@@ -5256,11 +5256,14 @@
       "tooling/git/tests/dev-worktrees.test.mjs",
       "README.md",
       "release-changes/items.json",
-      "tooling/new-platform/generate.mjs"
+      "tooling/new-platform/generate.mjs",
+      "packages/ui/src/organisms/BsReferenceOfficeScene.vue",
+      "packages/ui/src/utils/referenceOfficeScene.ts"
     ],
     "reason": "Restore the founder-approved HQ office as an internal monorepo application with complete shared templates, typed projections, viewport interactions and strict ownership checks. Preserve the checkpoint’s portable generator path fix and existing Suit behavior; no operational product activation, public release, hosted migration, deployment or model execution is established.",
     "sources": [
-      "hq-office-monorepo-20261103"
+      "hq-office-monorepo-20261103",
+      "hq-geometry-review-20261104"
     ]
   }
 ]

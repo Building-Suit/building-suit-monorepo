@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
-import { HqProblem } from './hqDomain'
+import { HqProblem, linkedSourceMessage } from './hqDomain'
 import type { HqDocument, HqTask } from './hqDomain'
 import { stages } from './hqWorkforce'
-import type { BrainFile, BrainReference, StageEvidence, WorkflowRun } from './hqWorkforce'
+import type { BrainFile, BrainReference, Stage, StageEvidence, WorkflowRun } from './hqWorkforce'
 
 export const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 export function requireWorkflow(ok: unknown, code: string): asserts ok {
@@ -16,9 +16,17 @@ export function dailySlot(now: number) {
 export function approvedTask(doc: HqDocument, taskId: string) {
   const task = doc.tasks.find(t => t.id === taskId)
   requireWorkflow(task?.approvedAt && task.workflow && task.budget === 0 && ['queued', 'running', 'review', 'blocked'].includes(task.status), 'APPROVAL_OR_CANCELLATION')
+  linkedSourceMessage(doc, task)
+  if (task.sourceMessage) requireWorkflow(task.workflow.daily === false && task.workflow.allowedTools.length === 0 && task.workflow.publicInputs.length === 0, 'MESSAGE_WORKFLOW_SCOPE')
   return task
 }
-export const contractDigest = (task: HqTask) => digest([task.id, task.brief, task.acceptance, task.allowedActions, task.approvedAt, task.workflow])
+export const contractDigest = (task: HqTask) => digest([task.id, task.brief, task.acceptance, task.allowedActions, task.approvedAt, task.workflow, ...(task.sourceMessage ? [task.sourceMessage] : [])])
+/** HR receives only the founder-reviewed shared brief. Steve alone receives the source conversation. */
+export function workflowAssignment(task: HqTask, artifacts: (Pick<StageEvidence, 'stage' | 'output' | 'sources'> & { digest: string })[], stage: Stage) {
+  return JSON.stringify({ brief: task.brief, acceptance: task.acceptance, allowedActions: task.allowedActions, artifacts,
+    ...(task.sourceMessage && stage === 'reply' ? { founderMessage: { id: task.sourceMessage.id, text: task.sourceMessage.text } } : {}),
+  })
+}
 export interface Lease { key: string; owner: string; generation: number }
 export function leasedRun(doc: HqDocument, lease: Lease, now: number) {
   const run = doc.workflowRuns?.[lease.key]
@@ -97,19 +105,24 @@ export function checkpoint(doc: HqDocument, lease: Lease, evidence: StageEvidenc
 export function prepareReport(doc: HqDocument, lease: Lease, now: number) {
   const run = leasedRun(doc, lease, now), reply = run.checkpoints.reply
   requireWorkflow(reply && run.checkpoints.evaluate?.review?.accepted, 'REVIEW_AND_REPLY_REQUIRED')
+  const source = approvedTask(doc, run.taskId).sourceMessage
   const text = reply.output
-  requireWorkflow(!run.outbox || run.outbox.text === text, 'OUTBOX_CONFLICT')
-  run.outbox ||= { key: digest([run.key, 'founder-report']), text, status: 'pending' }
+  const key = digest([run.key, 'founder-report', ...(source ? [source.id, source.digest] : [])])
+  requireWorkflow(!run.outbox || (run.outbox.text === text && run.outbox.key === key), 'OUTBOX_CONFLICT')
+  run.outbox ||= { key, text, status: 'pending' }
 }
 /** Delivery destination is HQ's existing CEO inbox, in the SAME transaction as the receipt.
  * No external notification or Brain write is attempted. A transport failure is reconciled by readback.
  */
 export function deliverReport(doc: HqDocument, lease: Lease, now: number) {
   const run = leasedRun(doc, lease, now), task = approvedTask(doc, run.taskId)
+  const original = linkedSourceMessage(doc, task)
   requireWorkflow(run.outbox?.status === 'pending', 'OUTBOX_REQUIRED')
+  requireWorkflow(run.outbox.text === run.checkpoints.reply?.output && run.outbox.key === digest([run.key, 'founder-report', ...(task.sourceMessage ? [task.sourceMessage.id, task.sourceMessage.digest] : [])]), 'OUTBOX_CONFLICT')
   const id = 'workflow_' + run.outbox.key, at = new Date(now).toISOString()
   requireWorkflow(!doc.messages.some(m => m.id === id), 'OUTBOX_RECEIPT_CONFLICT')
-  doc.messages.push({ id, agent: 'ceo', role: 'ceo', channel: 'founder_ceo', recipient: 'founder', text: run.outbox.text, status: 'delivered', createdAt: at })
+  doc.messages.push({ id, agent: 'ceo', role: 'ceo', channel: 'founder_ceo', recipient: 'founder', text: run.outbox.text, status: 'delivered', createdAt: at, ...(original ? { replyTo: original.id, taskId: task.id } : {}) })
+  if (original) original.status = 'answered'
   doc.events.unshift({ id, agent: 'ceo', type: 'workflow-report', title: 'CEO workflow report saved', detail: 'Four stage evidence and independent review saved. Delivered to the HQ inbox; external notification and founder reading are not verified.', taskId: task.id, createdAt: at })
   run.outbox.status = 'delivered'; run.outbox.receipt = id
   run.status = 'completed'; run.leaseUntil = 0

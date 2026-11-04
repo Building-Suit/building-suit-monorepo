@@ -1,0 +1,9 @@
+{
+  "id": "hq-protocol-response-cleanup-20261103",
+  "task": "HQ-PROTOCOL-RESPONSE-CLEANUP-20261103",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "docs/work-packages/company-hq"],
+  "reason": "Cancel unread bodies returned after a protocol deadline/cancellation or rejected by response validation. Synthetic regressions verify no body consumption, repeat request or blocking cleanup. Existing host adapters and runtime gates remain disabled; no live provider access or operational Suit activation."
+}

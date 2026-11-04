@@ -57,7 +57,21 @@ export interface WorkflowRun {
   evidenceBudget?: number
   checkpoints: Partial<Record<Stage, StageEvidence>>
   rejectedReviews?: StageEvidence[]
-  attempts: { stage: Stage; contextId: string; reservationId: string; at: string }[]
+  attempts: { stage: Stage; contextId: string; reservationId: string; at: string; owner?: string; generation?: number; inputDigest?: string; brain?: BrainReference[] }[]
   failures: { at: string; code: string }[]
   outbox?: { key: string; text: string; status: 'pending' | 'delivered'; receipt?: string }
+}
+
+/** Observed provider usage is evidence, not proof of a free allowance or a refund. */
+export interface ProviderOperation {
+  contextId: string
+  reservationId: string
+  requestDigest: string
+  state: 'dispatched' | 'completed' | 'rejected' | 'ambiguous'
+  accounting: 'unreconciled'
+  at: string
+  responseId?: string
+  usage?: { inputTokens: number; outputTokens: number; totalTokens: number }
+  resultDigest?: string
+  code?: string
 }

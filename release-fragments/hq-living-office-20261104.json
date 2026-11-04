@@ -1,0 +1,9 @@
+{
+  "id": "hq-living-office-20261104",
+  "task": "HQ-LIVING-OFFICE-20261104",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue", "packages/ui", "pnpm-lock.yaml", "docs/work-packages/company-hq"],
+  "reason": "Replace the internal Company HQ static image with original interactive WebGL geometry, persisted founder-controlled departments and planned milestones, truthful roster/evidence projections and authenticated local invalidations. Shared presentation is used by HQ and its inert catalogue only. No registered Suit activation or public release, hosted database mutation, deployment or live model execution. Preserve all runner history and control-plane schemas; hosted preparation remains disabled."
+}

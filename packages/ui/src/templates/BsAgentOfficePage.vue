@@ -1,9 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
-import { useOfficeViewport } from '@building-suit/ux'
-import type { AgentOfficeActivity, AgentOfficeContent, AgentOfficeMessage, AgentOfficeNote, AgentOfficeRoom, AgentOfficeTask, AgentOfficeTaskDraft, AgentOfficeView } from '../types/agentOfficePresentation'
+import BsLivingOfficeScene from '../organisms/BsLivingOfficeScene.vue'
+import BsReferenceOfficeScene from '../organisms/BsReferenceOfficeScene.vue'
+import type { LivingOfficeEmployee, LivingOfficeBrainActivity, LivingOfficeSceneCopy } from '../types/livingOffice'
+import type { AgentOfficeActivity, AgentOfficeContent, AgentOfficeMessage, AgentOfficeNote, AgentOfficeRoom, AgentOfficeTask, AgentOfficeTaskDraft, AgentOfficeView, LivingOfficePageCopy, AgentOfficeWorkCopy, AgentOfficeWorkflowDraft } from '../types/agentOfficePresentation'
 
 const props = withDefaults(defineProps<{
+  visualReview?: boolean
+  sceneCopy?: LivingOfficeSceneCopy
+  employees?: LivingOfficeEmployee[]
+  brainActivity?: LivingOfficeBrainActivity[]
+  brainSnapshotReady?: boolean
+  runtimeNotice?: string
+  livingCopy?: LivingOfficePageCopy
+  workCopy?: AgentOfficeWorkCopy
+  workflowFields?: { key: string; label: string }[]
+  sourceMessageText?: string
   content: AgentOfficeContent
   rooms: AgentOfficeRoom[]
   messages: AgentOfficeMessage[]
@@ -21,10 +33,15 @@ const props = withDefaults(defineProps<{
   error?: string | null
   messageError?: string | null
   taskError?: string | null
-}>(), { activity: () => [], connectionAvailable: false, loading: false, readOnly: false, pending: false, error: null, messageError: null, taskError: null })
+}>(), { visualReview: false, sceneCopy: undefined, livingCopy: undefined, workCopy: undefined, workflowFields: () => [], sourceMessageText: '', employees: () => [], brainActivity: () => [], brainSnapshotReady: true, runtimeNotice: '', activity: () => [], connectionAvailable: false, loading: false, readOnly: false, pending: false, error: null, messageError: null, taskError: null })
 
 const emit = defineEmits<{
+  'create-department': [draft: { name: string; description: string }]
+  'add-milestone': [draft: { id: string; title: string; acceptance: string }]
   'send-message': [text: string]
+  'plan-message': [id: string]
+  'prepare-workflow': [id: string]
+  'authorize-workflow': [draft: AgentOfficeWorkflowDraft]
   'create-task': [draft: AgentOfficeTaskDraft]
   'approve-task': [id: string]
   'cancel-task': [id: string]
@@ -38,17 +55,39 @@ const messageDraft = defineModel<string>('messageDraft', { default: '' })
 const taskDraft = defineModel<AgentOfficeTaskDraft>('taskDraft', { default: () => ({ title: '', brief: '', acceptance: '', allowedActions: '' }) })
 const conversationOpen = defineModel<boolean>('conversationOpen', { default: false })
 const taskOpen = defineModel<boolean>('taskOpen', { default: false })
+const workflowOpen = defineModel<boolean>('workflowOpen', { default: false })
+const workflowDraft = defineModel<AgentOfficeWorkflowDraft>('workflowDraft', { default: () => ({ id: '', brainFiles: {} }) })
 const view = ref<AgentOfficeView>('office')
 const profileOpen = ref(false), detailOpen = ref(false)
 const selectedRoomId = ref(''), selectedTaskId = ref('')
-const sceneFailed = ref(false)
+const selectedEmployeeId = ref(''), employeeOpen = ref(false)
+const selectedEmployee = computed(() => props.employees.find(e => e.id === selectedEmployeeId.value))
+const departmentDraft = defineModel<{ name: string; description: string }>('departmentDraft', { default: () => ({ name: '', description: '' }) })
+const departmentOpen = defineModel<boolean>('departmentOpen', { default: false })
+const milestoneDraft = defineModel<{ title: string; acceptance: string }>('milestoneDraft', { default: () => ({ title: '', acceptance: '' }) })
+const live = computed(() => props.livingCopy || { title: 'Living office', intro: 'Interactive organization view. Motion illustrates recorded state.', createDepartment: 'Create department', departmentName: 'Department name', purpose: 'Purpose', createOffice: 'Create office', milestoneTitle: 'Milestone title', milestoneAcceptance: 'Milestone acceptance', addMilestone: 'Add milestone', milestones: 'Milestones', planned: 'Planned', milestoneHint: 'Milestones require evidence before completion.', configured: 'Configured team', execution: 'Live execution unavailable', noWrites: 'No live Brain writes enabled.', departmentCreated: 'Department office created' })
 const copy = computed(() => props.content.copy)
+const work = computed<AgentOfficeWorkCopy>(() => props.workCopy || {
+  planFromMessage: 'Plan work from this message', linkedTask: 'Linked task', originalMessage: 'Original founder message',
+  privateContextNotice: 'The original message stays private to the founder and CEO. Only the reviewed brief is shared with Noah, Iris and Maya. Creating a proposal does not approve execution.',
+  authorizeBrainWork: 'Authorize Brain work', workflowTitle: 'Authorize read-only Brain scope',
+  workflowIntro: 'Choose the exact current Brain files for this approved task.',
+  workflowScope: 'Read-only Brain files only. No external tools, Brain writes or daily schedule are authorized.',
+  workflowUnavailable: 'Saving this scope does not start execution. Verified model access, a zero-cost allowance and hosting are still required.',
+  fileReferenceHint: 'Paste an approved Drive file URL or file ID.', authorizeWorkflow: 'Save approved Brain scope', workflowAuthorized: 'Read-only Brain scope authorized',
+})
 const selectedRoom = computed(() => props.rooms.find(room => room.id === selectedRoomId.value))
 const selectedTask = computed(() => props.tasks.find(task => task.id === selectedTaskId.value))
-const taskDirty = computed(() => Object.values(taskDraft.value).some(value => value.trim()))
-const taskComplete = computed(() => Object.values(taskDraft.value).every(value => value.trim()))
+const taskFields = computed(() => [taskDraft.value.title, taskDraft.value.brief, taskDraft.value.acceptance, taskDraft.value.allowedActions])
+const taskDirty = computed(() => taskFields.value.some(value => value.trim()) || !!taskDraft.value.sourceMessageId)
+const taskComplete = computed(() => taskFields.value.every(value => value.trim()))
+const workflowTask = computed(() => props.tasks.find(task => task.id === workflowDraft.value.id))
+const workflowDirty = computed(() => Object.values(workflowDraft.value.brainFiles).some(value => value.trim()))
+const workflowComplete = computed(() => /^[A-Za-z0-9_-]{1,120}$/.test(workflowDraft.value.id)
+  && !!workflowTask.value?.canAuthorizeWorkflow && props.workflowFields.length === 16
+  && new Set(props.workflowFields.map(field => field.key)).size === 16
+  && props.workflowFields.every(field => { const value = workflowDraft.value.brainFiles[field.key]; return typeof value === 'string' && value.trim().length > 0 && value.length <= 500 }))
 const ids = useId()
-const { element: viewportElement, scale, dragging, transform, zoom, reset, onKeydown, onPointerDown, onPointerMove, onPointerEnd, onMiniMapClick } = useOfficeViewport()
 const tabs = computed(() => [
   { id: 'office' as const, label: copy.value.office },
   { id: 'tasks' as const, label: copy.value.tasks },
@@ -61,12 +100,29 @@ function selectRoom(room: AgentOfficeRoom) {
   if (room.kind === 'executive' && room.active) conversationOpen.value = true
   else profileOpen.value = true
 }
-function showTask(task: AgentOfficeTask) { selectedTaskId.value = task.id; detailOpen.value = true }
+function showTask(task: AgentOfficeTask) { selectedTaskId.value = task.id; milestoneDraft.value = { title: '', acceptance: '' }; detailOpen.value = true }
+function selectEmployee(id: string) { selectedEmployeeId.value = id; employeeOpen.value = true }
+function createDepartment() { if (!props.readOnly && !props.pending && departmentDraft.value.name.trim() && departmentDraft.value.description.trim()) emit('create-department', { ...departmentDraft.value }) }
+function addMilestone() { if (!props.readOnly && !props.pending && selectedTask.value?.status === 'proposed' && milestoneDraft.value.title.trim() && milestoneDraft.value.acceptance.trim()) emit('add-milestone', { id: selectedTask.value.id, ...milestoneDraft.value }) }
 function sendMessage() {
   if (!props.readOnly && !props.pending && messageDraft.value.trim()) emit('send-message', messageDraft.value.trim())
 }
 function createTask() {
   if (!props.readOnly && !props.pending && taskComplete.value) emit('create-task', { ...taskDraft.value })
+}
+function planMessage(message: AgentOfficeMessage) {
+  if (!props.readOnly && !props.pending && message.role === 'founder' && message.canPlanWork && !message.taskId) emit('plan-message', message.id)
+}
+function linkedTask(message: AgentOfficeMessage) { return props.tasks.find(task => task.id === message.taskId) }
+function showLinkedTask(message: AgentOfficeMessage) { const task = linkedTask(message); if (task) showTask(task) }
+function prepareWorkflow() {
+  if (!props.readOnly && !props.pending && selectedTask.value?.canAuthorizeWorkflow) emit('prepare-workflow', selectedTask.value.id)
+}
+function authorizeWorkflow() {
+  if (!props.readOnly && !props.pending && workflowComplete.value) emit('authorize-workflow', {
+    id: workflowDraft.value.id,
+    brainFiles: Object.fromEntries(props.workflowFields.map(field => [field.key, workflowDraft.value.brainFiles[field.key]!.trim()])),
+  })
 }
 function messageKey(event: KeyboardEvent) {
   if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && (event.ctrlKey || event.metaKey)) {
@@ -80,7 +136,6 @@ function approveTask() {
 function cancelTask() {
   if (!props.readOnly && !props.pending && selectedTask.value?.canCancel) emit('cancel-task', selectedTask.value.id)
 }
-watch(() => props.content.sceneSrc, () => { sceneFailed.value = false })
 watch(selectedTask, value => { if (!value) detailOpen.value = false })
 watch(() => props.pending, (pending, previous) => {
   if (!pending && previous && !taskDirty.value && !props.taskError) taskOpen.value = false
@@ -88,7 +143,8 @@ watch(() => props.pending, (pending, previous) => {
 </script>
 
 <template>
-  <div class="bs-office" :aria-busy="loading || undefined">
+  <BsReferenceOfficeScene v-if="visualReview" :rooms="rooms" :employees="employees" :loading="loading" :error="error" />
+  <div v-else class="bs-office" :aria-busy="loading || undefined">
     <a class="bs-office__skip" :href="'#' + ids + '-workspace'">{{ copy.workspace }}</a>
     <header class="bs-office__header">
       <div class="bs-office__brand">
@@ -113,35 +169,9 @@ watch(() => props.pending, (pending, previous) => {
         <BsButton v-if="error" variant="text" :disabled="loading" @click="emit('retry')">{{ copy.retry }}</BsButton>
       </div>
       <section v-show="view === 'office'" class="bs-office__world" :aria-label="copy.office">
-        <div ref="viewportElement" class="bs-office__viewport" :class="{ 'bs-office__viewport--dragging': dragging, 'bs-office__viewport--zoomed': scale > 1 }" tabindex="0" role="group" :aria-label="copy.workspace" :aria-describedby="ids + '-scene-hint'" @keydown="onKeydown" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd">
-          <div class="bs-office__canvas" :style="transform">
-            <img v-if="!sceneFailed" class="bs-office__art" :src="content.sceneSrc" :alt="content.sceneAlt" width="1672" height="941" draggable="false" fetchpriority="high" @error="sceneFailed = true">
-            <div v-else class="bs-office__art-fallback" role="img" :aria-label="content.sceneAlt"><BsOfficeIcon name="image" :size="48" /><p>{{ content.sceneAlt }}</p></div>
-            <BsButton v-for="room in rooms" :key="room.id" variant="tile" class="bs-office__room" :class="'bs-office__room--' + room.kind" :style="{ left: room.x + '%', top: room.y + '%' }" :aria-label="room.label + (room.statusLabel ? ' · ' + room.statusLabel : '')" @click="selectRoom(room)">
-              <span class="bs-office__room-icon"><BsOfficeIcon :name="room.kind === 'executive' ? 'user' : room.kind === 'department' ? 'team' : 'dashboard'" :size="18" /></span>
-              <span class="bs-office__room-copy" dir="auto"><strong>{{ room.label }}</strong><small v-if="room.statusLabel">{{ room.statusLabel }}</small></span>
-            </BsButton>
-            <BsButton variant="tile" class="bs-office__brain-label" @click="view = 'brain'"><strong>{{ copy.brainLabel }}</strong><small>{{ copy.brainSubtitle }}</small></BsButton>
-          </div>
-          <div class="bs-office__map-footer">
-            <span class="bs-office__workspace-pill"><BsOfficeIcon name="dashboard" :size="16" />{{ copy.workspace }}</span>
-            <div class="bs-office__map-controls">
-              <button v-if="!sceneFailed" class="bs-office__minimap" type="button" :aria-label="copy.miniMap" @click="onMiniMapClick">
-                <img :src="content.sceneSrc" alt="" draggable="false" width="1672" height="941">
-                <span aria-hidden="true" class="bs-office__minimap-focus" :style="{ width: (100 / scale) + '%', height: (100 / scale) + '%' }" />
-              </button>
-              <div class="bs-office__zoom" role="group" :aria-label="copy.workspace">
-                <BsButton variant="icon" :aria-label="copy.zoomOut" :disabled="scale <= 1" @click="zoom(-.2)"><span aria-hidden="true">−</span></BsButton>
-                <BsButton variant="text" :aria-label="copy.resetView" @click="reset">{{ Math.round(scale * 100) }}%</BsButton>
-                <BsButton variant="icon" :aria-label="copy.zoomIn" :disabled="scale >= 2.4" @click="zoom(.2)"><span aria-hidden="true">+</span></BsButton>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p :id="ids + '-scene-hint'" class="bs-office__hint">{{ copy.sceneHint }}</p>
-        <div class="bs-office__directory" role="group" :aria-label="copy.roomList">
-          <BsButton v-for="room in rooms" :key="room.id" variant="tile" @click="selectRoom(room)"><BsOfficeIcon :name="room.active ? 'user' : 'dashboard'" :size="17" /><span><strong>{{ room.label }}</strong><small>{{ room.statusLabel }}</small></span></BsButton>
-        </div>
+        <div class="bs-office__living-heading"><div><span class="bs-office__eyebrow">{{ live.configured }} · {{ employees.length }}</span><h1>{{ live.title }}</h1><p>{{ live.intro }}</p></div><BsButton variant="primary" :disabled="readOnly || pending" @click="departmentOpen = true">{{ live.createDepartment }}</BsButton></div>
+        <BsLivingOfficeScene :copy="sceneCopy" :rooms="rooms" :employees="employees" :brain-activity="brainActivity" :evidence-ready="brainSnapshotReady" @select-room="id => { const room = rooms.find(r => r.id === id); if (room) selectRoom(room) }" @select-employee="selectEmployee" @select-brain="view = 'brain'" />
+        <aside class="bs-office__runtime" role="status"><strong>{{ live.execution }}</strong><p>{{ runtimeNotice || copy.conversationHint }}</p></aside>
       </section>
       <section v-if="view === 'tasks'" class="bs-office__panel" :aria-label="copy.tasksTitle">
         <div class="bs-office__panel-heading"><div><h1>{{ copy.tasksTitle }}</h1><p>{{ copy.tasksIntro }}</p></div><BsButton variant="primary" :disabled="readOnly || loading" @click="taskOpen = true">{{ copy.newTask }}</BsButton></div>
@@ -149,17 +179,33 @@ watch(() => props.pending, (pending, previous) => {
         <div class="bs-office__task-list"><button v-for="task in tasks" :key="task.id" type="button" class="bs-office__task" @click="showTask(task)"><span><strong>{{ task.title }}</strong><small>{{ task.ownerLabel }} · {{ task.updatedLabel }}</small></span><BsStatusBadge :status="task.status" :label="task.statusLabel" :tone="task.tone" /><span>{{ task.canApprove ? copy.reviewPlan : copy.viewTask }} →</span></button></div>
       </section>
       <section v-if="view === 'brain'" class="bs-office__panel" :aria-label="copy.brainTitle">
-        <h1>{{ copy.brainTitle }}</h1><p>{{ copy.brainIntro }}</p><p v-if="!brainNotes.length">{{ copy.noBrainNotes }}</p>
+        <h1>{{ copy.brainTitle }}</h1><p>{{ live.noWrites }}</p><ul><li v-for="event in brainActivity" :key="event.id">{{ event.label }}</li></ul><p>{{ copy.brainIntro }}</p><p v-if="!brainNotes.length">{{ copy.noBrainNotes }}</p>
         <div class="bs-office__notes"><article v-for="note in brainNotes" :key="note.id"><h2>{{ note.title }}</h2><p>{{ note.text }}</p></article></div>
         <h2>{{ copy.activityTitle }}</h2><p v-if="!activity.length">{{ copy.noActivity }}</p><ol class="bs-office__activity"><li v-for="event in activity" :key="event.id"><strong>{{ event.title }}</strong><p>{{ event.detail }}</p><small>{{ event.createdLabel }}</small></li></ol>
       </section>
     </main>
     <BsDialog v-model:visible="conversationOpen" :title="copy.conversationTitle" :dirty="!!messageDraft.trim()" :pending="pending" size="lg">
-      <p>{{ copy.conversationHint }}</p><p v-if="readOnly" role="status">{{ copy.readOnly }}</p>
-      <div class="bs-office__messages" role="log" aria-live="polite" :aria-label="copy.conversationTitle"><p v-if="!messages.length">{{ copy.noMessages }}</p><article v-for="message in messages" :key="message.id" :data-author="message.role"><strong>{{ message.authorLabel }}</strong><p dir="auto">{{ message.text }}</p><small>{{ message.createdLabel }} · {{ message.statusLabel }}</small></article></div>
+      <p>{{ copy.conversationHint }}</p><p class="bs-office__runtime">{{ runtimeNotice }}</p><p v-if="readOnly" role="status">{{ copy.readOnly }}</p>
+      <div class="bs-office__messages" role="log" aria-live="polite" :aria-label="copy.conversationTitle">
+        <p v-if="!messages.length">{{ copy.noMessages }}</p>
+        <article v-for="message in messages" :key="message.id" :data-author="message.role" :data-message-id="message.id">
+          <strong>{{ message.authorLabel }}</strong><p dir="auto">{{ message.text }}</p><small>{{ message.createdLabel }} · {{ message.statusLabel }}</small>
+          <p v-if="message.replyTo" class="bs-office__message-reference">{{ work.originalMessage }} · {{ message.replyTo }}</p>
+          <div v-if="message.taskId" class="bs-office__message-work" :data-linked-task-id="message.taskId">
+            <span>{{ work.linkedTask }}</span>
+            <BsButton v-if="linkedTask(message)" variant="text" @click="showLinkedTask(message)">{{ linkedTask(message)?.title }} · {{ linkedTask(message)?.statusLabel }}</BsButton>
+            <small>{{ message.taskId }}</small>
+          </div>
+          <BsButton v-else-if="message.role === 'founder' && message.canPlanWork" variant="text" :disabled="readOnly || pending" @click="planMessage(message)">{{ work.planFromMessage }}</BsButton>
+        </article>
+      </div>
       <BsForm :pending="pending" :disabled="readOnly" :error="messageError" @submit="sendMessage"><BsField :for="ids + '-message'" :label="copy.messageLabel" required><BsTextarea :id="ids + '-message'" v-model="messageDraft" :placeholder="copy.messagePlaceholder" :maxlength="6000" required :rows="3" @keydown="messageKey" /></BsField><BsButton type="submit" variant="primary" :disabled="!messageDraft.trim() || readOnly" :pending="pending">{{ copy.sendMessage }}</BsButton></BsForm>
     </BsDialog>
     <BsDialog v-model:visible="taskOpen" :title="copy.taskFormTitle" :dirty="taskDirty" :pending="pending">
+      <section v-if="taskDraft.sourceMessageId" class="bs-office__source-context" :data-source-message-id="taskDraft.sourceMessageId">
+        <h2>{{ work.originalMessage }}</h2><blockquote v-if="sourceMessageText" dir="auto">{{ sourceMessageText }}</blockquote><small v-else>{{ taskDraft.sourceMessageId }}</small>
+        <p>{{ work.privateContextNotice }}</p>
+      </section>
       <BsForm :pending="pending" :disabled="readOnly" :error="taskError" @submit="createTask">
         <BsField :for="ids + '-title'" :label="copy.taskTitle" required><BsInput :id="ids + '-title'" v-model="taskDraft.title" :maxlength="180" required /></BsField>
         <BsField :for="ids + '-brief'" :label="copy.taskBrief" required><BsTextarea :id="ids + '-brief'" v-model="taskDraft.brief" :maxlength="5000" required /></BsField>
@@ -169,20 +215,37 @@ watch(() => props.pending, (pending, previous) => {
         <BsButton type="submit" variant="primary" :disabled="!taskComplete || readOnly" :pending="pending">{{ copy.createProposal }}</BsButton>
       </BsForm>
     </BsDialog>
-    <BsDialog v-model:visible="detailOpen" :title="selectedTask?.title || copy.viewTask" :pending="pending">
-      <template v-if="selectedTask"><BsStatusBadge :status="selectedTask.status" :label="selectedTask.statusLabel" :tone="selectedTask.tone" /><dl class="bs-office__details"><dt>{{ copy.taskOwner }}</dt><dd>{{ selectedTask.ownerLabel }}</dd><dt>{{ copy.brief }}</dt><dd>{{ selectedTask.brief }}</dd><dt>{{ copy.acceptance }}</dt><dd>{{ selectedTask.acceptance }}</dd><dt>{{ copy.allowedActions }}</dt><dd>{{ selectedTask.allowedActions }}</dd><dt>{{ copy.budget }}</dt><dd>{{ selectedTask.budgetLabel }}</dd><template v-if="selectedTask.deliverable"><dt>{{ copy.deliverable }}</dt><dd>{{ selectedTask.deliverable }}</dd></template><template v-if="selectedTask.reviewEvidence"><dt>{{ copy.reviewEvidence }}</dt><dd>{{ selectedTask.reviewEvidence }}</dd></template></dl><p>{{ copy.approvedScopeNotice }}</p><p v-if="taskError" role="alert">{{ taskError }}</p><div class="bs-office__actions"><BsButton v-if="selectedTask.canApprove" variant="primary" :disabled="readOnly" :pending="pending" @click="approveTask">{{ copy.approvePlan }}</BsButton><BsButton v-if="selectedTask.canCancel" variant="danger" :disabled="readOnly" :pending="pending" @click="cancelTask">{{ copy.cancelTask }}</BsButton></div></template>
+    <BsDialog v-model:visible="detailOpen" :title="selectedTask?.title || copy.viewTask" :dirty="!!(milestoneDraft.title || milestoneDraft.acceptance)" :pending="pending">
+      <template v-if="selectedTask"><BsStatusBadge :status="selectedTask.status" :label="selectedTask.statusLabel" :tone="selectedTask.tone" /><dl class="bs-office__details"><dt>{{ copy.taskOwner }}</dt><dd>{{ selectedTask.ownerLabel }}</dd><dt>{{ copy.brief }}</dt><dd>{{ selectedTask.brief }}</dd><dt>{{ copy.acceptance }}</dt><dd>{{ selectedTask.acceptance }}</dd><dt>{{ copy.allowedActions }}</dt><dd>{{ selectedTask.allowedActions }}</dd><dt>{{ copy.budget }}</dt><dd>{{ selectedTask.budgetLabel }}</dd><template v-if="selectedTask.deliverable"><dt>{{ copy.deliverable }}</dt><dd>{{ selectedTask.deliverable }}</dd></template><template v-if="selectedTask.reviewEvidence"><dt>{{ copy.reviewEvidence }}</dt><dd>{{ selectedTask.reviewEvidence }}</dd></template></dl><section class="bs-office__milestones"><h2>{{ live.milestones }}</h2><p>{{ live.milestoneHint }}</p><ol><li v-for="milestone in selectedTask.milestones || []" :key="milestone.id"><strong>{{ milestone.title }}</strong> · {{ live.planned }}<p>{{ milestone.acceptance }}</p></li></ol><BsForm v-if="selectedTask.status === 'proposed'" :pending="pending" :disabled="readOnly" @submit="addMilestone"><BsField :for="ids + '-milestone-title'" :label="live.milestoneTitle" required><BsInput :id="ids + '-milestone-title'" v-model="milestoneDraft.title" :maxlength="180" required /></BsField><BsField :for="ids + '-milestone-acceptance'" :label="live.milestoneAcceptance" required><BsTextarea :id="ids + '-milestone-acceptance'" v-model="milestoneDraft.acceptance" :maxlength="1500" required /></BsField><BsButton type="submit" :disabled="readOnly || !milestoneDraft.title.trim() || !milestoneDraft.acceptance.trim()" :pending="pending">{{ live.addMilestone }}</BsButton></BsForm></section><p>{{ copy.approvedScopeNotice }}</p><p v-if="taskError" role="alert">{{ taskError }}</p><p v-if="selectedTask.workflowAuthorized" class="bs-office__workflow-status" role="status">{{ work.workflowAuthorized }}</p><div class="bs-office__actions"><BsButton v-if="selectedTask.canAuthorizeWorkflow" variant="primary" :disabled="readOnly" :pending="pending" @click="prepareWorkflow">{{ work.authorizeBrainWork }}</BsButton><BsButton v-if="selectedTask.canApprove" variant="primary" :disabled="readOnly" :pending="pending" @click="approveTask">{{ copy.approvePlan }}</BsButton><BsButton v-if="selectedTask.canCancel" variant="danger" :disabled="readOnly" :pending="pending" @click="cancelTask">{{ copy.cancelTask }}</BsButton></div></template>
     </BsDialog>
-    <BsDialog v-model:visible="profileOpen" :title="selectedRoom?.label || copy.profile"><template v-if="selectedRoom"><p>{{ selectedRoom.description }}</p><p>{{ selectedRoom.statusLabel }}</p><p v-if="selectedRoom.reportingLabel">{{ copy.reporting }}: {{ selectedRoom.reportingLabel }}</p><h2 v-if="selectedRoom.skills.length">{{ copy.skills }}</h2><ul><li v-for="skill in selectedRoom.skills" :key="skill">{{ skill }}</li></ul><p v-if="!selectedRoom.active">{{ copy.unassignedDescription }}</p></template></BsDialog>
+    <BsDialog v-model:visible="workflowOpen" :title="work.workflowTitle" :dirty="workflowDirty" :pending="pending" size="lg">
+      <div :data-workflow-task-id="workflowDraft.id">
+        <p>{{ work.workflowIntro }}</p><p v-if="workflowTask"><strong>{{ workflowTask.title }}</strong></p>
+        <p>{{ work.workflowScope }}</p><p class="bs-office__runtime" role="status">{{ work.workflowUnavailable }}</p><p v-if="readOnly">{{ copy.readOnly }}</p>
+        <BsForm :pending="pending" :disabled="readOnly" :error="taskError" @submit="authorizeWorkflow">
+          <p>{{ work.fileReferenceHint }}</p>
+          <div class="bs-office__workflow-fields">
+            <BsField v-for="field in workflowFields" :key="field.key" :for="ids + '-workflow-' + field.key" :label="field.label" required>
+              <BsInput :id="ids + '-workflow-' + field.key" v-model="workflowDraft.brainFiles[field.key]" :name="field.key" :maxlength="500" autocomplete="off" :spellcheck="false" required />
+            </BsField>
+          </div>
+          <BsButton type="submit" variant="primary" :disabled="readOnly || pending || !workflowComplete" :pending="pending">{{ work.authorizeWorkflow }}</BsButton>
+        </BsForm>
+      </div>
+    </BsDialog>
+    <BsDialog v-model:visible="departmentOpen" :title="live.createDepartment" :dirty="!!(departmentDraft.name || departmentDraft.description)" :pending="pending"><BsForm :disabled="readOnly" :pending="pending" :error="taskError" @submit="createDepartment"><BsField :for="ids + '-department-name'" :label="live.departmentName" required><BsInput :id="ids + '-department-name'" v-model="departmentDraft.name" :maxlength="80" required /></BsField><BsField :for="ids + '-department-purpose'" :label="live.purpose" required><BsTextarea :id="ids + '-department-purpose'" v-model="departmentDraft.description" :maxlength="1000" required /></BsField><BsButton type="submit" variant="primary" :disabled="readOnly || !departmentDraft.name.trim() || !departmentDraft.description.trim()" :pending="pending">{{ live.createOffice }}</BsButton></BsForm></BsDialog>
+    <BsDialog v-model:visible="employeeOpen" :title="selectedEmployee?.name || copy.profile"><template v-if="selectedEmployee"><p>{{ selectedEmployee.role }} · {{ selectedEmployee.id }}</p><p>{{ selectedEmployee.statusLabel }}</p><p>{{ copy.reporting }}: {{ selectedEmployee.reportsTo }}</p><p>{{ runtimeNotice }}</p><BsButton v-if="selectedEmployee.id === 'AG-CEO-001'" variant="primary" @click="employeeOpen = false; conversationOpen = true">{{ copy.talkToCeo }}</BsButton></template></BsDialog>
+    <BsDialog v-model:visible="profileOpen" :title="selectedRoom?.label || copy.profile"><template v-if="selectedRoom"><p>{{ selectedRoom.description }}</p><p>{{ selectedRoom.statusLabel }}</p><p v-if="selectedRoom.reportingLabel">{{ copy.reporting }}: {{ selectedRoom.reportingLabel }}</p><h2 v-if="selectedRoom.skills.length">{{ copy.skills }}</h2><ul><li v-for="skill in selectedRoom.skills" :key="skill">{{ skill }}</li></ul></template></BsDialog>
   </div>
 </template>
 
 <style scoped>
-/* Office composition preserves the approved capture without changing other pages. */
+/* Shared living-office composition; product policy and state remain projected props. */
 .bs-office { font-size: 16px; line-height: normal; font-weight: 400; -webkit-font-smoothing: auto; text-rendering: auto; }
 .bs-office p { line-height: 1.6; }
 .bs-office :where(h1, h2, p) { margin-block-start: 0; }
-.bs-office :deep(button) { font: inherit; color: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: var(--bs-space-2); min-block-size: var(--bs-tap-target-min); padding: var(--bs-space-2) var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-button); background: var(--bs-surface); letter-spacing: normal; line-height: normal; text-align: center; box-shadow: none; }
-.bs-office :deep(button:disabled) { cursor: not-allowed; opacity: .55; }
+.bs-office :deep(button:is(.ls-btn, .ls-action-text, .ls-action-icon, .ls-action-tab, .ls-action-tile)) { font: inherit; color: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: var(--bs-space-2); min-block-size: var(--bs-tap-target-min); padding: var(--bs-space-2) var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-button); background: var(--bs-surface); letter-spacing: normal; line-height: normal; text-align: center; box-shadow: none; }
+.bs-office :deep(button:is(.ls-btn, .ls-action-text, .ls-action-icon, .ls-action-tab, .ls-action-tile):disabled) { cursor: not-allowed; opacity: .55; }
 .bs-office :deep(.ls-btn-primary) { background: var(--bs-primary); color: var(--bs-text-on-primary); border-color: var(--bs-primary); font-weight: 700; }
 .bs-office :deep(.ls-action-text), .bs-office :deep(.ls-action-icon), .bs-office :deep(.ls-action-tab), .bs-office :deep(.ls-action-tile) { border: 0; background: transparent; }
 .bs-office :deep(.ls-action-icon) { padding: var(--bs-space-2); min-inline-size: var(--bs-tap-target-min); }
@@ -204,29 +267,22 @@ watch(() => props.pending, (pending, previous) => {
 .bs-office__connection[data-available='true'] > span { background: var(--bs-status-success); }
 .bs-office__main { padding: var(--bs-space-2); }
 .bs-office__notice { display: flex; align-items: center; flex-wrap: wrap; gap: var(--bs-space-3); padding: var(--bs-space-3); background: var(--bs-surface-muted); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-button); margin-block-end: var(--bs-space-2); }
-.bs-office__viewport { position: relative; overflow: hidden; border-radius: var(--bs-radius-card); border: 1px solid var(--bs-border); direction: ltr; }
-.bs-office__viewport:focus-visible, .bs-office button:focus-visible { outline: var(--bs-focus-ring-style); outline-offset: calc(-1 * var(--bs-focus-ring-offset)); }
-.bs-office__viewport--zoomed { cursor: grab; touch-action: none; }
-.bs-office__viewport--dragging { cursor: grabbing; }
-.bs-office__canvas { position: relative; transform-origin: center; }
-.bs-office__art, .bs-office__art-fallback { display: block; inline-size: 100%; block-size: auto; aspect-ratio: 1672/941; user-select: none; }
-.bs-office__art-fallback { display: grid; align-content: center; justify-items: center; background: var(--bs-surface-muted); }
-.bs-office .bs-office__room, .bs-office .bs-office__brain-label { inline-size: auto; position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center; gap: var(--bs-space-2); padding: var(--bs-space-2) var(--bs-space-3); background: var(--bs-surface); color: var(--bs-text); border: 1px solid var(--bs-border-strong); border-radius: var(--bs-radius-card); box-shadow: var(--bs-elevation-3); white-space: nowrap; }
-.bs-office__room-icon { display: grid; place-items: center; padding: var(--bs-space-2); background: var(--bs-surface-muted); border-radius: var(--bs-radius-button); }
-.bs-office__room--unassigned .bs-office__room-icon { padding: 0; }
-.bs-office__room--unassigned small { display: none; }
-.bs-office__room strong { font-size: clamp(.65rem, 1vw, 1rem); }
-.bs-office .bs-office__brain-label { inset-inline-start: 50%; inset-block-start: 39%; display: grid; text-align: center; gap: 0; }
-.bs-office__brain-label small { font-size: 83.333333%; color: var(--bs-text-muted); }
-.bs-office__map-footer { position: absolute; inset-inline: var(--bs-space-3); inset-block-end: var(--bs-space-3); display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
-.bs-office__map-footer > * { pointer-events: auto; }
-.bs-office__workspace-pill, .bs-office__map-controls, .bs-office__zoom { display: flex; align-items: center; gap: var(--bs-space-2); background: var(--bs-surface); border: 1px solid var(--bs-border); padding: var(--bs-space-2); border-radius: var(--bs-radius-card); }
-.bs-office__map-controls { flex-direction: column; }
-.bs-office .bs-office__minimap { display: block; min-block-size: 0; position: relative; inline-size: 9rem; padding: 0; border: 1px solid var(--bs-border); border-radius: var(--bs-radius-button); overflow: hidden; background: ButtonFace; }
-.bs-office__minimap img { display: inline; vertical-align: baseline; inline-size: 100%; block-size: auto; }
-.bs-office__minimap-focus { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); border: 1px solid var(--bs-accent); pointer-events: none; }
-.bs-office__hint { color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); text-align: center; margin: var(--bs-space-2); }
-.bs-office__directory { display: none; }
+ .bs-office__living-heading { display:flex; align-items:center; justify-content:space-between; gap:var(--bs-space-5); padding:var(--bs-space-6); }
+.bs-office__living-heading h1 { font-size:clamp(1.5rem,3vw,2.5rem); margin:var(--bs-space-2) 0; }
+.bs-office__living-heading p { color:var(--bs-text-muted); max-inline-size:55rem; margin:0; }
+.bs-office__eyebrow { font-size:var(--bs-type-body-m-size); color:var(--bs-accent); text-transform:uppercase; letter-spacing:.1em; }
+.bs-office__runtime { margin:var(--bs-space-4); padding:var(--bs-space-4); border:1px solid var(--bs-border); border-inline-start:3px solid var(--bs-accent); border-radius:var(--bs-radius-card); background:var(--bs-surface); }
+.bs-office__runtime p { margin:var(--bs-space-2) 0 0; color:var(--bs-text-muted); }
+.bs-office__milestones { margin-block:var(--bs-space-4); }
+.bs-office__source-context { margin-block: var(--bs-space-4); padding: var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-card); background: var(--bs-surface-muted); }
+.bs-office__source-context h2 { font-size: var(--bs-type-body-l-size, 1rem); margin-block-end: var(--bs-space-2); }
+.bs-office__source-context blockquote { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bs-office__source-context p { margin-block: var(--bs-space-3) 0; color: var(--bs-text-muted); }
+.bs-office__message-work { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bs-space-2); margin-block-start: var(--bs-space-2); }
+.bs-office__message-work small, .bs-office__message-reference { font-size: var(--bs-type-body-s-size, .75rem); color: var(--bs-text-muted); overflow-wrap: anywhere; }
+.bs-office__workflow-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--bs-space-4); }
+.bs-office__workflow-status { padding: var(--bs-space-3); border-inline-start: 3px solid var(--bs-status-info); background: var(--bs-surface-muted); }
+
 .bs-office__panel { max-inline-size: 75rem; margin: auto; padding: var(--bs-space-6); }
 .bs-office__panel h1 { font-size: var(--bs-type-h1-size); font-weight: 700; }
 .bs-office__panel h2 { font-size: var(--bs-type-h3-size); font-weight: 700; }
@@ -242,6 +298,7 @@ watch(() => props.pending, (pending, previous) => {
 .bs-office__messages article[data-author='founder'] { margin-inline-start: var(--bs-space-6); }
 .bs-office__messages p, .bs-office__details dd { white-space: pre-wrap; overflow-wrap: anywhere; }
 .bs-office__messages small { color: var(--bs-text-muted); }
+.bs-office__messages article > small { display: block; margin-block-end: var(--bs-space-2); }
 .bs-office__details { display: grid; gap: var(--bs-space-2); margin-block: var(--bs-space-4); }
 .bs-office__details dt { font-weight: 700; }
 .bs-office__details dd { margin: 0 0 var(--bs-space-3); }
@@ -252,17 +309,7 @@ watch(() => props.pending, (pending, previous) => {
   .bs-office .bs-office__ceo-action { gap: var(--bs-space-3); }
 .bs-office__brand strong { font-size: 1.1rem; }
   .bs-office__tabs { order: 3; inline-size: 100%; justify-content: center; }
-  .bs-office .bs-office__room { display: none; }
-  .bs-office__room-icon, .bs-office__room small, .bs-office__brain-label small, .bs-office__room--unassigned { display: none; }
-  .bs-office__room strong, .bs-office__brain-label strong { font-size: .65rem; }
-  .bs-office .bs-office__brain-label { padding: var(--bs-space-1); }
-  .bs-office__minimap, .bs-office__workspace-pill { display: none; }
-  .bs-office__map-footer { inset: auto var(--bs-space-1) var(--bs-space-1); }
-  .bs-office__map-controls { margin-inline-start: auto; padding: 0; }
-  .bs-office__zoom { padding: 0; gap: 0; }
-  .bs-office__zoom :deep(button) { min-block-size: 2rem; }
-  .bs-office__directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bs-space-2); padding: var(--bs-space-2); }
-  .bs-office__directory :deep(button) { display: flex; align-items: center; gap: var(--bs-space-2); min-block-size: var(--bs-tap-target-min); text-align: start; padding: var(--bs-space-2); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-button); }
+  .bs-office__living-heading { padding:var(--bs-space-3); flex-direction:column; align-items:flex-start; }
   .bs-office__panel { padding: var(--bs-space-3); }
   .bs-office__panel-heading { align-items: flex-start; flex-direction: column; }
 }

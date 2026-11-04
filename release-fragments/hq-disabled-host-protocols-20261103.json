@@ -1,0 +1,9 @@
+{
+  "id": "hq-disabled-host-protocols-20261103",
+  "task": "HQ-DISABLED-HOST-PROTOCOLS-20261103",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "docs/work-packages/company-hq"],
+  "reason": "Prepare bounded credential-free Responses and Drive protocol adapters with synthetic transports, durable outcome evidence and a manual disabled SQLite host. Keep the production executor closed because no atomic no-charge allowance authority is verified. No live model/Drive call, credential setup, schedule, hosted deployment or operational Suit activation."
+}
