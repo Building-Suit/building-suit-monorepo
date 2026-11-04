@@ -2053,5 +2053,43 @@
     "sources": [
       "supabase-explicit-access-20261022"
     ]
+  },
+  {
+    "id": "provider-neutral-agent-guidance",
+    "task": "BS-PROVIDER-NEUTRAL-GUIDANCE",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "AGENTS.md",
+      "docs/agent-workflows.md",
+      "CLAUDE.md",
+      "apps/building-suit-docs/CLAUDE.md",
+      "apps/doctor-suit/CLAUDE.md",
+      "apps/doctor-suit/supabase/CLAUDE.md",
+      "apps/inventory-suit/CLAUDE.md",
+      "apps/inventory-suit/supabase/CLAUDE.md",
+      "apps/ledger-suit/CLAUDE.md",
+      "apps/ledger-suit/supabase/CLAUDE.md",
+      "apps/shop-suit/CLAUDE.md",
+      "apps/shop-suit/supabase/CLAUDE.md",
+      "apps/super-admin-suit/CLAUDE.md",
+      "apps/super-admin-suit/supabase/CLAUDE.md",
+      "packages/ui/CLAUDE.md",
+      "supabase/CLAUDE.md",
+      "tooling/new-platform/templates/CLAUDE.md.template",
+      "release-changes/items.json"
+    ],
+    "reason": "Share canonical root and scoped agent instructions with Claude Code through adjacent imports, preserve provider-independent role boundaries and require verified model bindings, and include the import in future platform scaffolds. Documentation and starter guidance only; no model runtime, permissions, product behavior, deployment or workforce activation.",
+    "sources": [
+      "provider-neutral-agent-guidance"
+    ]
   }
 ]

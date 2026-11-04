@@ -10,6 +10,12 @@
 
 User instructions take priority. Scoped rules specialize these rules within their directories. Shared specifications govern common behavior; product requirements govern product-specific behavior. Resolve material conflicts explicitly. Historical plans and prototype evidence are references, not an automatic work queue.
 
+## Provider-neutral instructions and model selection
+
+`AGENTS.md` is the editable source for repository rules across AI providers. Each maintained adjacent `CLAUDE.md` contains only an `@AGENTS.md` import, so Claude Code reads the same source without a copied rule set. Edit the applicable root or scoped `AGENTS.md`; when adding a new scope, add its import-only `CLAUDE.md` too. Root rules and the more specific rules retain their directory scope. The platform starter emits the same pair. Original files under `apps/building-suit-docs/reference/agent-guidance/`, including its historical `CLAUDE.md`, are preserved evidence and never current project instructions.
+
+An agent's identity, reporting line, charter, access boundaries, tool permissions and acceptance requirements persist when its AI provider changes. Use the current company model matrix in the Brain for role-specific provider alternatives; do not duplicate that changing roster in this repository. A model family or tier is a policy choice, not proof of a runtime binding or interchangeable performance. Verify the provider/host's available exact model identifier, supported reasoning or effort controls, required tools and context before binding or switching. Record the actual selection and assess the role's work before accepting an alternative; do not silently substitute an unavailable or weaker model or assume one provider's effort label transfers to another. A charter or model list does not activate an agent, grant access, install tools or qualify its skills.
+
 ## Branches, worktrees and pull requests
 
 - Refresh `origin` and inspect GitHub before starting/resuming work and again before publishing, retargeting or merging. Manual GitHub merges are authoritative, including squash/rebase merges; never treat a stale local branch as an active feature.

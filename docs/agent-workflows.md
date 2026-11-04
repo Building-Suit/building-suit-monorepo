@@ -79,6 +79,7 @@ For final zero-native acceptance, run `node tooling/checks/suit-template-boundar
 4. Verify affected links, assets, translations and the docs build where relevant.
 5. When structure or commands change, update agent navigation and affected workflows in the same task.
 6. Ensure guidance matches actual paths/scripts, supports ordinary authorized feature/schema development and contains no stale task-specific restrictions.
+7. Keep each maintained `AGENTS.md` as the single editable rule source and pair it with an adjacent `CLAUDE.md` containing only `@AGENTS.md`. Preserve directory scope and historical reference files; the platform starter includes the same import bridge.
 
 ## 8. Add a new platform
 
