@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, shallowRef, useId, watch } from 'vue'
-import { SPATIAL_VIEWPORT_DEFAULT_CAMERA, useOverlayState, useSpatialViewport } from '@building-suit/ux'
+import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
+import { SPATIAL_VIEWPORT_MAX_ZOOM, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useOverlayState, useSpatialViewport } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout'
+import type { OfficePlacement } from '../utils/departmentOfficeLayout'
 
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()
@@ -20,7 +21,24 @@ const plansWorkspace = computed<HqCompanyPlansPresentation>(() => props.companyP
 const displayedUser = computed(() => founderAccess.value.user ?? props.user)
 const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value || plansVisible.value || plansPanelPresent.value })
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value || plansVisible.value || plansPanelPresent.value, sceneRadius: () => floorRadius.value })
+const viewportSize = shallowRef({ width: 1, height: 1 })
+let viewportObserver: ResizeObserver | undefined
+watch(viewportRef, element => {
+  viewportObserver?.disconnect()
+  viewportObserver = undefined
+  if (!element) return
+  const measure = () => {
+    const width = element.clientWidth, height = element.clientHeight
+    if (width > 0 && height > 0 && (width !== viewportSize.value.width || height !== viewportSize.value.height)) viewportSize.value = { width, height }
+  }
+  measure()
+  if (typeof ResizeObserver !== 'undefined') {
+    viewportObserver = new ResizeObserver(measure)
+    viewportObserver.observe(element)
+  }
+}, { flush: 'post' })
+onScopeDispose(() => { viewportObserver?.disconnect() })
 const panelTitleRef = shallowRef<HTMLElement | null>(null)
 const ui = useUiCopy()
 let returnFocus: HTMLElement | null = null
@@ -47,7 +65,9 @@ async function openBrain() {
   previousCamera = { ...camera }
   brainPanelPresent.value = true
   brainVisible.value = true
-  transitionTo({ yaw: 0.35, pitch: 0.2, zoom: 1.7, panX: 0, panY: 0.57 })
+  const focusCamera = { yaw: 0.35, pitch: 0.2, zoom: 1, panX: 0, panY: 0 }
+  const focusDistance = spatialViewportFrame(focusCamera, viewportSize.value.width, viewportSize.value.height, floorRadius.value).distance
+  transitionTo({ ...focusCamera, zoom: Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, focusDistance / 5) })
   await nextTick()
   if (brainVisible.value) panelTitleRef.value?.focus({ preventScroll: true })
 }
@@ -96,17 +116,23 @@ const brainPanelId = useId()
 const brainTitleId = useId()
 const plansPanelId = useId()
 const plansTitleId = useId()
-const mapPoint = (point: { x: number; z: number }) => ({ left: `${50 + point.x * mapScale.value}%`, top: `${50 + point.z * mapScale.value}%` })
-const viewMarker = computed(() => {
-  const x = Math.cos(camera.yaw) * camera.panX - Math.sin(camera.yaw) * Math.sin(camera.pitch) * camera.panY
-  const z = -Math.sin(camera.yaw) * camera.panX - Math.cos(camera.yaw) * Math.sin(camera.pitch) * camera.panY
-  return {
-    ...mapPoint({ x, z }),
-    width: `${Math.min(94, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
-    height: `${Math.min(90, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
-    transform: `translate(-50%, -50%) rotate(${(camera.yaw - SPATIAL_VIEWPORT_DEFAULT_CAMERA.yaw) * 180 / Math.PI}deg)`,
-  }
-})
+const mapPolygon = (points: readonly { x: number; z: number }[]) => points.map(point => `${(50 + point.x * mapScale.value).toFixed(3)},${(50 + point.z * mapScale.value).toFixed(3)}`).join(' ')
+const officeFootprint = (office: OfficePlacement) => {
+  const cosine = Math.cos(office.yaw), sine = Math.sin(office.yaw)
+  return mapPolygon(([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([side, end]) => {
+    const x = side * office.width / 2, z = end * office.depth / 2
+    return { x: office.x + cosine * x + sine * z, z: office.z - sine * x + cosine * z }
+  }))
+}
+const mapOffices = computed(() => [
+  { id: officeLayout.value.executive.id, name: props.content.companyPlans.executiveLabel, executive: true, points: officeFootprint(officeLayout.value.executive), road: mapPolygon(officeLayout.value.executive.roadPoints) },
+  ...officeLayout.value.offices.map(office => ({ id: office.id, name: office.name, executive: false, points: officeFootprint(office), road: mapPolygon(office.roadPoints) })),
+])
+const viewportFrame = computed(() => spatialViewportFrame(camera, viewportSize.value.width, viewportSize.value.height, floorRadius.value))
+const groundFootprint = computed(() => mapPolygon(spatialViewportGroundFootprint(viewportFrame.value, floorRadius.value)))
+// This outline preserves the screen aspect at the focus distance. The filled
+// polygon separately shows the oblique frustum's actual finite-floor footprint.
+const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle(viewportFrame.value)))
 </script>
 
 <template>
@@ -140,10 +166,14 @@ const viewMarker = computed(() => {
         </div>
         <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
           <div class="bs-hq-layout__minimap" role="img" :aria-label="`${content.minimapLabel}, ${content.zoomLabel}: ${zoomPercent}%`">
-            <span class="bs-hq-layout__minimap-view" :style="viewMarker" aria-hidden="true" />
+            <svg class="bs-hq-layout__minimap-scene" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <circle class="bs-hq-layout__map-floor" cx="50" cy="50" r="45" />
+              <polygon v-if="groundFootprint" class="bs-hq-layout__map-footprint" :points="groundFootprint" />
+              <polyline v-for="office in mapOffices" :key="`${office.id}-road`" class="bs-hq-layout__map-road" :points="office.road" />
+              <polygon v-for="office in mapOffices" :key="office.id" class="bs-hq-layout__office-marker" :class="{ 'bs-hq-layout__office-marker--executive': office.executive }" :points="office.points"><title>{{ office.name }}</title></polygon>
+              <polygon class="bs-hq-layout__minimap-view" :points="screenRectangle" />
+            </svg>
             <span class="bs-hq-layout__orb-marker" style="left: 50%; top: 50%" aria-hidden="true"><BsIcon name="orb" :size="18" /></span>
-            <span class="bs-hq-layout__office-marker bs-hq-layout__office-marker--executive" :style="mapPoint(officeLayout.executive)" :title="content.companyPlans.executiveLabel" aria-hidden="true" />
-            <span v-for="office in officeLayout.offices" :key="office.id" class="bs-hq-layout__office-marker" :style="mapPoint(office)" :title="office.name" aria-hidden="true" />
             <span class="bs-hq-layout__zoom-value" :aria-label="content.zoomLabel">{{ zoomPercent }}%</span>
           </div>
           <div class="bs-hq-layout__zoom">
@@ -282,12 +312,16 @@ const viewMarker = computed(() => {
 .bs-hq-layout__touch-hint { display: none; }
 .bs-hq-layout__keyboard-hint { display: block; }
 .bs-hq-layout__view { display: flex; flex: none; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; cursor: default; }
-.bs-hq-layout__minimap { position: relative; width: 104px; height: 104px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); box-shadow: 0 4px 14px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; }
+.bs-hq-layout__minimap { position: relative; width: 200px; height: 200px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); box-shadow: 0 4px 14px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; }
+.bs-hq-layout__minimap-scene { display: block; width: 100%; height: 100%; }
+.bs-hq-layout__map-floor { fill: var(--bs-color-neutral-charcoal); stroke: color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); stroke-width: .6px; vector-effect: non-scaling-stroke; }
+.bs-hq-layout__map-footprint { fill: color-mix(in srgb, var(--bs-soft-silver) 9%, transparent); stroke: color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); stroke-width: .6px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.bs-hq-layout__map-road { fill: none; stroke: color-mix(in srgb, var(--bs-soft-silver) 36%, transparent); stroke-width: .8px; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__zoom-value { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 1px 4px; border-radius: 4px; background: var(--bs-color-neutral-ink); color: var(--bs-soft-silver); font-size: 9px; line-height: 1.3; font-variant-numeric: tabular-nums; }
-.bs-hq-layout__office-marker { position: absolute; width: 7px; height: 7px; transform: translate(-50%, -50%); border: 1px solid var(--bs-soft-silver); border-radius: 2px; background: var(--bs-color-neutral-graphite); }
-.bs-hq-layout__office-marker--executive { border-color: var(--bs-premium-gold); background: var(--bs-premium-gold); }
+.bs-hq-layout__office-marker { fill: var(--bs-color-neutral-graphite); stroke: var(--bs-soft-silver); stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bs-hq-layout__office-marker--executive { fill: var(--bs-premium-gold); stroke: var(--bs-premium-gold); }
 .bs-hq-layout__plans-panel { width: min(520px, calc(100% - var(--bs-space-6))); }
-.bs-hq-layout__minimap-view { position: absolute; top: 50%; left: 50%; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 30%, transparent); background: color-mix(in srgb, var(--bs-soft-silver) 5%, transparent); border-radius: 3px; }
+.bs-hq-layout__minimap-view { fill: none; stroke: color-mix(in srgb, var(--bs-soft-silver) 80%, transparent); stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 26px; height: 26px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-neutral-graphite); box-shadow: 0 0 14px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent); }
 .bs-hq-layout__zoom { display: grid; grid-template-columns: repeat(3, 36px); gap: 2px; padding: 4px; border: 1px solid var(--bs-color-gray-800); border-radius: 14px; background: var(--bs-color-neutral-charcoal); pointer-events: auto; }
 .bs-hq-layout .bs-hq-layout__zoom button { width: 36px; min-width: 0; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--bs-soft-silver); }
@@ -308,6 +342,7 @@ const viewMarker = computed(() => {
   .bs-hq-layout__session { inset-block-start: 140px; inset-inline-end: 16px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__workspace-info { display: none; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__minimap { display: none; }
+  .bs-hq-layout__minimap { width: 180px; height: 180px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
   .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
   .bs-hq-brain__directory ul { max-height: 23dvh; }
@@ -329,14 +364,14 @@ const viewMarker = computed(() => {
   .bs-hq-layout__gesture-hint { font-size: 9px; }
   .bs-hq-layout__keyboard-hint { display: none; }
   .bs-hq-layout__view { gap: 8px; }
-  .bs-hq-layout__minimap { width: 88px; height: 88px; }
+  .bs-hq-layout__minimap { width: 144px; height: 144px; }
   .bs-hq-layout__zoom { grid-template-columns: repeat(3, 32px); }
   .bs-hq-layout .bs-hq-layout__zoom button { width: 32px; height: 32px; border-radius: 9px; }
 }
 @media (max-width: 374px) {
   .bs-hq-layout__workspace-info { max-width: 120px; }
   .bs-hq-layout__gesture-hint { display: none; }
-  .bs-hq-layout__minimap { width: 80px; height: 80px; }
+  .bs-hq-layout__minimap { width: 128px; height: 128px; }
 }
 @media (max-height: 500px) and (min-width: 521px) {
   .bs-hq-layout__brand { inset-block-start: 12px; }

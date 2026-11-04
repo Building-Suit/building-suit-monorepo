@@ -1,0 +1,34 @@
+{
+  "id": "hq-camera-overview-20261104",
+  "task": "HQ-CAMERA-OVERVIEW-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/work-packages/company-hq/HQ-CAMERA-OVERVIEW-20261104.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "release-changes/items.json",
+    "packages/ux/src/spatialViewportGeometry.ts",
+    "packages/ux/src/index.ts"
+  ],
+  "reason": "Correct internal HQ camera navigation only: left drag pans, middle drag rotates around the preserved panned world target, right is inactive and touch is unchanged. Set farther radius/aspect-aware default 100% overview; enlarge circular minimap to include the finite floor, every approved office and CEO marker, with actual canvas-aspect viewport rectangle and separate floor-frustum footprint. Update EN/AR hints. Prior office/Auth/database/plan work is stopped for this bounded correction. No provider calls, app Brain writes, migrations, staff/office records, public activation, deployment or spending. Tests/build/lint/typecheck/boundary/release/browser/API/runtime and tester/reviewer checks are prohibited and unrun; source math is not measured acceptance."
+}

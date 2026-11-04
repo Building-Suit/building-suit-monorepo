@@ -1,6 +1,8 @@
 # Company HQ handoff
 
-Current scope is [HQ-COMPANY-PLANS-20261104](HQ-COMPANY-PLANS-20261104.md): founder login followed by approval of a complete CEO/HR-reviewed company plan, including department/hiring/skill requests. It supersedes the earlier office-postponement hold. Work stays in the primary checkout with `pnpm dev:hq --current` on loopback port 3101. No worktree, public activation or autonomous testing is added.
+Current work is only [HQ-CAMERA-OVERVIEW-20261104](HQ-CAMERA-OVERVIEW-20261104.md): left-drag pan, middle-drag rotation around the panned world target, farther aspect-aware default overview and larger full-floor minimap with correctly proportioned viewport/ground footprint. Touch remains unchanged. Previous feature work is stopped; no office/Auth/database/plan extension or Brain/provider action is authorized by this correction. Acceptance is unrun.
+
+Existing foundation is [HQ-COMPANY-PLANS-20261104](HQ-COMPANY-PLANS-20261104.md): founder login followed by approval of a complete CEO/HR-reviewed company plan, including department/hiring/skill requests. It supersedes the earlier office-postponement hold. Work stays in the primary checkout with `pnpm dev:hq --current` on loopback port 3101. No worktree, public activation or autonomous testing is added.
 
 The Brain stays private cloud-only/read-only Google Drive, with no filesystem/Insync fallback. The earlier founder-requested restart/retry returned 330 eligible notes with `partial:false` and read one HOME note. Keep the dedicated reader, Brain-root-only Viewer grant and private Google config; connector credentials cannot be exported. Preserve verified known-parent traversal, bounded paginated reads, source-version revalidation, escaped note content and visible/online polling. That historical cloud read is not acceptance of new plans/Auth.
 

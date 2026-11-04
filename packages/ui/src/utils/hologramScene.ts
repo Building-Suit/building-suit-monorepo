@@ -1,4 +1,4 @@
-import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_MIN_PITCH, SPATIAL_VIEWPORT_MIN_TARGET_Y, SPATIAL_VIEWPORT_TARGET_Y } from '@building-suit/ux'
+import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout'
@@ -124,8 +124,8 @@ function lookAt(eye: Vector, target: Vector): Matrix {
   const x = normalize(cross([0, 1, 0], z)), y = cross(z, x)
   return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1])
 }
-function perspective(aspect: number, far = SCENE_FAR): Matrix {
-  const f = 1 / Math.tan(Math.PI / 8), near = 0.05
+function perspective(aspect: number, far = SCENE_FAR, near = 0.05): Matrix {
+  const f = 1 / Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2)
   return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) / (near - far), -1, 0, 0, 2 * far * near / (near - far), 0])
 }
 
@@ -596,8 +596,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       if (disposed || !orbProjection || gl!.isContextLost()) return null
       const bounds = canvas.getBoundingClientRect()
       if (!bounds.width || !bounds.height || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) return null
-      const horizontal = ((clientX - bounds.left) / bounds.width * 2 - 1) * Math.tan(Math.PI / 8) * orbProjection.aspect
-      const vertical = (1 - (clientY - bounds.top) / bounds.height * 2) * Math.tan(Math.PI / 8)
+      const horizontal = ((clientX - bounds.left) / bounds.width * 2 - 1) * Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2) * orbProjection.aspect
+      const vertical = (1 - (clientY - bounds.top) / bounds.height * 2) * Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2)
       const { eye, right, up, forward } = orbProjection
       return { origin: eye, direction: normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical]) }
     }
@@ -650,20 +650,14 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
         if (layoutChanged || width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
           || camera.zoom !== lastCamera[2] || camera.panX !== lastCamera[3] || camera.panY !== lastCamera[4]) {
-          const pitch = Math.max(SPATIAL_VIEWPORT_MIN_PITCH, Math.min(Math.PI / 2 - SPATIAL_VIEWPORT_MIN_PITCH, camera.pitch))
-          const right: Vector = [Math.cos(camera.yaw), 0, -Math.sin(camera.yaw)]
-          const up: Vector = [-Math.sin(camera.yaw) * Math.sin(pitch), Math.cos(pitch), -Math.cos(camera.yaw) * Math.sin(pitch)]
-          const target: Vector = [right[0] * camera.panX + up[0] * camera.panY, Math.max(SPATIAL_VIEWPORT_MIN_TARGET_Y, SPATIAL_VIEWPORT_TARGET_Y + up[1] * camera.panY), right[2] * camera.panX + up[2] * camera.panY]
-          const distance = 8.5 * Math.max(1, 0.76 / (width / height)) / camera.zoom
-          const eye: Vector = [target[0] + Math.sin(camera.yaw) * Math.cos(pitch) * distance, target[1] + Math.sin(pitch) * distance, target[2] + Math.cos(camera.yaw) * Math.cos(pitch) * distance]
-          const far = Math.max(SCENE_FAR, floorRadius * 2 + distance)
-          const projection = perspective(width / height, far), view = lookAt(eye, target)
+          const frame = spatialViewportFrame(camera, width, height, floorRadius)
+          const projection = perspective(frame.aspect, frame.far, frame.near), view = lookAt(frame.eye, frame.target)
           gl.uniformMatrix4fv(uniforms.uProjection!, false, projection)
-          gl.uniformMatrix4fv(uniforms.uView!, false, view); gl.uniform3fv(uniforms.uEye!, eye)
+          gl.uniformMatrix4fv(uniforms.uView!, false, view); gl.uniform3fv(uniforms.uEye!, frame.eye)
           viewProjection = matrixProduct(projection, view)
           orbProjection = {
-            eye, right, up, forward: normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]),
-            center: [0, 0.98, 0], radius: 0.84, aspect: width / height,
+            eye: frame.eye, right: frame.right, up: frame.up, forward: frame.forward,
+            center: [0, 0.98, 0], radius: 0.84, aspect: frame.aspect,
           }
           lastCamera = [camera.yaw, camera.pitch, camera.zoom, camera.panX, camera.panY]
           lastWidth = width; lastHeight = height

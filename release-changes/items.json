@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-COMPANY-PLANS-20261104",
+    "task": "HQ-CAMERA-OVERVIEW-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5265,9 +5265,16 @@
       "packages/ui/src/utils/hologramScene.ts",
       "packages/ux/src/composables/useSpatialViewport.ts",
       "packages/ui/src/organisms/BsHqCompanyPlans.vue",
-      "packages/ui/src/utils/departmentOfficeLayout.ts"
+      "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "apps/company-hq/i18n/locales/en.json",
+      "apps/company-hq/i18n/locales/ar.json",
+      "apps/company-hq/AGENTS.md",
+      "apps/company-hq/README.md",
+      "docs/work-packages/company-hq/HQ-CAMERA-OVERVIEW-20261104.md",
+      "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+      "packages/ux/src/spatialViewportGeometry.ts"
     ],
-    "reason": "Maintain the internal cloud Brain/3D workspace and add founder login plus complete reviewed company-plan approval. A reserved CEO desk/board opens the shared plan panel; authenticated exact-revision/idempotent decisions atomically publish all approved department records. Confirmed snapshots create empty offices/roads on separated concentric rings, growing the finite floor/overview with a 2.4-second construction effect and reduced-motion static completion. Hiring/skill entries are documentary approved requests, not workforce execution. Founder email is explicitly ceo@building-suit.com; user-entered registration requires email confirmation, server-only HttpOnly cookies and trusted one-time Auth UID membership checked against fresh Auth/session evidence. No metadata/client status grants authority. The HQ import seeds HR only, not the complete current company roster; newer approved Brain organization/acquisition records are not automatically synchronized. HR uses historical 2026-11-03 approval, preserving date precision and null original reviews/Auth approver. The service-only publisher remains a foundation without a live CEO/HR execution bridge. Preserve private bounded verified-root Google Drive knowledge reads with no filesystem fallback, shield/camera/overlay behavior, canonical tokens and bilingual presentation. Staging schema applied successfully at version 20261104194233 on dpruoncalmwicrqhqelu; historical migration stays unapplied, production untouched and GitHub founder-reported unconnected, with dashboard state unverified and migration-history review required; Automatic branching OFF remains policy only. Earlier cloud reads retain their historical scope. No new signup/email/login, Auth/approval/UI/runtime acceptance, tests/build/lint/typecheck/boundary/release checks or tester/reviewer agents ran. No operational product activation, public release, deployment, app Brain writes, new staff/model execution or spending.",
+    "reason": "Latest bounded camera/overview correction: left drag pans and middle drag rotates around the preserved panned world target; right is inactive and touch unchanged. Default 100% uses a farther radius/aspect-aware overview; the larger circular minimap shows the whole finite floor and all approved office/CEO markers, with actual canvas-aspect viewport rectangle and separate floor-frustum footprint. EN/AR controls match this mapping. No additional office/Auth/database/plan work, Brain/provider action or testing is part of this correction. Maintain the internal cloud Brain/3D workspace and add founder login plus complete reviewed company-plan approval. A reserved CEO desk/board opens the shared plan panel; authenticated exact-revision/idempotent decisions atomically publish all approved department records. Confirmed snapshots create empty offices/roads on separated concentric rings, growing the finite floor/overview with a 2.4-second construction effect and reduced-motion static completion. Hiring/skill entries are documentary approved requests, not workforce execution. Founder email is explicitly ceo@building-suit.com; user-entered registration requires email confirmation, server-only HttpOnly cookies and trusted one-time Auth UID membership checked against fresh Auth/session evidence. No metadata/client status grants authority. The HQ import seeds HR only, not the complete current company roster; newer approved Brain organization/acquisition records are not automatically synchronized. HR uses historical 2026-11-03 approval, preserving date precision and null original reviews/Auth approver. The service-only publisher remains a foundation without a live CEO/HR execution bridge. Preserve private bounded verified-root Google Drive knowledge reads with no filesystem fallback, shield/camera/overlay behavior, canonical tokens and bilingual presentation. Staging schema applied successfully at version 20261104194233 on dpruoncalmwicrqhqelu; historical migration stays unapplied, production untouched and GitHub founder-reported unconnected, with dashboard state unverified and migration-history review required; Automatic branching OFF remains policy only. Earlier cloud reads retain their historical scope. No new signup/email/login, Auth/approval/UI/runtime acceptance, tests/build/lint/typecheck/boundary/release checks or tester/reviewer agents ran. No operational product activation, public release, deployment, app Brain writes, new staff/model execution or spending.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5281,7 +5288,8 @@
       "hq-palette-pan-20261104",
       "hq-floating-layout-20261104",
       "hq-overlay-polish-20261104",
-      "hq-company-plans-20261104"
+      "hq-company-plans-20261104",
+      "hq-camera-overview-20261104"
     ],
     "evidence": [
       {
@@ -5333,10 +5341,6 @@
         "contains": "coal: read('--bs-color-neutral-ink')"
       },
       {
-        "path": "packages/ux/src/composables/useSpatialViewport.ts",
-        "contains": "pan: (event.pointerType !== 'touch' && event.button === 1) || event.shiftKey"
-      },
-      {
         "path": "packages/ui/src/utils/hologramScene.ts",
         "contains": "export function hologramFloorRadius(layers?: number): number"
       },
@@ -5375,6 +5379,22 @@
       {
         "path": "packages/ui/src/utils/hologramScene.ts",
         "contains": "const OFFICE_BUILD_SECONDS = 2.4"
+      },
+      {
+        "path": "apps/company-hq/i18n/locales/en.json",
+        "contains": "Left drag moves across the map. Middle drag rotates around the current view center. Scroll zooms with side panels closed. Right click is inactive."
+      },
+      {
+        "path": "apps/company-hq/i18n/locales/ar.json",
+        "contains": "اسحب بالزر الأيسر للتحريك عبر الخريطة وبالزر الأوسط للتدوير حول مركز العرض الحالي. مرّر للتكبير عندما تكون اللوحات الجانبية مغلقة. الزر الأيمن غير نشط."
+      },
+      {
+        "path": "apps/company-hq/i18n/locales/en.json",
+        "contains": "Full workspace overview"
+      },
+      {
+        "path": "packages/ux/src/spatialViewportGeometry.ts",
+        "contains": "export function spatialViewportGroundFootprint(frame: SpatialViewportFrame, radius: number)"
       }
     ]
   }

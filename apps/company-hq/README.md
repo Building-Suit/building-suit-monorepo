@@ -42,19 +42,23 @@ GET `/api/brain` and `/api/brain/notes/:id` retain loopback socket/Host, same-or
 
 ## Ownership and camera
 
+The latest [camera/minimap correction](../../docs/work-packages/company-hq/HQ-CAMERA-OVERVIEW-20261104.md) changes only navigation and overview behavior: left drag pans, middle drag rotates, right click stays inactive and touch controls stay unchanged. Rotation preserves the panned world X/Z target. Default/reset 100% is a farther overview fitted to floor radius and canvas aspect. The larger circular minimap keeps the whole finite floor, every approved office and CEO marker visible. Its viewport rectangle reflects actual canvas width/height through ultrawide resize; the floor-frustum footprint is computed separately. Source acceptance is unrun.
+
 The route supplies translated content and typed Brain, founder-access, company-plan and approved-department projections to shared `BsHqLayoutPage`. `useHqFounderAccess` and `useHqCompanyPlans` own app lifecycle and semantic commands; shared `BsHqCompanyPlans` owns the form, review and confirmation presentation. Shared UI owns the side panel, `BsHologramScene`, shield/brain WebGL geometry and orb picking. Shared UX `useSpatialViewport` owns camera gestures, interruptible camera transitions, hover/hold coordination and reset. Manual zoom locks while the Brain sidebar is open: overview +/− buttons are disabled, and wheel, pinch and keyboard zoom do not change the camera. The panel keeps native scrolling. The requested opening focus remains a programmatic transition; reset closes the sidebar and restores default view. Reduced motion uses static open/closed states without beat, vibration or camera animation. Closing restores the pre-open camera; reset closes the panel and restores the closed orb and default camera. App `useCompanyBrain` owns API lifecycle/polling/projection; app server utilities own Google authorization and scoped reads. Shared UI performs no Brain query or server import. English/Arabic and LTR/RTL follow shared infrastructure.
 
 | Input | Action |
 | --- | --- |
-| Left drag / one-finger drag | Rotate |
-| Middle drag / Shift + left drag / two-finger drag | Pan across the map |
+| Left drag | Pan across the map |
+| Middle drag | Rotate around the current world target |
+| One-finger drag | Rotate (unchanged) |
+| Two-finger drag | Pan (unchanged) |
 | Right click or right drag | Inactive; no context menu or camera action |
 | Wheel / pinch / overview − and + | Zoom only while the Brain sidebar is closed |
 | Hover / stationary touch hold | Closed orb/shield vibration only; a hold does not open on release |
 | Left orb click/tap / top Brain tab | Open shield, reveal brain, focus camera and open side panel |
 | CEO desk/board / account login | Open company-plan review or founder login |
 | Close / Escape / Workspace | Close shield/panel and restore previous camera |
-| Third overview button | Close shield/panel, center, 100% zoom, default camera angle |
+| Third overview button | Close shield/panel, center, farther full-workspace 100% view and default angle |
 | Focused workspace arrows / Shift + arrows | Rotate / pan |
 | Focused workspace + or − / Home or 0 | Zoom while Brain is closed / reset |
 

@@ -274,3 +274,6 @@ export { readWebsiteImage } from './utils/readWebsiteImage.ts'
 
 export { scrollRegionKey } from './scrollRegion.ts'
 export { normalizeDecimalText } from './utils/decimalText.js'
+
+export { spatialViewportFrame, spatialViewportScreenRectangle, spatialViewportGroundFootprint, SPATIAL_VIEWPORT_VERTICAL_FOV } from './spatialViewportGeometry.ts'
+export type { SpatialViewportFrame, SpatialViewportPoint, SpatialViewportVector } from './spatialViewportGeometry.ts'
