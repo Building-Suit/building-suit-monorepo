@@ -8,10 +8,12 @@ const content = computed<HqLayoutContent>(() => ({
   logoSrc: '/brand/building-suit-logo-light.png',
   workspaceLabel: c('Workspace', 'مساحة العمل'),
   tasksLabel: c('Tasks', 'المهام'),
+  calendarLabel: c('Calendar', 'التقويم'),
   brainLabel: c('Brain', 'المعرفة'),
   statusLabel: c('No agents connected', 'لا يوجد وكلاء متصلون'),
   talkToCeoLabel: c('Talk to CEO', 'تحدث مع المدير التنفيذي'),
   profileLabel: c('Profile', 'الملف الشخصي'),
+  loginLabel: c('Login', 'تسجيل الدخول'),
   canvasLabel: c('Interactive 3D workspace', 'مساحة عمل ثلاثية الأبعاد تفاعلية'),
   minimapLabel: c('Workspace overview', 'نظرة عامة على مساحة العمل'),
   zoomOutLabel: c('Zoom out', 'تصغير'),
@@ -51,7 +53,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Smooth irregular shield pieces, a larger base and a moving aura sit above the HQ ground plane. Canonical coal, charcoal and graphite surfaces use restrained Premium Gold accents. The camera stays above the floor; left drag rotates, middle drag pans, right click is inactive, and manual zoom locks while Brain is open. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'قطع درع ناعمة غير منتظمة وقاعدة أكبر وهالة متحركة فوق أرضية HQ. تستخدم الأسطح ألوان الفحم والرمادي الداكن المعتمدة مع لمسات الذهب الفاخر. تبقى الكاميرا فوق الأرضية؛ السحب بالأيسر للتدوير وبالأوسط للتحريك، والأيمن غير نشط، ويُقفل التكبير عند فتح المعرفة. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('A full-height workspace has a floating logo, four-tab navigation, compact status/account card and round overview. A finite circular floor expands from an office-layer count; this example has zero layers. Smooth irregular shield pieces, a larger base and a moving aura sit above it. Canonical coal, charcoal and graphite surfaces use restrained Premium Gold accents. The camera stays above the floor; left drag rotates, middle drag pans, right click is inactive, and manual zoom locks while Brain is open. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'مساحة عمل بارتفاع كامل مع شعار عائم وأربعة تبويبات وبطاقة حالة وحساب مدمجة وخريطة دائرية. تتسع الأرضية الدائرية المحدودة بحسب عدد طبقات المكاتب؛ هذا المثال بلا طبقات. تعلوها قطع درع ناعمة غير منتظمة وقاعدة أكبر وهالة متحركة. تستخدم الأسطح ألوان الفحم والرمادي الداكن المعتمدة مع لمسات الذهب الفاخر. تبقى الكاميرا فوق الأرضية؛ السحب بالأيسر للتدوير وبالأوسط للتحريك، والأيمن غير نشط، ويُقفل التكبير عند فتح المعرفة. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

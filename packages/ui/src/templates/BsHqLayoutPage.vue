@@ -2,9 +2,10 @@
 import { computed, nextTick, ref, shallowRef, useId, watch } from 'vue'
 import { SPATIAL_VIEWPORT_DEFAULT_CAMERA, useSpatialViewport } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
-import type { HqBrainPresentation, HqLayoutContent } from '../types/hqLayoutPresentation'
+import type { HqBrainPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
+import { hologramFloorRadius } from '../utils/hologramScene'
 
-const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation }>()
+const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string] }>()
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
 const brainVisible = ref(false)
@@ -58,57 +59,57 @@ function onWorkspaceKeydown(event: KeyboardEvent) {
   onKeydown(event)
 }
 watch(resetVersion, () => closeBrain(false))
+const userInitials = computed(() => props.user?.displayName.trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] ?? '').join('') ?? '')
+const floorRadius = computed(() => hologramFloorRadius(props.officeLayerCount))
+const mapScale = computed(() => 45 / floorRadius.value)
 const hintId = useId()
 const brainPanelId = useId()
 const brainTitleId = useId()
 const orbMarker = computed(() => ({
-  left: `${Math.max(9, Math.min(91, 50 - camera.panX * 9))}%`,
-  top: `${Math.max(12, Math.min(88, 50 + camera.panY * 11))}%`,
+  left: `${Math.max(9, Math.min(91, 50 - camera.panX * mapScale.value))}%`,
+  top: `${Math.max(12, Math.min(88, 50 + camera.panY * mapScale.value))}%`,
 }))
 const viewMarker = computed(() => ({
-  width: `${Math.min(94, 62 / camera.zoom)}%`,
-  height: `${Math.min(90, 62 / camera.zoom)}%`,
+  width: `${Math.min(94, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
+  height: `${Math.min(90, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
   transform: `translate(-50%, -50%) rotate(${(camera.yaw - SPATIAL_VIEWPORT_DEFAULT_CAMERA.yaw) * 180 / Math.PI}deg)`,
 }))
 </script>
 
 <template>
   <div class="bs-hq-layout">
-    <header class="bs-hq-layout__header">
-      <div class="bs-hq-layout__brand">
-        <img :src="content.logoSrc" alt="" width="40" height="54">
-        <h1>{{ content.brandName }} <span>{{ content.brandSuffix }}</span></h1>
-      </div>
-
-      <nav class="bs-hq-layout__navigation" :aria-label="content.workspaceLabel">
-        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible }" :aria-current="!brainVisible ? 'page' : undefined" @click="closeBrain()">{{ content.workspaceLabel }}</BsButton>
-        <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.tasksLabel }}</BsButton>
-        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
-      </nav>
-
-      <div class="bs-hq-layout__actions">
-        <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
-        <BsButton variant="accent" class="bs-hq-layout__ceo" disabled><BsIcon name="chat" :size="20" />{{ content.talkToCeoLabel }}</BsButton>
-        <BsButton variant="icon" class="bs-hq-layout__profile" :aria-label="content.profileLabel" disabled><BsIcon name="user" :size="26" /></BsButton>
-      </div>
-    </header>
-
     <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }" @keydown="onWorkspaceKeydown">
     <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
-      <BsHologramScene ref="sceneRef" :camera="camera" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
-      <div class="bs-hq-layout__brain-entry" data-spatial-controls>
-        <BsButton variant="text" class="bs-hq-layout__brain-button" :aria-controls="brainPanelId" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="22" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
+      <BsHologramScene ref="sceneRef" :camera="camera" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
+      <div class="bs-hq-layout__brand" data-spatial-controls>
+        <img :src="content.logoSrc" alt="" width="32" height="44">
+        <h1>{{ content.brandName }} <span>{{ content.brandSuffix }}</span></h1>
       </div>
+      <nav class="bs-hq-layout__navigation" :aria-label="content.workspaceLabel" data-spatial-controls>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible }" :aria-current="!brainVisible ? 'page' : undefined" @click="closeBrain()">{{ content.workspaceLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.tasksLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.calendarLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
+      </nav>
+      <aside class="bs-hq-layout__session" data-spatial-controls>
+        <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
+        <BsButton variant="accent" class="bs-hq-layout__ceo" disabled><BsIcon name="chat" :size="17" />{{ content.talkToCeoLabel }}</BsButton>
+        <div v-if="user" class="bs-hq-layout__account" :aria-label="content.profileLabel">
+          <span class="bs-hq-layout__avatar"><img v-if="user.avatarUrl" :src="user.avatarUrl" alt="" width="30" height="30"><span v-else>{{ userInitials }}</span></span>
+          <span class="bs-hq-layout__identity"><strong>{{ user.displayName }}</strong><small v-if="user.detailLabel">{{ user.detailLabel }}</small></span>
+        </div>
+        <BsButton v-else variant="text" class="bs-hq-layout__login" disabled><BsIcon name="user" :size="18" />{{ content.loginLabel }}</BsButton>
+      </aside>
       <div class="bs-hq-layout__footer" dir="ltr">
         <div class="bs-hq-layout__workspace-info" dir="auto">
-          <span class="bs-hq-layout__workspace"><BsIcon name="cube" :size="22" />{{ content.workspaceLabel }}</span>
+          <BsButton variant="text" class="bs-hq-layout__brain-button" :aria-controls="brainPanelId" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="18" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
           <p :id="hintId" class="bs-hq-layout__gesture-hint"><span class="bs-hq-layout__mouse-hint">{{ content.mouseControlsLabel }}</span><span class="bs-hq-layout__touch-hint">{{ content.touchControlsLabel }}</span><span class="bs-hq-layout__keyboard-hint">{{ content.keyboardControlsLabel }}</span></p>
         </div>
         <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
-          <span class="bs-hq-layout__zoom-value" :aria-label="content.zoomLabel">{{ zoomPercent }}%</span>
-          <div class="bs-hq-layout__minimap" role="img" :aria-label="content.hologramLabel">
+          <div class="bs-hq-layout__minimap" role="img" :aria-label="`${content.minimapLabel}, ${content.zoomLabel}: ${zoomPercent}%`">
             <span class="bs-hq-layout__minimap-view" :style="viewMarker" aria-hidden="true" />
-            <span class="bs-hq-layout__orb-marker" :style="orbMarker" aria-hidden="true"><BsIcon name="orb" :size="21" /></span>
+            <span class="bs-hq-layout__orb-marker" :style="orbMarker" aria-hidden="true"><BsIcon name="orb" :size="18" /></span>
+            <span class="bs-hq-layout__zoom-value" :aria-label="content.zoomLabel">{{ zoomPercent }}%</span>
           </div>
           <div class="bs-hq-layout__zoom">
             <BsButton variant="icon" :aria-label="content.zoomOutLabel" :disabled="!canZoomOut" @click="zoomBy(1 / 1.2)"><BsIcon name="minus" :size="21" /></BsButton>
@@ -159,61 +160,51 @@ const viewMarker = computed(() => ({
 .bs-hq-layout {
   color-scheme: dark;
   display: flex;
-  flex-direction: column;
   height: 100svh;
   min-height: 360px;
-  padding: 0 8px 8px;
+  padding: var(--bs-space-2);
   overflow: hidden;
   color: var(--bs-pearl-white);
-  background: linear-gradient(120deg, var(--bs-color-neutral-graphite), var(--bs-color-neutral-ink));
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 18%, transparent);
-  border-radius: 26px;
-  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--bs-pearl-white) 8%, transparent);
+  background: var(--bs-color-neutral-ink);
   font-family: var(--bs-font-latin);
 }
-.bs-hq-layout__header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 24px;
-  min-height: 70px;
-  padding-inline: 44px 6px;
+.bs-hq-layout__workspace-area { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.bs-hq-layout__canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 12%, transparent);
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 30%, var(--bs-color-neutral-graphite), var(--bs-color-neutral-ink) 75%);
+  box-shadow: inset 0 1px 1px color-mix(in srgb, var(--bs-pearl-white) 4%, transparent);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
 }
-.bs-hq-layout__brand { display: flex; align-items: center; gap: 21px; white-space: nowrap; }
-.bs-hq-layout__brand img { flex: none; width: 40px; height: 54px; object-fit: contain; }
-.bs-hq-layout__brand h1 { margin: 0; font-size: 27px; font-weight: 750; line-height: 1.2; letter-spacing: -.8px; }
-.bs-hq-layout__brand h1 span { color: var(--bs-highlight-gold); }
-.bs-hq-layout__navigation {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 5%, transparent);
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--bs-color-neutral-ink) 74%, transparent);
-}
-.bs-hq-layout .bs-hq-layout__tab {
-  min-width: 94px;
-  min-height: 39px;
-  padding: 8px 17px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--bs-soft-silver);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 22px;
-}
-.bs-hq-layout .bs-hq-layout__tab--selected {
-  background: linear-gradient(var(--bs-color-gray-800), var(--bs-color-neutral-graphite));
-  border-color: color-mix(in srgb, var(--bs-premium-gold) 35%, transparent);
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--bs-color-neutral-ink) 70%, transparent), inset 0 1px 1px color-mix(in srgb, var(--bs-pearl-white) 7%, transparent);
-  color: var(--bs-pearl-white);
-  font-weight: 650;
-}
-.bs-hq-layout__actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
-.bs-hq-layout__workspace-area { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; overflow: hidden; }
-.bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); position: absolute; z-index: 3; inset-block: var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(420px, calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); border: 1px solid var(--bs-color-gray-800); border-radius: var(--bs-radius-modal); color: var(--bs-pearl-white); background: var(--bs-color-neutral-charcoal); box-shadow: var(--bs-shadow-elevation3-dark); user-select: text; }
+.bs-hq-layout__canvas--interacting { cursor: grabbing; }
+.bs-hq-layout__canvas:focus-visible { outline: 2px solid var(--bs-premium-gold); outline-offset: -4px; }
+.bs-hq-layout__brand { position: absolute; z-index: 2; inset-block-start: 18px; inset-inline-start: 20px; display: flex; align-items: center; gap: 11px; max-width: calc(50% - 28px); cursor: default; }
+.bs-hq-layout__brand img { flex: none; width: 32px; height: 44px; object-fit: contain; }
+.bs-hq-layout__brand h1 { margin: 0; font-size: 21px; font-weight: 650; line-height: 1.2; letter-spacing: -.5px; white-space: nowrap; }
+.bs-hq-layout__brand h1 span { color: var(--bs-premium-gold); }
+.bs-hq-layout__navigation { position: absolute; z-index: 2; top: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; width: max-content; max-width: calc(100% - 32px); padding: 4px; border: 1px solid var(--bs-color-gray-800); border-radius: 15px; background: var(--bs-color-neutral-charcoal); cursor: default; }
+.bs-hq-layout .bs-hq-layout__tab { min-width: 0; min-height: 38px; padding: 8px 14px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--bs-soft-silver); font-size: 13px; font-weight: 500; line-height: 20px; white-space: nowrap; }
+.bs-hq-layout .bs-hq-layout__tab--selected { border-color: color-mix(in srgb, var(--bs-premium-gold) 35%, transparent); background: var(--bs-color-neutral-graphite); color: var(--bs-pearl-white); font-weight: 650; }
+.bs-hq-layout__session { position: absolute; z-index: 2; inset-block-start: 82px; inset-inline-start: 20px; display: grid; gap: 7px; width: 204px; padding: 11px; border: 1px solid var(--bs-color-gray-800); border-radius: 16px; background: var(--bs-color-neutral-charcoal); box-shadow: 0 4px 16px color-mix(in srgb, var(--bs-color-neutral-ink) 20%, transparent); cursor: default; }
+.bs-hq-layout__status { display: flex; align-items: center; gap: 7px; min-height: 20px; color: var(--bs-soft-silver); font-size: 11px; line-height: 1.5; }
+.bs-hq-layout__status > span { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--bs-color-neutral-steel-gray); }
+.bs-hq-layout .bs-hq-layout__ceo { display: inline-flex; justify-content: center; gap: 7px; width: 100%; min-height: 34px; padding: 7px 9px; border: 1px solid var(--bs-premium-gold); border-radius: 9px; background: var(--bs-premium-gold); color: var(--bs-color-neutral-ink); font-size: 12px; font-weight: 650; line-height: 1.5; white-space: normal; }
+.bs-hq-layout__account { display: flex; align-items: center; gap: 8px; min-width: 0; padding-top: 7px; border-top: 1px solid var(--bs-color-gray-800); }
+.bs-hq-layout__avatar { flex: none; display: grid; place-items: center; width: 30px; height: 30px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 30%, transparent); border-radius: 50%; background: var(--bs-color-neutral-graphite); color: var(--bs-soft-silver); font-size: 11px; }
+.bs-hq-layout__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.bs-hq-layout__identity { display: grid; gap: 2px; min-width: 0; text-align: start; }
+.bs-hq-layout__identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+.bs-hq-layout__identity small { color: var(--bs-color-gray-400); font-size: 10px; overflow-wrap: anywhere; }
+.bs-hq-layout .bs-hq-layout__login { display: flex; justify-content: center; gap: 7px; width: 100%; min-height: 32px; padding: 5px 8px; border: 1px solid var(--bs-color-gray-800); border-radius: 9px; background: var(--bs-color-neutral-graphite); color: var(--bs-soft-silver); font-size: 12px; }
+.bs-hq-layout__tab:not(:disabled), .bs-hq-layout__brain-button { cursor: pointer; }
+.bs-hq-layout__tab:focus-visible, .bs-hq-layout__brain-button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
+.bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); position: absolute; z-index: 3; inset-block: 80px var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(420px, calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); border: 1px solid var(--bs-color-gray-800); border-radius: var(--bs-radius-modal); color: var(--bs-pearl-white); background: var(--bs-color-neutral-charcoal); box-shadow: var(--bs-shadow-elevation3-dark); user-select: text; }
 :global([dir="rtl"]) .bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(100% + var(--bs-space-3)); }
 .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease; will-change: transform; }
 .bs-hq-brain-slide-enter-from, .bs-hq-brain-slide-leave-to { transform: translateX(var(--bs-brain-panel-offset)); opacity: 0; }
@@ -222,71 +213,14 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__brain-heading h2:focus { outline: none; }
 .bs-hq-layout__brain-heading button { flex: none; color: var(--bs-soft-silver); }
 .bs-hq-layout__brain-panel button:focus-visible, .bs-hq-layout__brain-panel input:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
-.bs-hq-layout__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 40px;
-  padding: 8px 17px;
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 13%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bs-color-neutral-graphite) 35%, transparent);
-  color: var(--bs-soft-silver);
-  font-size: 13px;
-  white-space: nowrap;
-}
-.bs-hq-layout__status > span { width: 9px; height: 9px; border-radius: 50%; background: var(--bs-color-neutral-steel-gray); }
-.bs-hq-layout .bs-hq-layout__ceo {
-  display: inline-flex;
-  gap: 9px;
-  min-height: 40px;
-  padding: 9px 18px;
-  border: 1px solid var(--bs-premium-gold);
-  border-radius: 12px;
-  background: linear-gradient(var(--bs-highlight-gold), var(--bs-premium-gold));
-  box-shadow: inset 0 1px 1px color-mix(in srgb, var(--bs-pearl-white) 35%, transparent), 0 0 20px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent);
-  color: var(--bs-color-neutral-ink);
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.bs-hq-layout .bs-hq-layout__profile {
-  width: 43px;
-  height: 43px;
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 7%, transparent);
-  border-radius: 50%;
-  color: var(--bs-soft-silver);
-  background: linear-gradient(color-mix(in srgb, var(--bs-soft-silver) 16%, var(--bs-color-neutral-ink)), color-mix(in srgb, var(--bs-soft-silver) 6%, var(--bs-color-neutral-ink)));
-}
-.bs-hq-layout__canvas {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 16%, transparent);
-  border-radius: 26px 26px 21px 21px;
-  background:
-    radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--bs-soft-silver) 4%, transparent), transparent 65%),
-    linear-gradient(115deg, var(--bs-color-neutral-graphite), var(--bs-color-neutral-charcoal));
-  box-shadow: inset 0 1px 1px color-mix(in srgb, var(--bs-pearl-white) 4%, transparent);
-  touch-action: none;
-  user-select: none;
-  cursor: grab;
-}
-.bs-hq-layout__canvas--interacting { cursor: grabbing; }
-.bs-hq-layout__canvas:focus-visible { outline: 2px solid var(--bs-premium-gold); outline-offset: -4px; }
-.bs-hq-layout__brain-entry { position: absolute; top: 18px; inset-inline-start: 18px; cursor: default; }
-.bs-hq-layout .bs-hq-layout__brain-button { display: flex; align-items: center; gap: 12px; padding: 10px 15px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 35%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--bs-color-neutral-ink) 85%, transparent); color: var(--bs-pearl-white); }
-.bs-hq-layout__brain-button > svg { color: var(--bs-premium-gold); }
-.bs-hq-layout__brain-button span { display: grid; gap: 3px; text-align: start; }
-.bs-hq-layout__brain-button strong { font-size: 13px; }
-.bs-hq-layout__brain-button small { color: var(--bs-soft-silver); font-size: 11px; }
+.bs-hq-layout .bs-hq-layout__brain-button { display: flex; align-items: center; gap: 9px; max-width: 100%; padding: 8px 11px; border: 1px solid var(--bs-color-gray-800); border-radius: 11px; background: var(--bs-color-neutral-charcoal); color: var(--bs-pearl-white); pointer-events: auto; }
+.bs-hq-layout__brain-button > svg { flex: none; color: var(--bs-premium-gold); }
+.bs-hq-layout__brain-button span { display: grid; gap: 2px; min-width: 0; text-align: start; }
+.bs-hq-layout__brain-button strong { font-size: 12px; }
+.bs-hq-layout__brain-button small { color: var(--bs-soft-silver); font-size: 10px; white-space: normal; }
 .bs-hq-layout__brain-button small[data-status="connected"] { color: var(--bs-highlight-gold); }
-.bs-hq-layout__tab:not(:disabled), .bs-hq-layout__brain-button { cursor: pointer; }
-.bs-hq-layout__tab:focus-visible, .bs-hq-layout__brain-button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
 .bs-hq-brain { display: grid; gap: var(--bs-space-4); }
-.bs-hq-brain__source { display: flex; align-items: start; justify-content: space-between; gap: var(--bs-space-4); }
-.bs-hq-brain__source { flex-wrap: wrap; font-size: 13px; line-height: 1.6; padding-bottom: var(--bs-space-4); border-bottom: 1px solid var(--bs-color-gray-800); }
+.bs-hq-brain__source { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: var(--bs-space-4); padding-bottom: var(--bs-space-4); border-bottom: 1px solid var(--bs-color-gray-800); font-size: 13px; line-height: 1.6; }
 .bs-hq-brain__source p { margin: var(--bs-space-2) 0; color: var(--bs-soft-silver); font-size: 12px; }
 .bs-hq-brain small { color: var(--bs-soft-silver); font-size: 11px; }
 .bs-hq-brain__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-5); }
@@ -294,102 +228,93 @@ const viewMarker = computed(() => ({
 .bs-hq-brain__directory input { color: var(--bs-pearl-white); background: var(--bs-color-neutral-graphite); border-color: var(--bs-color-gray-800); }
 .bs-hq-brain__directory input::placeholder { color: var(--bs-color-gray-400); }
 .bs-hq-brain__directory ul { display: grid; gap: var(--bs-space-1); padding: 0; margin: var(--bs-space-3) 0 0; list-style: none; max-height: 29dvh; overflow: auto; overscroll-behavior: contain; }
-.bs-hq-brain__directory button { display: grid; width: 100%; min-width: 0; gap: var(--bs-space-1); padding: var(--bs-space-3); text-align: start; }
+.bs-hq-brain__directory button { display: grid; width: 100%; min-width: 0; gap: var(--bs-space-1); padding: var(--bs-space-3); text-align: start; color: var(--bs-pearl-white); }
 .bs-hq-brain__directory strong { font-size: 13px; font-weight: 600; }
 .bs-hq-brain__directory small { overflow-wrap: anywhere; }
-.bs-hq-brain__directory button { color: var(--bs-pearl-white); }
 .bs-hq-brain__directory button:hover { background: var(--bs-color-neutral-graphite); }
 .bs-hq-brain__directory button[aria-pressed="true"] { background: var(--bs-color-neutral-graphite); border-inline-start: 2px solid var(--bs-premium-gold); }
 .bs-hq-brain__note { min-width: 0; padding-top: var(--bs-space-4); border-top: 1px solid var(--bs-color-gray-800); user-select: text; }
 .bs-hq-brain__note h2 { margin: 0 0 var(--bs-space-2); font-size: 18px; }
 .bs-hq-brain__note p { margin: var(--bs-space-2) 0; overflow-wrap: anywhere; }
 .bs-hq-brain__note pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; line-height: 1.8; unicode-bidi: plaintext; }
-@media (max-width: 840px) {
-  .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__workspace-info { display: none; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__view { width: 140px; padding-top: 26px; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__minimap { display: none; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
-  .bs-hq-brain__directory ul { max-height: 23dvh; }
-}
-@media (prefers-reduced-motion: reduce) { .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: none; } }
-.bs-hq-layout__footer { position: absolute; inset: auto 0 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px; pointer-events: none; }
-.bs-hq-layout__workspace-info { display: grid; min-width: 0; justify-items: start; gap: 10px; }
-.bs-hq-layout__gesture-hint { max-width: 450px; margin: 0; color: var(--bs-soft-silver); opacity: 0.7; font-size: 11px; line-height: 1.6; }
+.bs-hq-layout__footer { position: absolute; z-index: 2; inset: auto 0 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 16px; pointer-events: none; }
+.bs-hq-layout__workspace-info { display: grid; min-width: 0; justify-items: start; gap: 8px; max-width: 340px; }
+.bs-hq-layout__gesture-hint { margin: 0; color: var(--bs-soft-silver); opacity: .7; font-size: 10px; line-height: 1.6; }
 .bs-hq-layout__touch-hint { display: none; }
 .bs-hq-layout__keyboard-hint { display: block; }
-.bs-hq-layout__workspace {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 42px;
-  padding: 9px 15px;
-  border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 22%, transparent);
-  border-radius: 12px;
-  background: linear-gradient(color-mix(in srgb, var(--bs-soft-silver) 8%, var(--bs-color-neutral-ink)), var(--bs-color-neutral-ink));
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent);
-  color: var(--bs-soft-silver);
-  font-size: 14px;
-  font-weight: 550;
-}
-.bs-hq-layout__view { position: relative; flex: none; width: 218px; padding: 29px 14px 11px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 24%, transparent); border-radius: 19px; background: color-mix(in srgb, var(--bs-color-neutral-ink) 75%, transparent); box-shadow: 0 5px 20px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; cursor: default; }
-.bs-hq-layout__zoom-value { position: absolute; top: 7px; right: 17px; color: var(--bs-soft-silver); font-size: 10px; font-variant-numeric: tabular-nums; }
-.bs-hq-layout__minimap { position: relative; height: 91px; margin: 0 10px 23px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 25%, transparent); border-radius: 5px; background: color-mix(in srgb, var(--bs-color-neutral-ink) 55%, transparent); }
+.bs-hq-layout__view { position: relative; flex: none; width: 180px; height: 180px; border: 1px solid var(--bs-color-gray-800); border-radius: 50%; background: var(--bs-color-neutral-charcoal); box-shadow: 0 5px 20px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; cursor: default; }
+.bs-hq-layout__minimap { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); }
+.bs-hq-layout__zoom-value { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 1px 4px; border-radius: 4px; background: var(--bs-color-neutral-ink); color: var(--bs-soft-silver); font-size: 9px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .bs-hq-layout__minimap-view { position: absolute; top: 50%; left: 50%; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 30%, transparent); background: color-mix(in srgb, var(--bs-soft-silver) 5%, transparent); border-radius: 3px; }
-.bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 30px; height: 30px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-neutral-graphite); box-shadow: 0 0 19px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent); }
-.bs-hq-layout__zoom { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.bs-hq-layout .bs-hq-layout__zoom button { width: 100%; min-width: 0; height: 44px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 12%, transparent); border-radius: 10px; background: linear-gradient(color-mix(in srgb, var(--bs-soft-silver) 16%, var(--bs-color-neutral-ink)), color-mix(in srgb, var(--bs-soft-silver) 8%, var(--bs-color-neutral-ink))); color: var(--bs-soft-silver); }
+.bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 26px; height: 26px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-neutral-graphite); box-shadow: 0 0 14px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent); }
+.bs-hq-layout__zoom { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 36px); gap: 5px; }
+.bs-hq-layout .bs-hq-layout__zoom button { width: 36px; min-width: 0; height: 36px; padding: 0; border: 1px solid var(--bs-color-gray-800); border-radius: 10px; background: var(--bs-color-neutral-graphite); color: var(--bs-soft-silver); }
 .bs-hq-layout button:disabled { opacity: 1; cursor: default; }
 .bs-hq-layout .bs-hq-layout__zoom button:not(:disabled) { cursor: pointer; }
 .bs-hq-layout .bs-hq-layout__zoom button:not(:disabled):hover { border-color: var(--bs-premium-gold); color: var(--bs-pearl-white); }
 .bs-hq-layout .bs-hq-layout__zoom button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
-.bs-hq-layout .bs-hq-layout__zoom button:disabled { opacity: 0.4; }
+.bs-hq-layout .bs-hq-layout__zoom button:disabled { opacity: .4; }
 :global([dir="rtl"]) .bs-hq-layout { font-family: var(--bs-font-arabic); }
 :global([dir="rtl"]) .bs-hq-layout__brand h1 { letter-spacing: normal; }
 :global([dir="rtl"]) .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { flex-direction: row-reverse; }
-@media (max-width: 1279px) {
-  .bs-hq-layout__header { padding-inline: 14px 6px; gap: 16px; }
-  .bs-hq-layout__brand { gap: 12px; }
-  .bs-hq-layout__brand h1 { font-size: 22px; }
-  .bs-hq-layout__actions { gap: 10px; }
-  .bs-hq-layout__status { padding-inline: 10px; font-size: 12px; }
-  .bs-hq-layout .bs-hq-layout__tab { min-width: 77px; padding-inline: 12px; font-size: 14px; }
+@media (max-width: 1000px) {
+  .bs-hq-layout__navigation { top: 76px; }
+  .bs-hq-layout__session { inset-block-start: 140px; width: 196px; }
+  .bs-hq-layout__brain-panel { inset-block-start: 132px; }
 }
-@media (max-width: 1023px) {
-  .bs-hq-layout__header { grid-template-columns: 1fr auto; padding-block: 10px; gap: 10px 16px; }
-  .bs-hq-layout__navigation { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
-  .bs-hq-layout__status { display: none; }
+@media (max-width: 840px) {
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__workspace-info { display: none; }
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__view { width: 140px; height: 64px; border-radius: 999px; }
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__minimap { display: none; }
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__zoom { bottom: 13px; }
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
+  .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
+  .bs-hq-brain__directory ul { max-height: 23dvh; }
 }
 @media (max-width: 520px) {
-  .bs-hq-layout { padding: 0 5px 5px; border-radius: 19px; }
-  .bs-hq-layout__header { padding-inline: 7px; gap: 10px; }
-  .bs-hq-layout__brand { gap: 9px; }
-  .bs-hq-layout__brand img { width: 28px; height: 40px; }
-  .bs-hq-layout__brand h1 { font-size: 17px; letter-spacing: -.5px; }
-  .bs-hq-layout__actions { gap: 7px; }
-  .bs-hq-layout .bs-hq-layout__ceo { max-width: 128px; padding-inline: 10px; font-size: 11px; gap: 5px; min-height: 35px; white-space: normal; line-height: 1.25; }
-  .bs-hq-layout .bs-hq-layout__ceo svg { width: 16px; }
-  .bs-hq-layout .bs-hq-layout__profile { width: 34px; height: 34px; }
-  .bs-hq-layout .bs-hq-layout__profile svg { width: 22px; }
-  .bs-hq-layout__canvas { border-radius: 19px 19px 15px 15px; }
+  .bs-hq-layout { padding: 5px; }
+  .bs-hq-layout__canvas { border-radius: 17px; }
+  .bs-hq-layout__brand { inset-block-start: 12px; inset-inline-start: 12px; gap: 8px; max-width: calc(100% - 24px); }
+  .bs-hq-layout__brand img { width: 27px; height: 36px; }
+  .bs-hq-layout__brand h1 { font-size: 18px; }
+  .bs-hq-layout__navigation { top: 64px; width: calc(100% - 24px); max-width: 360px; padding: 3px; }
+  .bs-hq-layout .bs-hq-layout__tab { flex: 1; padding: 7px 6px; font-size: 11px; }
+  .bs-hq-layout__session { inset-block-start: 122px; inset-inline-start: 12px; width: 172px; padding: 8px; gap: 6px; border-radius: 13px; }
+  .bs-hq-layout__status { font-size: 10px; }
+  .bs-hq-layout .bs-hq-layout__ceo, .bs-hq-layout .bs-hq-layout__login { font-size: 11px; }
+  .bs-hq-layout__brain-panel { inset-block-start: 116px; }
   .bs-hq-layout__footer { padding: 12px; gap: 10px; }
-  .bs-hq-layout__workspace { padding-inline: 10px; font-size: 12px; gap: 6px; }
-  .bs-hq-layout__workspace-info { max-width: 165px; gap: 8px; }
-  .bs-hq-layout__gesture-hint { font-size: 10px; }
+  .bs-hq-layout__workspace-info { max-width: 160px; }
+  .bs-hq-layout__gesture-hint { font-size: 9px; }
   .bs-hq-layout__keyboard-hint { display: none; }
-  .bs-hq-layout__view { width: 164px; padding: 27px 9px 9px; border-radius: 13px; }
-  .bs-hq-layout__minimap { height: 60px; margin: 0 4px 13px; }
-  .bs-hq-layout__zoom { gap: 5px; }
-  .bs-hq-layout .bs-hq-layout__zoom button { border-radius: 7px; }
+  .bs-hq-layout__view { width: 156px; height: 156px; }
+  .bs-hq-layout__minimap { top: 10px; width: 74px; height: 74px; }
+  .bs-hq-layout__zoom { bottom: 24px; grid-template-columns: repeat(3, 32px); gap: 4px; }
+  .bs-hq-layout .bs-hq-layout__zoom button { width: 32px; height: 32px; border-radius: 9px; }
+  .bs-hq-layout__workspace-area--brain .bs-hq-layout__zoom { bottom: 15px; }
 }
 @media (max-width: 374px) {
-  .bs-hq-layout .bs-hq-layout__ceo { display: none; }
-  .bs-hq-layout__workspace-info { max-width: 110px; }
-  .bs-hq-layout__footer { padding: 10px; }
+  .bs-hq-layout__workspace-info { max-width: 120px; }
+  .bs-hq-layout__gesture-hint { display: none; }
+  .bs-hq-layout__view { width: 144px; height: 144px; }
+  .bs-hq-layout__minimap { top: 8px; width: 68px; height: 68px; }
+  .bs-hq-layout__zoom { bottom: 20px; }
+}
+@media (max-height: 500px) and (min-width: 521px) {
+  .bs-hq-layout__brand { inset-block-start: 12px; }
+  .bs-hq-layout__navigation { top: 12px; }
+  .bs-hq-layout__brand h1 { font-size: 16px; }
+  .bs-hq-layout__session { inset-block-start: 72px; width: 180px; }
+  .bs-hq-layout__brain-panel { inset-block-start: 72px; }
+  .bs-hq-layout__gesture-hint { display: none; }
+}
+@media (max-height: 500px) and (min-width: 521px) and (max-width: 760px) {
+  .bs-hq-layout__brand h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 @media (pointer: coarse) {
   .bs-hq-layout__mouse-hint { display: none; }
   .bs-hq-layout__touch-hint { display: inline; }
   .bs-hq-layout__keyboard-hint { display: none; }
 }
+@media (prefers-reduced-motion: reduce) { .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: none; } }
 </style>

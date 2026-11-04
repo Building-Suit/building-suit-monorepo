@@ -5,14 +5,21 @@ type Vector = [number, number, number]
 type Matrix = Float32Array
 const SCENE_FAR = 150
 const BASE_RADIUS_SCALE = 1.12
+const FLOOR_BASE_RADIUS = 4.8
+// One six-unit radial band per future office layer; current HQ has zero.
+const OFFICE_LAYER_RADIAL_SPACING = 6
+// Bounds world scale and keeps the floor mesh fixed-size. Projection depth
+// expands with its diameter; gesture and camera movement limits stay separate.
+const MAX_OFFICE_LAYER_COUNT = 64
 interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
 
 export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
 export interface HologramInteraction { open: number; excited: number; opened?: boolean }
+export interface HologramLayout { officeLayerCount?: number }
 export interface HologramRenderer {
-  draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>) => void
+  draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>, layout?: Readonly<HologramLayout>) => void
   hitTestOrb: (clientX: number, clientY: number) => boolean
   dispose: () => void
 }
@@ -97,8 +104,8 @@ function lookAt(eye: Vector, target: Vector): Matrix {
   const x = normalize(cross([0, 1, 0], z)), y = cross(z, x)
   return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1])
 }
-function perspective(aspect: number): Matrix {
-  const f = 1 / Math.tan(Math.PI / 8), near = 0.05, far = SCENE_FAR
+function perspective(aspect: number, far = SCENE_FAR): Matrix {
+  const f = 1 / Math.tan(Math.PI / 8), near = 0.05
   return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) / (near - far), -1, 0, 0, 2 * far * near / (near - far), 0])
 }
 
@@ -137,12 +144,29 @@ function cylinder(bottomRadius: number, topRadius: number, bottom: number, top: 
   }
   return geometry
 }
-function groundPlane(): Geometry {
-  const y = SPATIAL_VIEWPORT_GROUND_Y
-  return {
-    positions: [-1, y, -1, -1, y, 1, 1, y, -1, 1, y, -1, -1, y, 1, 1, y, 1],
-    normals: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+function groundDisc(): Geometry {
+  const geometry: Geometry = { positions: [], normals: [] }
+  const y = SPATIAL_VIEWPORT_GROUND_Y, segments = 160
+  for (let index = 0; index < segments; index++) {
+    const angle = index / segments * Math.PI * 2, next = (index + 1) / segments * Math.PI * 2
+    geometry.positions.push(0, y, 0, Math.cos(next), y, Math.sin(next), Math.cos(angle), y, Math.sin(angle))
+    for (let vertex = 0; vertex < 3; vertex++) geometry.normals.push(0, 1, 0)
   }
+  return geometry
+}
+function groundEdge(): Geometry {
+  return parametric(160, 1, (u, v) => {
+    const angle = u * Math.PI * 2
+    return [Math.cos(angle), SPATIAL_VIEWPORT_GROUND_Y - v * 0.10, Math.sin(angle)]
+  }, u => [Math.cos(u * Math.PI * 2), 0, Math.sin(u * Math.PI * 2)])
+}
+function officeLayerCount(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.min(MAX_OFFICE_LAYER_COUNT, Math.floor(value))) : 0
+}
+/** Finite HQ radius: 4.8 units plus one six-unit band per clamped office layer. */
+export function hologramFloorRadius(layers?: number): number {
+  return FLOOR_BASE_RADIUS + officeLayerCount(layers) * OFFICE_LAYER_RADIAL_SPACING
 }
 function merge(...parts: Geometry[]): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
@@ -362,7 +386,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
     const plates = shieldFractures().map(plate => ({ ...plate, body: mesh(plate.body), seam: mesh(plate.seam), transform: identity() }))
     const geometry = {
-      ground: mesh(groundPlane()),
+      ground: mesh(groundDisc()),
+      groundEdge: mesh(groundEdge()),
       base: mesh(cylinder(1.53 * BASE_RADIUS_SCALE, 1.53 * BASE_RADIUS_SCALE, -0.65, -0.47)),
       bevel: mesh(cylinder(1.53 * BASE_RADIUS_SCALE, 1.39 * BASE_RADIUS_SCALE, -0.47, -0.39)),
       deck: mesh(cylinder(1.32 * BASE_RADIUS_SCALE, 1.32 * BASE_RADIUS_SCALE, -0.39, -0.31)),
@@ -384,7 +409,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     let orbProjection: OrbProjection | null = null
     const staticModel = identity(), brainModel = identity(), auraFirst = identity(), auraSecond = identity(), groundModel = identity()
     const outerRingModel = model(0, -0.48), innerRingModel = model(0, -0.30), emitterRingModel = model(0, -0.145)
-    let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0
+    let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0, lastOfficeLayerCount = -1
     gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     function drawMesh(shape: Mesh, color: Vector, material: number, opacity = 1, transform = staticModel, singleSided = false) {
       if (!gl) return
@@ -399,10 +424,19 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl.drawElements(gl.TRIANGLES, shape.count, gl.UNSIGNED_SHORT, 0)
     }
     return {
-      draw(camera, seconds, interaction: Readonly<HologramInteraction> = { open: 0, excited: 0 }) {
+      draw(camera, seconds, interaction: Readonly<HologramInteraction> = { open: 0, excited: 0 }, layout: Readonly<HologramLayout> = {}) {
         if (disposed || !gl || gl.isContextLost()) return
         const width = canvas.clientWidth, height = canvas.clientHeight
         if (!width || !height) return
+        const layers = officeLayerCount(layout.officeLayerCount)
+        const floorRadius = hologramFloorRadius(layers)
+        const layoutChanged = layers !== lastOfficeLayerCount
+        if (layoutChanged) {
+          // Scale only X/Z: the finite disk remains anchored at the origin and
+          // keeps its shared ground height regardless of camera pan or size.
+          groundModel[0] = floorRadius; groundModel[10] = floorRadius
+          lastOfficeLayerCount = layers
+        }
         const open = Math.max(0, Math.min(1, interaction.open))
         // Explicit opened state suppresses excitement immediately, before the
         // opening transition advances; closing fragments stay quiet as well.
@@ -419,7 +453,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           gl.viewport(0, 0, renderWidth, renderHeight)
         }
         gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-        if (width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
+        if (layoutChanged || width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
           || camera.zoom !== lastCamera[2] || camera.panX !== lastCamera[3] || camera.panY !== lastCamera[4]) {
           const pitch = Math.max(SPATIAL_VIEWPORT_MIN_PITCH, Math.min(Math.PI / 2 - SPATIAL_VIEWPORT_MIN_PITCH, camera.pitch))
           const right: Vector = [Math.cos(camera.yaw), 0, -Math.sin(camera.yaw)]
@@ -427,12 +461,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           const target: Vector = [right[0] * camera.panX + up[0] * camera.panY, Math.max(SPATIAL_VIEWPORT_MIN_TARGET_Y, SPATIAL_VIEWPORT_TARGET_Y + up[1] * camera.panY), right[2] * camera.panX + up[2] * camera.panY]
           const distance = 8.5 * Math.max(1, 0.76 / (width / height)) / camera.zoom
           const eye: Vector = [target[0] + Math.sin(camera.yaw) * Math.cos(pitch) * distance, target[1] + Math.sin(pitch) * distance, target[2] + Math.cos(camera.yaw) * Math.cos(pitch) * distance]
-          // A two-triangle world plane spans every visible ground point even
-          // after long pans. Only X/Z translate; its world height stays fixed.
-          const groundExtent = distance + SCENE_FAR + 8
-          groundModel[0] = groundExtent; groundModel[10] = groundExtent
-          groundModel[12] = target[0]; groundModel[14] = target[2]
-          gl.uniformMatrix4fv(uniforms.uProjection!, false, perspective(width / height))
+          const far = Math.max(SCENE_FAR, floorRadius * 2 + distance)
+          gl.uniformMatrix4fv(uniforms.uProjection!, false, perspective(width / height, far))
           gl.uniformMatrix4fv(uniforms.uView!, false, lookAt(eye, target)); gl.uniform3fv(uniforms.uEye!, eye)
           orbProjection = {
             eye, right, up, forward: normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]),
@@ -450,6 +480,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           orbProjection.radius = (0.84 - reveal * 0.14) * beat
         }
         drawMesh(geometry.ground, palette.coal, 6, 1, groundModel, true)
+        drawMesh(geometry.groundEdge, palette.graphite, 0, 1, groundModel, true)
         drawMesh(geometry.base, palette.charcoal, 0)
         drawMesh(geometry.bevel, palette.graphite, 0)
         drawMesh(geometry.deck, palette.charcoal, 0)

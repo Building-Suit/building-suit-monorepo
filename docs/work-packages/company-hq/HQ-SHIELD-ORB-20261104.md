@@ -1,6 +1,6 @@
 # HQ shield orb — 4 November 2026
 
-Status: latest source replaces the navy/blue wash with canonical coal/charcoal/graphite plus restrained Premium Gold and corrects map navigation to left-drag rotation/middle-drag panning. The smoother curves, wider base, HQ ground/camera bounds and sidebar manual-zoom lock remain. Founder feedback on earlier refinements was directional; final visual/control/performance acceptance remains pending. Visual, gesture, performance and freshness acceptance remain deferred under the standing no-autonomous-testing instruction. The explicitly requested server restart and bounded cloud connection retry succeeded.
+Status: latest source removes the reserved top header for compact floating logo/navigation/status-account overlays, rounds the overview and replaces the spanning ground with a finite round platform that grows from office-layer count. Canonical coal/charcoal/graphite plus restrained Premium Gold and left-drag rotation/middle-drag panning remain. The smoother curves, wider base, HQ ground/camera bounds and sidebar manual-zoom lock remain. Founder feedback on earlier refinements was directional; final visual/control/performance acceptance remains pending. Visual, gesture, performance and freshness acceptance remain deferred under the standing no-autonomous-testing instruction. The explicitly requested server restart and bounded cloud connection retry succeeded.
 
 The founder requested a simple shield orb using the Building Suit design system and palette, with a subtle beat, hover/touch-hold vibration, scatter-open shield pieces, a transparent inner orb containing a brain with moving/pulsing nerves, camera focus and a Brain details side panel. Every Brain entry point must trigger the same sequence. Preserve the original design for reversal. This request does not resume offices, characters, staff/model execution, the CEO proposal board or hosted database work.
 
@@ -16,12 +16,12 @@ The founder requested a simple shield orb using the Building Suit design system 
 
 The founder’s latest correction supersedes the earlier six matching strips and push-aside panel. They explicitly requested randomized shapes, the earlier larger base/aura/motion, no opened vibration, working zoom, reduced lag and the locale-aware overlay. No runtime, browser or benchmark check was added for this refinement.
 
-## Latest floor, curves and controls
+## Floor, curves and controls foundation (prior pass)
 
 The prior foundation pass addressed pixelated circles/lines, a slightly bigger base, a real HQ floor and a camera that cannot look below it, plus inactive right click. Its left/middle rotation equivalence was superseded by the explicit mapping confirmed below. The explicit no-underside goal resolves the contradictory “can go under” wording as an above-floor constraint. This is foundation work only; linking/designing offices remains next.
 
 - Base/ring radii are 12% wider. Base-ring meshes use 128 circumference segments with 8 tube sides; aura rings use 96×6, cylinders use 96 around, neural tubes use 6 sides with denser 28-step Bézier paths, and glass/seam contours are selectively denser. Indexed meshes, caches and bounded high-resolution backing remain. Normal-density screens target 1.5× supersampling; the 8m/DPR3/4096/GPU bounds still apply. These are source configuration changes, not a smoothness measurement.
-- An opaque, depth-writing two-triangle world plane sits at `SPATIAL_VIEWPORT_GROUND_Y = -0.69`, below the base bottom at -0.65. Its X/Z center follows the camera target, with extent based on camera distance and far clip, so panning stays over the ground without a large tiled mesh.
+- The prior opaque, depth-writing two-triangle world plane sat at `SPATIAL_VIEWPORT_GROUND_Y = -0.69`, below the base bottom at -0.65. Its X/Z center followed the camera target. This spanning geometry is superseded by the finite platform below.
 - Shared UX exports the same ground, minimum pitch (0.08), baseline target height (0.42) and minimum target height (ground +0.10) used defensively by the renderer. Orbit, pan, zoom and every camera-tween frame constrain pitch and target height; this prevents panning the target below ground as well as rotating below the horizon.
 - Left drag rotates; middle drag pans across the map with no modifier, with Shift + left drag retained as an alternative. A stationary primary orb click/tap activates it; middle click is navigation only. Right click/drag never activates or captures the camera. Context-menu/autoscroll defaults are suppressed on the workspace. Touch rotation/pan and keyboard movement remain.
 - A shared zoom policy blocks every manual zoom path while the sidebar is open or still sliding out, with disabled +/− controls. This latest rule supersedes earlier zoom-while-open wording.
@@ -37,6 +37,18 @@ Shared UI now reads canonical Ink, Charcoal, Graphite, neutral Steel Gray, Soft 
 The shared pointer controller reserves middle drag for map panning and primary drag for rotation. Primary click/tap opens the orb; middle click cannot accidentally open it. Right click stays inactive. English/Arabic gesture hints and the shared catalogue follow this mapping. Touch controls, keyboard controls, high-resolution limits, floor bounds, closed-only vibration, overlay direction and sidebar manual-zoom lock remain.
 
 These are source changes in the primary checkout. No app tests, builds, lint/typechecks, boundary/release, browser/API/runtime or benchmark checks were run. Visual and gesture acceptance remains with the founder/tester agents; Git/PR topology observations are administrative evidence only.
+
+## Floating controls and finite platform
+
+The founder requested removal of the top header, absolute logo at top-left, compact centered Workspace/Tasks/Calendar/Brain tabs, a compact left indicator/CEO/account card, a smaller round minimap and a finite circular floor that expands with office layers.
+
+The shared template now fills the viewport with the workspace and positions its controls over the scene. The logo sits at logical start and the status/CEO/account card below it; these mirror for RTL. Navigation stays centered in its own compact charcoal background, stepping down below the logo on narrow layouts. The circular overview is 180px on desktop and 156/144px on narrow screens; its open-panel narrow state becomes a small control capsule so reset remains accessible. Company Brain connection status/open action moves to bottom-left. The read-only Brain overlay still slides over the workspace below the top controls, without layout resize; closed-only vibration, above-floor bounds, all Brain entry actions and sidebar zoom lock remain.
+
+`HqLayoutContent` adds translated Calendar and Login labels. Optional `HqUserPresentation` supplies name, detail and avatar URL; initials are the fallback. The current app supplies no user session and shows disabled Login, truthful no-agent status, and disabled CEO/Tasks/Calendar controls. This is presentation only, not authentication, scheduling or agent activation.
+
+`officeLayerCount` is an optional template/scene numeric input, defaulting to zero. The pure `hologramFloorRadius` helper gives `4.8 + 6 × layers` world units, with integer layers normalized to 0–64 and invalid/nonfinite/negative input treated as zero. A 160-segment disk remains anchored at the world origin at Y −0.69; a graphite edge extends 0.10 below it. X/Z scale and minimap scale share the radius; mesh size stays fixed. Projection far depth grows with floor diameter and camera distance. The current app has no office layers; future office orchestration must provide the real count and reconcile larger footprints with the radial spacing. No offices/roads are generated here.
+
+All edits stay in the primary checkout. No app tests, builds, lint/typechecks, boundary/release checks, browser/API/runtime checks, benchmark or tester/reviewer agents ran. Layout, gestures and performance remain unverified under the standing no-autonomous-testing instruction. Git/PR observations are administrative only.
 
 ## Original design backup
 

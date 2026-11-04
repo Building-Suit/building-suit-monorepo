@@ -2,9 +2,9 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import { createHologramRenderer } from '../utils/hologramScene'
-import type { HologramPalette, HologramRenderer } from '../utils/hologramScene'
+import type { HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
 
-const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean }>(), { opened: false })
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number }>(), { opened: false, officeLayerCount: 0 })
 const emit = defineEmits<{ activate: [] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
@@ -15,6 +15,7 @@ let motion: MediaQueryList | null = null
 let frame = 0, visible = true, elapsed = 0, lastFrame = 0, disposed = false
 let lastPaint = 0, needsDraw = true
 let openAmount = props.opened ? 1 : 0, excitedAmount = 0, excitedTarget = 0
+const sceneLayout: HologramLayout = { officeLayerCount: props.officeLayerCount }
 
 function activateAt(clientX: number, clientY: number) {
   if (disposed || unavailable.value || !visible || !renderer?.hitTestOrb(clientX, clientY)) return false
@@ -55,7 +56,7 @@ function draw(time: number) {
   openAmount = reduced ? openTarget : openAmount + (openTarget - openAmount) * (1 - Math.exp(-delta * 7))
   if (props.opened || openAmount > 0.001) { excitedTarget = 0; excitedAmount = 0 }
   else excitedAmount = reduced ? 0 : excitedAmount + (excitedTarget - excitedAmount) * (1 - Math.exp(-delta * 12))
-  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount, opened: props.opened })
+  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount, opened: props.opened }, sceneLayout)
   if (!motion?.matches) requestDraw(false)
 }
 function updateVisibility() {
@@ -101,6 +102,10 @@ watch(() => props.resetVersion, () => {
 })
 watch(() => props.opened, () => {
   excitedTarget = 0; excitedAmount = 0
+  if (typeof window !== 'undefined') requestDraw()
+}, { flush: 'sync' })
+watch(() => props.officeLayerCount, count => {
+  sceneLayout.officeLayerCount = count
   if (typeof window !== 'undefined') requestDraw()
 }, { flush: 'sync' })
 onMounted(() => {

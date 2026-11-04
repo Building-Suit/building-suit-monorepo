@@ -5,10 +5,12 @@ export interface HqLayoutContent {
   logoSrc: string
   workspaceLabel: string
   tasksLabel: string
+  calendarLabel: string
   brainLabel: string
   statusLabel: string
   talkToCeoLabel: string
   profileLabel: string
+  loginLabel: string
   canvasLabel: string
   minimapLabel: string
   zoomOutLabel: string
@@ -66,4 +68,11 @@ export interface HqBrainPresentation {
   selectedId: string | null
   noteStatus: 'idle' | 'loading' | 'ready' | 'error'
   note: (HqBrainNoteSummary & { content: string }) | null
+}
+
+/** Optional identity projection only; the product owns authentication. */
+export interface HqUserPresentation {
+  displayName: string
+  detailLabel?: string
+  avatarUrl?: string
 }

@@ -5,9 +5,11 @@
   "hq": {
     "workspaceLabel": "Workspace",
     "tasksLabel": "Tasks",
+    "calendarLabel": "Calendar",
     "brainLabel": "Brain",
     "statusLabel": "No agents connected",
     "talkToCeoLabel": "Talk to CEO",
+    "loginLabel": "Login",
     "profileLabel": "Profile",
     "canvasLabel": "Interactive 3D workspace",
     "minimapLabel": "Workspace overview",

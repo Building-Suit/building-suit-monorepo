@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-PALETTE-PAN-20261104",
+    "task": "HQ-FLOATING-LAYOUT-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5265,7 +5265,7 @@
       "packages/ui/src/utils/hologramScene.ts",
       "packages/ux/src/composables/useSpatialViewport.ts"
     ],
-    "reason": "Maintain the internal reference-header 3D workspace with varied seeded spherical shield fragments, a restored broad base and moving aura, subtle beat and closed-only hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal and camera focus. The nonmodal read-only panel slides over the unchanged workspace from the left for LTR or right for RTL, with every manual zoom path locked while open; closing restores the prior camera and reset restores closed/default state. Indexed/lower-resolution meshes, cached matrices and idle paint limits reduce source rendering work; consistent native-density high-resolution backing restores sharpness within an 8m/DPR3/4096-and-hardware limit. Memoized panel content, incremental 40-note mounting and cached date formatting avoid rebuilding the entire directory during camera/status changes. Denser indexed circles/lines and a bounded 1.5x minimum supersampling target address remaining rough edges. Enlarge the base by 12%, add opaque world-space ground and shared pitch/target constraints so camera controls stay above the floor. Confirmed controls: left drag rotates, middle drag pans across the map without a modifier, Shift + left drag also pans, primary click/tap activates the orb and right click is inactive. Replace the navy/blue wash across HQ chrome, workspace, floor, shields and base with canonical Ink, Charcoal and Graphite; neutral metallic/glass details and restrained Premium Gold seams, emitter, aura, neural pulses and key control accents share existing tokens. Offices remain the next phase. Preserve the original design in Git. Keep private bounded verified-root Google Drive reads and visible/online polling, without filesystem fallback. Earlier founder-requested restart/retry verified a complete 330-note index and one note read; the founder gave positive directional feedback and requested higher resolution; latest visual, gesture, performance and freshness acceptance remain deferred, with no new runtime checks or performance measurements. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending.",
+    "reason": "Maintain the internal full-height 3D workspace with compact floating logo, centered Workspace/Tasks/Calendar/Brain navigation, one left status/CEO/account card, display-only optional user/avatar projection and disabled Login fallback, plus a smaller circular overview with varied seeded spherical shield fragments, a restored broad base and moving aura, subtle beat and closed-only hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal and camera focus. The nonmodal read-only panel slides over the unchanged workspace from the left for LTR or right for RTL, with every manual zoom path locked while open; closing restores the prior camera and reset restores closed/default state. Indexed/lower-resolution meshes, cached matrices and idle paint limits reduce source rendering work; consistent native-density high-resolution backing restores sharpness within an 8m/DPR3/4096-and-hardware limit. Memoized panel content, incremental 40-note mounting and cached date formatting avoid rebuilding the entire directory during camera/status changes. Denser indexed circles/lines and a bounded 1.5x minimum supersampling target address remaining rough edges. Enlarge the base by 12%, use a finite world-centered circular ground disk with a shallow edge and shared pitch/target constraints so camera controls stay above the floor. Optional officeLayerCount (current zero) scales its radius and the minimap consistently via the shared 4.8 + 6 × layers rule, integer 0–64; projection depth expands without adding office meshes. Tasks, Calendar, Login and CEO stay disabled; no authentication, scheduling or active-agent claim. Confirmed controls: left drag rotates, middle drag pans across the map without a modifier, Shift + left drag also pans, primary click/tap activates the orb and right click is inactive. Replace the navy/blue wash across HQ chrome, workspace, floor, shields and base with canonical Ink, Charcoal and Graphite; neutral metallic/glass details and restrained Premium Gold seams, emitter, aura, neural pulses and key control accents share existing tokens. Offices remain the next phase. Preserve the original design in Git. Keep private bounded verified-root Google Drive reads and visible/online polling, without filesystem fallback. Earlier founder-requested restart/retry verified a complete 330-note index and one note read; the founder gave positive directional feedback and requested higher resolution; latest visual, gesture, performance and freshness acceptance remain deferred, with no new runtime checks or performance measurements. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5276,7 +5276,8 @@
       "hq-orb-refinement-20261104",
       "hq-orb-hires-20261104",
       "hq-floor-controls-20261104",
-      "hq-palette-pan-20261104"
+      "hq-palette-pan-20261104",
+      "hq-floating-layout-20261104"
     ],
     "evidence": [
       {
@@ -5321,7 +5322,7 @@
       },
       {
         "path": "packages/ui/src/utils/hologramScene.ts",
-        "contains": "function groundPlane(): Geometry"
+        "contains": "function groundDisc(): Geometry"
       },
       {
         "path": "packages/ui/src/organisms/BsHologramScene.vue",
@@ -5330,6 +5331,18 @@
       {
         "path": "packages/ux/src/composables/useSpatialViewport.ts",
         "contains": "pan: (event.pointerType !== 'touch' && event.button === 1) || event.shiftKey"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "export function hologramFloorRadius(layers?: number): number"
+      },
+      {
+        "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+        "contains": "class=\"bs-hq-layout__session\""
+      },
+      {
+        "path": "apps/company-hq/app/pages/index.vue",
+        "contains": "calendarLabel: t('hq.calendarLabel')"
       }
     ]
   }

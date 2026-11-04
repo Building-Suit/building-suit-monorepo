@@ -5,9 +5,11 @@
   "hq": {
     "workspaceLabel": "مساحة العمل",
     "tasksLabel": "المهام",
+    "calendarLabel": "التقويم",
     "brainLabel": "المعرفة",
     "statusLabel": "لا يوجد وكلاء متصلون",
     "talkToCeoLabel": "تحدث مع المدير التنفيذي",
+    "loginLabel": "تسجيل الدخول",
     "profileLabel": "الملف الشخصي",
     "canvasLabel": "مساحة عمل ثلاثية الأبعاد تفاعلية",
     "minimapLabel": "نظرة عامة على مساحة العمل",
