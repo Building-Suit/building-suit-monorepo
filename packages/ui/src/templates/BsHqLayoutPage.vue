@@ -10,6 +10,7 @@ const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string] }>()
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
 const brainVisible = ref(false)
 const brainPanelPresent = ref(false)
+const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
 const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value })
 const panelTitleRef = shallowRef<HTMLElement | null>(null)
@@ -79,8 +80,8 @@ const viewMarker = computed(() => ({
 <template>
   <div class="bs-hq-layout">
     <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }" @keydown="onWorkspaceKeydown">
-    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
-      <BsHologramScene ref="sceneRef" :camera="camera" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
+    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting, 'bs-hq-layout__canvas--orb-hovered': orbHovered }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
+      <BsHologramScene ref="sceneRef" :camera="camera" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" @hover-change="orbHovered = $event" />
       <div class="bs-hq-layout__brand" data-spatial-controls>
         <img :src="content.logoSrc" alt="" width="32" height="44">
         <h1>{{ content.brandName }} <span>{{ content.brandSuffix }}</span></h1>
@@ -89,7 +90,7 @@ const viewMarker = computed(() => ({
         <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible }" :aria-current="!brainVisible ? 'page' : undefined" @click="closeBrain()">{{ content.workspaceLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.tasksLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.calendarLabel }}</BsButton>
-        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-label="brainCopy.openLabel" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
       </nav>
       <aside class="bs-hq-layout__session" data-spatial-controls>
         <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
@@ -102,7 +103,6 @@ const viewMarker = computed(() => ({
       </aside>
       <div class="bs-hq-layout__footer" dir="ltr">
         <div class="bs-hq-layout__workspace-info" dir="auto">
-          <BsButton variant="text" class="bs-hq-layout__brain-button" :aria-controls="brainPanelId" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="18" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
           <p :id="hintId" class="bs-hq-layout__gesture-hint"><span class="bs-hq-layout__mouse-hint">{{ content.mouseControlsLabel }}</span><span class="bs-hq-layout__touch-hint">{{ content.touchControlsLabel }}</span><span class="bs-hq-layout__keyboard-hint">{{ content.keyboardControlsLabel }}</span></p>
         </div>
         <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
@@ -182,6 +182,7 @@ const viewMarker = computed(() => ({
   user-select: none;
   cursor: grab;
 }
+.bs-hq-layout__canvas--orb-hovered { cursor: pointer; }
 .bs-hq-layout__canvas--interacting { cursor: grabbing; }
 .bs-hq-layout__canvas:focus-visible { outline: 2px solid var(--bs-premium-gold); outline-offset: -4px; }
 .bs-hq-layout__brand { position: absolute; z-index: 2; inset-block-start: 18px; inset-inline-start: 20px; display: flex; align-items: center; gap: 11px; max-width: calc(50% - 28px); cursor: default; }
@@ -191,7 +192,7 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__navigation { position: absolute; z-index: 2; top: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; width: max-content; max-width: calc(100% - 32px); padding: 4px; border: 1px solid var(--bs-color-gray-800); border-radius: 15px; background: var(--bs-color-neutral-charcoal); cursor: default; }
 .bs-hq-layout .bs-hq-layout__tab { min-width: 0; min-height: 38px; padding: 8px 14px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--bs-soft-silver); font-size: 13px; font-weight: 500; line-height: 20px; white-space: nowrap; }
 .bs-hq-layout .bs-hq-layout__tab--selected { border-color: color-mix(in srgb, var(--bs-premium-gold) 35%, transparent); background: var(--bs-color-neutral-graphite); color: var(--bs-pearl-white); font-weight: 650; }
-.bs-hq-layout__session { position: absolute; z-index: 2; inset-block-start: 82px; inset-inline-start: 20px; display: grid; gap: 7px; width: 204px; padding: 11px; border: 1px solid var(--bs-color-gray-800); border-radius: 16px; background: var(--bs-color-neutral-charcoal); box-shadow: 0 4px 16px color-mix(in srgb, var(--bs-color-neutral-ink) 20%, transparent); cursor: default; }
+.bs-hq-layout__session { position: absolute; z-index: 2; inset-block-start: 18px; inset-inline-end: 20px; display: grid; gap: 7px; width: 204px; padding: 11px; border: 1px solid var(--bs-color-gray-800); border-radius: 16px; background: var(--bs-color-neutral-charcoal); box-shadow: 0 4px 16px color-mix(in srgb, var(--bs-color-neutral-ink) 20%, transparent); cursor: default; }
 .bs-hq-layout__status { display: flex; align-items: center; gap: 7px; min-height: 20px; color: var(--bs-soft-silver); font-size: 11px; line-height: 1.5; }
 .bs-hq-layout__status > span { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--bs-color-neutral-steel-gray); }
 .bs-hq-layout .bs-hq-layout__ceo { display: inline-flex; justify-content: center; gap: 7px; width: 100%; min-height: 34px; padding: 7px 9px; border: 1px solid var(--bs-premium-gold); border-radius: 9px; background: var(--bs-premium-gold); color: var(--bs-color-neutral-ink); font-size: 12px; font-weight: 650; line-height: 1.5; white-space: normal; }
@@ -202,8 +203,8 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
 .bs-hq-layout__identity small { color: var(--bs-color-gray-400); font-size: 10px; overflow-wrap: anywhere; }
 .bs-hq-layout .bs-hq-layout__login { display: flex; justify-content: center; gap: 7px; width: 100%; min-height: 32px; padding: 5px 8px; border: 1px solid var(--bs-color-gray-800); border-radius: 9px; background: var(--bs-color-neutral-graphite); color: var(--bs-soft-silver); font-size: 12px; }
-.bs-hq-layout__tab:not(:disabled), .bs-hq-layout__brain-button { cursor: pointer; }
-.bs-hq-layout__tab:focus-visible, .bs-hq-layout__brain-button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
+.bs-hq-layout__tab:not(:disabled) { cursor: pointer; }
+.bs-hq-layout__tab:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
 .bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); position: absolute; z-index: 3; inset-block: 80px var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(420px, calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); border: 1px solid var(--bs-color-gray-800); border-radius: var(--bs-radius-modal); color: var(--bs-pearl-white); background: var(--bs-color-neutral-charcoal); box-shadow: var(--bs-shadow-elevation3-dark); user-select: text; }
 :global([dir="rtl"]) .bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(100% + var(--bs-space-3)); }
 .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease; will-change: transform; }
@@ -213,12 +214,6 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__brain-heading h2:focus { outline: none; }
 .bs-hq-layout__brain-heading button { flex: none; color: var(--bs-soft-silver); }
 .bs-hq-layout__brain-panel button:focus-visible, .bs-hq-layout__brain-panel input:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
-.bs-hq-layout .bs-hq-layout__brain-button { display: flex; align-items: center; gap: 9px; max-width: 100%; padding: 8px 11px; border: 1px solid var(--bs-color-gray-800); border-radius: 11px; background: var(--bs-color-neutral-charcoal); color: var(--bs-pearl-white); pointer-events: auto; }
-.bs-hq-layout__brain-button > svg { flex: none; color: var(--bs-premium-gold); }
-.bs-hq-layout__brain-button span { display: grid; gap: 2px; min-width: 0; text-align: start; }
-.bs-hq-layout__brain-button strong { font-size: 12px; }
-.bs-hq-layout__brain-button small { color: var(--bs-soft-silver); font-size: 10px; white-space: normal; }
-.bs-hq-layout__brain-button small[data-status="connected"] { color: var(--bs-highlight-gold); }
 .bs-hq-brain { display: grid; gap: var(--bs-space-4); }
 .bs-hq-brain__source { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: var(--bs-space-4); padding-bottom: var(--bs-space-4); border-bottom: 1px solid var(--bs-color-gray-800); font-size: 13px; line-height: 1.6; }
 .bs-hq-brain__source p { margin: var(--bs-space-2) 0; color: var(--bs-soft-silver); font-size: 12px; }
@@ -242,16 +237,16 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__gesture-hint { margin: 0; color: var(--bs-soft-silver); opacity: .7; font-size: 10px; line-height: 1.6; }
 .bs-hq-layout__touch-hint { display: none; }
 .bs-hq-layout__keyboard-hint { display: block; }
-.bs-hq-layout__view { position: relative; flex: none; width: 180px; height: 180px; border: 1px solid var(--bs-color-gray-800); border-radius: 50%; background: var(--bs-color-neutral-charcoal); box-shadow: 0 5px 20px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; cursor: default; }
-.bs-hq-layout__minimap { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); }
+.bs-hq-layout__view { display: flex; flex: none; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; cursor: default; }
+.bs-hq-layout__minimap { position: relative; width: 104px; height: 104px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); box-shadow: 0 4px 14px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; }
 .bs-hq-layout__zoom-value { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 1px 4px; border-radius: 4px; background: var(--bs-color-neutral-ink); color: var(--bs-soft-silver); font-size: 9px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .bs-hq-layout__minimap-view { position: absolute; top: 50%; left: 50%; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 30%, transparent); background: color-mix(in srgb, var(--bs-soft-silver) 5%, transparent); border-radius: 3px; }
 .bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 26px; height: 26px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-neutral-graphite); box-shadow: 0 0 14px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent); }
-.bs-hq-layout__zoom { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 36px); gap: 5px; }
-.bs-hq-layout .bs-hq-layout__zoom button { width: 36px; min-width: 0; height: 36px; padding: 0; border: 1px solid var(--bs-color-gray-800); border-radius: 10px; background: var(--bs-color-neutral-graphite); color: var(--bs-soft-silver); }
+.bs-hq-layout__zoom { display: grid; grid-template-columns: repeat(3, 36px); gap: 2px; padding: 4px; border: 1px solid var(--bs-color-gray-800); border-radius: 14px; background: var(--bs-color-neutral-charcoal); pointer-events: auto; }
+.bs-hq-layout .bs-hq-layout__zoom button { width: 36px; min-width: 0; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--bs-soft-silver); }
 .bs-hq-layout button:disabled { opacity: 1; cursor: default; }
 .bs-hq-layout .bs-hq-layout__zoom button:not(:disabled) { cursor: pointer; }
-.bs-hq-layout .bs-hq-layout__zoom button:not(:disabled):hover { border-color: var(--bs-premium-gold); color: var(--bs-pearl-white); }
+.bs-hq-layout .bs-hq-layout__zoom button:not(:disabled):hover { background: var(--bs-color-neutral-graphite); border-color: var(--bs-premium-gold); color: var(--bs-pearl-white); }
 .bs-hq-layout .bs-hq-layout__zoom button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
 .bs-hq-layout .bs-hq-layout__zoom button:disabled { opacity: .4; }
 :global([dir="rtl"]) .bs-hq-layout { font-family: var(--bs-font-arabic); }
@@ -259,14 +254,13 @@ const viewMarker = computed(() => ({
 :global([dir="rtl"]) .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { flex-direction: row-reverse; }
 @media (max-width: 1000px) {
   .bs-hq-layout__navigation { top: 76px; }
-  .bs-hq-layout__session { inset-block-start: 140px; width: 196px; }
+  .bs-hq-layout__session { width: 196px; }
   .bs-hq-layout__brain-panel { inset-block-start: 132px; }
 }
 @media (max-width: 840px) {
+  .bs-hq-layout__session { inset-block-start: 140px; inset-inline-end: 16px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__workspace-info { display: none; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__view { width: 140px; height: 64px; border-radius: 999px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__minimap { display: none; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__zoom { bottom: 13px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
   .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
   .bs-hq-brain__directory ul { max-height: 23dvh; }
@@ -279,7 +273,7 @@ const viewMarker = computed(() => ({
   .bs-hq-layout__brand h1 { font-size: 18px; }
   .bs-hq-layout__navigation { top: 64px; width: calc(100% - 24px); max-width: 360px; padding: 3px; }
   .bs-hq-layout .bs-hq-layout__tab { flex: 1; padding: 7px 6px; font-size: 11px; }
-  .bs-hq-layout__session { inset-block-start: 122px; inset-inline-start: 12px; width: 172px; padding: 8px; gap: 6px; border-radius: 13px; }
+  .bs-hq-layout__session { inset-block-start: 122px; inset-inline-end: 12px; width: 172px; padding: 8px; gap: 6px; border-radius: 13px; }
   .bs-hq-layout__status { font-size: 10px; }
   .bs-hq-layout .bs-hq-layout__ceo, .bs-hq-layout .bs-hq-layout__login { font-size: 11px; }
   .bs-hq-layout__brain-panel { inset-block-start: 116px; }
@@ -287,18 +281,15 @@ const viewMarker = computed(() => ({
   .bs-hq-layout__workspace-info { max-width: 160px; }
   .bs-hq-layout__gesture-hint { font-size: 9px; }
   .bs-hq-layout__keyboard-hint { display: none; }
-  .bs-hq-layout__view { width: 156px; height: 156px; }
-  .bs-hq-layout__minimap { top: 10px; width: 74px; height: 74px; }
-  .bs-hq-layout__zoom { bottom: 24px; grid-template-columns: repeat(3, 32px); gap: 4px; }
+  .bs-hq-layout__view { gap: 8px; }
+  .bs-hq-layout__minimap { width: 88px; height: 88px; }
+  .bs-hq-layout__zoom { grid-template-columns: repeat(3, 32px); }
   .bs-hq-layout .bs-hq-layout__zoom button { width: 32px; height: 32px; border-radius: 9px; }
-  .bs-hq-layout__workspace-area--brain .bs-hq-layout__zoom { bottom: 15px; }
 }
 @media (max-width: 374px) {
   .bs-hq-layout__workspace-info { max-width: 120px; }
   .bs-hq-layout__gesture-hint { display: none; }
-  .bs-hq-layout__view { width: 144px; height: 144px; }
-  .bs-hq-layout__minimap { top: 8px; width: 68px; height: 68px; }
-  .bs-hq-layout__zoom { bottom: 20px; }
+  .bs-hq-layout__minimap { width: 80px; height: 80px; }
 }
 @media (max-height: 500px) and (min-width: 521px) {
   .bs-hq-layout__brand { inset-block-start: 12px; }
