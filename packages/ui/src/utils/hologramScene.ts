@@ -4,10 +4,12 @@ type Vector = [number, number, number]
 type Matrix = Float32Array
 interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; count: number; mode: number }
+interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; aspect: number }
 
 export interface HologramPalette { light: Vector; blue: Vector; metal: Vector }
 export interface HologramRenderer {
   draw: (camera: Readonly<SpatialViewportCamera>, seconds: number) => void
+  hitTestOrb: (clientX: number, clientY: number) => boolean
   dispose: () => void
 }
 
@@ -206,6 +208,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       points: mesh(particles(), gl.POINTS),
     }
     let disposed = false
+    let orbProjection: OrbProjection | null = null
     function drawMesh(shape: Mesh, color: Vector, material: number, opacity = 1, transform = identity(), additive = false) {
       if (!gl) return
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.position); gl.vertexAttribPointer(position, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(position)
@@ -236,6 +239,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         gl.uniformMatrix4fv(uniforms.uView!, false, lookAt(eye, target))
         gl.uniform3fv(uniforms.uEye!, eye); gl.uniform1f(uniforms.uTime!, seconds); gl.uniform1f(uniforms.uPointSize!, 1.8 * ratio)
         const time = seconds % 1000, float = Math.sin(time * 1.25) * 0.055
+        orbProjection = { eye, right, up, forward: normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]), center: [0, 0.88 + float, 0], aspect: width / height }
         drawMesh(geometry.grid, palette.blue, 4, 0.14)
         drawMesh(geometry.floor, palette.blue, 4, 0.16, identity(), true)
         drawMesh(geometry.base, palette.metal, 0)
@@ -255,9 +259,23 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         drawMesh(geometry.orbit, palette.blue, 2, 0.3, model(0, 0.88 + float, 0, 1.12, -time * 0.09), true)
         drawMesh(geometry.points, palette.light, 2, 0.48, model(0, Math.sin(time * 0.35) * 0.05, 0, 0, time * 0.025), true)
       },
+      hitTestOrb(clientX, clientY) {
+        if (disposed || !orbProjection || gl.isContextLost()) return false
+        const bounds = canvas.getBoundingClientRect()
+        if (!bounds.width || !bounds.height || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) return false
+        const horizontal = ((clientX - bounds.left) / bounds.width * 2 - 1) * Math.tan(Math.PI / 8) * orbProjection.aspect
+        const vertical = (1 - (clientY - bounds.top) / bounds.height * 2) * Math.tan(Math.PI / 8)
+        const { eye, right, up, forward, center } = orbProjection
+        const direction = normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical])
+        const origin: Vector = [eye[0] - center[0], eye[1] - center[1], eye[2] - center[2]]
+        const projection = dot(origin, direction)
+        const discriminant = projection * projection - dot(origin, origin) + 0.64 * 0.64
+        return discriminant >= 0 && -projection + Math.sqrt(discriminant) > 0.05
+      },
       dispose() {
         if (disposed) return
         disposed = true
+        orbProjection = null
         for (const buffer of buffers) gl.deleteBuffer(buffer)
         for (const shader of shaders) gl.deleteShader(shader)
         gl.deleteProgram(program)

@@ -19,6 +19,25 @@
     "mouseControlsLabel": "Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.",
     "touchControlsLabel": "Drag to rotate. Use two fingers to move and pinch to zoom.",
     "keyboardControlsLabel": "Arrow keys rotate. Shift + arrows move. Home resets.",
-    "zoomLabel": "Zoom"
+    "zoomLabel": "Zoom",
+    "companyBrain": {
+      "title": "Company Brain",
+      "openLabel": "Open Company Brain",
+      "loadingLabel": "Reading Brain…",
+      "connectedLabel": "Local Brain available",
+      "unavailableLabel": "Brain folder unavailable",
+      "errorLabel": "Could not read the Brain",
+      "sourceLabel": "Source: synced Brain folder on this computer",
+      "freshnessLabel": "Refresh reads the local files. Cloud sync status is not available here.",
+      "refreshLabel": "Refresh",
+      "searchLabel": "Find a note by name or folder",
+      "emptyLabel": "No matching notes.",
+      "selectLabel": "Select a note to read it.",
+      "noteErrorLabel": "This note could not be read. Refresh and try again.",
+      "observedLabel": "Folder read",
+      "modifiedLabel": "File modified",
+      "partialLabel": "The directory is incomplete. Some notes exceed the read limits or are unavailable.",
+      "readOnlyLabel": "Read only"
+    }
   }
 }

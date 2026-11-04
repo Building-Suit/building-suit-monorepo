@@ -5,6 +5,7 @@ import { createHologramRenderer } from '../utils/hologramScene'
 import type { HologramPalette, HologramRenderer } from '../utils/hologramScene'
 
 const props = defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string }>()
+const emit = defineEmits<{ activate: [] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
 let renderer: HologramRenderer | null = null
@@ -12,6 +13,13 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let motion: MediaQueryList | null = null
 let frame = 0, visible = true, started = 0, disposed = false
+
+function activateAt(clientX: number, clientY: number) {
+  if (disposed || unavailable.value || !visible || !renderer?.hitTestOrb(clientX, clientY)) return false
+  emit('activate')
+  return true
+}
+defineExpose({ activateAt })
 
 function requestDraw() {
   if (!disposed && !frame && visible && !document.hidden && renderer) frame = requestAnimationFrame(draw)

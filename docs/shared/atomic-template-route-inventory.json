@@ -3474,7 +3474,7 @@
       "status": "implemented-unverified",
       "domainAdapter": "apps/company-hq/app/app.vue",
       "dependencies": [],
-      "verification": "4 November 2026 orb workspace: source implementation only; founder deferred tests/builds/lint/typechecks/browser verification to future tester agents. Earlier static-layout results do not verify this scope. See company-hq/HQ-ORB-20261104.md."
+      "verification": "4 November 2026 read-only local Brain workspace: source implementation only; founder deferred tests/builds/lint/typechecks/API/browser/runtime verification to future tester agents. No boundary check or application acceptance was run. Local connection and cloud sync freshness are unverified. Earlier static-layout results do not verify this scope. See company-hq/HQ-BRAIN-20261104.md."
     },
     {
       "source": "apps/company-hq/app/pages/index.vue",
@@ -3487,9 +3487,11 @@
       ],
       "destination": "packages/ui/src/templates/BsHqLayoutPage.vue",
       "status": "implemented-unverified",
-      "domainAdapter": "apps/company-hq/app/pages/index.vue",
-      "dependencies": [],
-      "verification": "4 November 2026 orb workspace: source implementation only; founder deferred tests/builds/lint/typechecks/browser verification to future tester agents. Earlier static-layout results do not verify this scope. See company-hq/HQ-ORB-20261104.md.",
+      "domainAdapter": "apps/company-hq/app/composables/useCompanyBrain.ts",
+      "dependencies": [
+        "@building-suit/ui/types/hqLayoutPresentation"
+      ],
+      "verification": "4 November 2026 read-only local Brain workspace: source implementation only; founder deferred tests/builds/lint/typechecks/API/browser/runtime verification to future tester agents. No boundary check or application acceptance was run. Local connection and cloud sync freshness are unverified. Earlier static-layout results do not verify this scope. See company-hq/HQ-BRAIN-20261104.md.",
       "purpose": "hq-spatial-workspace"
     }
   ],

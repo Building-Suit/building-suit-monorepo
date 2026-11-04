@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-ORB-20261104",
+    "task": "HQ-BRAIN-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5265,11 +5265,12 @@
       "packages/ui/src/utils/hologramScene.ts",
       "packages/ux/src/composables/useSpatialViewport.ts"
     ],
-    "reason": "Restart the internal HQ preview with the reference header arrangement, remove the prior offices/agents/APIs/authentication/persistence and add the founder-authorized central floating 3D holographic orb and base. Shared local camera controls support mouse/touch orbit, pan, zoom and reset to center, 100% zoom and the default angle; the bottom-right overview includes an orb icon. Header business controls remain disabled, historical migrations and evidence are retained, and current acceptance is pending because the founder deferred autonomous testing. No operational product activation, public release, hosted operation, deployment or model execution is introduced.",
+    "reason": "Restart the internal HQ workspace with the reference header arrangement and central floating 3D orb/base, shared mouse/touch orbit-pan-zoom/reset and overview. Add actual orb click/tap, Brain navigation and a Company Brain button opening a shared read-only note browser with title/path search, refresh and escaped raw Markdown. App-owned GET routes read a privately configured local Insync Brain mirror under loopback/same-origin guards, opaque note IDs, root/symlink checks and bounded scans; this is not direct Drive OAuth or cloud sync freshness evidence. Departments/roads are postponed and their uncommitted work reverted; characters, agents, authentication, tasks, LLM calls, Brain writes and the previous business runtime remain absent. Preserve historical migration/evidence and accepted fragments. Source implementation and local connection remain unverified because the founder deferred autonomous testing. No operational product activation, public release, hosted database change, deployment or model execution is introduced.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
-      "hq-spatial-orb-20261104"
+      "hq-spatial-orb-20261104",
+      "hq-brain-connection-20261104"
     ]
   }
 ]

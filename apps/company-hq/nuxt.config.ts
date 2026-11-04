@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-11-03',
   devtools: { enabled: false },
   devServer: { host: '127.0.0.1', port: 3101 },
+  runtimeConfig: { hqBrainPath: '' },
   i18n: { locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }] },
   nitro: { preset: 'node-server' },
   app: { head: { title: 'Building Suit HQ' } },

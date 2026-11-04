@@ -930,9 +930,9 @@
         "BsHqLayoutPage",
         "BsHologramScene"
       ],
-      "adapterBoundary": "HQ supplies typed translated HqLayoutContent only. Shared UI owns the complete header, workspace, floating 3D orb/base, overview icon and camera controls. Shared UX owns local orbit, pan, zoom and reset state through SpatialViewportCamera. Header business controls remain disabled. There are no offices, agents, authenticated records, server commands, network connection or persistence.",
-      "task": "HQ-ORB-20261104",
-      "migrationStatus": "implemented-unverified: source implementation only; founder deferred autonomous testing to future tester agents. Earlier eight-browser/static-layout checks do not verify this scene; see company-hq/HQ-ORB-20261104.md."
+      "adapterBoundary": "HQ supplies translated HqLayoutContent/HqBrainContent and neutral HqBrainPresentation. Shared UI owns the complete workspace, floating 3D orb/base, actual orb picking, overview/camera controls and BsDialog read-only note browser with escaped raw Markdown. Shared UX owns local orbit, pan, zoom, reset and activation coordination through SpatialViewportCamera. App composables own API lifecycle/projection; app server routes own guarded local Insync mirror reads. Shared UI performs no Brain query or filesystem access. Offices/roads are postponed; characters, agents, authentication, tasks, LLM calls, Brain writes, direct Drive OAuth and persistence are absent.",
+      "task": "HQ-BRAIN-20261104",
+      "migrationStatus": "implemented-unverified: source implementation and ignored local configuration only; founder deferred autonomous testing to future tester agents. No API/browser/runtime verification was run, and local connection/cloud sync freshness are unverified. Earlier eight-browser/static-layout checks do not verify this scene or Brain access; see company-hq/HQ-BRAIN-20261104.md."
     }
   ]
 }

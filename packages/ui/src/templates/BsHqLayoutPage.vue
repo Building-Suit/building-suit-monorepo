@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { computed, useId } from 'vue'
+import { computed, ref, shallowRef, useId } from 'vue'
 import { SPATIAL_VIEWPORT_DEFAULT_CAMERA, useSpatialViewport } from '@building-suit/ux'
-import type { HqLayoutContent } from '../types/hqLayoutPresentation'
+import type { HqBrainPresentation, HqLayoutContent } from '../types/hqLayoutPresentation'
 
-defineProps<{ content: HqLayoutContent }>()
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onWheel, onKeydown, zoomBy, reset } = useSpatialViewport()
+const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation }>()
+const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string] }>()
+const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean } | null>(null)
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onWheel, onKeydown, zoomBy, reset } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y))
+const brainVisible = ref(false)
+const search = ref<string | number>('')
+const brainCopy = computed(() => props.content.companyBrain)
+const brainStatus = computed(() => props.brain?.status ?? 'unavailable')
+const brainStatusLabel = computed(() => ({ loading: brainCopy.value.loadingLabel, connected: brainCopy.value.connectedLabel, unavailable: brainCopy.value.unavailableLabel, error: brainCopy.value.errorLabel })[brainStatus.value])
+const visibleNotes = computed(() => {
+  const query = String(search.value).trim().toLocaleLowerCase()
+  return (props.brain?.notes ?? []).filter(note => !query || `${note.title} ${note.path}`.toLocaleLowerCase().includes(query))
+})
+function openBrain() { brainVisible.value = true }
 const hintId = useId()
 const orbMarker = computed(() => ({
   left: `${Math.max(9, Math.min(91, 50 - camera.panX * 9))}%`,
@@ -26,9 +38,9 @@ const viewMarker = computed(() => ({
       </div>
 
       <nav class="bs-hq-layout__navigation" :aria-label="content.workspaceLabel">
-        <BsButton variant="tab" class="bs-hq-layout__tab bs-hq-layout__tab--selected" aria-current="page" disabled>{{ content.workspaceLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible }" :aria-current="!brainVisible ? 'page' : undefined" @click="brainVisible = false">{{ content.workspaceLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.tasksLabel }}</BsButton>
-        <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.brainLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" aria-haspopup="dialog" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
       </nav>
 
       <div class="bs-hq-layout__actions">
@@ -39,7 +51,10 @@ const viewMarker = computed(() => ({
     </header>
 
     <main ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel.prevent="onWheel" @keydown="onKeydown" @contextmenu.prevent>
-      <BsHologramScene :camera="camera" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" />
+      <BsHologramScene ref="sceneRef" :camera="camera" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
+      <div class="bs-hq-layout__brain-entry" data-spatial-controls>
+        <BsButton variant="text" class="bs-hq-layout__brain-button" aria-haspopup="dialog" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="22" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
+      </div>
       <div class="bs-hq-layout__footer" dir="ltr">
         <div class="bs-hq-layout__workspace-info" dir="auto">
           <span class="bs-hq-layout__workspace"><BsIcon name="cube" :size="22" />{{ content.workspaceLabel }}</span>
@@ -59,6 +74,31 @@ const viewMarker = computed(() => ({
         </aside>
       </div>
     </main>
+    <BsDialog v-model:visible="brainVisible" :title="brainCopy.title" size="lg">
+      <section class="bs-hq-brain" :aria-label="brainCopy.title">
+        <div class="bs-hq-brain__source">
+          <div><strong role="status">{{ brainStatusLabel }}</strong><p>{{ brainCopy.sourceLabel }} · {{ brainCopy.readOnlyLabel }}</p><p>{{ brainCopy.freshnessLabel }}</p><small v-if="brain?.observedLabel">{{ brainCopy.observedLabel }}: {{ brain.observedLabel }}</small></div>
+          <BsButton :disabled="brainStatus === 'loading'" @click="emit('refreshBrain')">{{ brainCopy.refreshLabel }}</BsButton>
+        </div>
+        <p v-if="brain?.partial" role="status">{{ brainCopy.partialLabel }}</p>
+        <div v-if="brainStatus === 'connected'" class="bs-hq-brain__body">
+          <nav class="bs-hq-brain__directory" :aria-label="brainCopy.searchLabel">
+            <BsInput v-model="search" type="search" :aria-label="brainCopy.searchLabel" :placeholder="brainCopy.searchLabel" />
+            <p v-if="!visibleNotes.length" role="status">{{ brainCopy.emptyLabel }}</p>
+            <ul v-else><li v-for="note in visibleNotes" :key="note.id"><BsButton variant="text" :aria-pressed="brain?.selectedId === note.id" @click="emit('selectBrainNote', note.id)"><strong>{{ note.title }}</strong><small dir="auto">{{ note.path }}</small></BsButton></li></ul>
+          </nav>
+          <article class="bs-hq-brain__note" :aria-busy="brain?.noteStatus === 'loading'" aria-live="polite">
+            <p v-if="brain?.noteStatus === 'loading'">{{ brainCopy.loadingLabel }}</p>
+            <p v-else-if="brain?.noteStatus === 'error'" role="alert">{{ brainCopy.noteErrorLabel }}</p>
+            <template v-else-if="brain?.note">
+              <h2>{{ brain.note.title }}</h2><p dir="auto">{{ brain.note.path }}</p><small>{{ brainCopy.modifiedLabel }}: {{ brain.note.modifiedLabel }}</small>
+              <pre dir="auto">{{ brain.note.content }}</pre>
+            </template>
+            <p v-else>{{ brainCopy.selectLabel }}</p>
+          </article>
+        </div>
+      </section>
+    </BsDialog>
   </div>
 </template>
 
@@ -172,6 +212,30 @@ const viewMarker = computed(() => ({
 }
 .bs-hq-layout__canvas--interacting { cursor: grabbing; }
 .bs-hq-layout__canvas:focus-visible { outline: 2px solid var(--bs-sky-steel); outline-offset: -4px; }
+.bs-hq-layout__brain-entry { position: absolute; top: 18px; inset-inline-start: 18px; cursor: default; }
+.bs-hq-layout .bs-hq-layout__brain-button { display: flex; align-items: center; gap: 12px; padding: 10px 15px; border: 1px solid color-mix(in srgb, var(--bs-sky-steel) 35%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--bs-midnight-background) 85%, transparent); color: var(--bs-pearl-white); }
+.bs-hq-layout__brain-button span { display: grid; gap: 3px; text-align: start; }
+.bs-hq-layout__brain-button strong { font-size: 13px; }
+.bs-hq-layout__brain-button small { color: var(--bs-cloud-gray); font-size: 11px; }
+.bs-hq-layout__brain-button small[data-status="connected"] { color: var(--bs-color-secondary-pale-sky); }
+.bs-hq-layout__tab:not(:disabled), .bs-hq-layout__brain-button { cursor: pointer; }
+.bs-hq-layout__tab:focus-visible, .bs-hq-layout__brain-button:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
+.bs-hq-brain { display: grid; gap: var(--bs-space-4); }
+.bs-hq-brain__source { display: flex; align-items: start; justify-content: space-between; gap: var(--bs-space-4); }
+.bs-hq-brain__source p { margin: var(--bs-space-2) 0; color: var(--bs-text-muted); font-size: 13px; }
+.bs-hq-brain small { color: var(--bs-text-muted); font-size: 11px; }
+.bs-hq-brain__body { display: grid; grid-template-columns: minmax(190px, 30%) minmax(0, 1fr); gap: var(--bs-space-5); }
+.bs-hq-brain__directory { min-width: 0; }
+.bs-hq-brain__directory ul { display: grid; gap: var(--bs-space-1); padding: 0; margin: var(--bs-space-3) 0 0; list-style: none; max-height: 52dvh; overflow: auto; }
+.bs-hq-brain__directory button { display: grid; width: 100%; min-width: 0; gap: var(--bs-space-1); padding: var(--bs-space-3); text-align: start; }
+.bs-hq-brain__directory strong { font-size: 13px; font-weight: 600; }
+.bs-hq-brain__directory small { overflow-wrap: anywhere; }
+.bs-hq-brain__directory button[aria-pressed="true"] { background: var(--bs-surface-muted); box-shadow: inset 3px 0 var(--bs-premium-gold); }
+.bs-hq-brain__note { min-width: 0; max-height: 58dvh; overflow: auto; user-select: text; }
+.bs-hq-brain__note h2 { margin: 0 0 var(--bs-space-2); font-size: 18px; }
+.bs-hq-brain__note p { margin: var(--bs-space-2) 0; overflow-wrap: anywhere; }
+.bs-hq-brain__note pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; line-height: 1.8; unicode-bidi: plaintext; }
+@media (max-width: 640px) { .bs-hq-brain__body { grid-template-columns: 1fr; } .bs-hq-brain__directory ul { max-height: 23dvh; } .bs-hq-brain__note { max-height: 42dvh; } .bs-hq-brain__source { flex-wrap: wrap; } }
 .bs-hq-layout__footer { position: absolute; inset: auto 0 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px; pointer-events: none; }
 .bs-hq-layout__workspace-info { display: grid; min-width: 0; justify-items: start; gap: 10px; }
 .bs-hq-layout__gesture-hint { max-width: 450px; margin: 0; color: var(--bs-cloud-gray); opacity: 0.7; font-size: 11px; line-height: 1.6; }

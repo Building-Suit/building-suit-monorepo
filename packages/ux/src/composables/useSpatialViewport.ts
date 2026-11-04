@@ -12,6 +12,9 @@ export interface SpatialViewportCamera {
 interface SpatialPointer {
   x: number
   y: number
+  startX: number
+  startY: number
+  activationEligible: boolean
   touch: boolean
   pan: boolean
   capture: HTMLElement
@@ -30,7 +33,7 @@ const maximumPitch = Math.PI / 2 - 0.08
 const interactiveSelector = 'button, a, input, textarea, select, [role="button"], [contenteditable="true"], [data-spatial-controls]'
 
 /** Request-scoped orbit, pan and zoom mechanics for a shared spatial viewport. */
-export function useSpatialViewport() {
+export function useSpatialViewport(onActivate?: (clientX: number, clientY: number) => void) {
   const viewportRef = shallowRef<HTMLElement | null>(null)
   const camera = reactive<SpatialViewportCamera>({ ...SPATIAL_VIEWPORT_DEFAULT_CAMERA })
   const pointerCount = ref(0)
@@ -105,10 +108,14 @@ export function useSpatialViewport() {
     pointers.set(event.pointerId, {
       x: event.clientX,
       y: event.clientY,
+      startX: event.clientX,
+      startY: event.clientY,
+      activationEligible: event.isPrimary && event.button === 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey,
       touch: event.pointerType === 'touch',
       pan: event.shiftKey || event.button === 1 || event.button === 2,
       capture: element,
     })
+    if (pointers.size > 1) for (const pointer of pointers.values()) pointer.activationEligible = false
     pointerCount.value = pointers.size
     touchGesture = currentTouchGesture()
     try { element.setPointerCapture(event.pointerId) }
@@ -122,6 +129,7 @@ export function useSpatialViewport() {
     if (!pointer.touch && event.buttons === 0) { onPointerEnd(event); return }
     const x = event.clientX - pointer.x
     const y = event.clientY - pointer.y
+    if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) >= 6 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) pointer.activationEligible = false
     pointer.x = event.clientX
     pointer.y = event.clientY
     const nextGesture = currentTouchGesture()
@@ -139,15 +147,18 @@ export function useSpatialViewport() {
   function onPointerEnd(event: PointerEvent) {
     const pointer = pointers.get(event.pointerId)
     if (!pointer) return
+    const activate = event.type === 'pointerup' && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
     pointers.delete(event.pointerId)
     pointerCount.value = pointers.size
     touchGesture = currentTouchGesture()
     releasePointer(event.pointerId, pointer)
+    if (activate) onActivate?.(event.clientX, event.clientY)
   }
 
   function onWheel(event: WheelEvent) {
     if (ignoresTarget(event.target)) return
     event.preventDefault()
+    for (const pointer of pointers.values()) pointer.activationEligible = false
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? (viewportRef.value?.clientHeight ?? 600) : 1
     const delta = Math.max(-160, Math.min(160, event.deltaY * unit))
     zoomBy(Math.exp(-delta * 0.0015))
