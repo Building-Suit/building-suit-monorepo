@@ -11,7 +11,11 @@ const brainVisible = ref(false)
 const search = ref<string | number>('')
 const brainCopy = computed(() => props.content.companyBrain)
 const brainStatus = computed(() => props.brain?.status ?? 'unavailable')
-const brainStatusLabel = computed(() => ({ loading: brainCopy.value.loadingLabel, connected: brainCopy.value.connectedLabel, unavailable: brainCopy.value.unavailableLabel, error: brainCopy.value.errorLabel })[brainStatus.value])
+const brainStatusLabel = computed(() => {
+  if (props.brain?.reason === 'not-configured') return brainCopy.value.setupRequiredLabel
+  if (props.brain?.reason === 'authorization-required') return brainCopy.value.authorizationRequiredLabel
+  return ({ loading: brainCopy.value.loadingLabel, connected: brainCopy.value.connectedLabel, unavailable: brainCopy.value.unavailableLabel, error: brainCopy.value.errorLabel })[brainStatus.value]
+})
 const visibleNotes = computed(() => {
   const query = String(search.value).trim().toLocaleLowerCase()
   return (props.brain?.notes ?? []).filter(note => !query || `${note.title} ${note.path}`.toLocaleLowerCase().includes(query))
@@ -78,8 +82,9 @@ const viewMarker = computed(() => ({
       <section class="bs-hq-brain" :aria-label="brainCopy.title">
         <div class="bs-hq-brain__source">
           <div><strong role="status">{{ brainStatusLabel }}</strong><p>{{ brainCopy.sourceLabel }} · {{ brainCopy.readOnlyLabel }}</p><p>{{ brainCopy.freshnessLabel }}</p><small v-if="brain?.observedLabel">{{ brainCopy.observedLabel }}: {{ brain.observedLabel }}</small></div>
-          <BsButton :disabled="brainStatus === 'loading'" @click="emit('refreshBrain')">{{ brainCopy.refreshLabel }}</BsButton>
+          <BsButton :pending="brain?.refreshing" :disabled="brainStatus === 'loading'" @click="emit('refreshBrain')">{{ brainCopy.refreshLabel }}</BsButton>
         </div>
+        <p v-if="brain?.reason === 'not-configured' || brain?.reason === 'authorization-required'" role="status">{{ brainCopy.setupInstructionsLabel }}</p>
         <p v-if="brain?.partial" role="status">{{ brainCopy.partialLabel }}</p>
         <div v-if="brainStatus === 'connected'" class="bs-hq-brain__body">
           <nav class="bs-hq-brain__directory" :aria-label="brainCopy.searchLabel">
@@ -91,7 +96,7 @@ const viewMarker = computed(() => ({
             <p v-if="brain?.noteStatus === 'loading'">{{ brainCopy.loadingLabel }}</p>
             <p v-else-if="brain?.noteStatus === 'error'" role="alert">{{ brainCopy.noteErrorLabel }}</p>
             <template v-else-if="brain?.note">
-              <h2>{{ brain.note.title }}</h2><p dir="auto">{{ brain.note.path }}</p><small>{{ brainCopy.modifiedLabel }}: {{ brain.note.modifiedLabel }}</small>
+              <h2>{{ brain.note.title }}</h2><p dir="auto">{{ brain.note.path }}</p><small>{{ brainCopy.modifiedLabel }}: {{ brain.note.modifiedLabel }} · {{ brainCopy.versionLabel }}: {{ brain.note.version }}</small>
               <pre dir="auto">{{ brain.note.content }}</pre>
             </template>
             <p v-else>{{ brainCopy.selectLabel }}</p>

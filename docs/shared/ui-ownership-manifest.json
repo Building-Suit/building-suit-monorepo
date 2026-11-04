@@ -930,9 +930,9 @@
         "BsHqLayoutPage",
         "BsHologramScene"
       ],
-      "adapterBoundary": "HQ supplies translated HqLayoutContent/HqBrainContent and neutral HqBrainPresentation. Shared UI owns the complete workspace, floating 3D orb/base, actual orb picking, overview/camera controls and BsDialog read-only note browser with escaped raw Markdown. Shared UX owns local orbit, pan, zoom, reset and activation coordination through SpatialViewportCamera. App composables own API lifecycle/projection; app server routes own guarded local Insync mirror reads. Shared UI performs no Brain query or filesystem access. Offices/roads are postponed; characters, agents, authentication, tasks, LLM calls, Brain writes, direct Drive OAuth and persistence are absent.",
-      "task": "HQ-BRAIN-20261104",
-      "migrationStatus": "implemented-unverified: source implementation and ignored local configuration only; founder deferred autonomous testing to future tester agents. No API/browser/runtime verification was run, and local connection/cloud sync freshness are unverified. Earlier eight-browser/static-layout checks do not verify this scene or Brain access; see company-hq/HQ-BRAIN-20261104.md."
+      "adapterBoundary": "HQ supplies translated HqLayoutContent/HqBrainContent and neutral HqBrainPresentation. Shared UI owns the complete workspace, floating 3D orb/base, picking, overview/camera controls and BsDialog read-only browser with escaped Markdown, setup/auth/error and source-version/freshness presentation. Shared UX owns orbit, pan, zoom, reset and activation coordination. App composables own API lifecycle/polling/projection; app server routes own private Google authorization and fixed-root verified descendant reads. Shared UI performs no Brain query or server access. No filesystem/Insync fallback. Offices/roads are postponed; characters, active agents, authentication, tasks, LLM calls, Brain writes and persistence are absent.",
+      "task": "HQ-CLOUD-BRAIN-20261104",
+      "migrationStatus": "implemented-unverified: cloud-reader source only; dedicated Google credentials and Brain-root Viewer grant remain owner setup. Founder deferred tests/builds/lint/typechecks/checks/API/browser/runtime verification to future tester agents. No live connection, freshness or application acceptance is claimed. Earlier static checks do not verify this scope; see company-hq/HQ-CLOUD-BRAIN-20261104.md."
     }
   ]
 }

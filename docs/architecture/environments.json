@@ -134,7 +134,7 @@
       }
     },
     "company-hq": {
-      "organizationId": "",
+      "organizationId": "pmrcnkldnnemyfbryybn",
       "ownerEmail": "",
       "managementRole": "Owner",
       "plan": "unverified",
@@ -149,16 +149,33 @@
         "appUrl": "http://127.0.0.1:3101"
       },
       "production": {
-        "projectRef": "",
-        "requestedProjectRef": "dfeiuxsqhgzontefmrjc",
+        "projectRef": "nkpvskyugnnnozepbwzb",
         "appUrl": "",
-        "status": "founder-selected candidate only; project/organization, access, schema and zero-cost capacity unverified; no hosted migration or deployment"
+        "status": "project/organization metadata verified by get_project on 2026-11-04 after reconnection; public table listing empty at observation only; Auth, provider-managed schemas, migrations and app behavior unverified; founder reports GitHub not connected; no hosted mutation or deployment",
+        "supersededRequestedProjectRef": "dfeiuxsqhgzontefmrjc",
+        "projectName": "Production",
+        "region": "eu-north-1",
+        "providerStatus": "ACTIVE_HEALTHY",
+        "createdAt": "2026-11-04T14:13:40.678938Z"
       },
       "staging": {
-        "projectRef": "",
-        "requestedProjectRef": "lwecnmsosfwovlzxauml",
+        "projectRef": "dpruoncalmwicrqhqelu",
         "appUrl": "",
-        "status": "founder-selected candidate conflicts with verified Super Admin staging mapping; scope/ownership resolution and authorized access required before any HQ mutation"
+        "status": "project/organization metadata verified by get_project on 2026-11-04 after reconnection; public table listing empty at observation only; Auth, provider-managed schemas, migrations and app behavior unverified; founder reports GitHub not connected; no hosted mutation or deployment",
+        "supersededRequestedProjectRef": "lwecnmsosfwovlzxauml",
+        "projectName": "Staging",
+        "region": "eu-west-1",
+        "providerStatus": "ACTIVE_HEALTHY",
+        "createdAt": "2026-11-04T13:31:18.708786Z"
+      },
+      "githubIntegration": {
+        "repository": "Building-Suit/building-suit-monorepo",
+        "workingDirectory": "apps/company-hq",
+        "migrationDirectory": "./supabase",
+        "stagingBranch": "stg",
+        "productionBranch": "main",
+        "automaticBranchingPolicy": "off",
+        "status": "target workflow only; founder reports not configured, provider configuration not verified; review historical migrations before enabling"
       }
     }
   },

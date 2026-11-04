@@ -24,20 +24,24 @@
       "title": "معرفة الشركة",
       "openLabel": "فتح معرفة الشركة",
       "loadingLabel": "جارٍ قراءة المعرفة…",
-      "connectedLabel": "المعرفة المحلية متاحة",
-      "unavailableLabel": "مجلد المعرفة غير متاح",
-      "errorLabel": "تعذرت قراءة المعرفة",
-      "sourceLabel": "المصدر: مجلد المعرفة المتزامن على هذا الجهاز",
-      "freshnessLabel": "التحديث يقرأ الملفات المحلية. حالة المزامنة السحابية غير متاحة هنا.",
+      "connectedLabel": "معرفة الشركة السحابية متصلة",
+      "unavailableLabel": "المعرفة السحابية غير متاحة",
+      "errorLabel": "انقطع اتصال المعرفة السحابية",
+      "sourceLabel": "المصدر: مجلد معرفة الشركة الخاص على Google Drive",
+      "freshnessLabel": "يُفحص Google Drive كل ١٥ ثانية ما دامت الصفحة ظاهرة ومتصلة. تقل وتيرة المحاولة عند تعذر الاتصال.",
       "refreshLabel": "تحديث",
       "searchLabel": "ابحث عن ملاحظة بالاسم أو المجلد",
       "emptyLabel": "لا توجد ملاحظات مطابقة.",
       "selectLabel": "اختر ملاحظة لقراءتها.",
       "noteErrorLabel": "تعذرت قراءة هذه الملاحظة. حدّث وحاول مجددًا.",
-      "observedLabel": "قراءة المجلد",
-      "modifiedLabel": "تعديل الملف",
+      "observedLabel": "آخر فحص سحابي ناجح",
+      "modifiedLabel": "آخر تعديل على Google Drive",
       "partialLabel": "قائمة الملاحظات غير مكتملة. بعض الملاحظات تتجاوز حدود القراءة أو غير متاحة.",
-      "readOnlyLabel": "للقراءة فقط"
+      "readOnlyLabel": "للقراءة فقط",
+      "setupRequiredLabel": "يلزم إعداد قارئ Google Drive",
+      "authorizationRequiredLabel": "يلزم منح الوصول إلى Google Drive",
+      "setupInstructionsLabel": "أعدّ قارئ Google Drive الخاص على خادم HQ وامنحه صلاحية عارض لمجلد معرفة الشركة.",
+      "versionLabel": "الإصدار"
     }
   }
 }

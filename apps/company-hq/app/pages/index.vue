@@ -43,6 +43,10 @@ const content = computed<HqLayoutContent>(() => ({
     modifiedLabel: t('hq.companyBrain.modifiedLabel'),
     partialLabel: t('hq.companyBrain.partialLabel'),
     readOnlyLabel: t('hq.companyBrain.readOnlyLabel'),
+    setupRequiredLabel: t('hq.companyBrain.setupRequiredLabel'),
+    authorizationRequiredLabel: t('hq.companyBrain.authorizationRequiredLabel'),
+    setupInstructionsLabel: t('hq.companyBrain.setupInstructionsLabel'),
+    versionLabel: t('hq.companyBrain.versionLabel'),
   },
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })

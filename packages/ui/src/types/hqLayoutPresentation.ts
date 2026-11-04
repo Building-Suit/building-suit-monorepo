@@ -41,6 +41,10 @@ export interface HqBrainContent {
   modifiedLabel: string
   partialLabel: string
   readOnlyLabel: string
+  setupRequiredLabel: string
+  authorizationRequiredLabel: string
+  setupInstructionsLabel: string
+  versionLabel: string
 }
 
 export interface HqBrainNoteSummary {
@@ -48,10 +52,13 @@ export interface HqBrainNoteSummary {
   title: string
   path: string
   modifiedLabel: string
+  version: string
 }
 
 export interface HqBrainPresentation {
   status: 'loading' | 'connected' | 'unavailable' | 'error'
+  reason: 'not-configured' | 'authorization-required' | 'cloud-unavailable' | null
+  refreshing: boolean
   notes: readonly HqBrainNoteSummary[]
   observedLabel: string
   partial: boolean

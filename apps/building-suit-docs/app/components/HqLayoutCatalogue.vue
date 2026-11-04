@@ -27,26 +27,30 @@ const content = computed<HqLayoutContent>(() => ({
     title: c("Company Brain", "معرفة الشركة"),
     openLabel: c("Open Company Brain", "فتح معرفة الشركة"),
     loadingLabel: c("Reading Brain…", "جارٍ قراءة المعرفة…"),
-    connectedLabel: c("Local Brain available", "المعرفة المحلية متاحة"),
-    unavailableLabel: c("Brain folder unavailable", "مجلد المعرفة غير متاح"),
-    errorLabel: c("Could not read the Brain", "تعذرت قراءة المعرفة"),
-    sourceLabel: c("Source: synced Brain folder on this computer", "المصدر: مجلد المعرفة المتزامن على هذا الجهاز"),
-    freshnessLabel: c("Refresh reads the local files. Cloud sync status is not available here.", "التحديث يقرأ الملفات المحلية. حالة المزامنة السحابية غير متاحة هنا."),
+    connectedLabel: c("Cloud Brain connected", "معرفة الشركة السحابية متصلة"),
+    unavailableLabel: c("Cloud Brain unavailable", "المعرفة السحابية غير متاحة"),
+    errorLabel: c("Cloud Brain connection interrupted", "انقطع اتصال المعرفة السحابية"),
+    sourceLabel: c("Source: private Company Brain on Google Drive", "المصدر: مجلد معرفة الشركة الخاص على Google Drive"),
+    freshnessLabel: c("Checks Google Drive every 15 seconds while this page is visible and connected. Failed connections retry less often.", "يُفحص Google Drive كل ١٥ ثانية ما دامت الصفحة ظاهرة ومتصلة. تقل وتيرة المحاولة عند تعذر الاتصال."),
     refreshLabel: c("Refresh", "تحديث"),
     searchLabel: c("Find a note by name or folder", "ابحث عن ملاحظة بالاسم أو المجلد"),
     emptyLabel: c("No matching notes.", "لا توجد ملاحظات مطابقة."),
     selectLabel: c("Select a note to read it.", "اختر ملاحظة لقراءتها."),
     noteErrorLabel: c("This note could not be read. Refresh and try again.", "تعذرت قراءة هذه الملاحظة. حدّث وحاول مجددًا."),
-    observedLabel: c("Folder read", "قراءة المجلد"),
-    modifiedLabel: c("File modified", "تعديل الملف"),
+    observedLabel: c("Last successful cloud check", "آخر فحص سحابي ناجح"),
+    modifiedLabel: c("Modified in Google Drive", "آخر تعديل على Google Drive"),
     partialLabel: c("The directory is incomplete. Some notes exceed the read limits or are unavailable.", "قائمة الملاحظات غير مكتملة. بعض الملاحظات تتجاوز حدود القراءة أو غير متاحة."),
     readOnlyLabel: c("Read only", "للقراءة فقط"),
+    setupRequiredLabel: c("Google Drive reader setup required", "يلزم إعداد قارئ Google Drive"),
+    authorizationRequiredLabel: c("Google Drive access required", "يلزم منح الوصول إلى Google Drive"),
+    setupInstructionsLabel: c("Configure the private Google Drive reader on the HQ server and give it Viewer access to the Company Brain folder.", "أعدّ قارئ Google Drive الخاص على خادم HQ وامنحه صلاحية عارض لمجلد معرفة الشركة."),
+    versionLabel: c("Version", "الإصدار"),
   },
 }))
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Interactive 3D hologram with orbit, pan, zoom and reset. The Brain opens a read-only note browser; this catalogue has no Brain folder connection.', 'هولوغرام ثلاثي الأبعاد تفاعلي مع التدوير والتحريك والتكبير وإعادة العرض. تفتح المعرفة مستعرض ملاحظات للقراءة فقط، ولا يتصل هذا المثال بمجلد المعرفة.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Interactive 3D hologram with orbit, pan, zoom and reset. The Brain opens a read-only Google Drive note browser; this catalogue has no cloud credentials or connection.', 'هولوغرام ثلاثي الأبعاد تفاعلي مع التدوير والتحريك والتكبير وإعادة العرض. تفتح المعرفة مستعرض ملاحظات Google Drive للقراءة فقط، ولا يحتوي هذا المثال على بيانات اعتماد أو اتصال سحابي.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

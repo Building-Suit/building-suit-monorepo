@@ -1,36 +1,46 @@
 # Building Suit HQ workspace
 
-HQ was restarted on 4 November 2026 at the founder's request. The current workspace uses the reference image's header arrangement and a floating 3D holographic orb above a base at the center of the rounded canvas. The bottom-right overview shows an orb icon and camera controls. Clicking/tapping the actual orb, using Brain navigation or choosing the Company Brain button opens a read-only note browser for the local Insync Brain mirror. Department offices and roads are postponed; no characters, agents, authentication, tasks, messages, LLM calls or Brain writes are added. Tasks, Talk to CEO and profile controls remain disabled.
+HQ retains the reference header, floating 3D orb/base and interactive camera. Clicking/tapping the actual orb, Brain navigation or Company Brain button opens a read-only browser for the private cloud Company Brain. The current phase replaces the earlier local mirror reader: there is no filesystem/Insync source or fallback. Offices and roads remain postponed; characters, active agents, authentication, tasks, LLM calls and Brain writes are absent. Tasks, Talk to CEO and profile controls stay disabled.
 
-From the monorepo root:
+Run from the primary monorepo checkout, as requested by the founder:
 
 ```sh
 pnpm dev:hq --current
 ```
 
-Open `http://127.0.0.1:3101` on the server's computer. `--current` serves the checkout where the command runs; edits there hot-reload. The founder explicitly requested work in the primary repository checkout. No database, OAuth setup or cloud provider activation is needed.
+Open `http://127.0.0.1:3101` on that computer. Edits hot-reload. The preview is local; its Brain source is Google Drive. The scene works without credentials and shows setup-required Brain status until configured.
 
-The orb scene can be shown without configuration. To enable local note access, copy `.env.example` to the app's ignored `.env` and set the private server variable `NUXT_HQ_BRAIN_PATH` to the absolute path of the local Insync-synchronized folder named `building-suit-brain`. Keep that personal path out of source and public runtime configuration. Restart the dev server after changing this setting. A missing, unavailable or ineligible folder produces an unavailable state. The current implementation uses a local mirror rather than a direct Google Drive API connection; Insync owns synchronization independently.
+## Private cloud reader setup
 
-The Brain dialog supports title/path search, manual refresh, note selection and escaped raw Markdown text. Relative note paths and local file modification times are shown; the server's observed timestamp records when it read the local mirror. Neither timestamp proves that Insync has synchronized the latest cloud data. Notes are selected by opaque IDs rather than a client-supplied filesystem path. No note content is included in SSR payloads or persisted in a client cache.
+The fixed root is `1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8`, named `building-suit-brain`. Use a dedicated Google service account with Viewer access to **only that folder**; no public sharing or unrelated Drive access is needed. Enable Google Drive API in its Cloud project, create the reader account without project roles, then share the root with its email. If allowed by organizational policy, use service account **Keys → Add key → Create new key → JSON**.
 
-The local GET routes `/api/brain` and `/api/brain/notes/:id` use a loopback socket/Host guard with same-origin checks and the HQ request header. They do not trust forwarded host/IP headers or add remote identity/authentication. Reads stay under the configured folder, do not follow symlinks and exclude hidden entries, script directories and secret/private-key-like path names. The scanner caps results at 2,000 notes, traversal at 20 levels and 20,000 inspected entries, and individual Markdown files at 512 KiB; a partial-result state indicates omitted or unavailable entries. Name-based exclusions do not classify the contents of every otherwise eligible note. No write endpoint is provided.
+Copy `.env.example` to the ignored app `.env` and privately populate `NUXT_HQ_BRAIN_GOOGLE_CLIENT_EMAIL` and `NUXT_HQ_BRAIN_GOOGLE_PRIVATE_KEY` from `client_email` and `private_key`. Literal `\n` PEM newlines are supported. Restart the server after changes. Never place the JSON key or values in source, chat, Brain notes, client configuration or logs. If key creation is blocked by organization policy, report that constraint without bypassing it. The assistant's Drive connector does not supply this app's credentials. No account, key or folder grant has been created by this implementation; owner setup remains pending.
 
-The workspace supports these camera controls:
+The reader uses `drive.readonly`; that API scope is not a folder allowlist. Its dedicated principal's narrow grant and the server's fixed-root descendant checks both matter. See [Google Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth) and [service-account authorization](https://developers.google.com/identity/protocols/oauth2/service-account).
+
+## Read and refresh contract
+
+The dialog supports title/path search, manual refresh, note selection and escaped raw Markdown. It shows Drive modification/version metadata and the last successful cloud check. Automatic refresh runs while visible and online, 15 seconds after the previous request completes; focus/online resumes immediately, with nonoverlapping requests and 30/60/120-second failure backoff. A changed selected-note version triggers a refetch; cloud failure/offline clears stale content. These are polling semantics, not a webhook, zero-lag guarantee or all-agent synchronization service. Setup-required, authorization-required, unavailable and partial-result states remain explicit.
+
+GET `/api/brain` and `/api/brain/notes/:id` retain loopback socket/Host, same-origin and HQ-header guards with no-store responses. They do not trust forwarded identity headers. This private preview has no hosted-user identity boundary and must not be exposed as a public authenticated app. The server verifies the root and each known descendant parent chain, paginates child listings, rejects shortcuts/native/binary objects and accepts eligible downloadable `.md` files only. It excludes hidden/script/secret-like paths and caps at 2,000 notes, 20 levels, 20,000 inspected entries, 250 Drive requests per read and 512 KiB per note. Note reads revalidate parent chain/version around download. A partial-result flag reports bounded/omitted entries. Name exclusions do not classify every note's content. Notes are untrusted data, never executable instructions; no write endpoint, SSR note payload or persistent client cache is added.
+
+## Ownership and camera
+
+The route supplies translated `HqLayoutContent`/`HqBrainContent` and typed `HqBrainPresentation` to shared `BsHqLayoutPage`. Shared UI owns the dialog, `BsHologramScene`, WebGL renderer and orb picking. Shared UX `useSpatialViewport` owns camera gestures, activation coordination and reset. App `useCompanyBrain` owns API lifecycle/polling/projection; app server utilities own Google authorization and scoped reads. Shared UI performs no Brain query or server import. English/Arabic and LTR/RTL follow shared infrastructure.
 
 | Input | Action |
 | --- | --- |
-| Left mouse drag or one-finger touch drag | Rotate the view around the orb |
-| Right/middle mouse drag or Shift + drag | Move the view horizontally or vertically |
-| Mouse wheel or touch pinch | Zoom |
-| Two-finger touch drag | Move the view |
-| First/second overview button | Zoom out/in |
-| Third overview button | Restore center, 100% zoom and default camera angle |
-| Focused workspace arrow keys / Shift + arrow keys | Rotate / move the view |
-| Focused workspace + or − / Home or 0 | Zoom / restore the default view |
+| Left drag / one-finger drag | Rotate |
+| Right/middle drag / Shift + drag / two-finger drag | Pan |
+| Wheel / pinch / overview − and + | Zoom |
+| Third overview button | Center, 100% zoom, default camera angle |
+| Focused workspace arrows / Shift + arrows | Rotate / pan |
+| Focused workspace + or − / Home or 0 | Zoom / reset |
 
-The app route supplies translated `HqLayoutContent`, including `HqBrainContent`, and a typed `HqBrainPresentation` to the complete shared `BsHqLayoutPage` template. Shared UI owns the `BsDialog` note browser, `BsHologramScene`, WebGL renderer and orb picking. `useSpatialViewport` in `packages/ux` owns camera gestures, activation coordination and reset state. The app's `useCompanyBrain` composable owns the read-only API lifecycle, while app server utilities own local filesystem access. Shared UI does not query Brain or import server infrastructure. The documentation app demonstrates the same template in its component catalogue. English/Arabic and LTR/RTL use the shared infrastructure.
+## HQ environments and acceptance
 
-The founder has instructed agents to stop autonomous testing until tester agents are introduced. No tests, builds, lint, typechecks, browser/runtime verification or API requests are run for this implementation; acceptance and the local Brain connection are unverified. The existing browser suite still describes the earlier empty canvas and disabled viewport controls and needs updating by the future testers. Its previous eight passing static-layout scenarios do not verify the orb, camera interaction or Brain access.
+Provider metadata verified on 4 November 2026 identifies staging `dpruoncalmwicrqhqelu` (Staging, eu-west-1) and production `nkpvskyugnnnozepbwzb` (Production, eu-north-1), both ACTIVE_HEALTHY in organization `pmrcnkldnnemyfbryybn`. Read-only public-table listings were empty at that observation. This does not verify Auth, provider-managed schemas, migrations, GitHub integration or app behavior. The founder reports GitHub is not connected yet. Current cloud reading does not use Supabase. The [environment map](../../docs/architecture/environments.json) preserves earlier candidates as history without changing Super Admin.
 
-See the [current Brain scope and handoff](../../docs/work-packages/company-hq/HQ-BRAIN-20261104.md) and the preceding [orb record](../../docs/work-packages/company-hq/HQ-ORB-20261104.md). The [static restart record](../../docs/work-packages/company-hq/STATIC-RESTART-20261104.md), earlier backend/office records and Supabase migration files remain dated evidence. They do not authorize a hosted operation.
+The target existing GitHub integration workflow is repository `Building-Suit/building-suit-monorepo`, working directory `apps/company-hq`, migrations at relative `./supabase`, `stg` for staging and `main` for production, with Automatic branching OFF per maintained policy. This is not configured or verified here. Review retained historical HQ migrations before enabling integration; no hosted migration, merge or deployment is performed or authorized by this record. See [Supabase's working-directory documentation](https://supabase.com/docs/guides/deployment/branching/github-integration).
+
+Source is implemented; Google credentials/grant, live connection, freshness and acceptance remain unverified. The founder prohibited autonomous tests/builds/lint/typechecks/browser/API verification and tester/reviewer agents; none was run for this phase. Earlier static-layout results do not verify the orb or cloud reader. See [current cloud scope](../../docs/work-packages/company-hq/HQ-CLOUD-BRAIN-20261104.md), [handoff](../../docs/work-packages/company-hq/CLOUD-HANDOFF.md) and historical [local-reader record](../../docs/work-packages/company-hq/HQ-BRAIN-20261104.md).

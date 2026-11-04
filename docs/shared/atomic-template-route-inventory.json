@@ -3474,7 +3474,7 @@
       "status": "implemented-unverified",
       "domainAdapter": "apps/company-hq/app/app.vue",
       "dependencies": [],
-      "verification": "4 November 2026 read-only local Brain workspace: source implementation only; founder deferred tests/builds/lint/typechecks/API/browser/runtime verification to future tester agents. No boundary check or application acceptance was run. Local connection and cloud sync freshness are unverified. Earlier static-layout results do not verify this scope. See company-hq/HQ-BRAIN-20261104.md."
+      "verification": "4 November 2026 cloud-only read-only Brain workspace: source implemented; owner Google credentials/root-Viewer setup, connection and freshness unverified. Founder deferred tests/builds/lint/typechecks/checks/API/browser/runtime verification and tester/reviewer agents. No boundary/application acceptance was run; earlier static-layout results do not verify this scope. See company-hq/HQ-CLOUD-BRAIN-20261104.md."
     },
     {
       "source": "apps/company-hq/app/pages/index.vue",
@@ -3491,7 +3491,7 @@
       "dependencies": [
         "@building-suit/ui/types/hqLayoutPresentation"
       ],
-      "verification": "4 November 2026 read-only local Brain workspace: source implementation only; founder deferred tests/builds/lint/typechecks/API/browser/runtime verification to future tester agents. No boundary check or application acceptance was run. Local connection and cloud sync freshness are unverified. Earlier static-layout results do not verify this scope. See company-hq/HQ-BRAIN-20261104.md.",
+      "verification": "4 November 2026 cloud-only read-only Brain workspace: source implemented; owner Google credentials/root-Viewer setup, connection and freshness unverified. Founder deferred tests/builds/lint/typechecks/checks/API/browser/runtime verification and tester/reviewer agents. No boundary/application acceptance was run; earlier static-layout results do not verify this scope. See company-hq/HQ-CLOUD-BRAIN-20261104.md.",
       "purpose": "hq-spatial-workspace"
     }
   ],

@@ -24,20 +24,24 @@
       "title": "Company Brain",
       "openLabel": "Open Company Brain",
       "loadingLabel": "Reading Brain…",
-      "connectedLabel": "Local Brain available",
-      "unavailableLabel": "Brain folder unavailable",
-      "errorLabel": "Could not read the Brain",
-      "sourceLabel": "Source: synced Brain folder on this computer",
-      "freshnessLabel": "Refresh reads the local files. Cloud sync status is not available here.",
+      "connectedLabel": "Cloud Brain connected",
+      "unavailableLabel": "Cloud Brain unavailable",
+      "errorLabel": "Cloud Brain connection interrupted",
+      "sourceLabel": "Source: private Company Brain on Google Drive",
+      "freshnessLabel": "Checks Google Drive every 15 seconds while this page is visible and connected. Failed connections retry less often.",
       "refreshLabel": "Refresh",
       "searchLabel": "Find a note by name or folder",
       "emptyLabel": "No matching notes.",
       "selectLabel": "Select a note to read it.",
       "noteErrorLabel": "This note could not be read. Refresh and try again.",
-      "observedLabel": "Folder read",
-      "modifiedLabel": "File modified",
+      "observedLabel": "Last successful cloud check",
+      "modifiedLabel": "Modified in Google Drive",
       "partialLabel": "The directory is incomplete. Some notes exceed the read limits or are unavailable.",
-      "readOnlyLabel": "Read only"
+      "readOnlyLabel": "Read only",
+      "setupRequiredLabel": "Google Drive reader setup required",
+      "authorizationRequiredLabel": "Google Drive access required",
+      "setupInstructionsLabel": "Configure the private Google Drive reader on the HQ server and give it Viewer access to the Company Brain folder.",
+      "versionLabel": "Version"
     }
   }
 }
