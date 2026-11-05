@@ -174,7 +174,7 @@ onBeforeUnmount(() => { disposed = true; pendingMessage = null })
         {{ content.lastSeenLabel }}:
         <time :datetime="presentation.lastRuntimeSeenAt">{{ timeLabel(presentation.lastRuntimeSeenAt) }}</time>
       </p>
-      <BsHqWorkActivity v-if="content.workforce?.activity && presentation.workActivity" :items="presentation.workActivity" :copy="content.workforce.activity" :locale="content.locale" @open-task="emit('openTask', $event)" />
+      <BsHqWorkActivity v-if="content.workforce?.activity && presentation.workActivity" :items="presentation.workActivity" :copy="content.workforce.activity" :locale="content.locale" compact @open-task="emit('openTask', $event)" />
     </header>
 
     <p v-if="notice" class="bs-hq-chat__notice" role="alert">{{ notice }}</p>

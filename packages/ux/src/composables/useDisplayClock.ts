@@ -1,4 +1,4 @@
-import { onMounted, onScopeDispose, ref, watch } from 'vue'
+import { onActivated, onDeactivated, onMounted, onScopeDispose, ref, watch } from 'vue'
 
 /** Local display time only. Never reads application data or implies progress. */
 export function useDisplayClock(enabled: () => boolean) {
@@ -13,6 +13,8 @@ export function useDisplayClock(enabled: () => boolean) {
   }
   watch(enabled, update)
   onMounted(() => { mounted = true; update(); document.addEventListener('visibilitychange', update) })
+  onActivated(() => { mounted = true; update() })
+  onDeactivated(() => { mounted = false; update() })
   onScopeDispose(() => {
     mounted = false
     if (timer !== undefined) clearInterval(timer)

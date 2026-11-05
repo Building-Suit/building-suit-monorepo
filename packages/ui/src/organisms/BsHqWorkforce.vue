@@ -15,12 +15,17 @@ const emit = defineEmits<{ createTask: [request: HqTaskRequest]; refresh: []; 'u
 const assignee = ref<string | number | null>(null)
 const title = ref(''), brief = ref(''), acceptance = ref('')
 const dispatching = ref(false)
+const followupForm = ref<HTMLFormElement | null>(null)
 const followupSource = ref<{ id: string; updatedAt?: string; title: string; deliverable: string } | null>(null)
+let previousDraft: { assignee: string | number | null; title: string; brief: string; acceptance: string } | null = null
 const localTaskId = ref<string | null>(null)
 const selectedTaskId = computed({ get: () => props.selectedTaskId === undefined ? localTaskId.value : props.selectedTaskId, set: (id: string | null) => { localTaskId.value = id; emit('update:selectedTaskId', id) } })
 let disposed = false
 let pendingDraft: { request: HqTaskRequest; ids: Set<string> } | null = null
-const tasks = computed(() => props.presentation.tasks ?? [])
+const tasks = computed(() => [...(props.presentation.tasks ?? [])].sort((a, b) => {
+  const rank = { active: 0, pending: 1, blocked: 2, complete: 3 }
+  return rank[a.state] - rank[b.state] || Date.parse(b.updatedAt ?? b.createdAt) - Date.parse(a.updatedAt ?? a.createdAt)
+}))
 const selected = computed(() => tasks.value.find(task => task.id === selectedTaskId.value) ?? null)
 const sourceCurrent = computed(() => !followupSource.value || selected.value?.id === followupSource.value.id
   && selected.value.state === 'complete' && selected.value.updatedAt === followupSource.value.updatedAt
@@ -32,14 +37,21 @@ const requestBrief = computed(() => followupSource.value && props.content.follow
 const options = computed<{ id: string | null; label: string; disabled?: boolean }[]>(() => [{ id: null, label: props.content.autoAssignLabel }, ...props.presentation.agents.map(agent => ({ id: agent.id, label: `${agent.name} · ${agent.roleLabel ?? agent.role}`, disabled: agent.configured === false }))])
 const canSubmit = computed(() => !blocked.value && options.value.some(option => option.id === assignee.value && !option.disabled) && title.value.trim().length > 0 && title.value.length <= 180 && brief.value.trim().length > 0 && requestBrief.value.length <= 12000 && acceptance.value.trim().length > 0 && acceptance.value.length <= 6000)
 
-function beginFollowup() {
+async function beginFollowup() {
   const task = selected.value, copy = props.content.followup
   if (!task || task.state !== 'complete' || !task.deliverable || !task.reviews.length || !copy) return
+  previousDraft = { assignee: assignee.value, title: title.value, brief: brief.value, acceptance: acceptance.value }
   followupSource.value = { id: task.id, title: task.title, updatedAt: task.updatedAt, deliverable: task.deliverable }
   title.value = `${copy.titlePrefix} ${task.title}`.slice(0, 180)
   brief.value = ''; acceptance.value = copy.acceptance; assignee.value = null
+  await nextTick()
+  if (!disposed) followupForm.value?.querySelector('textarea')?.focus()
 }
-function cancelFollowup() { followupSource.value = null; title.value = ''; brief.value = ''; acceptance.value = ''; pendingDraft = null }
+function cancelFollowup() {
+  followupSource.value = null
+  title.value = previousDraft?.title ?? ''; brief.value = previousDraft?.brief ?? ''; acceptance.value = previousDraft?.acceptance ?? ''
+  assignee.value = previousDraft?.assignee ?? null; previousDraft = null; pendingDraft = null
+}
 watch(selectedTaskId, () => { if (followupSource.value) cancelFollowup() })
 
 function date(value: string): string {
@@ -100,7 +112,7 @@ onBeforeUnmount(() => { disposed = true; pendingDraft = null; title.value = ''; 
             <h4>{{ content.followup.title }}</h4><p class="bs-hq-workforce__muted">{{ content.followup.explanation }}</p>
             <BsButton v-if="selected.reviews.length && !followupSource" variant="primary" :disabled="blocked" @click="beginFollowup">{{ content.followup.action }}</BsButton>
           </section>
-          <form v-if="followupSource && content.followup" class="bs-hq-workforce__form" @submit.prevent="submit">
+          <form v-if="followupSource && content.followup" ref="followupForm" class="bs-hq-workforce__form" @submit.prevent="submit">
             <p class="bs-hq-workforce__muted">{{ content.followup.source }}: <bdi>{{ followupSource.id }}</bdi></p>
             <p class="bs-hq-workforce__muted">{{ content.followup.supported }}</p>
             <p v-if="!sourceCurrent" class="bs-hq-workforce__notice" role="alert">{{ content.followup.updated }}</p>

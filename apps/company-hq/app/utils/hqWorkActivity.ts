@@ -6,7 +6,7 @@ import { hqObservedActivity } from './hqAgentPresence.ts'
 export function hqWorkActivity(snapshot: HqAgentSnapshot, online: boolean, now: number): HqWorkActivity[] {
   return snapshot.jobs.filter(job => job.status === 'working' || job.status === 'queued')
     .sort((a, b) => Number(b.status === 'working') - Number(a.status === 'working') || Date.parse(a.createdAt) - Date.parse(b.createdAt))
-    .map(job => {
+    .map((job): HqWorkActivity => {
       const agent = snapshot.agents.find(item => item.id === job.agentId)
       const taskIds = new Set(snapshot.messages.filter(message => message.taskId && message.replyTo === job.founderMessageId).map(message => message.taskId))
       // Ambiguous/missing transcript coverage must never link to an arbitrary task.

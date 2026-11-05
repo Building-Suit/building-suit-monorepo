@@ -3,7 +3,7 @@ import { useDisplayClock } from '@building-suit/ux'
 import BsButton from '../atoms/BsButton.vue'
 import type { HqWorkActivity, HqWorkActivityCopy } from '../types/hqAgentsPresentation'
 
-const props = defineProps<{ items: readonly HqWorkActivity[]; copy: HqWorkActivityCopy; locale?: string }>()
+const props = defineProps<{ items: readonly HqWorkActivity[]; copy: HqWorkActivityCopy; locale?: string; compact?: boolean }>()
 const emit = defineEmits<{ openTask: [id: string] }>()
 const now = useDisplayClock(() => props.items.length > 0)
 function elapsed(item: HqWorkActivity): string {
@@ -16,7 +16,7 @@ function elapsed(item: HqWorkActivity): string {
 </script>
 
 <template>
-  <section class="bs-hq-activity" :aria-label="copy.title">
+  <section class="bs-hq-activity" :data-compact="compact || undefined" :aria-label="copy.title">
     <h3>{{ copy.title }}</h3>
     <p v-if="!items.length" class="bs-hq-activity__empty">{{ copy.empty }}</p>
     <ul v-else>
@@ -36,6 +36,7 @@ function elapsed(item: HqWorkActivity): string {
 .bs-hq-activity { display: grid; gap: var(--bs-space-2); min-width: 0; padding: var(--bs-space-3); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-card); background: var(--bs-component-hq-glass-card); }
 .bs-hq-activity h3, .bs-hq-activity p { margin: 0; font-size: .75rem; line-height: 1.6; overflow-wrap: anywhere; }
 .bs-hq-activity ul { display: grid; gap: var(--bs-space-3); max-height: 10rem; overflow: auto; margin: 0; padding: 0; list-style: none; }
+.bs-hq-activity[data-compact] ul { max-height: 6rem; }
 .bs-hq-activity li { display: grid; gap: var(--bs-space-1); border-inline-start: 2px solid var(--bs-border); padding-inline-start: var(--bs-space-2); }
 .bs-hq-activity li[data-state='working'] { border-color: var(--bs-accent); }
 .bs-hq-activity__line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--bs-space-2); font-size: .75rem; }
