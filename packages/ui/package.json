@@ -437,6 +437,8 @@
     "./types/commodityPricingPresentation": "./src/types/commodityPricingPresentation.ts",
     "./templates/BsHqLayoutPage": "./src/templates/BsHqLayoutPage.vue",
     "./types/hqLayoutPresentation": "./src/types/hqLayoutPresentation.ts",
+    "./types/hqMeetingPresentation": "./src/types/hqMeetingPresentation.ts",
+    "./organisms/BsHqMeetingPanel": "./src/organisms/BsHqMeetingPanel.vue",
     "./organisms/BsHologramScene": "./src/organisms/BsHologramScene.vue",
     "./utils/hologramScene": "./src/utils/hologramScene.ts",
     "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",

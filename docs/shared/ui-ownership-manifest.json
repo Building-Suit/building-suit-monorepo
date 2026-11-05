@@ -934,7 +934,8 @@
         "BsHqCeoChat",
         "BsHqWorkforce",
         "BsHqOfficeOverview",
-        "BsHqWorkActivity"
+        "BsHqWorkActivity",
+        "BsHqMeetingPanel"
       ],
       "adapterBoundary": "HQ supplies typed translated Brain, founder-access, company-plan, department roster and agent/chat/task/learning projections and semantic commands. Shared UI owns the workspace, scene, panels, escaped CEO chat and workforce presentation. Product adapters own cloud reads, fresh founder authorization, durable idempotent task/conversation queues and private category invalidations. The private Oracle worker executes bounded actual assignments and reviews using fresh scoped Drive documents. Work activity and connection counts follow observed worker leases; explicitly configured characters may roam cosmetically while their labels retain actual connection state. Hiring, skills, external writes and plan approvals retain their existing founder authority. No app/server queries in UI, local Brain fallback or public Suit activation. HQ office observations are a bounded founder-only read model; host-recorded skill loads are distinct from actual application. Shared UI owns translucent surfaces/metrics/tool-skill-agent presentation; useHqOfficeInspection owns nested selection and office tabs.",
       "task": "HQ-RESULT-WORK-VISIBILITY-20261105",

@@ -1,0 +1,23 @@
+{
+  "id": "hq-multilingual-meetings-20261105",
+  "task": "HQ-MULTILINGUAL-MEETINGS-20261105",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqMeetingCatalogue.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHqMeetingPanel.vue",
+    "packages/ui/src/types/hqMeetingPresentation.ts",
+    "packages/ux/package.json",
+    "packages/ux/src/controllers/createMeetingAudio.mjs",
+    "packages/ux/src/controllers/createMeetingAudio.d.mts",
+    "packages/ux/tests/meeting-audio.test.mjs",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/company-hq"
+  ],
+  "reason": "Prepare internal Arabic-first HQ meeting coordination, explicit microphone/draft/text fallback and local voice fencing, immutable execution-plan approval, source-only disabled Supabase semantic persistence, bounded durable synthetic workers and independent fixture review. Keep live provider/hosting/qualified staff activation disabled; synthetic tests, process recovery and visible fixture output do not prove live employee or provider operation. No operational Suit publication, production migration, Oracle mutation, merge, deployment or new spend. Current-PC source checkpoint4adde130 remains unavailable for reconciliation."
+}

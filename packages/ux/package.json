@@ -9,7 +9,8 @@
     "./downloadText": "./src/utils/downloadText.js",
     "./decimalText": "./src/utils/decimalText.js",
     "./mtSics": "./src/utils/mtSics.js",
-    "./sicsScale": "./src/controllers/createSicsScale.ts"
+    "./sicsScale": "./src/controllers/createSicsScale.ts",
+    "./meetingAudio": "./src/controllers/createMeetingAudio.mjs"
   },
   "dependencies": {
     "@building-suit/contracts": "workspace:*",

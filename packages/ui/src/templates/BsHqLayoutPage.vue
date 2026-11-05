@@ -4,6 +4,8 @@ import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } fro
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
 import type { HqAgentPresentation, HqAgentsPresentation, HqTaskRequest } from '../types/hqAgentsPresentation'
+import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
+import BsHqMeetingPanel from '../organisms/BsHqMeetingPanel.vue'
 import BsHqOfficeOverview from '../organisms/BsHqOfficeOverview.vue'
 import BsHqCeoChat from '../organisms/BsHqCeoChat.vue'
 import BsHqWorkforce from '../organisms/BsHqWorkforce.vue'
@@ -14,8 +16,10 @@ import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
 import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from '../utils/hologramPresentationGeometry.ts'
 
-const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; agents?: HqAgentsPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()
+const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
+const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const meetingVisible = ref(false)
+function openMeeting() { closeConversation(false); meetingVisible.value = true; emit('meetingCommand', { type: 'refresh' }) }
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
 const brainPanelPresent = ref(false)
 const workplacePanelPresent = ref(false)
@@ -61,7 +65,7 @@ function chooseCeoSection(value: string) { if (ceoTabs.value.some(tab => tab.val
 const displayedUser = computed(() => founderAccess.value.user ?? props.user)
 const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => Boolean(focusedTargetId.value) || brainPanelPresent.value || workplacePanelPresent.value || chatVisible.value || Boolean(conversationDetail.value), sceneRadius: () => floorRadius.value })
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => Boolean(focusedTargetId.value) || brainPanelPresent.value || workplacePanelPresent.value || chatVisible.value || meetingVisible.value || Boolean(conversationDetail.value), sceneRadius: () => floorRadius.value })
 const viewportSize = shallowRef({ width: 1, height: 1 })
 const { selectedId: focusedTargetId, select: focusTarget, clear: clearFocus, refit: refitFocus } = useSpatialWorkspaceSelection({
   camera, viewport: () => viewportSize.value, sceneRadius: () => floorRadius.value,
@@ -307,6 +311,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       <aside class="bs-hq-layout__session" data-spatial-controls>
         <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
         <BsButton variant="accent" class="bs-hq-layout__ceo" :aria-controls="chatPanelId" :aria-expanded="chatVisible" @click="openChat"><BsIcon name="chat" :size="17" />{{ content.talkToCeoLabel }}</BsButton>
+        <BsButton v-if="meeting" variant="secondary" class="bs-hq-layout__ceo" aria-haspopup="dialog" :aria-expanded="meetingVisible" @click="openMeeting"><BsIcon name="chat" :size="17" />{{ meeting.copy.labels.entry }}</BsButton>
         <BsButton v-if="displayedUser" variant="text" class="bs-hq-layout__account" :aria-label="content.companyPlans.executiveLabel" :aria-controls="workplacePanelId" :aria-expanded="plansVisible" @click="openPlans">
           <span class="bs-hq-layout__avatar"><img v-if="displayedUser.avatarUrl" :src="displayedUser.avatarUrl" alt="" width="30" height="30"><span v-else>{{ userInitials }}</span></span>
           <span class="bs-hq-layout__identity"><strong>{{ displayedUser.displayName }}</strong><small v-if="displayedUser.detailLabel">{{ displayedUser.detailLabel }}</small></span>
@@ -435,6 +440,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       </aside>
     </Transition>
     </main>
+    <BsHqMeetingPanel v-if="meeting" v-model:visible="meetingVisible" :meeting="meeting" @command="command => emit('meetingCommand', command)" />
   </div>
 </template>
 

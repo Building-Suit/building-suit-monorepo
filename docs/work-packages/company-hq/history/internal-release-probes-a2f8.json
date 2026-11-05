@@ -1,0 +1,302 @@
+{
+  "source": "a2f8e25f90eb8d12d4a750056d25a4e4b81263f4",
+  "reason": "Historical internal probes preserved; maintained internal release inventory uses path coverage only.",
+  "evidence": [
+    {
+      "path": "apps/company-hq/server/utils/googleDriveAuth.ts",
+      "contains": "const READ_ONLY_SCOPE = 'https://www.googleapis.com/auth/drive.readonly'"
+    },
+    {
+      "path": "apps/company-hq/server/utils/brain.ts",
+      "contains": "const ROOT_FOLDER_ID = '1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'"
+    },
+    {
+      "path": "apps/company-hq/app/composables/useHqLiveEvents.ts",
+      "contains": "fetch('/api/hq/events'"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "function shieldFractures(): ShieldFracture[]"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "name=\"bs-hq-brain-slide\""
+    },
+    {
+      "path": "packages/ux/src/composables/useSpatialViewport.ts",
+      "contains": "function transitionTo(target: Readonly<SpatialViewportCamera>"
+    },
+    {
+      "path": "apps/company-hq/app/composables/useCompanyBrain.ts",
+      "contains": "const dateFormatter = computed(() => new Intl.DateTimeFormat"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "const pixelBudget = 8_000_000"
+    },
+    {
+      "path": "packages/ux/src/spatialViewportGeometry.ts",
+      "contains": "export const SPATIAL_VIEWPORT_GROUND_Y = -0.69"
+    },
+    {
+      "path": "packages/ux/src/composables/useSpatialViewport.ts",
+      "contains": "if (policy.zoomLocked?.()) return"
+    },
+    {
+      "path": "packages/ui/src/utils/naturalIslandGeometry.ts",
+      "contains": "export function createNaturalIslandGeometry(footprint: HqIslandFootprint, protectedRadius: number, groundY: number): NaturalIslandMeshes"
+    },
+    {
+      "path": "packages/ui/src/organisms/BsHologramScene.vue",
+      "contains": "coal: read('--bs-color-neutral-ink')"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "export function hologramFloorRadius(layers?: number): number"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "class=\"bs-hq-layout__session\""
+    },
+    {
+      "path": "apps/company-hq/app/pages/index.vue",
+      "contains": "calendarLabel: t('hq.calendarLabel')"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "@hover-change=\"orbHovered = $event\""
+    },
+    {
+      "path": "apps/company-hq/app/composables/useHqFounderAccess.ts",
+      "contains": "export function useHqFounderAccess"
+    },
+    {
+      "path": "apps/company-hq/app/composables/useHqCompanyPlans.ts",
+      "contains": "export function useHqCompanyPlans"
+    },
+    {
+      "path": "apps/company-hq/server/utils/hqAccess.ts",
+      "contains": "export async function requireHqFounder"
+    },
+    {
+      "path": "apps/company-hq/supabase/migrations/20261104194233_hq_founder_company_plans.sql",
+      "contains": "create function public.hq_decide_company_plan"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "export function layoutDepartmentOffices"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "export function workplaceFootprint(office: OfficePlacement)"
+    },
+    {
+      "path": "packages/ui/src/utils/circularWorkplaceGeometry.ts",
+      "contains": "export function createCircularWorkplaceGeometry(layout: DepartmentOfficeLayout"
+    },
+    {
+      "path": "packages/ui/package.json",
+      "contains": "\"./utils/circularWorkplaceGeometry\": \"./src/utils/circularWorkplaceGeometry.ts\""
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "drawMesh(sharedWorkplaces.concrete, officeConcreteColor, 13)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "const { startAngle, endAngle, innerRadius, outerRadius } = entry.placement.sector"
+    },
+    {
+      "path": "packages/ui/src/utils/hqIslandGeometry.ts",
+      "contains": "const COAST_CLEARANCE = 2.4"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "const OFFICE_BUILD_SECONDS = 2.4"
+    },
+    {
+      "path": "apps/company-hq/i18n/locales/en.json",
+      "contains": "Left drag moves across the map. Middle drag rotates around the current view center. Scroll zooms with side panels closed. Right click is inactive."
+    },
+    {
+      "path": "apps/company-hq/i18n/locales/ar.json",
+      "contains": "اسحب بالزر الأيسر للتحريك عبر الخريطة وبالزر الأوسط للتدوير حول مركز العرض الحالي. مرّر للتكبير عندما تكون اللوحات الجانبية مغلقة. الزر الأيمن غير نشط."
+    },
+    {
+      "path": "apps/company-hq/i18n/locales/en.json",
+      "contains": "Full workspace overview"
+    },
+    {
+      "path": "packages/ux/src/spatialViewportGeometry.ts",
+      "contains": "export function spatialViewportGroundFootprint(frame: SpatialViewportFrame, radius: number)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramEffects.ts",
+      "contains": "const BLOOM_LONG_SIDE = 768"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "function configureScenePass()"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "effects?.compositeBloom()"
+    },
+    {
+      "path": "packages/ui/src/organisms/BsHologramScene.vue",
+      "contains": "navy: read('--bs-color-brand-building-navy')"
+    },
+    {
+      "path": "packages/ux/src/composables/useSpatialViewport.ts",
+      "contains": "from '../spatialViewportGeometry.ts'"
+    },
+    {
+      "path": "docs/work-packages/company-hq/HQ-MODULE-RECOVERY-20261104.md",
+      "contains": "The fresh HQ request returned HTTP 200"
+    },
+    {
+      "path": "packages/ui/src/utils/officeArchitecture.ts",
+      "contains": "export function createOfficeArchitecture"
+    },
+    {
+      "path": "packages/ui/src/utils/officeArchitecture.ts",
+      "contains": "const EXECUTIVE_DESK_WIDTH = 2.35"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "export const DEPARTMENT_OFFICE_WIDTH = 6.2"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "export const OFFICE_WALKWAY_WIDTH = 0.95"
+    },
+    {
+      "path": "packages/ui/package.json",
+      "contains": "\"./utils/officeArchitecture\": \"./src/utils/officeArchitecture.ts\""
+    },
+    {
+      "path": "packages/ux/src/composables/useSpatialWorkspaceSelection.ts",
+      "contains": "export function useSpatialWorkspaceSelection"
+    },
+    {
+      "path": "packages/ux/src/composables/useSpatialWorkspaceSelection.ts",
+      "contains": "if (!selectedId.value) previousCamera = { ...policy.camera }"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "<BsSelect ref=\"workplaceSelectRef\""
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "function workplaceIntersection(entry: OfficeRenderEntry"
+    },
+    {
+      "path": "packages/ui/src/organisms/BsHologramScene.vue",
+      "contains": ":aria-pressed=\"selectedWorkplaceId === department.id\""
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "hitTestWorkplace(clientX, clientY) {"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "function openPlans() { void openWorkplace(officeLayout.value.executive.id) }"
+    },
+    {
+      "path": "apps/company-hq/supabase/migrations/20261104231249_brain_drive_sync.sql",
+      "contains": "create function public.hq_brain_publish_plan"
+    },
+    {
+      "path": "apps/company-hq/supabase/migrations/20261104231249_brain_drive_sync.sql",
+      "contains": "'legacy-acquisition-departments-2026-11-04'"
+    },
+    {
+      "path": "packages/ui/src/utils/officeArchitecture.ts",
+      "contains": "standingLightPosition"
+    },
+    {
+      "path": "packages/ui/src/utils/hqIslandGeometry.ts",
+      "contains": "export function createHqIslandFootprint(layout: DepartmentOfficeLayout): HqIslandFootprint"
+    },
+    {
+      "path": "packages/ui/src/utils/naturalIslandGeometry.ts",
+      "contains": "if (radius <= protectedEdge) return groundY"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramEffects.ts",
+      "contains": "const BLOOM_STRENGTH = 0.48"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "function islandGroundShadow(footprint: HqIslandFootprint): Geometry"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramTerrainMaterial.ts",
+      "contains": "export function createHologramTerrainMaterial(gl: WebGLRenderingContext): HologramTerrainMaterial"
+    },
+    {
+      "path": "packages/ui/src/utils/naturalIslandMaterial.ts",
+      "contains": "export function createNaturalIslandMaterial(gl: WebGLRenderingContext): NaturalIslandMaterial"
+    },
+    {
+      "path": "packages/ui/src/utils/naturalIslandMaterial.ts",
+      "contains": "gl.activeTexture(gl.TEXTURE2)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "createNaturalIslandGeometry(islandFootprint, Math.max(...officeLayout.rings.map(ring => ring.outerRadius)) + 0.12, SPATIAL_VIEWPORT_GROUND_Y)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "gl.uniform1i(uniforms.uIslandMap!, 2)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "vec4 mineral = texture2D(uIslandMap, uv);"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "geometry.groundEdge = mesh(land.cliffs)"
+    },
+    {
+      "path": "packages/ui/package.json",
+      "contains": "\"./utils/naturalIslandGeometry\": \"./src/utils/naturalIslandGeometry.ts\""
+    },
+    {
+      "path": "packages/ui/package.json",
+      "contains": "\"./utils/naturalIslandMaterial\": \"./src/utils/naturalIslandMaterial.ts\""
+    },
+    {
+      "path": "apps/company-hq/server/utils/hqEvents.ts",
+      "contains": "export async function streamHqEvents"
+    },
+    {
+      "path": "apps/company-hq/supabase/migrations/20261105000725_hq_live_push_events.sql",
+      "contains": "create trigger hq_live_brain after update of content_digest"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "function islandWater(footprint: HqIslandFootprint): Geometry"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "const step = FULL_TURN / occupied"
+    },
+    {
+      "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+      "contains": "const occupied = Math.min(capacity, remaining)"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramPresentationGeometry.ts",
+      "contains": "export const HQ_ORB_SCALE = 1.15"
+    },
+    {
+      "path": "packages/ui/src/utils/hologramScene.ts",
+      "contains": "const entry = makeEntry(placement)"
+    },
+    {
+      "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "contains": "distance: 5 * HQ_ORB_SCALE"
+    }
+  ]
+}

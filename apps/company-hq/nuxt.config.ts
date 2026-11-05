@@ -27,9 +27,10 @@ export default defineNuxtConfig({
     hqSupabaseUrl: '', hqSupabasePublishableKey: '', hqEnvironment: 'staging',
     hqFounderEmail: 'ceo@building-suit.com',
     hqAppOrigin: '',
+    hqMeetingsDemo: false, hqMeetingsDemoDatabase: '', hqMeetingsLive: false,
   },
   i18n: { locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }] },
-  nitro: { preset: process.env.VERCEL ? 'vercel' : 'node-server' },
+  nitro: { preset: process.env.VERCEL ? 'vercel' : 'node-server', externals: { inline: [/shared\/meetings\//] } },
   app: { head: { title: 'Building Suit HQ' } },
   routeRules: { '/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'no-store' } } },
 })
