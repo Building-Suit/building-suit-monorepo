@@ -27,8 +27,7 @@ export interface SpatialViewportFrame {
 
 export const SPATIAL_VIEWPORT_DEFAULT_CAMERA: Readonly<SpatialViewportCamera> = Object.freeze({ yaw: 0.55, pitch: 0.5, zoom: 1, panX: 0, panY: 0 })
 export const SPATIAL_VIEWPORT_MIN_ZOOM = 0.35
-// The overview now starts farther away; retain enough magnification to focus
-// the same orb without changing the meaning of the default 100% overview.
+// Retain enough magnification for closeups from the radius-aware overview.
 export const SPATIAL_VIEWPORT_MAX_ZOOM = 32
 export const SPATIAL_VIEWPORT_GROUND_Y = -0.69
 export const SPATIAL_VIEWPORT_MIN_PITCH = 0.08
@@ -37,12 +36,14 @@ export const SPATIAL_VIEWPORT_MIN_TARGET_Y = SPATIAL_VIEWPORT_GROUND_Y + 0.10
 export const SPATIAL_VIEWPORT_VERTICAL_FOV = Math.PI / 4
 const tangent = Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2)
 const overviewCoverage = 0.86
+// The founder's preferred former 139% view is now the default 100% view.
+const defaultMagnification = 1.39
 const highestScenePoint = 2.1
 const circleSegments = 160
 const finite = (value: number, fallback: number) => Number.isFinite(value) ? value : fallback
 const dot = (left: SpatialViewportVector, right: SpatialViewportVector) => left[0] * right[0] + left[1] * right[1] + left[2] * right[2]
 
-/** One camera model: finite-floor overview at 100%, scaled by actual aspect. */
+/** One camera model: calibrated 100% overview, scaled by actual floor/aspect. */
 export function spatialViewportFrame(camera: Readonly<SpatialViewportCamera>, width: number, height: number, sceneRadius = 4.8): SpatialViewportFrame {
   const aspect = Math.max(1, finite(width, 1)) / Math.max(1, finite(height, 1))
   const radius = Math.max(0.1, finite(sceneRadius, 4.8))
@@ -72,7 +73,7 @@ export function spatialViewportFrame(camera: Readonly<SpatialViewportCamera>, wi
         radius * Math.hypot(plane[0], plane[2]) + Math.max(plane[1] * (SPATIAL_VIEWPORT_GROUND_Y - SPATIAL_VIEWPORT_TARGET_Y), plane[1] * (highestScenePoint - SPATIAL_VIEWPORT_TARGET_Y)))
     }
   }
-  const distance = overviewDistance / zoom
+  const distance = overviewDistance / (defaultMagnification * zoom)
   const target: SpatialViewportVector = [finite(camera.panX, 0), SPATIAL_VIEWPORT_TARGET_Y, finite(camera.panY, 0)]
   const eye: SpatialViewportVector = [target[0] - forward[0] * distance, target[1] - forward[1] * distance, target[2] - forward[2] * distance]
   const halfHeight = distance * tangent

@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-EQUAL-WORKPLACES-20261105",
+    "task": "HQ-CLOSER-DEFAULT-VIEW-20261105",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5296,7 +5296,7 @@
       "packages/ui/src/utils/hologramPresentationGeometry.ts",
       "docs/work-packages/company-hq/HQ-EQUAL-WORKPLACES-20261105.md"
     ],
-    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The original island now has an eroded irregular upper coastline, weathered layered cliffs, shallow exposed-rim relief and matte volcanic rock/soil with sparse moss and grass. A protected disk beneath the existing workplace floor stays exactly at the unchanged ground height. A separate cached 1024-square land texture supplies mineral/fracture/pore/soil variation with lifecycle cleanup; the original footprint/camera-water envelope and 512-square structural material remain unchanged. Gold coast accents, existing softened lamps, surrounding Navy water/Pearl foam and bloom remain, with mirrored ground still removed. A lower rocky shelf covers the existing water inner edge without changing its mesh, waves or sea level. Current workplaces occupy adjacent annular sectors on one circular floor, dividing each occupied band equally by its actual workplace count, including the CEO: two receive 180 degrees each and three 120. The CEO remains centered at the top; departments follow clockwise under approved-date/ID ordering. Existing furniture-fit ceilings and band radii remain, while additions/removals intentionally redistribute the affected band and overflow uses wider bands. Every neighboring boundary, including wraparound, has a lower-concrete/upper-glass radial partition; a sole workplace has none and there is no enclosing perimeter wall. The floating Orb is 15% larger through a shared scale coordinated with picking and Brain focus; the base retains its size. Separate enclosing room walls, platforms and road spokes are replaced; furniture, lamps, freestanding CEO plan board, whole-sector picking, minimap and reversible workplace focus follow the sector layout. Existing shared-template/UX ownership, bilingual overlays, camera/zoom bounds and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
+    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The original island now has an eroded irregular upper coastline, weathered layered cliffs, shallow exposed-rim relief and matte volcanic rock/soil with sparse moss and grass. A protected disk beneath the existing workplace floor stays exactly at the unchanged ground height. A separate cached 1024-square land texture supplies mineral/fracture/pore/soil variation with lifecycle cleanup; the original footprint/camera-water envelope and 512-square structural material remain unchanged. Gold coast accents, existing softened lamps, surrounding Navy water/Pearl foam and bloom remain, with mirrored ground still removed. A lower rocky shelf covers the existing water inner edge without changing its mesh, waves or sea level. Current workplaces occupy adjacent annular sectors on one circular floor, dividing each occupied band equally by its actual workplace count, including the CEO: two receive 180 degrees each and three 120. The CEO remains centered at the top; departments follow clockwise under approved-date/ID ordering. Existing furniture-fit ceilings and band radii remain, while additions/removals intentionally redistribute the affected band and overflow uses wider bands. Every neighboring boundary, including wraparound, has a lower-concrete/upper-glass radial partition; a sole workplace has none and there is no enclosing perimeter wall. The floating Orb is 15% larger through a shared scale coordinated with picking and Brain focus; the base retains its size. Default/reset overview now uses the previous 139-percent camera distance while normalized camera zoom 1 and the displayed 100-percent default remain; floor-radius/aspect fitting, rendering, minimap, pan scale and selection focus share the actual frame. Separate enclosing room walls, platforms and road spokes are replaced; furniture, lamps, freestanding CEO plan board, whole-sector picking, minimap and reversible workplace focus follow the sector layout. Existing shared-template/UX ownership, bilingual overlays, camera/zoom bounds and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5323,7 +5323,8 @@
       "hq-office-ring-balance-20261105",
       "hq-circular-workplaces-20261105",
       "hq-natural-island-20261105",
-      "hq-equal-workplaces-20261105"
+      "hq-equal-workplaces-20261105",
+      "hq-closer-default-view-20261105"
     ],
     "evidence": [
       {
@@ -5621,6 +5622,18 @@
       {
         "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
         "contains": "distance: 5 * HQ_ORB_SCALE"
+      },
+      {
+        "path": "packages/ux/src/spatialViewportGeometry.ts",
+        "contains": "const defaultMagnification = 1.39"
+      },
+      {
+        "path": "packages/ux/src/spatialViewportGeometry.ts",
+        "contains": "const distance = overviewDistance / (defaultMagnification * zoom)"
+      },
+      {
+        "path": "packages/ux/src/spatialViewportGeometry.ts",
+        "contains": "zoom: 1"
       }
     ]
   }
