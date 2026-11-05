@@ -2,15 +2,18 @@ import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewpo
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
-import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout.ts'
+import type { OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
 import type { HologramEffects } from './hologramEffects.ts'
 import { createOfficeArchitecture } from './officeArchitecture.ts'
 import { createCircularWorkplaceGeometry } from './circularWorkplaceGeometry.ts'
-import { createHqIslandFootprint, hqIslandRadiusAt } from './hqIslandGeometry.ts'
+import { createHqIslandFootprint } from './hqIslandGeometry.ts'
 import type { HqIslandFootprint } from './hqIslandGeometry.ts'
 import { createHologramTerrainMaterial } from './hologramTerrainMaterial.ts'
 import type { HologramTerrainMaterial } from './hologramTerrainMaterial.ts'
+import { createNaturalIslandGeometry } from './naturalIslandGeometry.ts'
+import { createNaturalIslandMaterial } from './naturalIslandMaterial.ts'
+import type { NaturalIslandMaterial } from './naturalIslandMaterial.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -80,11 +83,64 @@ uniform vec3 uRoomLight;
 uniform float uRoomLightStrength;
 uniform sampler2D uTerrainMap;
 uniform float uTerrainScale;
+uniform sampler2D uIslandMap;
+uniform float uIslandScale;
+uniform vec3 uIslandSoil;
+uniform vec3 uIslandMoss;
 uniform float uSweepY;
 uniform float uConstruction;
 varying vec3 vWorld;
 varying vec3 vNormal;
 void main() {
+  if ((uMaterial > 5.5 && uMaterial < 6.5) || (uMaterial > 8.5 && uMaterial < 9.5) || uMaterial > 13.5) {
+    // Land has its own material/sampler. Office concrete and every other scene
+    // object retain their existing texture, lighting and surface response.
+    bool cliff = uMaterial > 8.5 && uMaterial < 9.5;
+    bool grass = uMaterial > 13.5;
+    vec3 normal = normalize(vNormal);
+    vec2 plane = cliff ? (abs(normal.x) > abs(normal.z) ? vWorld.zy : vWorld.xy) : vWorld.xz;
+    vec2 uv = plane * uIslandScale;
+    vec4 mineral = texture2D(uIslandMap, uv);
+    vec2 warped = uv + (mineral.rg - vec2(0.5)) * 0.11;
+    vec4 detail = texture2D(uIslandMap, mat2(0.80, -0.60, 0.60, 0.80) * warped * 7.13 + vec2(0.19, 0.43));
+    vec4 grit = texture2D(uIslandMap, mat2(0.39, 0.92, -0.92, 0.39) * warped * 29.71 + vec2(0.67, 0.11));
+    vec2 slope = (mineral.rg - vec2(0.5)) * 0.34 + (detail.rg - vec2(0.5)) * 0.13;
+    if (cliff) normal = normalize(normal + vec3(slope.x, (grit.b - 0.5) * 0.10, slope.y));
+    else normal = normalize(normal + vec3(slope.x, 0.0, slope.y));
+    float diffuse = max(dot(normal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
+    float cavities = (1.0 - smoothstep(0.26, 0.52, detail.b)) * 0.18;
+    float variation = 0.68 + mineral.b * 0.54 + (grit.b - 0.5) * 0.15 - cavities;
+    vec3 rock = uColor * variation;
+    float soil = smoothstep(0.42, 0.72, mineral.a) * 0.56;
+    float moss = smoothstep(0.72, 0.88, mineral.a) * smoothstep(0.40, 0.66, detail.a);
+    moss *= smoothstep(0.35, 0.82, max(normal.y, 0.0));
+    vec3 surface = mix(rock, uIslandSoil * (0.78 + detail.b * 0.40), soil);
+    if (cliff) {
+      // Broken mineral bands follow warped rock, without regular terrace lines.
+      float bedding = fract(vWorld.y * 2.1 + mineral.b * 2.7 + detail.b * 0.23);
+      float erosion = (1.0 - smoothstep(0.02, 0.16, bedding)) * smoothstep(0.38, 0.70, detail.a);
+      surface *= 1.0 - erosion * 0.19;
+      moss *= 0.24;
+    }
+    surface = mix(surface, uIslandMoss * (0.78 + grit.b * 0.38), moss * 0.75);
+    if (grass) surface = uColor * (0.76 + detail.b * 0.36);
+    vec3 color = surface * (0.72 + diffuse * 0.36);
+    // Preserve the existing diffuse Brain spill; land never adds clearcoat or
+    // a metallic/environment reflection, even along the fractured cliff faces.
+    if (!cliff && !grass) {
+      float radius = length(vWorld.xz);
+      color *= 1.0 - 0.66 * exp(-radius * radius / 2.1);
+      float lightPool = 0.34 * exp(-radius * radius / 7.6) + 0.08 * exp(-pow(radius - 2.18, 2.0) / 0.70);
+      color += mix(uAccent, uSilver, 0.22) * lightPool * uBrainLightStrength * (0.96 + 0.04 * sin(uTime * 2.15));
+    } else {
+      vec3 brainOffset = uBrainLight - vWorld;
+      float distanceSquared = max(dot(brainOffset, brainOffset), 0.01);
+      float brainDiffuse = max(dot(normal, brainOffset * inversesqrt(distanceSquared)), 0.0);
+      color += mix(uAccent, uSilver, 0.32) * uBrainLightStrength / (1.0 + 0.58 * distanceSquared) * (0.10 + 0.62 * brainDiffuse);
+    }
+    gl_FragColor = vec4(color, uOpacity);
+    return;
+  }
   if (uMaterial > 12.5) {
     // Honed concrete stays diffuse: no reflected office/orb image or clearcoat.
     vec3 surfaceNormal = normalize(vNormal);
@@ -149,28 +205,6 @@ void main() {
     return;
   }
   vec3 view = normalize(uEye - vWorld);
-  if (uMaterial > 5.5 && uMaterial < 6.5) {
-    float radius = length(vWorld.xz);
-    float contactShadow = 1.0 - 0.66 * exp(-radius * radius / 2.1);
-    vec2 terrainUv = vWorld.xz * uTerrainScale;
-    vec4 stone = texture2D(uTerrainMap, terrainUv);
-    float grain = texture2D(uTerrainMap, terrainUv * 9.0 + vec2(0.17, 0.53)).a;
-    vec3 stoneNormal = normalize(vec3((stone.r - 0.5) * 0.44, 1.0, (stone.g - 0.5) * 0.44));
-    float stoneDiffuse = max(dot(stoneNormal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
-    float layer = fract(stone.b * 7.0);
-    float contour = 1.0 - smoothstep(0.02, 0.09, min(layer, 1.0 - layer));
-    float finish = (0.88 + stone.b * 0.28 + (grain - 0.5) * 0.08) * (1.0 - contour * 0.12);
-    vec3 floorColor = mix(uColor, uNavyDeep, 0.12 + contour * 0.15) * finish * contactShadow;
-    floorColor *= 0.84 + stoneDiffuse * 0.18;
-    floorColor += uNavy * (0.065 + stone.b * 0.045);
-    // Diffuse emitter spill lights the matte island without reflecting objects.
-    float lightPulse = 0.96 + 0.04 * sin(uTime * 2.15);
-    float lightPool = 0.34 * exp(-radius * radius / 7.6);
-    lightPool += 0.08 * exp(-pow(radius - 2.18, 2.0) / 0.70);
-    floorColor += mix(uAccent, uSilver, 0.22) * lightPool * uBrainLightStrength * lightPulse;
-    gl_FragColor = vec4(floorColor, 1.0);
-    return;
-  }
   vec3 normal = normalize(vNormal);
   float facing = abs(dot(normal, view));
   float rim = pow(1.0 - facing, 3.0);
@@ -224,19 +258,6 @@ void main() {
   } else if (uMaterial > 6.5 && uMaterial < 7.5) {
     float sweep = 1.0 - smoothstep(0.015, 0.065, abs(vWorld.y - uSweepY));
     color = mix(color, uAccent * 1.65, sweep * uConstruction * 0.82);
-  } else if (uMaterial > 8.5) {
-    // Axis-selected world projection preserves faceted normals while giving
-    // vertical layers and loose rocks the same matte mineral material.
-    vec2 stonePlane = abs(normal.x) > abs(normal.z) ? vWorld.zy : vWorld.xy;
-    vec2 stoneUv = stonePlane * vec2(uTerrainScale * 2.0, uTerrainScale * 8.0);
-    vec4 stone = texture2D(uTerrainMap, stoneUv);
-    float grain = texture2D(uTerrainMap, stoneUv * 9.0 + vec2(0.41, 0.29)).a;
-    float strata = 0.5 + 0.5 * sin(vWorld.y * 9.0 + stone.b * 4.0);
-    float veinField = fract(stone.b * 11.0 + vWorld.y * 0.21);
-    float mineral = (1.0 - smoothstep(0.015, 0.055, abs(veinField - 0.5))) * smoothstep(0.58, 0.75, grain);
-    vec3 rock = mix(uColor, uNavy, strata * 0.22 + stone.b * 0.12);
-    color = rock * (0.62 + diffuse * 0.56) * (0.84 + stone.b * 0.28 + (grain - 0.5) * 0.12);
-    color += uAccent * mineral * 0.024 + uNavy * rim * 0.075;
   }
   gl_FragColor = vec4(color, alpha);
 }`
@@ -298,16 +319,6 @@ function cylinder(bottomRadius: number, topRadius: number, bottom: number, top: 
   }
   return geometry
 }
-function groundDisc(footprint: HqIslandFootprint): Geometry {
-  const geometry: Geometry = { positions: [], normals: [] }
-  const y = SPATIAL_VIEWPORT_GROUND_Y
-  for (let index = 0; index < footprint.outline.length; index++) {
-    const current = footprint.outline[index]!, next = footprint.outline[(index + 1) % footprint.outline.length]!
-    geometry.positions.push(0, y, 0, next.x, y, next.z, current.x, y, current.z)
-    for (let vertex = 0; vertex < 3; vertex++) geometry.normals.push(0, 1, 0)
-  }
-  return geometry
-}
 function islandWater(footprint: HqIslandFootprint): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
   const seaLevel = SPATIAL_VIEWPORT_GROUND_Y - 0.50
@@ -336,51 +347,6 @@ function islandWater(footprint: HqIslandFootprint): Geometry {
   }
   return geometry
 }
-const ISLAND_LAYERS = [
-  { scale: 1, inset: 0, depth: 0 },
-  { scale: 1, inset: 0.08, depth: 0.09 },
-  { scale: 0.99, inset: 0.04, depth: 0.25 },
-  { scale: 0.965, inset: 0, depth: 0.53 },
-  { scale: 0.90, inset: 0, depth: 0.78 },
-  { scale: 0.73, inset: 0, depth: 1 },
-] as const
-function islandLayerPoint(footprint: HqIslandFootprint, index: number, level: number): Vector {
-  const sample = index % footprint.outline.length, point = footprint.outline[sample]!, band = ISLAND_LAYERS[level]!
-  const angle = sample / footprint.outline.length * Math.PI * 2, radius = footprint.radii[sample]!
-  const scale = band.scale - band.inset / radius
-  const rock = level > 1 ? Math.sin(angle * 9 + level * 1.7) * 0.065 + Math.sin(angle * 17 - level) * 0.022 : 0
-  return [point.x * scale, SPATIAL_VIEWPORT_GROUND_Y - band.depth * footprint.depth + rock, point.z * scale]
-}
-function groundEdge(footprint: HqIslandFootprint): Geometry {
-  const geometry: Geometry = { positions: [], normals: [] }
-  const segments = footprint.outline.length
-  function triangle(a: Vector, b: Vector, c: Vector) {
-    const normal = normalize(cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]))
-    geometry.positions.push(...a, ...b, ...c)
-    for (let vertex = 0; vertex < 3; vertex++) geometry.normals.push(...normal)
-  }
-  for (let band = 0; band < ISLAND_LAYERS.length - 1; band++) for (let index = 0; index < segments; index++) {
-    const a = islandLayerPoint(footprint, index, band), b = islandLayerPoint(footprint, index + 1, band), c = islandLayerPoint(footprint, index, band + 1), d = islandLayerPoint(footprint, index + 1, band + 1)
-    triangle(a, b, c); triangle(b, d, c)
-  }
-  const underside: Vector = [0, SPATIAL_VIEWPORT_GROUND_Y - footprint.depth * 1.12, 0]
-  for (let index = 0; index < segments; index++) triangle(underside, islandLayerPoint(footprint, index, ISLAND_LAYERS.length - 1), islandLayerPoint(footprint, index + 1, ISLAND_LAYERS.length - 1))
-  return geometry
-}
-function islandPerimeter(footprint: HqIslandFootprint, middle = false): Geometry {
-  const points: Vector[] = []
-  for (let index = 0; index <= footprint.outline.length; index++) {
-    const sample = index % footprint.outline.length, angle = sample / footprint.outline.length * Math.PI * 2
-    if (middle) {
-      const point = islandLayerPoint(footprint, sample, 3)
-      points.push([point[0] + Math.cos(angle) * 0.014, point[1], point[2] + Math.sin(angle) * 0.014])
-    } else {
-      const point = footprint.outline[sample]!
-      points.push([point.x - Math.cos(angle) * 0.035, SPATIAL_VIEWPORT_GROUND_Y + 0.014, point.z - Math.sin(angle) * 0.035])
-    }
-  }
-  return tube(points, middle ? 0.011 : 0.014, 6)
-}
 function islandGroundShadow(footprint: HqIslandFootprint): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
   const height = SPATIAL_VIEWPORT_GROUND_Y - footprint.depth * 1.22 - 0.16
@@ -408,53 +374,6 @@ function merge(...parts: Geometry[]): Geometry {
     for (const value of part.normals) geometry.normals.push(value)
   }
   return geometry
-}
-function islandDecorations(footprint: HqIslandFootprint, workspaces: readonly OfficePlacement[]): { rocks: Geometry; grass: Geometry } {
-  const rocks: Geometry = { positions: [], normals: [] }, grass: Geometry = { positions: [], normals: [] }
-  const floorOuterRadius = Math.max(...workspaces.map(office => office.sector.outerRadius))
-  const candidates: DepartmentRoadPoint[] = [], placed: DepartmentRoadPoint[] = []
-  for (let index = 0; index < 36; index++) {
-    const angle = index * Math.PI * (3 - Math.sqrt(5)) + 0.35, radius = floorOuterRadius + 1.1
-    candidates.push({ x: Math.cos(angle) * radius, z: Math.sin(angle) * radius })
-  }
-  function clear(point: DepartmentRoadPoint): boolean {
-    const radius = Math.hypot(point.x, point.z)
-    if (radius < floorOuterRadius + 0.85 || radius + 0.85 > hqIslandRadiusAt(footprint, Math.atan2(point.z, point.x))) return false
-    if (placed.some(previous => Math.hypot(point.x - previous.x, point.z - previous.z) < 2.4)) return false
-    return true
-  }
-  function rock(x: number, z: number, width: number, height: number, depth: number, turn: number) {
-    const shape = parametric(10, 6, (u, v) => {
-      const angle = u * Math.PI * 2, latitude = v * Math.PI
-      const px = Math.sin(latitude) * Math.cos(angle) * width, pz = Math.sin(latitude) * Math.sin(angle) * depth
-      return [x + px * Math.cos(turn) + pz * Math.sin(turn), SPATIAL_VIEWPORT_GROUND_Y + height * (0.45 + Math.cos(latitude)), z - px * Math.sin(turn) + pz * Math.cos(turn)]
-    }, () => [0, 1, 0])
-    for (let index = 0; index < shape.positions.length; index += 9) {
-      const a: Vector = [shape.positions[index]!, shape.positions[index + 1]!, shape.positions[index + 2]!]
-      const b: Vector = [shape.positions[index + 3]!, shape.positions[index + 4]!, shape.positions[index + 5]!]
-      const c: Vector = [shape.positions[index + 6]!, shape.positions[index + 7]!, shape.positions[index + 8]!]
-      const normal = normalize(cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]))
-      rocks.positions.push(...a, ...b, ...c)
-      for (let vertex = 0; vertex < 3; vertex++) rocks.normals.push(...normal)
-    }
-  }
-  for (const point of candidates) {
-    if (!clear(point)) continue
-    const index = placed.length, turn = index * 1.83
-    placed.push(point)
-    rock(point.x, point.z, 0.48, 0.22, 0.35, turn)
-    rock(point.x + 0.48, point.z + 0.18, 0.25, 0.105, 0.20, turn + 0.8)
-    rock(point.x - 0.34, point.z + 0.24, 0.20, 0.08, 0.16, turn - 0.6)
-    for (let tuft = 0; tuft < 3; tuft++) for (let blade = 0; blade < 4; blade++) {
-      const angle = turn + tuft * 2.1 + blade * 0.62, baseX = point.x + Math.cos(tuft * 2.1) * 0.65, baseZ = point.z + Math.sin(tuft * 2.1) * 0.52
-      const height = 0.14 + blade * 0.025, bendX = Math.cos(angle) * 0.08, bendZ = Math.sin(angle) * 0.08, widthX = Math.cos(angle + Math.PI / 2) * 0.017, widthZ = Math.sin(angle + Math.PI / 2) * 0.017
-      grass.positions.push(baseX - widthX, SPATIAL_VIEWPORT_GROUND_Y + 0.01, baseZ - widthZ, baseX + widthX, SPATIAL_VIEWPORT_GROUND_Y + 0.01, baseZ + widthZ, baseX + bendX, SPATIAL_VIEWPORT_GROUND_Y + height, baseZ + bendZ)
-      const normal = normalize([Math.cos(angle), 0.25, Math.sin(angle)])
-      for (let vertex = 0; vertex < 3; vertex++) grass.normals.push(...normal)
-    }
-    if (placed.length >= 8) break
-  }
-  return { rocks, grass }
 }
 function constructionStage(age: number, start: number, end: number): number {
   const progress = Math.max(0, Math.min(1, (age - start) / (end - start)))
@@ -637,6 +556,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
   let program: WebGLProgram | null = null
   let effects: HologramEffects | null = null
   let terrainMaterial: HologramTerrainMaterial | null = null
+  let islandMaterial: NaturalIslandMaterial | null = null
   try {
     function compile(kind: number, source: string) {
       const shader = gl!.createShader(kind)
@@ -653,8 +573,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Hologram renderer unavailable')
     gl.useProgram(program)
     const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal')
-    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uBrainLight', 'uBrainLightStrength', 'uRoomLight', 'uRoomLightStrength', 'uTerrainMap', 'uTerrainScale'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uBrainLight', 'uBrainLightStrength', 'uRoomLight', 'uRoomLightStrength', 'uTerrainMap', 'uTerrainScale', 'uIslandMap', 'uIslandScale', 'uIslandSoil', 'uIslandMoss'].map(name => [name, gl.getUniformLocation(program!, name)]))
     terrainMaterial = createHologramTerrainMaterial(gl)
+    islandMaterial = createNaturalIslandMaterial(gl)
     effects = createHologramEffects(gl)
     gl.useProgram(program)
     const mesh = (data: Geometry): Mesh => {
@@ -703,7 +624,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     const brainAuraColor = palette.navy.map((value, index) => value * 0.55 + palette.silver[index]! * 0.45) as Vector
     const islandTopColor = palette.charcoal.map((value, index) => value * 0.72 + palette.navy[index]! * 0.28) as Vector
     const islandRockColor = palette.coal.map((value, index) => value * 0.52 + palette.navyDeep[index]! * 0.30 + palette.steelGray[index]! * 0.18) as Vector
-    const islandGrassColor = palette.gold.map((value, index) => value * 0.22 + palette.steelGray[index]! * 0.34 + palette.navyDeep[index]! * 0.44) as Vector
+    const islandSoilColor = palette.gold.map((value, index) => value * 0.24 + palette.coal[index]! * 0.56 + palette.steelGray[index]! * 0.20) as Vector
+    const islandMossColor: Vector = [palette.gold[0] * 0.22, palette.gold[1] * 0.36, palette.navy[2] * 0.30]
     const officeFoliageColor = palette.navy.map((value, index) => value * 0.55 + palette.gold[index]! * 0.20 + palette.steelGray[index]! * 0.25) as Vector
     let officeLayout = layoutDepartmentOffices(EMPTY_DEPARTMENTS)
     function workplaceMeshes() {
@@ -712,15 +634,18 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
     let sharedWorkplaces = workplaceMeshes()
     let islandFootprint = createHqIslandFootprint(officeLayout), lastIslandLayout = officeLayout
-    const initialDecorations = islandDecorations(islandFootprint, [officeLayout.executive, ...officeLayout.offices])
+    function naturalLand() {
+      return createNaturalIslandGeometry(islandFootprint, Math.max(...officeLayout.rings.map(ring => ring.outerRadius)) + 0.12, SPATIAL_VIEWPORT_GROUND_Y)
+    }
+    const initialLand = naturalLand()
     const geometry = {
       water: mesh(islandWater(islandFootprint)),
-      ground: mesh(groundDisc(islandFootprint)),
-      groundEdge: mesh(groundEdge(islandFootprint)),
-      groundLight: mesh(islandPerimeter(islandFootprint)),
-      groundMidLight: mesh(islandPerimeter(islandFootprint, true)),
+      ground: mesh(initialLand.top),
+      groundEdge: mesh(initialLand.cliffs),
+      groundLight: mesh(initialLand.topGold),
+      groundMidLight: mesh(initialLand.middleGold),
       groundShadow: mesh(islandGroundShadow(islandFootprint)),
-      islandRocks: mesh(initialDecorations.rocks), islandGrass: mesh(initialDecorations.grass),
+      islandRocks: mesh(initialLand.rocks), islandGrass: mesh(initialLand.grass),
       hub: mesh(cylinder(2.16, 2.16, SPATIAL_VIEWPORT_GROUND_Y + 0.004, SPATIAL_VIEWPORT_GROUND_Y + 0.044)),
       hubRing: mesh(torus(2.14, 0.012, 192, 8)),
       base: mesh(cylinder(1.53 * BASE_RADIUS_SCALE, 1.53 * BASE_RADIUS_SCALE, -0.65, -0.47)),
@@ -825,6 +750,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl.uniform1i(uniforms.uTerrainMap!, 1)
       gl.uniform1f(uniforms.uTerrainScale!, 1 / terrainMaterial!.worldSize)
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, terrainMaterial!.texture)
+      gl.uniform1i(uniforms.uIslandMap!, 2)
+      gl.uniform1f(uniforms.uIslandScale!, 1 / islandMaterial!.worldSize)
+      gl.uniform3fv(uniforms.uIslandSoil!, islandSoilColor); gl.uniform3fv(uniforms.uIslandMoss!, islandMossColor)
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, islandMaterial!.texture)
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null)
     }
     function drawMesh(shape: Mesh, color: Vector, material: number, opacity = 1, transform = staticModel, singleSided = false, count = shape.count) {
@@ -833,7 +762,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.normal); gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(normal)
       gl.uniformMatrix4fv(uniforms.uModel!, false, transform)
       gl.uniform3fv(uniforms.uColor!, color); gl.uniform1f(uniforms.uMaterial!, material); gl.uniform1f(uniforms.uOpacity!, opacity)
-      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11 || material === 13)) || (material === 4 && opacity > 0.5))
+      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11 || material === 13 || material === 14)) || (material === 4 && opacity > 0.5))
       if (singleSided) { gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK) }
       else gl.disable(gl.CULL_FACE)
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shape.indices)
@@ -945,18 +874,18 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         previousSeconds = seconds
         updateOffices(layout.departments ?? EMPTY_DEPARTMENTS, Boolean(layout.reducedMotion))
         if (officeLayout !== lastIslandLayout) {
-          // The coast supports the entire shared circular floor and leaves a
-          // natural rocky shoreline beyond its outside edge.
+          // Only land relief/material geometry changes. Preserve the original
+          // water boundary, scene radius, flat workplace support and camera fit.
           islandFootprint = createHqIslandFootprint(officeLayout)
-          const decorations = islandDecorations(islandFootprint, [officeLayout.executive, ...officeLayout.offices])
+          const land = naturalLand()
           for (const shape of [geometry.water, geometry.ground, geometry.groundEdge, geometry.groundLight, geometry.groundMidLight, geometry.groundShadow, geometry.islandRocks, geometry.islandGrass]) releaseMesh(shape)
           geometry.water = mesh(islandWater(islandFootprint))
-          geometry.ground = mesh(groundDisc(islandFootprint))
-          geometry.groundEdge = mesh(groundEdge(islandFootprint))
-          geometry.groundLight = mesh(islandPerimeter(islandFootprint))
-          geometry.groundMidLight = mesh(islandPerimeter(islandFootprint, true))
+          geometry.ground = mesh(land.top)
+          geometry.groundEdge = mesh(land.cliffs)
+          geometry.groundLight = mesh(land.topGold)
+          geometry.groundMidLight = mesh(land.middleGold)
           geometry.groundShadow = mesh(islandGroundShadow(islandFootprint))
-          geometry.islandRocks = mesh(decorations.rocks); geometry.islandGrass = mesh(decorations.grass)
+          geometry.islandRocks = mesh(land.rocks); geometry.islandGrass = mesh(land.grass)
           lastIslandLayout = officeLayout
         }
         const floorRadius = Math.max(hologramFloorRadius(layout.officeLayerCount), officeLayout.floorRadius, islandFootprint.radius)
@@ -1023,7 +952,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         const drawSceneObjects = () => {
           drawMesh(geometry.groundLight, palette.gold, 2, 0.76, groundLightModel)
           drawMesh(geometry.islandRocks, islandRockColor, 9)
-          drawMesh(geometry.islandGrass, islandGrassColor, 0)
+          drawMesh(geometry.islandGrass, islandMossColor, 14)
           drawMesh(geometry.hub, palette.navyDeep, 8)
           drawMesh(geometry.hubRing, palette.gold, 2, 0.94, hubRingModel)
           drawMesh(sharedWorkplaces.floor, officeFloorColor, 13)
@@ -1094,6 +1023,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         officeEntries.clear(); firstSeen.clear()
         effects?.dispose(); effects = null
         terrainMaterial?.dispose(); terrainMaterial = null
+        islandMaterial?.dispose(); islandMaterial = null
         for (const buffer of buffers) gl.deleteBuffer(buffer)
         for (const shader of shaders) gl.deleteShader(shader)
         gl.deleteProgram(program)
@@ -1103,6 +1033,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
   catch {
     effects?.dispose()
     terrainMaterial?.dispose()
+    islandMaterial?.dispose()
     for (const buffer of buffers) gl.deleteBuffer(buffer)
     for (const shader of shaders) gl.deleteShader(shader)
     if (program) gl.deleteProgram(program)

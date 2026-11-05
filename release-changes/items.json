@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-CIRCULAR-WORKPLACES-20261105",
+    "task": "HQ-NATURAL-ISLAND-20261105",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5289,9 +5289,12 @@
       "docs/work-packages/company-hq/HQ-LIVE-EVENTS-20261105.md",
       "docs/work-packages/company-hq/HQ-OFFICE-RING-BALANCE-20261105.md",
       "packages/ui/src/utils/circularWorkplaceGeometry.ts",
-      "docs/work-packages/company-hq/HQ-CIRCULAR-WORKPLACES-20261105.md"
+      "docs/work-packages/company-hq/HQ-CIRCULAR-WORKPLACES-20261105.md",
+      "packages/ui/src/utils/naturalIslandGeometry.ts",
+      "packages/ui/src/utils/naturalIslandMaterial.ts",
+      "docs/work-packages/company-hq/HQ-NATURAL-ISLAND-20261105.md"
     ],
-    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The matte Coal/Navy/Gold island shares its coast with the minimap and supports the continuous workplace floor through its occupied outer band. Cached 512-square stone/normal/grain material, softened lamps, Gold seams, faceted rock, bounded coastal Navy water/Pearl foam and bloom replace the removed reflection pass/sampler/targets. Current workplaces occupy adjacent annular sectors on one circular floor, with only lower-concrete/upper-glass radial partitions between occupied neighbors. The fixed first band reserves the top CEO slot and accommodates seven departments; later approvals fill clockwise then wider bands, retaining ordinary appended assignments under approved-date/ID ordering. Separate enclosing room walls, platforms and road spokes are replaced; furniture, lamps, freestanding CEO plan board, whole-sector picking, minimap and reversible workplace focus follow the sector layout. Existing shared-template/UX ownership, bilingual overlays, camera/zoom bounds and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
+    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The original island now has an eroded irregular upper coastline, weathered layered cliffs, shallow exposed-rim relief and matte volcanic rock/soil with sparse moss and grass. A protected disk beneath the existing workplace floor stays exactly at the unchanged ground height. A separate cached 1024-square land texture supplies mineral/fracture/pore/soil variation with lifecycle cleanup; the original footprint/camera-water envelope and 512-square structural material remain unchanged. Gold coast accents, existing softened lamps, surrounding Navy water/Pearl foam and bloom remain, with mirrored ground still removed. A lower rocky shelf covers the existing water inner edge without changing its mesh, waves or sea level. Current workplaces occupy adjacent annular sectors on one circular floor, with only lower-concrete/upper-glass radial partitions between occupied neighbors. The fixed first band reserves the top CEO slot and accommodates seven departments; later approvals fill clockwise then wider bands, retaining ordinary appended assignments under approved-date/ID ordering. Separate enclosing room walls, platforms and road spokes are replaced; furniture, lamps, freestanding CEO plan board, whole-sector picking, minimap and reversible workplace focus follow the sector layout. Existing shared-template/UX ownership, bilingual overlays, camera/zoom bounds and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5316,7 +5319,8 @@
       "hq-island-lighting-20261105",
       "hq-live-events-20261105",
       "hq-office-ring-balance-20261105",
-      "hq-circular-workplaces-20261105"
+      "hq-circular-workplaces-20261105",
+      "hq-natural-island-20261105"
     ],
     "evidence": [
       {
@@ -5360,8 +5364,8 @@
         "contains": "if (policy.zoomLocked?.()) return"
       },
       {
-        "path": "packages/ui/src/utils/hologramScene.ts",
-        "contains": "function groundDisc(footprint: HqIslandFootprint): Geometry"
+        "path": "packages/ui/src/utils/naturalIslandGeometry.ts",
+        "contains": "export function createNaturalIslandGeometry(footprint: HqIslandFootprint, protectedRadius: number, groundY: number): NaturalIslandMeshes"
       },
       {
         "path": "packages/ui/src/organisms/BsHologramScene.vue",
@@ -5536,8 +5540,8 @@
         "contains": "export function createHqIslandFootprint(layout: DepartmentOfficeLayout): HqIslandFootprint"
       },
       {
-        "path": "packages/ui/src/utils/hologramScene.ts",
-        "contains": "function islandPerimeter(footprint: HqIslandFootprint, middle = false): Geometry"
+        "path": "packages/ui/src/utils/naturalIslandGeometry.ts",
+        "contains": "if (radius <= protectedEdge) return groundY"
       },
       {
         "path": "packages/ui/src/utils/hologramEffects.ts",
@@ -5550,6 +5554,38 @@
       {
         "path": "packages/ui/src/utils/hologramTerrainMaterial.ts",
         "contains": "export function createHologramTerrainMaterial(gl: WebGLRenderingContext): HologramTerrainMaterial"
+      },
+      {
+        "path": "packages/ui/src/utils/naturalIslandMaterial.ts",
+        "contains": "export function createNaturalIslandMaterial(gl: WebGLRenderingContext): NaturalIslandMaterial"
+      },
+      {
+        "path": "packages/ui/src/utils/naturalIslandMaterial.ts",
+        "contains": "gl.activeTexture(gl.TEXTURE2)"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "createNaturalIslandGeometry(islandFootprint, Math.max(...officeLayout.rings.map(ring => ring.outerRadius)) + 0.12, SPATIAL_VIEWPORT_GROUND_Y)"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "gl.uniform1i(uniforms.uIslandMap!, 2)"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "vec4 mineral = texture2D(uIslandMap, uv);"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "geometry.groundEdge = mesh(land.cliffs)"
+      },
+      {
+        "path": "packages/ui/package.json",
+        "contains": "\"./utils/naturalIslandGeometry\": \"./src/utils/naturalIslandGeometry.ts\""
+      },
+      {
+        "path": "packages/ui/package.json",
+        "contains": "\"./utils/naturalIslandMaterial\": \"./src/utils/naturalIslandMaterial.ts\""
       },
       {
         "path": "apps/company-hq/server/utils/hqEvents.ts",

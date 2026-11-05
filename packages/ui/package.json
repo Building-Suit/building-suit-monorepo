@@ -443,7 +443,9 @@
     "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue",
     "./utils/hologramEffects": "./src/utils/hologramEffects.ts",
     "./utils/officeArchitecture": "./src/utils/officeArchitecture.ts",
-    "./utils/circularWorkplaceGeometry": "./src/utils/circularWorkplaceGeometry.ts"
+    "./utils/circularWorkplaceGeometry": "./src/utils/circularWorkplaceGeometry.ts",
+    "./utils/naturalIslandGeometry": "./src/utils/naturalIslandGeometry.ts",
+    "./utils/naturalIslandMaterial": "./src/utils/naturalIslandMaterial.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
