@@ -24,7 +24,8 @@
     "packages/ux/src/controllers/createMeetingAudio.d.mts",
     "packages/ux/tests/meeting-audio.test.mjs",
     "docs/shared/ui-ownership-manifest.json",
-    "docs/work-packages/company-hq"
+    "docs/work-packages/company-hq",
+    "release-changes/items.json"
   ],
   "reason": "Add internal Arabic-first HQ meeting controls, exact local voice/audio fencing, qualified canonical participants, versioned execution approval and source-only adapters reusing existing HQ chat/task/worker/review. Current source includes founder checkpoint4adde130 and upstream9df6ff85. Synthetic fixtures/browser/process tests do not establish live provider, quota, acoustic or Oracle acceptance. Default transport disabled; no hosted migration/deployment, shared-branch merge, new resource or paid fallback."
 }
