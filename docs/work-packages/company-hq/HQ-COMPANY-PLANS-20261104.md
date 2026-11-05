@@ -1,5 +1,7 @@
 # HQ founder login and reviewed company plans — 4 November 2026
 
+> Historical founder-plan foundation checkpoint. Its legacy-HR-only and timed-refresh limits are superseded by [Brain sync](HQ-BRAIN-SYNC-20261105.md) and [live events](HQ-LIVE-EVENTS-20261105.md); the whole-plan founder authority remains.
+
 Status: source implementation with successful staging schema setup on `dpruoncalmwicrqhqelu`, provider migration metadata `20261104194233`; application acceptance unrun. Work stays in the primary checkout. No public product activation or release is created.
 
 ## Founder direction

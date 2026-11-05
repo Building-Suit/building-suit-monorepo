@@ -1,9 +1,6 @@
 /** GPU-only effects for the native, antialiased WebGL canvas. */
 export interface HologramEffects {
   resize: (width: number, height: number) => boolean
-  beginReflection: () => boolean
-  endReflection: () => void
-  reflectionTexture: () => WebGLTexture | null
   compositeBloom: () => void
   dispose: () => void
 }
@@ -24,11 +21,9 @@ interface EffectProgram {
 }
 
 const MAXIMUM_SCENE_PIXELS = 8_000_000
-const REFLECTION_SCALE = 0.5
-const REFLECTION_LONG_SIDE = 1536
 const BLOOM_SCALE = 0.25
 const BLOOM_LONG_SIDE = 768
-const BLOOM_STRENGTH = 0.60
+const BLOOM_STRENGTH = 0.48
 const POSITION_ATTRIBUTE = 0
 
 const vertexShader = `
@@ -101,9 +96,9 @@ function scaledSize(width: number, height: number, scale: number, limit: number)
  * copies its resolved pixels entirely on the GPU, then combines blurred light
  * with that exact source using straight alpha. Halos can extend over the CSS
  * background while unchanged source pixels retain their native antialiasing.
- * With an 8M-pixel caller budget, target storage is bounded at about 48 MB:
- * RGBA scene copy + half-size RGBA/DEPTH16 reflection + two quarter-size RGBA
- * bloom targets (the long-side caps can reduce this further).
+ * With an 8M-pixel caller budget, target storage is bounded at about 36 MB:
+ * RGBA scene copy + two quarter-size RGBA bloom targets (the long-side cap
+ * can reduce this further). No secondary geometry or depth target is allocated.
  *
  * Fullscreen passes intentionally do not snapshot/restore renderer GL state.
  * After compositeBloom, the default framebuffer/full viewport are bound;
@@ -116,11 +111,10 @@ function scaledSize(width: number, height: number, scale: number, limit: number)
 export function createHologramEffects(gl: WebGLRenderingContext): HologramEffects | null {
   const textures = new Set<WebGLTexture>()
   const framebuffers = new Set<WebGLFramebuffer>()
-  const renderbuffers = new Set<WebGLRenderbuffer>()
   const shaders = new Set<WebGLShader>()
   const programs = new Set<WebGLProgram>()
   let quad: WebGLBuffer | null = null
-  let scene: EffectTarget | null = null, reflection: EffectTarget | null = null
+  let scene: EffectTarget | null = null
   let bloomA: EffectTarget | null = null, bloomB: EffectTarget | null = null
   let mainWidth = 0, mainHeight = 0
   let ready = false, failed = false, disposed = false
@@ -128,10 +122,9 @@ export function createHologramEffects(gl: WebGLRenderingContext): HologramEffect
   function freeTargets() {
     ready = false
     for (const framebuffer of framebuffers) gl.deleteFramebuffer(framebuffer)
-    for (const renderbuffer of renderbuffers) gl.deleteRenderbuffer(renderbuffer)
     for (const texture of textures) gl.deleteTexture(texture)
-    framebuffers.clear(); renderbuffers.clear(); textures.clear()
-    scene = null; reflection = null; bloomA = null; bloomB = null
+    framebuffers.clear(); textures.clear()
+    scene = null; bloomA = null; bloomB = null
   }
   function freeResources() {
     freeTargets()
@@ -159,8 +152,7 @@ export function createHologramEffects(gl: WebGLRenderingContext): HologramEffect
   try {
     if (gl.isContextLost()) return null
     const maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number
-    const maximumDepthSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) as number
-    if (!Number.isFinite(maximumTextureSize) || maximumTextureSize < 1 || !Number.isFinite(maximumDepthSize) || maximumDepthSize < 1) return null
+    if (!Number.isFinite(maximumTextureSize) || maximumTextureSize < 1) return null
 
     function compile(kind: number, source: string) {
       const shader = gl.createShader(kind)
@@ -194,7 +186,7 @@ export function createHologramEffects(gl: WebGLRenderingContext): HologramEffect
     gl.bindBuffer(gl.ARRAY_BUFFER, quad)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
 
-    function target(width: number, height: number, depth = false): EffectTarget {
+    function target(width: number, height: number): EffectTarget {
       const texture = gl.createTexture()
       if (!texture) throw new Error('Hologram effects unavailable')
       textures.add(texture)
@@ -208,13 +200,6 @@ export function createHologramEffects(gl: WebGLRenderingContext): HologramEffect
       if (!framebuffer) throw new Error('Hologram effects unavailable')
       framebuffers.add(framebuffer); gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
-      if (depth) {
-        const buffer = gl.createRenderbuffer()
-        if (!buffer) throw new Error('Hologram effects unavailable')
-        renderbuffers.add(buffer); gl.bindRenderbuffer(gl.RENDERBUFFER, buffer)
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height)
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, buffer)
-      }
       if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error('Hologram effects unavailable')
       return { texture, framebuffer, width, height }
     }
@@ -240,41 +225,16 @@ export function createHologramEffects(gl: WebGLRenderingContext): HologramEffect
           // Release first: resizing never keeps two complete target sets alive.
           freeTargets()
           mainWidth = width; mainHeight = height
-          const [reflectionWidth, reflectionHeight] = scaledSize(width, height, REFLECTION_SCALE, Math.min(REFLECTION_LONG_SIDE, maximumTextureSize, maximumDepthSize))
           const [bloomWidth, bloomHeight] = scaledSize(width, height, BLOOM_SCALE, Math.min(BLOOM_LONG_SIDE, maximumTextureSize))
           // A temporary framebuffer attachment also validates the copy texture.
           scene = target(width, height)
-          reflection = target(reflectionWidth, reflectionHeight, true)
           bloomA = target(bloomWidth, bloomHeight); bloomB = target(bloomWidth, bloomHeight)
           ready = true
-          gl.bindRenderbuffer(gl.RENDERBUFFER, null)
           mainTarget(); clearTextureUnits()
           return true
         }
         catch { disable(); return false }
       },
-      beginReflection() {
-        if (!usable() || !ready || !reflection) return false
-        try {
-          // The world's reflection sampler may still reference last frame's
-          // texture. Unbind it before attaching that texture for writing.
-          clearTextureUnits()
-          gl.bindFramebuffer(gl.FRAMEBUFFER, reflection.framebuffer)
-          gl.viewport(0, 0, reflection.width, reflection.height)
-          gl.disable(gl.SCISSOR_TEST); gl.colorMask(true, true, true, true)
-          gl.enable(gl.DEPTH_TEST); gl.depthMask(true)
-          gl.clearColor(0, 0, 0, 0); gl.clearDepth(1)
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-          return true
-        }
-        catch { disable(); return false }
-      },
-      endReflection() {
-        if (!usable()) return
-        try { mainTarget() }
-        catch { disable() }
-      },
-      reflectionTexture() { return usable() && ready ? reflection?.texture ?? null : null },
       compositeBloom() {
         if (!usable() || !ready || !scene || !bloomA || !bloomB || !quad) return
         if (mainWidth !== gl.drawingBufferWidth || mainHeight !== gl.drawingBufferHeight) return

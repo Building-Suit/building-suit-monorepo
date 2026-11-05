@@ -1,5 +1,7 @@
 # HQ — cloud Brain connection, 4 November 2026
 
+> Historical 4 November connection checkpoint. Its timed-refresh description is superseded by [HQ-LIVE-EVENTS-20261105](HQ-LIVE-EVENTS-20261105.md); current reads are event-driven, without recurring client data fetches.
+
 Status: cloud index and one note read verified after founder-requested restart/retry; broader application acceptance deferred. Shield redesign follows in [HQ-SHIELD-ORB-20261104](HQ-SHIELD-ORB-20261104.md).
 
 The founder authorizes START for the first cloud Brain-to-orb connection phase and explicitly rejects any local Brain connection. This narrowly lifts the prior clarification hold; it does not resume offices, HR-proposal board, staff/model execution or the broader hybrid operational database. The existing primary checkout and `codex/company-hq/office-design` / [PR528](https://github.com/Building-Suit/building-suit-monorepo/pull/528) remain the work location. No new worktree is used.

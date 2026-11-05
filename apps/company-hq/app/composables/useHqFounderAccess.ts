@@ -41,12 +41,14 @@ function displayUser(value: unknown): HqUserPresentation | undefined {
  * Supabase session validation and cookie rotation belong to the HQ server.
  */
 export function useHqFounderAccess(messages?: () => HqFounderAccessMessages) {
+  const live = useHqLiveEvents()
   const status = ref<HqFounderAccessPresentation['status']>('loading')
   const user = shallowRef<HqUserPresentation | undefined>(undefined)
   const pending = ref(false)
   const messageReason = ref<MessageReason | null>(null)
   let request: AbortController | null = null
   let checking: Promise<boolean> | null = null
+  let checkQueued = false
   let disposed = false
   const headers = { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' }
   const access = computed<HqFounderAccessPresentation>(() => ({
@@ -66,7 +68,10 @@ export function useHqFounderAccess(messages?: () => HqFounderAccessMessages) {
   async function perform(action: AccessAction, credentials?: { email: string; password: string }): Promise<boolean> {
     if (disposed || pending.value || typeof window === 'undefined') return false
     pending.value = true
-    clear(action === 'sign-in' ? 'anonymous' : 'loading')
+    // A background access invalidation keeps presentation stable until its
+    // fresh server result arrives. Every privileged request still authorizes
+    // independently; failed/revoked results clear authority immediately.
+    if (action !== 'check' || status.value !== 'founder') clear(action === 'sign-in' ? 'anonymous' : 'loading')
     const controller = new AbortController()
     request = controller
     try {
@@ -117,13 +122,20 @@ export function useHqFounderAccess(messages?: () => HqFounderAccessMessages) {
       return false
     }
     finally {
-      if (!disposed) pending.value = false
-      if (request === controller) request = null
+      if (request === controller) {
+        request = null
+        if (!disposed) {
+          pending.value = false
+          live.setFounder(status.value === 'founder')
+          if (checkQueued) { checkQueued = false; live.invalidate('access') }
+        }
+      }
     }
   }
 
   function recheck(): Promise<boolean> {
     if (checking) return checking
+    if (pending.value) { checkQueued = true; return Promise.resolve(false) }
     const task = perform('check').finally(() => { if (checking === task) checking = null })
     checking = task
     return task
@@ -142,35 +154,29 @@ export function useHqFounderAccess(messages?: () => HqFounderAccessMessages) {
     return perform('register', { email: email.trim(), password })
   }
 
-  function resume() {
-    if (document.hidden || !navigator.onLine) return
-    void recheck()
-  }
-
   function goOffline() {
     request?.abort()
+    request = null
+    checking = null
+    checkQueued = false
+    pending.value = false
     clear('error')
     messageReason.value = 'unavailable'
   }
 
+  live.subscribe('access', recheck, goOffline)
+  watch(status, value => live.setFounder(value === 'founder'), { immediate: true, flush: 'sync' })
   onMounted(() => {
-    document.addEventListener('visibilitychange', resume)
-    window.addEventListener('focus', resume)
-    window.addEventListener('online', resume)
-    window.addEventListener('offline', goOffline)
-    void recheck()
+    if (!document.hidden && navigator.onLine) void recheck()
   })
   onScopeDispose(() => {
     disposed = true
     request?.abort()
     request = null
     checking = null
+    checkQueued = false
     clear('anonymous')
-    if (typeof window === 'undefined') return
-    document.removeEventListener('visibilitychange', resume)
-    window.removeEventListener('focus', resume)
-    window.removeEventListener('online', resume)
-    window.removeEventListener('offline', goOffline)
+    live.setFounder(false)
   })
 
   return { access, recheck, signIn, signOut, register }

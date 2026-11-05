@@ -1,5 +1,7 @@
 # HQ neon materials and floor reflections — 4 November 2026
 
+> Historical reflection prototype. The latest [matte terrain requirement](HQ-ISLAND-LIGHTING-20261105.md) removes its mirrored pass, reflection sampler and render targets entirely; only bounded bloom remains. The dated implementation description below is not current runtime guidance.
+
 The founder's latest supplied reference explicitly supersedes the earlier all-coal/no-navy direction. Mix Coal, canonical Building Navy and Premium Gold using existing tokens, with metallic detail, neon emission and a reflective finite floor. This is a visual refinement in the primary checkout on PR #528.
 
 Preserve the accepted camera/mouse/overview correction, including left-drag pan, middle-drag rotation around the panned world target, the farther default overview and full-floor minimap. Preserve office design, founder access, company plans and all data boundaries; this request adds no functional or staffing work.

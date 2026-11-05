@@ -97,7 +97,7 @@ async function responseJson(response: Response): Promise<unknown> {
   finally { reader.releaseLock() }
 }
 
-async function provider(config: VerifiedConfig, path: string, options: { method?: 'GET' | 'POST'; accessToken?: string; body?: Record<string, unknown> } = {}): Promise<unknown> {
+async function provider(config: VerifiedConfig, path: string, options: { method?: 'GET' | 'POST'; accessToken?: string; body?: Record<string, unknown>; signal?: AbortSignal } = {}): Promise<unknown> {
   try {
     const body = options.body ? JSON.stringify(options.body) : undefined
     if (body && Buffer.byteLength(body) > MAX_PROVIDER_BYTES) throw failure(400, 'cloud-unavailable')
@@ -109,7 +109,7 @@ async function provider(config: VerifiedConfig, path: string, options: { method?
         ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
       },
       body,
-      signal: AbortSignal.timeout(8_000),
+      signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(8_000)]) : AbortSignal.timeout(8_000),
       redirect: 'error',
       cache: 'no-store',
     })
@@ -180,16 +180,27 @@ async function verifiedUser(config: VerifiedConfig, accessToken: string): Promis
 }
 
 /** Only server-selected HQ RPCs; caller must requireHqFounder for privileged work. */
-export async function hqRpc<T>(config: HqAccessConfig, accessToken: string, name: string, body: Record<string, unknown> = {}): Promise<T> {
+export async function hqRpc<T>(config: HqAccessConfig, accessToken: string, name: string, body: Record<string, unknown> = {}, signal?: AbortSignal): Promise<T> {
   const verified = verifiedConfig(config)
   if (!/^hq_[a-z0-9_]{1,80}$/.test(name) || !tokenString(accessToken, 3_500)) throw failure(403, 'not-founder')
-  try { return await provider(verified, `/rest/v1/rpc/${name}`, { method: 'POST', accessToken, body }) as T }
+  try { return await provider(verified, `/rest/v1/rpc/${name}`, { method: 'POST', accessToken, body, signal }) as T }
   catch (error: unknown) {
     if (error instanceof ProviderError && error.status === 401) throw failure(401, 'invalid-credentials')
     if (error instanceof ProviderError && error.status === 403) throw failure(403, 'not-founder')
     if (error instanceof ProviderError && (error.status === 400 || error.status === 409)) throw failure(error.status, 'cloud-unavailable')
     throw failure(503, 'cloud-unavailable')
   }
+}
+
+/** Server-only transport configuration; the founder JWT never enters the URL. */
+export function hqRealtimeUrl(config: HqAccessConfig): string {
+  const verified = verifiedConfig(config)
+  const url = new URL('/realtime/v1/websocket', verified.url)
+  url.protocol = 'wss:'
+  url.searchParams.set('apikey', verified.key)
+  // Version 1 uses bounded JSON text frames, avoiding a binary broadcast parser.
+  url.searchParams.set('vsn', '1.0.0')
+  return url.href
 }
 
 async function founderSession(event: H3Event, input: HqAccessConfig, config: VerifiedConfig): Promise<HqFounderSession | null> {

@@ -5,6 +5,7 @@ import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffic
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
+import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
 
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()
@@ -14,7 +15,8 @@ const workplacePanelPresent = ref(false)
 const workplaceTitleRef = shallowRef<HTMLElement | null>(null)
 const workplaceSelectRef = shallowRef<{ focus: () => void } | null>(null)
 const officeLayout = computed(() => layoutDepartmentOffices(props.departments ?? []))
-const floorRadius = computed(() => Math.max(officeLayout.value.floorRadius, hologramFloorRadius(props.officeLayerCount)))
+const islandFootprint = computed(() => createHqIslandFootprint(officeLayout.value))
+const floorRadius = computed(() => Math.max(officeLayout.value.floorRadius, islandFootprint.value.radius, hologramFloorRadius(props.officeLayerCount)))
 const availableWorkplaces = computed(() => [
   { ...officeLayout.value.executive, name: props.content.companyPlans.executiveLabel, executive: true },
   ...officeLayout.value.offices.map(office => ({ ...office, executive: false })),
@@ -75,6 +77,7 @@ const renderedNotes = computed(() => visibleNotes.value.slice(0, noteLimit.value
 watch(search, () => { noteLimit.value = 40 })
 async function openBrain() {
   if (brainVisible.value) return
+  emit('refreshBrain')
   rememberReturnFocus()
   brainPanelPresent.value = true
   focusTarget({ id: 'brain', x: 0, z: 0, width: 1.8, depth: 1.8, height: 2, yaw: 0, viewYaw: 0.35, pitch: 0.2, distance: 5 })
@@ -132,11 +135,13 @@ watch(() => availableWorkplaces.value.map(({ id, x, z, width, depth, yaw }) => [
 const userInitials = computed(() => displayedUser.value?.displayName.trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] ?? '').join('') ?? '')
 const mapScale = computed(() => 45 / floorRadius.value)
 const hintId = useId()
+const islandClipId = useId()
 const brainPanelId = useId()
 const brainTitleId = useId()
 const workplacePanelId = useId()
 const workplaceTitleId = useId()
 const mapPolygon = (points: readonly { x: number; z: number }[]) => points.map(point => `${(50 + point.x * mapScale.value).toFixed(3)},${(50 + point.z * mapScale.value).toFixed(3)}`).join(' ')
+const islandMapOutline = computed(() => mapPolygon(islandFootprint.value.outline))
 const officeFootprint = (office: OfficePlacement) => {
   const cosine = Math.cos(office.yaw), sine = Math.sin(office.yaw)
   return mapPolygon(([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([side, end]) => {
@@ -191,8 +196,9 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
         <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
           <div class="bs-hq-layout__minimap" role="img" :aria-label="`${content.minimapLabel}, ${content.zoomLabel}: ${zoomPercent}%`">
             <svg class="bs-hq-layout__minimap-scene" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-              <circle class="bs-hq-layout__map-floor" cx="50" cy="50" r="45" />
-              <polygon v-if="groundFootprint" class="bs-hq-layout__map-footprint" :points="groundFootprint" />
+              <defs><clipPath :id="islandClipId"><polygon :points="islandMapOutline" /></clipPath></defs>
+              <polygon class="bs-hq-layout__map-floor" :points="islandMapOutline" />
+              <polygon v-if="groundFootprint" class="bs-hq-layout__map-footprint" :points="groundFootprint" :clip-path="`url(#${islandClipId})`" />
               <polyline v-for="office in mapOffices" :key="`${office.id}-road`" class="bs-hq-layout__map-road" :points="office.road" />
               <polygon v-for="office in mapOffices" :key="office.id" class="bs-hq-layout__office-marker" :class="{ 'bs-hq-layout__office-marker--executive': office.executive, 'bs-hq-layout__office-marker--selected': selectedWorkplaceId === office.id }" :points="office.points"><title>{{ office.name }}</title></polygon>
               <polygon class="bs-hq-layout__minimap-view" :points="screenRectangle" />

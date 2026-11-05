@@ -19,7 +19,9 @@ export interface OfficeArchitecture {
   floorInset: OfficeArchitectureGeometry
   executive: OfficeFurnitureGeometry
   department: OfficeFurnitureGeometry
-  furnishings: { body: OfficeArchitectureGeometry; metal: OfficeArchitectureGeometry; leaves: OfficeArchitectureGeometry; light: OfficeArchitectureGeometry }
+  furnishings: { body: OfficeArchitectureGeometry; metal: OfficeArchitectureGeometry; leaves: OfficeArchitectureGeometry; light: OfficeArchitectureGeometry; shade: OfficeArchitectureGeometry }
+  /** Local bulb center, shared by the visible fixture and analytic room light. */
+  standingLightPosition: OfficeArchitectureVector
   executiveHitRegions: OfficeExecutiveHitRegions
 }
 
@@ -223,7 +225,7 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   const rim = border(roomWidth - 0.12, roomDepth - 0.12, 0.18, 0.023, 0.008, 0.018)
   const floorInset = roundedBox(roomWidth - 0.38, roomDepth - 0.34, 0.002, 0.012, 0.15, 0.003)
   const walls = empty(), wallTrim = empty(), executive = furniture(), department = furniture()
-  const furnishings = { body: empty(), metal: empty(), leaves: empty(), light: empty() }
+  const furnishings = { body: empty(), metal: empty(), leaves: empty(), light: empty(), shade: empty() }
   const wallZ = halfDepth - 0.16, returnDepth = Math.min(1.35, roomDepth * 0.31), returnZ = wallZ + 0.075 - returnDepth / 2
   append(walls, roundedBox(roomWidth - 0.24, 0.15, 0, WALL_HEIGHT, 0.04, 0.018, 0, wallZ, 3))
   append(wallTrim, box(roomWidth - 0.30, 0.018, 0.021, 0, WALL_HEIGHT - 0.026, wallZ - 0.078))
@@ -265,6 +267,18 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
     append(furnishings.metal, box(0.045, 0.012, 0.008, cabinetX - 0.38 + book * 0.095, 1.17, halfDepth - 0.464))
   }
   append(furnishings.light, box(0.68, 0.010, 0.012, cabinetX, 1.008, halfDepth - 0.45))
+  // Rear-right perimeter fixture leaves the middle/front/outer-chair aisles
+  // untouched. Its 1.815 height stays inside the existing 1.9 room hit volume.
+  const lampX = halfWidth - 0.55, lampZ = halfDepth - 0.66
+  const standingLightPosition: Vector = [lampX, 1.50, lampZ]
+  append(furnishings.metal,
+    cylinder(0.23, 0.21, 0.016, 0.065, lampX, lampZ, 24),
+    cylinder(0.024, 0.024, 0.055, 1.55, lampX, lampZ, 12),
+    cylinder(0.19, 0.19, 1.795, 1.815, lampX, lampZ, 24))
+  append(furnishings.shade, cylinder(0.30, 0.19, 1.535, 1.80, lampX, lampZ, 24))
+  append(furnishings.light,
+    cylinder(0.304, 0.304, 1.513, 1.535, lampX, lampZ, 24),
+    transformed(ellipsoid(0.095, 0.075, 0.095, 12, 8), lampX, standingLightPosition[1], lampZ))
   const leaf = ellipsoid(0.09, 0.29, 0.13, 10, 6)
   for (const side of [-1, 1]) {
     const plantX = side * (halfWidth - 0.55), plantZ = -halfDepth + 0.55
@@ -275,5 +289,5 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
       append(furnishings.leaves, transformed(leaf, plantX + Math.sin(angle) * 0.12, 0.64 + (petal % 2) * 0.05, plantZ + Math.cos(angle) * 0.12, angle, 0.43))
     }
   }
-  return { foundation, rim, walls, wallTrim, floorInset, executive, department, furnishings, executiveHitRegions: officeExecutiveHitRegions(roomWidth, roomDepth) }
+  return { foundation, rim, walls, wallTrim, floorInset, executive, department, furnishings, standingLightPosition, executiveHitRegions: officeExecutiveHitRegions(roomWidth, roomDepth) }
 }
