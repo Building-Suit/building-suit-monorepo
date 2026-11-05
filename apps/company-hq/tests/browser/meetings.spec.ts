@@ -30,18 +30,18 @@ async function waitForHydration(page: Page) {
   await page.waitForFunction(() => Boolean((document.querySelector('#__nuxt') as Element & { __vue_app__?: unknown } | null)?.__vue_app__))
 }
 
-async function openMeeting(page: Page, options: { mobile?: boolean } = {}) {
+async function openMeeting(page: Page, options: { mobile?: boolean; mode?: 'demonstration' | 'live' } = {}) {
   if (options.mobile) await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await waitForHydration(page)
-  const entry = page.locator('.bs-hq-layout__ceo')
+  const entry = page.getByRole('button', { name: /^(Meeting|الاجتماع)$/ })
   await expect(entry).toBeEnabled()
   await entry.focus()
   await page.keyboard.press('Enter')
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(panel(page)).toBeVisible()
-  await expect(panel(page).locator('[data-mode="demonstration"]')).toBeVisible()
-  await expect(panel(page).locator('form').first().locator('button[type="submit"]')).toBeEnabled()
+  await expect(panel(page).locator(`[data-mode="${options.mode ?? 'demonstration'}"]`)).toBeVisible()
+  await expect(panel(page).locator('form').first().locator('input[maxlength="160"]')).toBeEnabled()
   return panel(page)
 }
 
@@ -55,7 +55,10 @@ async function startMeeting(page: Page, title: string) {
 
 async function choose(select: Locator, page: Page, name: string) {
   await select.click()
-  await page.getByRole('option', { name: name === 'English' ? /English|الإنجليزية|الإنجليزي/ : name, exact: name !== 'English' }).click()
+  const controlled = await select.getAttribute('aria-controls')
+  expect(controlled).toBeTruthy()
+  await page.locator(`[id="${controlled}"]`).getByRole('option', { name: name === 'English' ? /English|الإنجليزية|الإنجليزي/ : name, exact: name !== 'English' }).click()
+  await expect(select).toHaveAttribute('aria-expanded', 'false')
 }
 
 async function sendText(page: Page, value: string) {
@@ -93,6 +96,33 @@ async function confirmDecision(page: Page, index: number) {
 async function assertNoOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   expect(await panel(page).evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+}
+
+async function installSyntheticLocalVoices(page: Page) {
+  await page.addInitScript(() => {
+    type FakeUtterance = { text: string; voice?: { voiceURI: string }; onstart?: () => void; onend?: () => void; onerror?: () => void }
+    const voices = [
+      { voiceURI: 'synthetic:local:ar:one', name: 'Synthetic local Arabic One', lang: 'ar-SA', localService: true },
+      { voiceURI: 'synthetic:local:ar:two', name: 'Synthetic local Arabic Two', lang: 'ar-SA', localService: true },
+      { voiceURI: 'synthetic:remote:ar:excluded', name: 'Remote voice must be excluded', lang: 'ar-SA', localService: false },
+    ]
+    const harness = { spoken: [] as { text: string; voiceURI?: string }[], utterances: [] as FakeUtterance[], cancellations: 0, cancelTimes: [] as number[], interruptIntentAt: null as number | null }
+    Object.defineProperty(window, '__meetingAudioHarness', { value: harness })
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: class {
+      text: string
+      constructor(text: string) { this.text = text }
+    } })
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+      getVoices: () => voices,
+      addEventListener() {}, removeEventListener() {},
+      speak(utterance: FakeUtterance) {
+        harness.spoken.push({ text: utterance.text, voiceURI: utterance.voice?.voiceURI })
+        harness.utterances.push(utterance)
+        queueMicrotask(() => utterance.onstart?.())
+      },
+      cancel() { harness.cancellations++; harness.cancelTimes.push(performance.now()) },
+    } })
+  })
 }
 
 test.beforeEach(async ({ page, context }) => {
@@ -155,7 +185,7 @@ test('mobile Arabic keyboard interaction and unavailable audio keep text usable'
   await expect(meeting).toHaveAttribute('dir', 'rtl')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(page.locator('.bs-hq-layout__ceo')).toBeFocused()
+  await expect(page.getByRole('button', { name: /^(Meeting|الاجتماع)$/ })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(meeting).toBeVisible()
   await startMeeting(page, 'اجتماع الجوال المصطنع')
@@ -191,7 +221,8 @@ test('persisted research raises a hand through events while discussion continues
   const generation = (await snapshot(page)).record!.generation
   await meeting.locator('.bs-hq-meeting__audio .bs-hq-meeting__toolbar button').nth(2).click()
   await expect.poll(async () => (await snapshot(page)).record?.generation ?? 0).toBeGreaterThan(generation)
-  await sendText(page, 'Amaya, discuss the synthetic staffing scope while Noah researches.')
+  await choose(meeting.locator('textarea[maxlength="4000"][rows="3"]').locator('xpath=ancestor::form').getByRole('combobox'), page, 'Amaya')
+  await sendText(page, 'Discuss the synthetic staffing scope while background research continues.')
   await expect.poll(async () => (await snapshot(page)).record?.events.filter(event => event.type === 'agent-contribution').at(-1)?.data.agentId).toBe('AG-HR-001')
   expect(await meeting.locator('.bs-hq-meeting__tile[data-status="speaking"]').count()).toBeLessThanOrEqual(1)
   const noah = meeting.locator('.bs-hq-meeting__tile').filter({ hasText: 'Noah' })
@@ -213,7 +244,7 @@ test('exact plan approval dispatches once on intentional end and independent rep
   await page.goto('about:blank')
   await page.goto('/')
   await waitForHydration(page)
-  await page.locator('.bs-hq-layout__ceo').click()
+  await page.getByRole('button', { name: /^(Meeting|الاجتماع)$/ }).click()
   await expect(panel(page)).toBeVisible()
   const held = await snapshot(page)
   expect(held.record?.id).toBe(approvedId)
@@ -229,14 +260,14 @@ test('exact plan approval dispatches once on intentional end and independent rep
   await page.goto('about:blank')
   await page.goto('/')
   await waitForHydration(page)
-  await page.locator('.bs-hq-layout__ceo').click()
+  await page.getByRole('button', { name: /^(Meeting|الاجتماع)$/ }).click()
   await expect.poll(async () => (await snapshot(page)).reports.length, { timeout: 20_000 }).toBe(1)
   const returned = await snapshot(page)
   expect(returned.record?.id).toBe(id)
   expect(returned.receipts).toHaveLength(1)
   await page.reload()
   await waitForHydration(page)
-  await page.locator('.bs-hq-layout__ceo').click()
+  await page.getByRole('button', { name: /^(Meeting|الاجتماع)$/ }).click()
   expect((await snapshot(page)).receipts).toHaveLength(1)
 })
 
@@ -272,35 +303,14 @@ test('another browser session cannot read a meeting and missing request boundari
 
 
 test('explicit exact local voice assignments speak and a founder interruption fences stale browser callbacks', async ({ page }) => {
-  await page.addInitScript(() => {
-    type FakeUtterance = { text: string; voice?: { voiceURI: string }; onstart?: () => void; onend?: () => void; onerror?: () => void }
-    const voices = [
-      { voiceURI: 'synthetic:local:ar:one', name: 'Synthetic local Arabic One', lang: 'ar-SA', localService: true },
-      { voiceURI: 'synthetic:local:ar:two', name: 'Synthetic local Arabic Two', lang: 'ar-SA', localService: true },
-      { voiceURI: 'synthetic:remote:ar:excluded', name: 'Remote voice must be excluded', lang: 'ar-SA', localService: false },
-    ]
-    const harness = { spoken: [] as { text: string; voiceURI?: string }[], utterances: [] as FakeUtterance[], cancellations: 0 }
-    Object.defineProperty(window, '__meetingAudioHarness', { value: harness })
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: class {
-      text: string
-      constructor(text: string) { this.text = text }
-    } })
-    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
-      getVoices: () => voices,
-      addEventListener() {}, removeEventListener() {},
-      speak(utterance: FakeUtterance) {
-        harness.spoken.push({ text: utterance.text, voiceURI: utterance.voice?.voiceURI })
-        harness.utterances.push(utterance)
-        queueMicrotask(() => utterance.onstart?.())
-      },
-      cancel() { harness.cancellations++ },
-    } })
-  })
+  await installSyntheticLocalVoices(page)
   const meeting = await openMeeting(page)
   const steveVoice = meeting.getByRole('combobox', { name: /Steve/ })
   await steveVoice.click()
   await expect(page.getByRole('option', { name: 'Remote voice must be excluded', exact: true })).toHaveCount(0)
-  await page.getByRole('option', { name: 'Synthetic local Arabic One', exact: true }).click()
+  const steveChoices = await steveVoice.getAttribute('aria-controls')
+  await page.locator(`[id="${steveChoices}"]`).getByRole('option', { name: 'Synthetic local Arabic One', exact: true }).click()
+  await expect(steveVoice).toHaveAttribute('aria-expanded', 'false')
   await choose(meeting.getByRole('combobox', { name: /Amaya/ }), page, 'Synthetic local Arabic Two')
   await startMeeting(page, 'Synthetic local voice orchestration')
   await sendText(page, 'Steve, give a synthetic demonstration contribution.')
@@ -312,8 +322,21 @@ test('explicit exact local voice assignments speak and a founder interruption fe
   expect(first.spoken.voiceURI).toBe('synthetic:local:ar:one')
   expect(first.spoken.text).toMatch(/SYNTHETIC|تجريبي/)
   const generation = (await snapshot(page)).record!.generation
-  await meeting.locator('.bs-hq-meeting__audio .bs-hq-meeting__toolbar button').nth(2).click()
+  const interruptButton = meeting.locator('.bs-hq-meeting__audio .bs-hq-meeting__toolbar button').nth(2)
+  await interruptButton.evaluate(element => element.addEventListener('click', () => {
+    ;(window as unknown as { __meetingAudioHarness: { interruptIntentAt: number } }).__meetingAudioHarness.interruptIntentAt = performance.now()
+  }, { capture: true, once: true }))
+  await interruptButton.click()
   await expect.poll(() => page.evaluate(() => (window as unknown as { __meetingAudioHarness: { cancellations: number } }).__meetingAudioHarness.cancellations)).toBeGreaterThan(first.cancellations)
+  const latency = await page.evaluate(() => {
+    const harness = (window as unknown as { __meetingAudioHarness: { interruptIntentAt: number; cancelTimes: number[] } }).__meetingAudioHarness
+    return harness.cancelTimes.find(time => time >= harness.interruptIntentAt)! - harness.interruptIntentAt
+  })
+  expect(latency).toBeGreaterThanOrEqual(0)
+  expect(latency).toBeLessThan(500)
+  const measurement = { clickEventToMockCancelMs: latency, conditions: 'Headless Chromium; synthetic local voices; no microphone; scene WebGL fallback. Measures browser click capture event to mocked speechSynthesis.cancel, not acoustic stopping latency.' }
+  console.log(`Mock browser interruption measurement: ${JSON.stringify(measurement)}`)
+  await test.info().attach('mock-browser-interruption-latency', { body: JSON.stringify(measurement, null, 2), contentType: 'application/json' })
   await expect.poll(async () => (await snapshot(page)).record!.generation).toBeGreaterThan(generation)
   await page.evaluate(() => {
     const first = (window as unknown as { __meetingAudioHarness: { utterances: { onstart?: () => void; onend?: () => void }[] } }).__meetingAudioHarness.utterances[0]
@@ -329,4 +352,150 @@ test('explicit exact local voice assignments speak and a founder interruption fe
     first.onstart?.(); first.onend?.()
   })
   await expect(meeting.locator('.bs-hq-meeting__tile').filter({ hasText: 'Amaya' })).toHaveAttribute('data-status', 'speaking')
+  // A persisted text response arriving after a newer founder interrupt must stay silent.
+  let responsePaused = false
+  let releaseResponse = () => {}
+  const released = new Promise<void>(resolve => { releaseResponse = resolve })
+  await page.route('**/api/hq/meetings/demo', async route => {
+    if (route.request().method() !== 'POST' || route.request().postDataJSON()?.command?.type !== 'text') return route.fallback()
+    const response = await route.fetch()
+    responsePaused = true
+    await released
+    await route.fulfill({ response })
+  })
+  const text = meeting.locator('textarea[maxlength="4000"][rows="3"]')
+  await text.fill('Steve, this delayed synthetic response must stay silent after interruption.')
+  await text.locator('xpath=ancestor::form').locator('button[type="submit"]').click()
+  try {
+    await expect.poll(() => responsePaused).toBe(true)
+    await interruptButton.click()
+  }
+  finally { releaseResponse() }
+  await expect.poll(async () => (await snapshot(page)).record!.events.filter(event => event.type === 'audio-invalidated' && event.data.reason === 'founder-interruption').length).toBeGreaterThan(1)
+  await expect(meeting).toHaveAttribute('aria-busy', 'false')
+  expect(await page.evaluate(() => (window as unknown as { __meetingAudioHarness: { spoken: unknown[] } }).__meetingAudioHarness.spoken.length)).toBe(2)
+})
+
+
+test('SYNTHETIC LIVE-PROTOCOL FIXTURE: trusted roster, correlated output, generation fence and authority loss', async ({ page }) => {
+  // Every live response below is a synthetic DTO, matching livePresentation's
+  // unit fixtures. This test never authenticates or reaches a live HQ backend.
+  await installSyntheticLocalVoices(page)
+  await page.addInitScript(() => {
+    const originalFetch = window.fetch.bind(window)
+    window.fetch = (input, init) => {
+      const source = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (new URL(source, location.href).pathname === '/api/hq/events') {
+        const encoder = new TextEncoder()
+        const body = new ReadableStream({ start(controller) {
+          controller.enqueue(encoder.encode('event: ready\ndata: {}\n\n'))
+          init?.signal?.addEventListener('abort', () => { try { controller.close() } catch { /* The synthetic stream may already be closed. */ } }, { once: true })
+        } })
+        return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }))
+      }
+      return originalFetch(input, init)
+    }
+  })
+  const stamp = '2026-11-05T12:00:00.000Z'
+  const uid = (number: number) => `10000000-0000-4000-8000-${String(number).padStart(12, '0')}`
+  const roster = { observedAt: stamp, participants: [
+    { id: 'AG-CEO-001', name: 'Steve', role: 'CEO', supervisorId: null, qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'synthetic-live-protocol:ceo:v1' },
+    { id: 'AG-HR-001', name: 'Amaya', role: 'HR Lead', supervisorId: 'AG-CEO-001', qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'synthetic-live-protocol:hr:v1' },
+    { id: 'AG-HR-002', name: 'Noah', role: 'Recruiter', supervisorId: 'AG-HR-001', qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'synthetic-live-protocol:recruiter:v1' },
+    { id: 'AG-RES-001', name: 'Nadia', role: 'Research Lead', supervisorId: 'AG-CEO-001', qualified: false, allowedTools: [], registryReference: 'synthetic-live-protocol:unqualified:v1' },
+  ] }
+  type RawContribution = { id: string; meeting_id: string; generation: number; agent_id: string; source_event_id: number; founder_message_id: string; response_message_id: string | null; response_artifact_id: null; response_digest: string | null; response_text: string | null; status: string; error: null; created_at: string; completed_at: null }
+  type RawFixture = {
+    meeting: { id: string; founder_id: string; title: string; language: string; status: string; connection: string; participants: string[]; floor: string; generation: number; paused: boolean; revision: number; created_at: string; ended_at: null } | null
+    events: { id: number; kind: string; actor_id: string; payload: { type: string; text: string; uncertain: boolean }; created_at: string }[]
+    contributions: RawContribution[]
+    turn: { id: string; agentId: string; generation: number; status: string; language: string; text: string | null } | null
+    plans: never[]; tasks: never[]; executionBackend: 'hq-business-tasks'
+  }
+  const fixture: RawFixture = { meeting: null, events: [], contributions: [], turn: null, plans: [], tasks: [], executionBackend: 'hq-business-tasks' }
+  const requests: { type: string; command?: { type: string; text?: string } }[] = []
+  const forbiddenDemoRequests: string[] = []
+  let denied = false
+  await page.route('**/api/hq/**', async route => {
+    const request = route.request(), path = new URL(request.url()).pathname
+    const json = (body: unknown, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
+    if (path === '/api/hq/access') return json({ status: 'founder', user: { displayName: 'SYNTHETIC TRUSTED FOUNDER', detailLabel: 'Synthetic live-protocol fixture; no Auth session' } })
+    if (path === '/api/hq/meetings/availability') return json({ demonstration: false, live: true, blockers: [] })
+    if (path === '/api/hq/meetings/registry') return json(roster)
+    if (path.startsWith('/api/hq/meetings/demo')) { forbiddenDemoRequests.push(path); return json({ error: 'Fixture prohibits demonstration fallback' }, 503) }
+    if (path !== '/api/hq/meetings/live') return json({ error: 'Unrelated HQ backend disabled in synthetic protocol fixture' }, 503)
+    if (denied) return json({ statusMessage: 'Synthetic protocol fixture revokes authority' }, 401)
+    if (request.method() === 'GET') return json(fixture)
+    const body = request.postDataJSON()
+    requests.push(body)
+    if (body.type === 'create') {
+      expect(body.participantIds).toEqual(['AG-CEO-001', 'AG-HR-001', 'AG-HR-002'])
+      fixture.meeting = { id: body.requestId, founder_id: uid(2), title: body.title, language: body.language, status: 'active', connection: 'connected', participants: body.participantIds, floor: 'founder', generation: 0, paused: false, revision: 1, created_at: stamp, ended_at: null }
+    }
+    else {
+      expect(body.type).toBe('command')
+      expect(body.meetingId).toBe(fixture.meeting!.id)
+      fixture.meeting!.revision++
+      if (body.command.type === 'text') {
+        fixture.meeting!.generation++
+        fixture.meeting!.floor = 'AG-CEO-001'
+        fixture.events.push({ id: 1, kind: 'text', actor_id: uid(2), payload: { type: 'text', text: body.command.text, uncertain: false }, created_at: stamp })
+        fixture.contributions = [{ id: uid(3), meeting_id: fixture.meeting!.id, generation: fixture.meeting!.generation, agent_id: 'AG-CEO-001', source_event_id: 1, founder_message_id: uid(5), response_message_id: null, response_artifact_id: null, response_digest: null, response_text: null, status: 'thinking', error: null, created_at: stamp, completed_at: null }]
+        fixture.turn = { id: uid(3), agentId: 'AG-CEO-001', generation: fixture.meeting!.generation, status: 'thinking', language: 'ar', text: 'UNTRUSTED TURN TEXT MUST NEVER BECOME A REPLY' }
+      }
+      else if (body.command.type === 'interrupt') {
+        fixture.meeting!.generation++
+        fixture.meeting!.floor = 'founder'
+        fixture.contributions[0].status = 'interrupted'
+        fixture.turn = null
+      }
+      else throw new Error(`Unexpected synthetic live command: ${body.command.type}`)
+    }
+    return json(fixture)
+  })
+  const meeting = await openMeeting(page, { mode: 'live' })
+  await expect(meeting.getByRole('checkbox', { name: /^Steve/ })).toBeChecked()
+  await expect(meeting.getByRole('checkbox', { name: /^Amaya/ })).toBeChecked()
+  await expect(meeting.getByRole('checkbox', { name: /^Noah/ })).toBeChecked()
+  await expect(meeting.getByRole('checkbox', { name: /^Nadia/ })).toBeDisabled()
+  await choose(meeting.getByRole('combobox', { name: /Steve/ }), page, 'Synthetic local Arabic One')
+  const privateTitle = 'SYNTHETIC LIVE-PROTOCOL FIXTURE — no provider'
+  const setup = meeting.locator('form').first()
+  await setup.locator('input[maxlength="160"]').fill(privateTitle)
+  await setup.locator('button[type="submit"]').click()
+  await expect(meeting.locator('.bs-hq-meeting__tiles')).toBeVisible()
+  await expect(meeting.locator('.bs-hq-meeting__tiles article').first()).toContainText('SYNTHETIC TRUSTED FOUNDER')
+  const founderText = 'SYNTHETIC LIVE-PROTOCOL FIXTURE: Steve, inspect the supplied fixture only.'
+  await sendText(page, founderText)
+  const transcript = meeting.locator('.bs-hq-meeting__log').first()
+  await expect(transcript.locator('li')).toHaveCount(1)
+  await expect(meeting.locator('.bs-hq-meeting__tile').filter({ hasText: 'Steve' })).toHaveAttribute('data-status', 'thinking')
+  await expect(meeting.getByText('UNTRUSTED TURN TEXT MUST NEVER BECOME A REPLY', { exact: true })).toHaveCount(0)
+  expect(await page.evaluate(() => (window as unknown as { __meetingAudioHarness: { spoken: unknown[] } }).__meetingAudioHarness.spoken.length)).toBe(0)
+  const reply = '[SYNTHETIC LIVE-PROTOCOL FIXTURE] Correlated persisted CEO reply.'
+  Object.assign(fixture.contributions[0], { status: 'speaking', response_text: reply, response_digest: 'a'.repeat(64), response_message_id: uid(6) })
+  Object.assign(fixture.turn!, { status: 'speaking' })
+  fixture.meeting!.revision++
+  await meeting.locator('header button').click()
+  await expect(transcript).toContainText(reply)
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __meetingAudioHarness: { spoken: unknown[] } }).__meetingAudioHarness.spoken.length)).toBe(1)
+  expect(await page.evaluate(() => (window as unknown as { __meetingAudioHarness: { spoken: { text: string; voiceURI: string }[] } }).__meetingAudioHarness.spoken[0])).toEqual({ text: reply, voiceURI: 'synthetic:local:ar:one' })
+  await meeting.locator('.bs-hq-meeting__audio .bs-hq-meeting__toolbar button').nth(2).click()
+  await expect(meeting.locator('.bs-hq-meeting__tile').filter({ hasText: 'Steve' })).toHaveAttribute('data-status', 'listening')
+  // Historical text remains attributable, but an obsolete turn cannot speak.
+  fixture.contributions[0].status = 'speaking'
+  fixture.turn = { id: uid(3), agentId: 'AG-CEO-001', generation: fixture.meeting!.generation - 1, status: 'speaking', language: 'ar', text: 'UNTRUSTED TURN TEXT MUST NEVER BECOME A REPLY' }
+  fixture.meeting!.floor = 'AG-CEO-001'
+  fixture.meeting!.revision++
+  await meeting.locator('header button').click()
+  await expect(meeting.locator('.bs-hq-meeting__tile[data-status="speaking"]')).toHaveCount(0)
+  expect(await page.evaluate(() => (window as unknown as { __meetingAudioHarness: { spoken: unknown[] } }).__meetingAudioHarness.spoken.length)).toBe(1)
+  denied = true
+  await meeting.locator('header button').click()
+  await expect(meeting.locator('[data-mode="unavailable"]')).toBeVisible()
+  await expect(meeting.locator('.bs-hq-meeting__tiles')).toHaveCount(0)
+  await expect(meeting.getByText(reply, { exact: true })).toHaveCount(0)
+  await expect(meeting.locator('input[maxlength="160"]')).toHaveValue('')
+  expect(forbiddenDemoRequests).toEqual([])
+  expect(requests.map(request => request.type === 'command' ? request.command!.type : request.type)).toEqual(['create', 'text', 'interrupt'])
 })

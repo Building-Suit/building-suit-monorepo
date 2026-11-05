@@ -102,6 +102,25 @@ test('recognition replaces interim drafts, marks uncertainty and never authorize
   controller.close()
 })
 
+test('oversized recognition rejects the whole alternative and preserves the exact previous draft', async () => {
+  const fixture = browser(), drafts = []
+  const controller = createMeetingAudio({ environment: fixture.environment, onDraft: value => drafts.push(value) })
+  await controller.startCapture(consent)
+  const recognition = fixture.recognizers[0], late = recognition.onresult
+  const reviewed = 'Keep this reviewed draft exactly 👩🏽‍💻 — لا توافق بعد.'
+  recognition.onresult(result(reviewed, true, 0.95))
+  // The former slice at 8000 accepted a partial alternative and split this emoji.
+  recognition.onresult(result(`${'a'.repeat(7_999)}😀 retain this consequential suffix`, true, 0.95))
+  assert.deepEqual(drafts.map(draft => draft.text), [reviewed])
+  assert.equal(controller.getState().error, 'recognition-limit')
+  assert.equal(controller.getState().captureActive, false)
+  assert.equal(recognition.aborts, 1)
+  assert.equal(fixture.counts().stops, 1)
+  late(result('This obsolete recognition callback must stay rejected'))
+  assert.deepEqual(drafts.map(draft => draft.text), [reviewed])
+  controller.close()
+})
+
 test('pending permission is invalidated on close and late tracks are released', async () => {
   let allow
   const fixture = browser({ permission: () => new Promise(resolve => { allow = resolve }) })

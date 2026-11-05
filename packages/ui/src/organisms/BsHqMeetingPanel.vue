@@ -35,15 +35,27 @@ const addressOptions = computed(() => [{ id: '', name: label('coordinator') }, .
 const languageOptions = computed(() => [{ id: 'ar', name: label('arabic') }, { id: 'en', name: label('english') }])
 const floorName = computed(() => props.meeting.floor === props.meeting.founder.id ? props.meeting.founder.name : participants.value.find(participant => participant.id === props.meeting.floor)?.name ?? label('unassigned'))
 const modeLabel = computed(() => label(props.meeting.mode === 'live' ? 'live' : props.meeting.mode === 'demonstration' ? 'demonstration' : 'unavailable'))
-const planDecidable = computed(() => active.value && !disabled.value && props.meeting.plan && ['draft', 'awaiting-approval', 'revised'].includes(props.meeting.plan.state))
+const planDecidable = computed(() => active.value && !disabled.value && props.meeting.plan && (props.meeting.mode === 'live' ? props.meeting.plan.state === 'awaiting-approval' : ['draft', 'awaiting-approval', 'revised'].includes(props.meeting.plan.state)))
 const planRevisable = computed(() => active.value && !disabled.value && props.meeting.plan && !['dispatched', 'discarded'].includes(props.meeting.plan.state))
 
 watch(() => props.meeting.participants, value => {
   const existing = new Set(value.filter(participant => participant.eligible).map(participant => participant.id))
+  const workers = new Set(value.filter(participant => participant.eligible && participant.workEligible !== false).map(participant => participant.id))
   participantIds.value = participantIds.value.filter(id => existing.has(id))
   if (props.meeting.phase === 'setup' && !participantIds.value.length) participantIds.value = value.filter(participant => participant.eligible && participant.selected !== false).map(participant => participant.id)
+  if (!existing.has(addressedTo.value)) addressedTo.value = ''
+  if (!workers.has(researchAgentId.value)) researchAgentId.value = ''
+  if (!workers.has(planOwnerId.value)) planOwnerId.value = ''
 }, { immediate: true })
 watch(() => props.meeting.language, value => { language.value = value })
+watch(() => [props.meeting.phase, props.meeting.mode, props.meeting.founder.id] as const, ([phase, mode, founderId], [previousPhase, previousMode, previousFounder]) => {
+  if ((['active', 'ended'].includes(previousPhase) && ['setup', 'unavailable'].includes(phase)) || (previousMode === 'live' && mode !== 'live') || (previousFounder !== founderId && previousPhase === 'active')) {
+    title.value = props.meeting.title
+    text.value = ''; chat.value = ''; question.value = ''; planTitle.value = ''; objective.value = ''; deliverable.value = ''
+    addressedTo.value = ''; researchAgentId.value = ''; planOwnerId.value = ''; disclosureAccepted.value = false
+    submittedText = ''; submittedChat = ''
+  }
+}, { flush: 'sync' })
 watch(() => props.meeting.draftText, value => { if (value !== undefined) text.value = value })
 watch(() => props.meeting.transcript, value => {
   if (submittedText && value.some(event => event.text === submittedText && event.speakerName === props.meeting.founder.name)) {
@@ -128,6 +140,7 @@ function safeLink(value: string): string | undefined {
         <BsButton variant="secondary" :disabled="meeting.pending" @click="emit('command', { type: 'refresh' })">{{ label('refresh') }}</BsButton>
       </header>
       <p v-if="meeting.mode === 'demonstration'" class="bs-hq-meeting__notice" role="status">{{ label('demonstrationNotice') }}</p>
+      <template v-if="meeting.mode === 'live'"><p class="bs-hq-meeting__notice" role="status">{{ label('liveSourceNotice') }}</p><p class="bs-hq-meeting__meta">{{ label('liveScopeNotice') }}</p></template>
       <p v-if="meeting.message" class="bs-hq-meeting__notice" role="alert">{{ meeting.message }}</p>
       <p class="bs-hq-meeting__meta">{{ label('retention') }}</p>
 

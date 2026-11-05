@@ -215,7 +215,8 @@ export function createMeetingAudio(options = {}) {
           const result = event.results[index]
           const alternative = result?.[0]
           if (!alternative || typeof alternative.transcript !== 'string') continue
-          entries.set(index, { text: alternative.transcript.slice(0, 8_000), final: result.isFinal === true,
+          if (alternative.transcript.length > 8_000) { stopCapture(); fail('recognition-limit'); return }
+          entries.set(index, { text: alternative.transcript, final: result.isFinal === true,
             confidence: typeof alternative.confidence === 'number' && Number.isFinite(alternative.confidence)
               ? Math.max(0, Math.min(1, alternative.confidence)) : null })
         }

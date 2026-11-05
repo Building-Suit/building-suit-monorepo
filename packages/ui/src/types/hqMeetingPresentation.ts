@@ -1,7 +1,7 @@
 /** Neutral meeting projections. Authorization, providers and persistence stay product-owned. */
 export type HqMeetingLanguage = 'ar' | 'en'
 export type HqMeetingParticipantStatus = 'listening' | 'thinking' | 'speaking' | 'researching' | 'hand-raised' | 'unavailable' | 'failed'
-export type HqMeetingPlanState = 'draft' | 'awaiting-approval' | 'approved' | 'dispatched' | 'revised' | 'deferred' | 'discarded'
+export type HqMeetingPlanState = 'draft' | 'awaiting-approval' | 'approved' | 'dispatched' | 'revised' | 'deferred' | 'discarded' | 'blocked'
 export type HqMeetingConnection = 'connected' | 'connecting' | 'reconnecting' | 'offline' | 'failed'
 export type HqMeetingTaskState = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'review-required' | 'reviewed'
 
@@ -28,6 +28,7 @@ export type HqMeetingLabel =
   | 'digest' | 'objective' | 'owner' | 'deliverable' | 'budget' | 'blockers' | 'draftPlan' | 'approve' | 'approveNow' | 'approveOnEnd'
   | 'revise' | 'defer' | 'discard' | 'approvalNotice' | 'approvalConfirmation' | 'cancel' | 'confirm' | 'scope' | 'acceptance' | 'review'
   | 'supervisor' | 'inputs' | 'dependencies' | 'priority' | 'environment'
+  | 'liveScopeNotice' | 'liveSourceNotice' | 'approvedOnHold' | 'syntheticFounder'
 
 export interface HqMeetingCopy {
   labels: Record<HqMeetingLabel, string>

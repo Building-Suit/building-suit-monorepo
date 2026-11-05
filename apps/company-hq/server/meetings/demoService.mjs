@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { createMeeting, applyCommand, safeSharedUrl } from '../../shared/meetings/domain.mjs'
+import { createMeeting, applyCommand, resolveRecentLink, safeSharedUrl } from '../../shared/meetings/domain.mjs'
 import { demonstrationRegistry } from '../../shared/meetings/registry.mjs'
 import { createSyntheticMeetingRepository } from './repository.mjs'
 
@@ -16,10 +16,21 @@ export function demoSnapshot(filename, owner, meetingId) {
   const record = meetingId ? repo.get(owner, meetingId) : repo.list(owner)[0] ?? null
   return { mode: 'demonstration', registry: demonstrationRegistry, record, receipts: record ? repo.jobs(owner, record.id) : [], reports: record ? repo.report(owner, record.id) : [] }
 }
-function taskFor(record, input, id) {
+function taskLinks(record, input, includeRecent) {
+  // A supplied URL is exact scope, not a hint to replace with newer chat data.
+  if (input.url !== undefined) return [safeSharedUrl(input.url)]
+  const explicit = [...new Set((typeof input.question === 'string' ? input.question.match(/https?:\/\/[^\s<>]+/g) : null) ?? [])]
+  if (explicit.length > 1) throw new Error('research-link-ambiguous')
+  if (explicit.length === 1) return [safeSharedUrl(explicit[0])]
+  if (!includeRecent) return []
+  const reference = resolveRecentLink(record, input.referenceEventId)
+  if (reference.status === 'ambiguous') throw new Error('research-link-ambiguous')
+  return reference.status === 'resolved' ? [reference.url] : []
+}
+function taskFor(record, input, id, includeRecentLinks = true) {
   const agent = record.participants.find(item => item.id === input.agentId)
   if (!agent?.supervisorId) throw new Error('supervisor-required')
-  return { id, agentId: agent.id, supervisorId: agent.supervisorId, question: input.question, scope: 'Deterministic disposable fixture only; no external execution.', deliverable: input.deliverable ?? 'A clearly labeled synthetic findings report', allowedTools: ['synthetic-fixture'], allowedActions: ['synthetic-fixture'], links: record.events.filter(event => event.type === 'link-shared').slice(-1).map(event => event.data.url), budget: 0, timeoutMs: 120000, dependencies: [] }
+  return { id, agentId: agent.id, supervisorId: agent.supervisorId, question: input.question, scope: 'Deterministic disposable fixture only; no external execution.', deliverable: input.deliverable ?? 'A clearly labeled synthetic findings report', allowedTools: ['synthetic-fixture'], allowedActions: ['synthetic-fixture'], links: taskLinks(record, input, includeRecentLinks), budget: 0, timeoutMs: 120000, dependencies: [] }
 }
 function respond(repo, owner, record) {
   const current = repo.get(owner, record.id)
@@ -77,7 +88,7 @@ export function demoCommand(filename, owner, input) {
       }
       case 'research': save({ type: 'research', task: taskFor(record, command, input.requestId) }); break
       case 'draftPlan': {
-        const task = taskFor(record, { agentId: command.ownerId, question: command.objective, deliverable: command.deliverable }, `task:${input.requestId}`)
+        const task = taskFor(record, { agentId: command.ownerId, question: command.objective, deliverable: command.deliverable }, `task:${input.requestId}`, false)
         const prior = record.plans.at(-1)
         const proposal = { type: prior?.status === 'revised' ? 'revise-plan' : 'propose-plan', planId: prior?.status === 'revised' ? prior.id : input.requestId, title: command.title, summary: 'Synthetic scoped fixture. No live execution is enabled.', tasks: [{ ...task, objective: task.question, owner: task.agentId, supervisor: task.supervisorId, inputs: ['Disposable synthetic meeting fixture'], acceptanceCriteria: ['Persist a clearly marked synthetic deliverable with evidence and independent review'], requiredReview: [...new Set([task.supervisorId, record.chairId])], blockers: [], priority: 'normal', executionEnvironment: 'synthetic-fixture' }] }
         save(proposal)

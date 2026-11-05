@@ -1,15 +1,11 @@
 import { createError } from 'h3'
-import { requireHqFounder } from '../../../utils/hqAccess'
-import { readBrainIndex, readBrainNote } from '../../../utils/brain'
-import { parseMeetingRegistry } from '../../../../shared/meetings/registry.mjs'
+import { hqRpc, requireHqFounder } from '../../../utils/hqAccess'
 
 export default defineEventHandler(async event => {
   const config = useRuntimeConfig(event)
-  await requireHqFounder(event, config)
-  const index = await readBrainIndex(config)
-  const source = index.notes.filter(note => note.path === 'Company/Agent Registry.md')
-  if (index.status !== 'connected' || source.length !== 1) throw createError({ statusCode: 503, statusMessage: 'Canonical roster unavailable' })
-  const note = await readBrainNote(config, source[0]!.id)
-  try { return { participants: parseMeetingRegistry(note.content, { id: note.id, version: note.version }), observedAt: index.observedAt } }
-  catch { throw createError({ statusCode: 503, statusMessage: 'Canonical roster unavailable' }) }
+  const { accessToken } = await requireHqFounder(event, config)
+  if (config.hqMeetingsLive !== true) throw createError({ statusCode: 503, statusMessage: 'Live meetings are disabled' })
+  // Canonical, source-bound workforce projection; qualification is a separate
+  // evidence-bound meeting gate, never inferred from configured attendance.
+  return hqRpc(config, accessToken, 'hq_meeting_roster')
 })

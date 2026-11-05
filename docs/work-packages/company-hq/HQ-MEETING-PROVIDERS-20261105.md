@@ -4,7 +4,7 @@ Checked 2026-11-05 (Africa/Cairo) against current official OpenAI and MDN docume
 
 ## Result
 
-No live application model or speech service is verified usable within this task's $0 budget and current access. There are documented supported routes, including a newly documented subscriber API-credit benefit; absence of verified application credentials and allowance is the present blocker. Do not characterize all subscriber API access as impossible. Keep live inference disabled and finish deterministic/synthetic implementation independently.
+The current published source, refreshed to9df6ff85, includes an existing private Codex CLI worker using supported ChatGPT-managed authentication on its trusted Oracle host. Reuse that existing worker rather than require a new application API key or duplicate live queue. This task has not reverified its current quota, staff qualification, meeting latency/capacity or live speech. Keep new meeting transport disabled pending those checks and authorized rollout. A separately documented API-credit benefit is an alternative to assess, not a reason to enable paid fallback.
 
 ## Model and voice access
 
@@ -14,7 +14,7 @@ No live application model or speech service is verified usable within this task'
 | OpenAI Realtime API | Browser WebRTC or server WebSocket, with server-created ephemeral client secrets for browser connections. Current guide uses `POST /v1/realtime/client_secrets` and `/v1/realtime/calls`. | No provisioned app credentials, exact voice/model access, privacy acceptance, or allowance verified. Does not by itself establish the company's assigned model hierarchy. |
 | ChatGPT Plus | ChatGPT subscription access is distinct from ordinary paid API usage. Participating tools can separately request authorized allowance sharing. | Neither possession of a Plus subscription nor a desktop CLI login grants this HQ app reusable credentials or approved allowance. |
 | ChatGPT Pro/Business API credits | A documented API-credit benefit can fund Responses and Realtime under stated eligibility and activation conditions. | Founder plan, eligibility, organization ownership/link, claimed balance, expiry and paid-credit fallback are unknown; no claim performed. |
-| Codex CLI/app-server authentication | Personal CLI authentication is separate from hosted application API authentication. | Existing Oracle synthetic CLI success does not establish a supported HQ integration. Do not copy any desktop or VM auth cache. |
+| Existing private Codex CLI host worker | Official non-interactive documentation supports advanced ChatGPT-managed auth on trusted private runners. Source9df6ff85 includes a technical Auth worker, exact model/effort, lease/journal and no API fallback. | Reuse existing HQ business tasks/worker/review. Current meeting quota/capacity/qualification remains unverified; no desktop cache is copied. A generic hosted app-server authentication endpoint remains a separate eligibility question. |
 
 Sources: [OpenAI API quickstart](https://developers.openai.com/api/docs/quickstart), [Realtime guide](https://developers.openai.com/api/docs/guides/realtime), [ChatGPT Plus](https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus).
 
@@ -24,7 +24,7 @@ Current official documentation says eligible paid Pro or Business subscriptions 
 
 Current public pricing includes `gpt-realtime-2.1` audio at $32 input/$64 output per million tokens, `gpt-realtime-2.1-mini` audio at $10/$20, and live transcription at $0.017/minute. These are published prices, not this task's cost or an enabled service. No universal free voice allowance was established by the pricing page. [OpenAI API pricing](https://developers.openai.com/api/docs/pricing).
 
-Sign in with ChatGPT's public documentation presently describes open-source/locally hosted apps and directs paid/remotely hosted apps to an interest route. It does not establish this private hosted HQ's eligibility. The app-server documentation explicitly excludes commercial/hosted services from its legacy authentication. A CLI wrapper does not establish an exception. [Plan usage overview](https://developers.openai.com/siwc/token-sharing-open-source), [app-server authentication](https://learn.chatgpt.com/docs/app-server#auth-endpoints).
+Sign in with ChatGPT's public documentation presently describes open-source/locally hosted apps and directs paid/remotely hosted apps to an interest route. It does not establish this private hosted HQ's eligibility. The app-server documentation explicitly excludes commercial/hosted services from its legacy authentication. That restriction concerns generic hosted Sign-in/app-server integration; the existing trusted private Codex automation worker below is a separate documented route. [Plan usage overview](https://developers.openai.com/siwc/token-sharing-open-source), [app-server authentication](https://learn.chatgpt.com/docs/app-server#auth-endpoints).
 
 ## Browser speech constraints
 
@@ -45,10 +45,18 @@ OpenAI TTS documentation lists Arabic and English, while noting voices are optim
 
 ## Exact remaining prerequisites
 
-1. Verify a supported app authentication route, exact assigned model access and intended speech voices, using server-side application credentials through an approved secret binding.
+1. Reverify existing trusted-worker quota, exact assigned models and meeting capacity without changing its authentication. If an optional generic API/Realtime route is selected, separately verify supported application credentials and voice access through approved secret binding.
 2. Verify an existing allowance that can operate without spending; do not activate a metered paid service, claim a benefit, create keys, or permit fallback spending as a side effect of this report.
 3. Present selected provider data destinations/retention and verify the intended hosted integration is eligible.
 4. Qualify the worker/roles and measure bounded resources. Preserve the Oracle pilot's network and existing workloads; documentation is not a deployment authorization.
 5. Test Arabic/English recognition and voices on the founder's actual device only after explicit microphone action; until then, keep text and synthetic demonstration paths clear.
 
 No Supabase changelog was fetched: this review does not alter or select any Supabase API/auth/database integration, and the parent is reusing existing authentication unchanged.
+
+## Reconciliation with the newly published worker source
+
+Fresh fetch resolved founder checkpoint4adde130 and follow-up9df6ff85 after the first feasibility inspection. The source already includes tooling/hq-agent-host/worker.mjs and dated staging activation/task receipts. The early CLI-only Oracle pilot is historical, not the whole current architecture. This task did not freshly SSH into or change that host. The new meeting dispatch bridge reuses existing hq_business_tasks and its technical worker/review chain; it does not introduce a parallel live executor or require a new API key.
+
+The [official non-interactive-mode guide](https://learn.chatgpt.com/docs/non-interactive-mode#authenticate-in-automation), fetched by this task, says codex exec reuses saved CLI authentication and documents advanced ChatGPT-managed authentication for trusted private CI/CD runners. Preserve the current host's own login, its exact provider/model/effort and API-key exclusion. Do not copy desktop credentials, turn the login into a public service or infer unlimited allowance/realtime speech from that supported private route. API/app-server eligibility and API-credit activation remain separate questions.
+
+A read-only query of verified HQ staging at2026-11-05 22:29:38UTC observed one enabled host, last heartbeat22:29:05UTC, zero active leases/queued jobs and latest completed task20:50:37UTC. No model or job was submitted. This does not measure Oracle CPU/RAM, subscription quota, acoustic latency or physical PC-off behavior. The existing private CLI account's actual privacy/training/retention controls require verification for meeting transcripts; the API data-control defaults above apply only if that API route is selected.

@@ -49,7 +49,7 @@ const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
   signOutFailed: companyPlansCopy.value.signOutFailed,
   confirmationRequired: companyPlansCopy.value.confirmationRequired,
 }))
-const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status)
+const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status, () => access.value.user)
 const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
   unavailable: companyPlansCopy.value.unavailable,
   conflict: companyPlansCopy.value.conflict,

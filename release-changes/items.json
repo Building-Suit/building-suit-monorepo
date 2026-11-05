@@ -5415,16 +5415,16 @@
       "hq-dark-rock-20261105",
       "hq-agent-identities-motion-20261105",
       "hq-steve-character-20261105",
-      "release-fragments/hq-ai-character-generation-20261105.json",
-      "release-fragments/hq-standard-characters-20261105.json",
-      "release-fragments/hq-character-scale-20261105.json",
-      "release-fragments/hq-office-inspector-20261105.json",
+      "hq-ai-character-generation-20261105",
+      "hq-standard-characters-20261105",
+      "hq-character-scale-20261105",
+      "hq-office-inspector-20261105",
       "hq-office-floors-data-20261105",
       "hq-conversational-chat-20261105",
       "hq-chat-uninterrupted-realtime-20261105",
-      "release-fragments/hq-chat-dictation-20261105.json",
+      "hq-chat-dictation-20261105",
       "hq-chat-intake-recovery-20261105",
-      "release-fragments/hq-result-work-visibility-20261105.json",
+      "hq-result-work-visibility-20261105",
       "hq-multilingual-meetings-20261105"
     ]
   }

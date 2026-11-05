@@ -433,7 +433,11 @@
         "inputs": "Inputs",
         "dependencies": "Dependencies",
         "priority": "Priority",
-        "environment": "Execution environment"
+        "environment": "Execution environment",
+        "liveScopeNotice": "Assignments can read approved sources with no additional spend and independent review. Each worker job allows up to 600 seconds. Dependencies, blockers and whole-task deadlines are not supported.",
+        "liveSourceNotice": "Replies and findings appear after correlated worker output is saved. Staff qualifications and the existing authorized runtime are required.",
+        "approvedOnHold": "Approved; held without dispatch.",
+        "syntheticFounder": "Synthetic founder session"
       },
       "participantStatus": {
         "listening": "Listening",
@@ -467,7 +471,8 @@
         "dispatched": "Dispatched",
         "revised": "Revised",
         "deferred": "Deferred",
-        "discarded": "Discarded"
+        "discarded": "Discarded",
+        "blocked": "Blocked: scope unsupported"
       }
     }
   }
