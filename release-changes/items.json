@@ -5286,9 +5286,10 @@
       "docs/work-packages/company-hq/HQ-ISLAND-LIGHTING-20261105.md",
       "packages/ui/src/utils/hqIslandGeometry.ts",
       "packages/ui/src/utils/hologramTerrainMaterial.ts",
-      "docs/work-packages/company-hq/HQ-LIVE-EVENTS-20261105.md"
+      "docs/work-packages/company-hq/HQ-LIVE-EVENTS-20261105.md",
+      "docs/work-packages/company-hq/HQ-OFFICE-RING-BALANCE-20261105.md"
     ],
-    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The procedural matte Coal/Navy/Gold island grows only near actual new office/road footprints and shares its coast with the minimap. Cached 512-square stone/normal/grain material, softened lamps, Gold seams, faceted rock, bounded coastal Navy water/Pearl foam and bloom replace the removed reflection pass/sampler/targets. Existing shared-template/UX ownership, bilingual overlays, reversible focus, camera/zoom bounds, picking and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
+    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The procedural matte Coal/Navy/Gold island grows only near actual new office/road footprints and shares its coast with the minimap. Cached 512-square stone/normal/grain material, softened lamps, Gold seams, faceted rock, bounded coastal Navy water/Pearl foam and bloom replace the removed reflection pass/sampler/targets. Office rings now use one fixed top phase and alternating clockwise/counterclockwise slots with full-capacity spacing, preserving ordinary appended assignments under the existing approved-date/ID sort; road gaps, minimap and directional land share that layout. Existing shared-template/UX ownership, bilingual overlays, reversible focus, camera/zoom bounds, picking and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5311,7 +5312,8 @@
       "hq-workplace-selection-20261105",
       "hq-brain-sync-20261105",
       "hq-island-lighting-20261105",
-      "hq-live-events-20261105"
+      "hq-live-events-20261105",
+      "hq-office-ring-balance-20261105"
     ],
     "evidence": [
       {
@@ -5397,6 +5399,10 @@
       {
         "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
         "contains": "export function layoutDepartmentOffices"
+      },
+      {
+        "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
+        "contains": "function ringSlotAngle(ring: number, slot: number): number"
       },
       {
         "path": "packages/ui/src/utils/hologramScene.ts",

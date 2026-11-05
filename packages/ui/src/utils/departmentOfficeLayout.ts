@@ -11,6 +11,7 @@ const FOOTPRINT_RADIUS = Math.hypot(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_D
 const MINIMUM_CENTER_DISTANCE = FOOTPRINT_RADIUS * 2 + OFFICE_WALKWAY_WIDTH + 0.65
 const ROAD_START_RADIUS = 2.1
 const FULL_TURN = Math.PI * 2
+const RING_START_ANGLE = -Math.PI / 2
 
 export interface DepartmentRoadPoint { x: number; z: number }
 export interface OfficePlacement {
@@ -43,13 +44,18 @@ function corridorRadius(innerRing: number): number {
   if (innerRing === 0) return (ROAD_START_RADIUS + FIRST_RING_RADIUS - FOOTPRINT_RADIUS) / 2
   return (ringRadius(innerRing) + ringRadius(innerRing + 1)) / 2
 }
-function ringPhase(ring: number): number { return -Math.PI / 2 + (ring % 2 ? 0 : 0.19) }
 function ringCapacity(ring: number): number {
   return Math.max(1, Math.floor(Math.PI / Math.asin(MINIMUM_CENTER_DISTANCE / (ringRadius(ring) * 2))))
 }
+function ringSlotAngle(ring: number, slot: number): number {
+  // Start at the top, then fill clockwise/counterclockwise pairs. Keep the
+  // capacity-based spacing so appending an office does not move earlier slots.
+  const offset = slot % 2 === 0 ? -slot / 2 : (slot + 1) / 2
+  return RING_START_ANGLE + offset * FULL_TURN / ringCapacity(ring)
+}
 function point(radius: number, angle: number): DepartmentRoadPoint { return { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius } }
 function nearestGap(ring: number, target: number): number {
-  const step = FULL_TURN / ringCapacity(ring), phase = ringPhase(ring)
+  const step = FULL_TURN / ringCapacity(ring), phase = RING_START_ANGLE
   return phase + (Math.round((target - phase) / step - 0.5) + 0.5) * step
 }
 function arc(path: DepartmentRoadPoint[], radius: number, start: number, end: number): void {
@@ -86,7 +92,7 @@ export function layoutDepartmentOffices(departments: readonly HqDepartmentOffice
     const timeDifference = (Number.isFinite(leftTime) ? leftTime : Number.MAX_SAFE_INTEGER) - (Number.isFinite(rightTime) ? rightTime : Number.MAX_SAFE_INTEGER)
     return timeDifference || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
   })
-  const executiveAngle = ringPhase(1)
+  const executiveAngle = ringSlotAngle(1, 0)
   const executive: ExecutiveWorkspacePlacement = {
     id: 'executive-workspace', ...point(ringRadius(1), executiveAngle), yaw: Math.PI / 2 - executiveAngle,
     width: DEPARTMENT_OFFICE_WIDTH, depth: DEPARTMENT_OFFICE_DEPTH, ring: 1,
@@ -98,7 +104,7 @@ export function layoutDepartmentOffices(departments: readonly HqDepartmentOffice
   let ring = 1, slot = 1, capacity = ringCapacity(ring)
   for (const department of oldestFirst) {
     if (slot >= capacity) { ring += 1; slot = 0; capacity = ringCapacity(ring) }
-    const angle = ringPhase(ring) + slot * FULL_TURN / capacity, radius = ringRadius(ring)
+    const angle = ringSlotAngle(ring, slot), radius = ringRadius(ring)
     offices.push({
       ...department, ...point(radius, angle), yaw: Math.PI / 2 - angle,
       width: DEPARTMENT_OFFICE_WIDTH, depth: DEPARTMENT_OFFICE_DEPTH, ring,
