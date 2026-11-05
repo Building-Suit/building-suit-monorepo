@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { createError, deleteCookie, getCookie, getHeader, setCookie, setResponseHeader, setResponseStatus, type H3Event } from 'h3'
 import { createRequestRateLimit } from '@building-suit/auth/rate-limit'
 import type { HqFounderAccessResponse } from '../../shared/types/access'
-import { assertLocalBrainRequest } from './brain'
+import { assertLocalBrainRequest, hqHostedOrigin } from './brain'
 
 export interface HqAccessConfig {
   hqSupabaseUrl?: unknown
@@ -10,6 +10,7 @@ export interface HqAccessConfig {
   hqEnvironment?: unknown
   hqFounderEmail?: unknown
   hqBrainDevProxyToken?: unknown
+  hqAppOrigin?: unknown
 }
 
 interface VerifiedConfig {
@@ -18,6 +19,7 @@ interface VerifiedConfig {
   environment: 'staging' | 'production'
   project: string
   founderEmail: string
+  appOrigin: string | null
 }
 
 interface SessionTokens { accessToken: string; refreshToken: string; expiresIn: number }
@@ -27,7 +29,7 @@ const PROJECTS = { staging: 'dpruoncalmwicrqhqelu', production: 'nkpvskyugnnnoze
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const TOKEN = /^[A-Za-z0-9._~-]+$/
 const MAX_INPUT_BYTES = 8_192
-const MAX_PROVIDER_BYTES = 512 * 1_024
+const MAX_PROVIDER_BYTES = 1536 * 1_024
 const limitAttempt = createRequestRateLimit(6, 300_000, 128)
 const refreshing = new Map<string, Promise<SessionTokens>>()
 
@@ -62,15 +64,15 @@ function verifiedConfig(config: HqAccessConfig): VerifiedConfig {
   }
   const founderEmail = typeof config.hqFounderEmail === 'string' ? config.hqFounderEmail.trim().toLowerCase() : 'ceo@building-suit.com'
   if (!acceptable || !/^[^\s@]{1,64}@[^\s@.]+(?:\.[^\s@.]+)+$/.test(founderEmail) || founderEmail.length > 254) throw failure(503, 'setup-required')
-  return { url: config.hqSupabaseUrl, key, environment, project, founderEmail }
+  return { url: config.hqSupabaseUrl, key, environment, project, founderEmail, appOrigin: hqHostedOrigin(config) }
 }
 
 export function assertHqAccessRequest(event: H3Event, config: HqAccessConfig): void {
   assertLocalBrainRequest(event, config)
   setResponseHeader(event, 'Vary', 'Origin, X-HQ-Brain, X-HQ-Access')
   if (getHeader(event, 'x-hq-access') !== '1') throw failure(403, 'not-founder')
-  // Mutations require the browser's actual Origin, in addition to the existing
-  // socket/Host/same-origin/custom-header gate. Forwarded headers grant nothing.
+  // Mutations require the browser's actual Origin as well as the configured
+  // Host/same-origin/custom-header gate. Forwarded headers grant nothing.
   if (event.method !== 'GET' && !getHeader(event, 'origin')) throw failure(403, 'not-founder')
 }
 
@@ -125,23 +127,35 @@ async function provider(config: VerifiedConfig, path: string, options: { method?
 
 function cookieOptions(event: H3Event, config: VerifiedConfig) {
   return {
-    httpOnly: true, sameSite: 'strict' as const, path: '/api/hq',
-    secure: config.environment === 'production' || Boolean((event.node.req.socket as { encrypted?: boolean }).encrypted),
+    httpOnly: true, sameSite: 'strict' as const, path: '/api',
+    secure: config.appOrigin !== null || config.environment === 'production' || Boolean((event.node.req.socket as { encrypted?: boolean }).encrypted),
   }
 }
 function cookieNames(config: VerifiedConfig) {
-  const prefix = `bs-hq-${config.environment}-${config.project}`
+  // Versioned names prevent an older longer-path cookie from shadowing the
+  // new Brain-capable /api session in an incoming Cookie header.
+  const prefix = `bs-hq-${config.environment}-${config.project}-v2`
   return { access: `${prefix}-access`, refresh: `${prefix}-refresh` }
+}
+function clearLegacyCookies(event: H3Event, config: VerifiedConfig) {
+  const prefix = `bs-hq-${config.environment}-${config.project}`
+  const options = cookieOptions(event, config)
+  for (const name of [`${prefix}-access`, `${prefix}-refresh`]) {
+    deleteCookie(event, name, { ...options, path: '/api/hq' })
+    deleteCookie(event, name, { ...options, path: '/api' })
+  }
 }
 function clearCookies(event: H3Event, config: VerifiedConfig) {
   const names = cookieNames(config)
   const options = cookieOptions(event, config)
   deleteCookie(event, names.access, options)
   deleteCookie(event, names.refresh, options)
+  clearLegacyCookies(event, config)
 }
 function storeCookies(event: H3Event, config: VerifiedConfig, tokens: SessionTokens) {
   const names = cookieNames(config)
   const options = cookieOptions(event, config)
+  clearLegacyCookies(event, config)
   setCookie(event, names.access, tokens.accessToken, { ...options, maxAge: Math.max(1, Math.min(tokens.expiresIn, 86_400)) })
   setCookie(event, names.refresh, tokens.refreshToken, { ...options, maxAge: 7 * 86_400 })
 }
@@ -204,6 +218,7 @@ export function hqRealtimeUrl(config: HqAccessConfig): string {
 }
 
 async function founderSession(event: H3Event, input: HqAccessConfig, config: VerifiedConfig): Promise<HqFounderSession | null> {
+  clearLegacyCookies(event, config)
   const names = cookieNames(config)
   let accessToken = getCookie(event, names.access)
   const refreshToken = getCookie(event, names.refresh)
@@ -314,7 +329,7 @@ async function credentials(event: H3Event): Promise<{ email: string; password: s
 function authAttempt(event: H3Event, config: VerifiedConfig) {
   const peer = event.node.req.socket.remoteAddress ?? 'checked-development-proxy'
   if (!limitAttempt(`${config.project}:${peer}`)) {
-    setResponseHeader(event, 'Retry-After', '300')
+    setResponseHeader(event, 'Retry-After', 300)
     throw failure(429, 'cloud-unavailable')
   }
 }

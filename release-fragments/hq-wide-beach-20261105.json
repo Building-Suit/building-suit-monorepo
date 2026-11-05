@@ -1,0 +1,22 @@
+{
+  "id": "hq-wide-beach-20261105",
+  "task": "HQ-WIDE-BEACH-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hqIslandGeometry.ts",
+    "packages/ui/src/utils/naturalIslandGeometry.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder asks for a genuinely wider beach: grow lower sand depth to 7–9 scene units and extend shared shore outward by 6.6, preserving workplace anchors/support and approximately the upper cliff extent. Twelve sand bands, closer chair pairs and larger umbrellas; shared water/camera/minimap follow the coast. Keep three descents, no hill neon and existing waves. Source-only; checks/browser/runtime acceptance deferred under standing instruction. No merge/deployment."
+}

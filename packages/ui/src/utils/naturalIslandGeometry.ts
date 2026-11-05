@@ -10,7 +10,23 @@ export interface NaturalIslandMeshes {
   middleGold: NaturalIslandGeometry
   rocks: NaturalIslandGeometry
   grass: NaturalIslandGeometry
+  sand: NaturalIslandGeometry
+  beachFurnitureBody: NaturalIslandGeometry
+  beachFurnitureFabric: NaturalIslandGeometry
+  beachPoints: readonly NaturalIslandDestination[]
 }
+
+export interface NaturalIslandDestination {
+  x: number
+  y: number
+  z: number
+  yaw: number
+  kind: 'lounge' | 'fish'
+}
+
+/** Exposed hill reduced 55%; the inhabited terrace stays at its original height. */
+export const NATURAL_ISLAND_SEA_DROP = 1.44
+const RELIEF_SCALE = 0.45
 
 const FULL_TURN = Math.PI * 2
 const COAST_SAMPLES = 320
@@ -46,59 +62,69 @@ function bay(angle: number, center: number, width: number): number {
   const distance = Math.atan2(Math.sin(angle - center), Math.cos(angle - center)) / width
   return Math.exp(-distance * distance * 2)
 }
+function coastProfile(footprint: HqIslandFootprint, protectedRadius: number, angle: number) {
+  const original = hqIslandRadiusAt(footprint, angle)
+  const erosion = 0.18 + periodicField(angle, 1.9, 6.8) * 0.65
+    + bay(angle, 0.38, 0.62) * 0.42 + bay(angle, 2.72, 0.47) * 0.67 + bay(angle, 4.63, 0.70) * 0.46
+  const fractures = (periodicField(angle, 11.3, 19.2) - 0.5) * 0.24
+    + (periodicField(angle, 28.1, -12.7) - 0.5) * 0.08
+  const shore = Math.min(footprint.radius, original * 0.99 - 0.10)
+  const foot = Math.max(protectedRadius + 0.62, shore - 0.12)
+  const top = clamp(original - erosion + fractures, protectedRadius + 0.38, foot - 0.12)
+  return { top, foot, shore }
+}
+
+/** Land height only. A null result means the point is beyond the dry shore. */
+export function naturalIslandSurfaceHeight(footprint: HqIslandFootprint, protectedRadius: number, groundY: number, x: number, z: number): number | null {
+  const radius = Math.hypot(x, z)
+  if (radius <= protectedRadius) return groundY
+  const angle = Math.atan2(z, x), profile = coastProfile(footprint, protectedRadius, angle)
+  if (radius > profile.shore) return null
+  const sea = groundY - NATURAL_ISLAND_SEA_DROP
+  let surface: number
+  if (radius <= profile.top) {
+    const rim = clamp((radius - protectedRadius) / Math.max(0.2, profile.top - protectedRadius), 0, 1)
+    const erosion = (field(x * 0.72 + 18.3, z * 0.72 - 12.8) - 0.5) * 0.18
+    const gravel = (noise(x * 3.7 - 4.3, z * 3.7 + 8.2) - 0.5) * 0.027
+    surface = groundY + clamp(smooth(rim / 0.60) * (erosion + gravel - smooth((rim - 0.58) / 0.42) * 0.055), -0.14, 0.16) * RELIEF_SCALE
+  } else if (radius >= profile.foot) {
+    const shore = clamp((radius - profile.foot) / Math.max(0.1, profile.shore - profile.foot), 0, 1)
+    surface = sea + mix(0.06, -0.12, smooth(shore))
+  } else {
+    const cliff = clamp((radius - profile.top) / Math.max(0.1, profile.foot - profile.top), 0, 1)
+    surface = mix(groundY - 0.06, sea + 0.06, smooth(cliff))
+  }
+  return surface
+}
+
+/** Retained compatibility interfaces: the high cliff has no beach destinations. */
+export function naturalIslandAgentDestinations(_footprint: HqIslandFootprint, _protectedRadius: number, _groundY: number): readonly NaturalIslandDestination[] { return [] }
+export function naturalIslandBeachRoutes(_footprint: HqIslandFootprint, _protectedRadius: number, _groundY: number): readonly (readonly { x: number; y: number; z: number }[])[] { return [] }
+export function naturalIslandBeachRoute(_footprint: HqIslandFootprint, _protectedRadius: number, _groundY: number): readonly { x: number; y: number; z: number }[] { return [] }
+
 function flatTriangle(geometry: NaturalIslandGeometry, a: Vector, b: Vector, c: Vector): void {
   const normal = normalize(cross(subtract(b, a), subtract(c, a)))
   geometry.positions.push(...a, ...b, ...c)
   for (let vertex = 0; vertex < 3; vertex++) geometry.normals.push(...normal)
 }
-function tube(path: readonly Vector[], radius: number): NaturalIslandGeometry {
-  const geometry = empty(), count = path.length
-  function vertex(index: number, side: number): void {
-    const point = path[index % count]!, before = path[(index + count - 1) % count]!, after = path[(index + 1) % count]!
-    const tangent = normalize(subtract(after, before)), across = normalize(cross(tangent, [0, 1, 0])), up = cross(tangent, across)
-    const angle = side / 6 * FULL_TURN
-    const normal: Vector = [0, 1, 2].map(axis => across[axis]! * Math.cos(angle) + up[axis]! * Math.sin(angle)) as Vector
-    geometry.positions.push(point[0] + normal[0] * radius, point[1] + normal[1] * radius, point[2] + normal[2] * radius)
-    geometry.normals.push(...normal)
-  }
-  for (let index = 0; index < count; index++) for (let side = 0; side < 6; side++) {
-    vertex(index, side); vertex(index + 1, side); vertex(index, side + 1)
-    vertex(index + 1, side); vertex(index + 1, side + 1); vertex(index, side + 1)
-  }
-  return geometry
-}
-
 /**
- * Land-only geometry. The existing footprint continues to own water, camera
- * bounds and page geometry. Every point inside protectedRadius stays precisely
- * on groundY; erosion and relief are restricted to the unoccupied coastal rim.
+ * The existing footprint owns the finite shore and camera envelope. Every
+ * point inside protectedRadius stays precisely on groundY; weathered cliff
+ * faces descend directly into the sea outside the inhabited terrace.
  */
 export function createNaturalIslandGeometry(footprint: HqIslandFootprint, protectedRadius: number, groundY: number): NaturalIslandMeshes {
   const top = empty(), cliffs = empty(), rocks = empty(), grass = empty()
   const protectedEdge = Math.max(0, protectedRadius)
-  function erodedRadius(angle: number): number {
-    const original = hqIslandRadiusAt(footprint, angle)
-    const broadErosion = 0.18 + periodicField(angle, 1.9, 6.8) * 0.65
-      + bay(angle, 0.38, 0.62) * 0.76 + bay(angle, 2.72, 0.47) * 0.97 + bay(angle, 4.63, 0.70) * 0.62
-    const brokenEdge = (periodicField(angle, 11.3, 19.2) - 0.5) * 0.31
-      + (periodicField(angle, 28.1, -12.7) - 0.5) * 0.12
-    return clamp(original - broadErosion + brokenEdge, protectedEdge + 0.38, footprint.radius)
-  }
-  const coastalRadii = Array.from({ length: COAST_SAMPLES }, (_, index) => erodedRadius(index / COAST_SAMPLES * FULL_TURN))
+  const sea = groundY - NATURAL_ISLAND_SEA_DROP
+  const profiles = Array.from({ length: COAST_SAMPLES }, (_, index) => coastProfile(footprint, protectedEdge, index / COAST_SAMPLES * FULL_TURN))
+  const coastalRadii = profiles.map(profile => profile.top)
   function coast(angle: number): number {
     const sample = ((angle % FULL_TURN + FULL_TURN) % FULL_TURN) / FULL_TURN * COAST_SAMPLES
     const index = Math.floor(sample)
     return mix(coastalRadii[index]!, coastalRadii[(index + 1) % COAST_SAMPLES]!, sample - index)
   }
   function height(x: number, z: number): number {
-    const radius = Math.hypot(x, z)
-    if (radius <= protectedEdge) return groundY
-    const rimWidth = Math.max(0.25, coast(Math.atan2(z, x)) - protectedEdge)
-    const rim = clamp((radius - protectedEdge) / rimWidth, 0, 1)
-    const erosion = (field(x * 0.72 + 18.3, z * 0.72 - 12.8) - 0.5) * 0.18
-    const gravel = (noise(x * 3.7 - 4.3, z * 3.7 + 8.2) - 0.5) * 0.027
-    const coastalFall = smooth((rim - 0.58) / 0.42) * 0.055
-    return groundY + clamp(smooth(rim / 0.60) * (erosion + gravel - coastalFall), -0.14, 0.16)
+    return naturalIslandSurfaceHeight(footprint, protectedEdge, groundY, x, z) ?? sea
   }
   function surfaceNormal(x: number, z: number): Vector {
     if (Math.hypot(x, z) <= protectedEdge) return [0, 1, 0]
@@ -131,43 +157,36 @@ export function createNaturalIslandGeometry(footprint: HqIslandFootprint, protec
     topVertex(index + 1, band); topVertex(index + 1, band + 1); topVertex(index, band + 1)
   }
 
-  const cliffSamples: (Vector | undefined)[][] = Array.from({ length: 7 }, () => [])
+  const cliffSamples: (Vector | undefined)[][] = Array.from({ length: 9 }, () => [])
   function cliffPoint(index: number, layer: number): Vector {
     const sample = index % COAST_SAMPLES, cached = cliffSamples[layer]![sample]
     if (cached) return cached
-    const angle = sample / COAST_SAMPLES * FULL_TURN, original = hqIslandRadiusAt(footprint, angle), upper = coastalRadii[sample]!
+    const angle = sample / COAST_SAMPLES * FULL_TURN, profile = profiles[sample]!, upper = coastalRadii[sample]!
     const weather = periodicField(angle, 5.1, 4.2 + layer * 3.1) - 0.5
     const fractures = periodicField(angle, 17.7, -8.3 + layer * 1.7) - 0.5
-    // This shelf deliberately overlaps the ORIGINAL water's inner edge at its
-    // unchanged sea level. Recessed bays therefore cannot expose a black gap.
-    const waterShelf = Math.min(footprint.radius, Math.max(upper - 0.11, original * 0.99 - 0.39))
     let radius = upper, y = height(Math.cos(angle) * upper, Math.sin(angle) * upper)
-    if (layer === 1) { radius = mix(upper, waterShelf, 0.33) + weather * 0.14; y = groundY - 0.29 + weather * 0.065 }
-    else if (layer === 2) { radius = waterShelf; y = groundY - 0.50 }
-    else if (layer === 3) { radius = waterShelf - 0.15 + weather * 0.33 + fractures * 0.10; y = groundY - 0.81 + weather * 0.16 }
-    else if (layer === 4) { radius = waterShelf - 0.48 + weather * 0.48 + fractures * 0.15; y = groundY - 1.20 + weather * 0.22 }
-    else if (layer === 5) { radius = waterShelf - 0.92 + weather * 0.53 + fractures * 0.18; y = groundY - footprint.depth * 0.77 + weather * 0.23 }
-    else if (layer === 6) { radius = waterShelf - 1.48 + weather * 0.55 + fractures * 0.13; y = groundY - footprint.depth + weather * 0.12 }
+    if (layer > 0 && layer < 6) {
+      const descent = [0, 0.12, 0.29, 0.48, 0.70, 0.88][layer]!
+      // Broad irregular ledges and small recesses expose dark strata without
+      // the concentric, machined bevel of the old floating platform.
+      radius = mix(upper, profile.foot, descent) + (weather * 0.16 + fractures * 0.075) * Math.sin(descent * Math.PI)
+      y = mix(groundY, sea + 0.06, smooth(descent)) + (weather * 0.19 + fractures * 0.065) * RELIEF_SCALE
+    } else if (layer === 6) { radius = profile.foot; y = sea + 0.06 }
+    else if (layer === 7) { radius = profile.shore + 0.02; y = sea - 0.12 }
+    else if (layer === 8) { radius = profile.shore - 0.42 + weather * 0.21; y = sea - 0.85 + weather * 0.09 }
     radius = Math.min(footprint.radius, radius)
     const point: Vector = [Math.cos(angle) * radius, y, Math.sin(angle) * radius]
     cliffSamples[layer]![sample] = point
     return point
   }
-  for (let layer = 0; layer < 6; layer++) for (let index = 0; index < COAST_SAMPLES; index++) {
+  for (let layer = 0; layer < 8; layer++) for (let index = 0; index < COAST_SAMPLES; index++) {
     const a = cliffPoint(index, layer), b = cliffPoint(index + 1, layer), c = cliffPoint(index, layer + 1), d = cliffPoint(index + 1, layer + 1)
     // Alternate diagonals break long repeated facets along eroded strata.
     if ((index + layer) % 2 === 0) { flatTriangle(cliffs, a, b, c); flatTriangle(cliffs, b, d, c) }
     else { flatTriangle(cliffs, a, b, d); flatTriangle(cliffs, a, d, c) }
   }
-  const underside: Vector = [0, groundY - footprint.depth * 1.06, 0]
-  for (let index = 0; index < COAST_SAMPLES; index++) flatTriangle(cliffs, underside, cliffPoint(index, 6), cliffPoint(index + 1, 6))
-  const upperSeam: Vector[] = [], middleSeam: Vector[] = []
-  for (let index = 0; index < COAST_SAMPLES; index++) {
-    const angle = index / COAST_SAMPLES * FULL_TURN, upper = cliffPoint(index, 0), middle = cliffPoint(index, 4)
-    upperSeam.push([upper[0] - Math.cos(angle) * 0.035, upper[1] + 0.014, upper[2] - Math.sin(angle) * 0.035])
-    middleSeam.push([middle[0] + Math.cos(angle) * 0.014, middle[1], middle[2] + Math.sin(angle) * 0.014])
-  }
-
+  const underside: Vector = [0, sea - 0.91, 0]
+  for (let index = 0; index < COAST_SAMPLES; index++) flatTriangle(cliffs, underside, cliffPoint(index, 8), cliffPoint(index + 1, 8))
   function rock(x: number, z: number, size: number, seed: number): void {
     const radius = Math.hypot(x, z)
     if (radius - size * 1.12 < protectedEdge + 0.22 || radius + size * 1.12 > coast(Math.atan2(z, x)) - 0.08) return
@@ -212,5 +231,6 @@ export function createNaturalIslandGeometry(footprint: HqIslandFootprint, protec
         [baseX + Math.cos(turn) * 0.065, baseY + bladeHeight, baseZ + Math.sin(turn) * 0.065])
     }
   }
-  return { top, cliffs, topGold: tube(upperSeam, 0.014), middleGold: tube(middleSeam, 0.011), rocks, grass }
+  return { top, cliffs, topGold: empty(), middleGold: empty(), rocks, grass,
+    sand: empty(), beachFurnitureBody: empty(), beachFurnitureFabric: empty(), beachPoints: [] }
 }

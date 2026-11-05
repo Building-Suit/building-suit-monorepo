@@ -5,16 +5,26 @@ import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloor
 import type { OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
 import type { HologramEffects } from './hologramEffects.ts'
-import { createOfficeArchitecture } from './officeArchitecture.ts'
-import { createCircularWorkplaceGeometry } from './circularWorkplaceGeometry.ts'
+import { createOfficeArchitecture, departmentDeskLayout } from './officeArchitecture.ts'
+import { createOrganicOfficePlatform, organicPrismIntersection } from './organicOfficePlatform.ts'
 import { createHqIslandFootprint } from './hqIslandGeometry.ts'
 import type { HqIslandFootprint } from './hqIslandGeometry.ts'
 import { createHologramTerrainMaterial } from './hologramTerrainMaterial.ts'
 import type { HologramTerrainMaterial } from './hologramTerrainMaterial.ts'
-import { createNaturalIslandGeometry } from './naturalIslandGeometry.ts'
+import { createNaturalIslandGeometry, NATURAL_ISLAND_SEA_DROP } from './naturalIslandGeometry.ts'
 import { createNaturalIslandMaterial } from './naturalIslandMaterial.ts'
 import type { NaturalIslandMaterial } from './naturalIslandMaterial.ts'
-import { HQ_ORB_SCALE } from './hologramPresentationGeometry.ts'
+import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from './hologramPresentationGeometry.ts'
+import { createIslandWaterClock, ISLAND_WATER_DETAIL_GLSL, ISLAND_WATER_FRAGMENT_GLSL, ISLAND_WATER_SURFACE_GLSL, ISLAND_WATER_VERTEX_GLSL } from './islandWaterMaterial.ts'
+import { createHqAgentCharacterGeometry, createHqAgentMotion, HQ_AGENT_CHARACTER_SCALE, HQ_AGENT_RIG } from './hqAgentCharacters.ts'
+import type { HqAgentCharacter, HqAgentPose } from './hqAgentCharacters.ts'
+import { createIslandShore, createIslandShoreImpacts } from './islandShoreInteraction.ts'
+import type { IslandShore } from './islandShoreInteraction.ts'
+import { createIslandShoreEffects } from './islandShoreEffects.ts'
+import type { IslandShoreEffects } from './islandShoreEffects.ts'
+import { ISLAND_SHORE_UNIFORMS_GLSL } from './islandShoreShaders.ts'
+import { ISLAND_WATER_DEBUG_MODES, ISLAND_SHORE_CONFIG } from './islandWaterConfig.ts'
+import type { IslandWaterDebug } from './islandWaterConfig.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -24,20 +34,23 @@ const OFFICE_BUILD_SECONDS = 2.4
 const OFFICE_FOUNDATION_HEIGHT = 0.14
 const OFFICE_WALL_HEIGHT = 1.9
 const EMPTY_DEPARTMENTS: readonly HqDepartmentOffice[] = []
-interface Geometry { positions: number[]; normals: number[] }
-interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
+const EMPTY_AGENTS: readonly HqAgentCharacter[] = []
+interface Geometry { positions: number[]; normals: number[]; coast?: number[] }
+interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; coast?: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
 interface SceneRay { origin: Vector; direction: Vector }
 interface OfficeRenderEntry {
   placement: OfficePlacement & { id: string }
   wallModel: Matrix
+  floorModel: Matrix
+  deskModels: Matrix[]
   completedHeight: number
   standingLight: Vector
 }
 
 export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; navy: Vector; navyDeep: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
 export interface HologramInteraction { open: number; excited: number; opened?: boolean }
-export interface HologramLayout { officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; reducedMotion?: boolean }
+export interface HologramLayout { waterDebug?: IslandWaterDebug; waterSeconds?: number; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentCharacter[]; reducedMotion?: boolean }
 export interface HologramOfficeAnchor { x: number; y: number; visible: boolean }
 export interface HologramRenderer {
   draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>, layout?: Readonly<HologramLayout>) => void
@@ -45,20 +58,42 @@ export interface HologramRenderer {
   hitTestWorkplace: (clientX: number, clientY: number) => string | null
   projectOfficeAnchor: (id: string) => HologramOfficeAnchor | null
   projectExecutiveAnchor: () => HologramOfficeAnchor | null
+  projectAgentAnchor: (id: string) => HologramOfficeAnchor | null
   dispose: () => void
 }
 
 const vertexShader = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 attribute vec3 aPosition;
 attribute vec3 aNormal;
+attribute vec4 aCoast;
 uniform mat4 uProjection;
 uniform mat4 uView;
 uniform mat4 uModel;
+uniform float uMaterial;
+uniform float uTime;
+uniform vec3 uEye;
+uniform float uWaterPixelScale;
+uniform vec4 uWaterPhaseA;
+uniform vec4 uWaterPhaseB;
+uniform vec4 uWaterDrift;
 varying vec3 vWorld;
 varying vec3 vNormal;
+varying vec3 vLocal;
+varying vec4 vOcean;
+varying vec4 vWaterState;
+varying vec4 vWaterCoast;
+${ISLAND_SHORE_UNIFORMS_GLSL}
+${ISLAND_WATER_SURFACE_GLSL}
 void main() {
   vec4 world = uModel * vec4(aPosition, 1.0);
+  ${ISLAND_WATER_VERTEX_GLSL}
   vWorld = world.xyz;
+  vLocal = aPosition;
   vNormal = mat3(uModel) * aNormal;
   gl_Position = uProjection * uView * world;
 }`
@@ -70,6 +105,10 @@ precision highp float;
 precision mediump float;
 #endif
 uniform vec3 uEye;
+uniform vec4 uWaterPhaseA;
+uniform vec4 uWaterRipplePhase;
+uniform vec4 uWaterDrift;
+uniform float uWaterPixelScale;
 uniform vec3 uColor;
 uniform float uOpacity;
 uniform float uTime;
@@ -92,6 +131,12 @@ uniform float uSweepY;
 uniform float uConstruction;
 varying vec3 vWorld;
 varying vec3 vNormal;
+varying vec3 vLocal;
+varying vec4 vOcean;
+varying vec4 vWaterState;
+varying vec4 vWaterCoast;
+${ISLAND_SHORE_UNIFORMS_GLSL}
+${ISLAND_WATER_DETAIL_GLSL}
 void main() {
   if ((uMaterial > 5.5 && uMaterial < 6.5) || (uMaterial > 8.5 && uMaterial < 9.5) || uMaterial > 13.5) {
     // Land has its own material/sampler. Office concrete and every other scene
@@ -102,29 +147,22 @@ void main() {
     vec2 plane = cliff ? (abs(normal.x) > abs(normal.z) ? vWorld.zy : vWorld.xy) : vWorld.xz;
     vec2 uv = plane * uIslandScale;
     vec4 mineral = texture2D(uIslandMap, uv);
-    vec2 warped = uv + (mineral.rg - vec2(0.5)) * 0.11;
-    vec4 detail = texture2D(uIslandMap, mat2(0.80, -0.60, 0.60, 0.80) * warped * 7.13 + vec2(0.19, 0.43));
-    vec4 grit = texture2D(uIslandMap, mat2(0.39, 0.92, -0.92, 0.39) * warped * 29.71 + vec2(0.67, 0.11));
-    vec2 slope = (mineral.rg - vec2(0.5)) * 0.34 + (detail.rg - vec2(0.5)) * 0.13;
-    if (cliff) normal = normalize(normal + vec3(slope.x, (grit.b - 0.5) * 0.10, slope.y));
+    vec2 warped = uv + (mineral.rg - vec2(0.5)) * 0.025;
+    vec4 detail = texture2D(uIslandMap, mat2(0.80, -0.60, 0.60, 0.80) * warped * 5.37 + vec2(0.19, 0.43));
+    vec4 grit = texture2D(uIslandMap, mat2(0.39, 0.92, -0.92, 0.39) * warped * 17.13 + vec2(0.67, 0.11));
+    vec2 slope = (mineral.rg - vec2(0.5)) * 0.14 + (detail.rg - vec2(0.5)) * 0.05;
+    if (cliff) normal = normalize(normal + vec3(slope.x, (grit.b - 0.5) * 0.025, slope.y));
     else normal = normalize(normal + vec3(slope.x, 0.0, slope.y));
     float diffuse = max(dot(normal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
-    float cavities = (1.0 - smoothstep(0.26, 0.52, detail.b)) * 0.18;
-    float variation = 0.68 + mineral.b * 0.54 + (grit.b - 0.5) * 0.15 - cavities;
+    float variation = 0.96 + (mineral.b - 0.5) * 0.80 + (detail.b - 0.5) * 0.35 + (grit.b - 0.5) * 0.12;
     vec3 rock = uColor * variation;
-    float soil = smoothstep(0.42, 0.72, mineral.a) * 0.56;
-    float moss = smoothstep(0.72, 0.88, mineral.a) * smoothstep(0.40, 0.66, detail.a);
-    moss *= smoothstep(0.35, 0.82, max(normal.y, 0.0));
-    vec3 surface = mix(rock, uIslandSoil * (0.78 + detail.b * 0.40), soil);
-    if (cliff) {
-      // Broken mineral bands follow warped rock, without regular terrace lines.
-      float bedding = fract(vWorld.y * 2.1 + mineral.b * 2.7 + detail.b * 0.23);
-      float erosion = (1.0 - smoothstep(0.02, 0.16, bedding)) * smoothstep(0.38, 0.70, detail.a);
-      surface *= 1.0 - erosion * 0.19;
-      moss *= 0.24;
-    }
-    surface = mix(surface, uIslandMoss * (0.78 + grit.b * 0.38), moss * 0.75);
-    if (grass) surface = uColor * (0.76 + detail.b * 0.36);
+    float soil = smoothstep(0.49, 0.66, mineral.a) * (cliff ? 0.04 : 0.14);
+    float moss = smoothstep(0.58, 0.69, mineral.a) * smoothstep(0.50, 0.64, detail.a);
+    moss *= smoothstep(0.55, 0.90, max(normal.y, 0.0)) * (cliff ? 0.08 : 0.30);
+    vec3 surface = mix(rock, uIslandSoil * (0.94 + detail.b * 0.12), soil);
+    // Fine matte grain and restrained greenery replace broad mud/contour patches.
+    surface = mix(surface, uIslandMoss * (0.94 + grit.b * 0.12), moss);
+    if (grass) surface = uColor * (0.94 + detail.b * 0.12);
     vec3 color = surface * (0.72 + diffuse * 0.36);
     // Preserve the existing diffuse Brain spill; land never adds clearcoat or
     // a metallic/environment reflection, even along the fractured cliff faces.
@@ -143,12 +181,25 @@ void main() {
     return;
   }
   if (uMaterial > 12.5) {
-    // Honed concrete stays diffuse: no reflected office/orb image or clearcoat.
+    // Concrete and ceramic tile stay diffuse, without reflected scene images.
     vec3 surfaceNormal = normalize(vNormal);
     vec4 stone = texture2D(uTerrainMap, vWorld.xz * uTerrainScale * 3.0);
     float grain = texture2D(uTerrainMap, (vWorld.xz + vWorld.yy) * uTerrainScale * 24.0).a;
     float diffuse = max(dot(surfaceNormal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
-    vec3 color = uColor * (0.66 + 0.34 * diffuse) * (0.94 + stone.b * 0.08 + (grain - 0.5) * 0.055);
+    vec3 surface = uColor * (0.94 + stone.b * 0.08 + (grain - 0.5) * 0.055);
+    if (uMaterial > 13.1 && surfaceNormal.y > 0.5) {
+      // Each independent platform has its own aligned ceramic tile grid. Filtering
+      // widens with view distance so grout softens in the overview.
+      vec2 tileUv = vLocal.xz / 1.2;
+      vec2 edge = min(fract(tileUv), 1.0 - fract(tileUv)) * 1.2;
+      float filterWidth = clamp(length(uEye - vWorld) * 0.0007, 0.003, 0.05);
+      float joint = 1.0 - smoothstep(0.014, 0.014 + filterWidth, min(edge.x, edge.y));
+      vec2 tile = floor(tileUv);
+      float variation = fract(sin(dot(tile, vec2(127.1, 311.7))) * 43758.5453);
+      surface *= 0.94 + variation * 0.10;
+      surface = mix(surface, mix(uNavy, uSilver, 0.40), joint * 0.72);
+    }
+    vec3 color = surface * (0.66 + 0.34 * diffuse);
     vec3 brainOffset = uBrainLight - vWorld;
     color += mix(uAccent, uSilver, 0.32) * uBrainLightStrength * 0.10 / (1.0 + dot(brainOffset, brainOffset) * 0.58);
     gl_FragColor = vec4(color, uOpacity);
@@ -162,43 +213,7 @@ void main() {
     gl_FragColor = vec4(color, uOpacity * (0.16 + rim * 0.30));
     return;
   }
-  if (uMaterial > 10.5 && uMaterial < 11.5) {
-    // This independent water material precedes the contact-shadow branch.
-    // Geometry carries coastal distance and offshore blend in vNormal.xy;
-    // analytic wave slopes provide fluid motion without rebuilding the mesh.
-    float shoreDistance = vNormal.x;
-    float offshore = clamp(vNormal.y, 0.0, 1.0);
-    float phaseA = dot(vWorld.xz, vec2(0.90, 0.44)) - uTime * 0.65;
-    float phaseB = dot(vWorld.xz, vec2(-0.53, 0.81)) + uTime * 0.43;
-    float waveA = sin(phaseA), waveB = sin(phaseB);
-    vec2 slope = vec2(0.90, 0.44) * cos(phaseA) * 0.055;
-    slope += vec2(-0.53, 0.81) * cos(phaseB) * 0.035;
-    vec3 waterNormal = normalize(vec3(-slope.x, 1.0, -slope.y));
-    vec3 waterView = normalize(uEye - vWorld);
-    float fresnel = pow(1.0 - max(dot(waterNormal, waterView), 0.0), 3.0);
-    float shallow = exp(-max(shoreDistance, 0.0) * 1.18);
-    vec3 deepWater = mix(uNavyDeep, uNavy, 0.54 + waveA * 0.045 + waveB * 0.025);
-    deepWater = mix(deepWater, uSilver, 0.065);
-    vec3 shallowWater = mix(uNavy, uSilver, 0.22);
-    vec3 waterColor = mix(deepWater, shallowWater, shallow * 0.58);
-    waterColor += uSilver * fresnel * 0.10;
-    float rippleCrest = smoothstep(0.72, 0.98, 0.5 + waveA * 0.5);
-    rippleCrest += smoothstep(0.80, 0.99, 0.5 + waveB * 0.5) * 0.55;
-    waterColor += uSilver * rippleCrest * 0.024;
-    vec3 halfLight = normalize(normalize(vec3(-1.5, 3.0, 2.0)) + waterView);
-    float sparkle = pow(max(dot(waterNormal, halfLight), 0.0), 72.0);
-    waterColor += uSilver * sparkle * 0.30;
-    // A narrow, gently breathing foam line follows the actual directional
-    // coast. It is diffuse shore detail, never a mirrored island/object image.
-    float foamEdge = abs(shoreDistance - 0.055 - waveA * 0.026 - waveB * 0.018);
-    float foam = (1.0 - smoothstep(0.025, 0.13, foamEdge));
-    foam *= 0.55 + 0.25 * waveA + 0.20 * waveB;
-    waterColor = mix(waterColor, uColor, foam * 0.27);
-    float alpha = (1.0 - smoothstep(0.66, 1.0, offshore)) * uOpacity;
-    if (alpha < 0.004) discard;
-    gl_FragColor = vec4(waterColor, alpha);
-    return;
-  }
+  ${ISLAND_WATER_FRAGMENT_GLSL}
   if (uMaterial > 9.5) {
     // Vertex-weighted concentric geometry gives a soft ground contact shadow
     // without a texture, readback, extra target or per-office shadow map.
@@ -320,29 +335,31 @@ function cylinder(bottomRadius: number, topRadius: number, bottom: number, top: 
   }
   return geometry
 }
-function islandWater(footprint: HqIslandFootprint): Geometry {
-  const geometry: Geometry = { positions: [], normals: [] }
-  const seaLevel = SPATIAL_VIEWPORT_GROUND_Y - 0.50
-  const outerRadius = footprint.radius * 2.4
-  // Eight fixed radial bands resolve the narrow shore and the broad offshore
-  // fade. Indexed upload merges shared vertices:256×8 vertices,3584 triangles.
-  // Rebuilt only when occupied sectors change, never on pan/zoom or each frame.
-  const bands = 8
+function islandWater(footprint: HqIslandFootprint, shore: IslandShore): Geometry {
+  const geometry: Geometry = { positions: [], normals: [], coast: [] }
+  const outerRadius = footprint.radius * 2.4, bands = ISLAND_SHORE_CONFIG.waterBands
+  const segments = ISLAND_SHORE_CONFIG.waterSegments
+  // Keep the existing mesh budget. Cache shoreline queries once per shared vertex.
+  const cache = new Map<number, number[]>()
   function vertex(index: number, band: number) {
-    const sample = index % footprint.outline.length
-    const angle = sample / footprint.outline.length * Math.PI * 2
-    const coastRadius = footprint.radii[sample]!
-    // Match the rock's near-surface inset where it crosses this sea level;
-    // the first band tucks underneath, so no transparent gap outlines the land.
-    const waterline = coastRadius * 0.99 - 0.04
-    const span = outerRadius - waterline
-    const offsets = [-0.40, 0, 0.16, 0.55, 1.40, span * 0.36, span * 0.70, span]
-    const distance = offsets[band]!
-    const radius = waterline + distance
-    geometry.positions.push(Math.cos(angle) * radius, seaLevel, Math.sin(angle) * radius)
-    geometry.normals.push(distance, Math.max(0, distance / span), 0)
+    const sample = index % segments, key = band * segments + sample
+    let data = cache.get(key)
+    if (!data) {
+      const angle = sample / segments * Math.PI * 2, contact = shore.contact(angle, 0)
+      const waterline = Math.hypot(contact.x, contact.z), span = outerRadius - waterline
+      const offsets = ISLAND_SHORE_CONFIG.shoreBandOffsets
+      const distance = band < offsets.length ? offsets[band]! : offsets[offsets.length - 1]! + (span - offsets[offsets.length - 1]!) * (band - offsets.length + 1) / (bands - offsets.length)
+      const radius = waterline + distance, x = Math.cos(angle) * radius, z = Math.sin(angle) * radius
+      const coast = shore.sample(x, z)
+      data = [x, shore.seaLevel, z, coast.distance, Math.max(0, distance / span), coast.bed,
+        coast.nx, coast.nz, coast.steepness, coast.shadow]
+      cache.set(key, data)
+    }
+    geometry.positions.push(data[0]!, data[1]!, data[2]!)
+    geometry.normals.push(data[3]!, data[4]!, data[5]!)
+    geometry.coast!.push(data[6]!, data[7]!, data[8]!, data[9]!)
   }
-  for (let band = 0; band < bands - 1; band++) for (let index = 0; index < footprint.outline.length; index++) {
+  for (let band = 0; band < bands - 1; band++) for (let index = 0; index < segments; index++) {
     vertex(index, band); vertex(index + 1, band); vertex(index, band + 1)
     vertex(index + 1, band); vertex(index + 1, band + 1); vertex(index, band + 1)
   }
@@ -350,7 +367,7 @@ function islandWater(footprint: HqIslandFootprint): Geometry {
 }
 function islandGroundShadow(footprint: HqIslandFootprint): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
-  const height = SPATIAL_VIEWPORT_GROUND_Y - footprint.depth * 1.22 - 0.16
+  const height = SPATIAL_VIEWPORT_GROUND_Y - NATURAL_ISLAND_SEA_DROP - 0.95
   const bands = [{ scale: 0, weight: 0.70 }, { scale: 0.84, weight: 0.70 }, { scale: 1.02, weight: 0.36 }, { scale: 1.12, weight: 0.10 }, { scale: 1.23, weight: 0 }]
   function vertex(index: number, band: number) {
     const point = footprint.outline[index % footprint.outline.length]!, edge = bands[band]!
@@ -380,8 +397,7 @@ function constructionStage(age: number, start: number, end: number): number {
   const progress = Math.max(0, Math.min(1, (age - start) / (end - start)))
   return progress * progress * (3 - 2 * progress)
 }
-function matrixProduct(first: Matrix, second: Matrix): Matrix {
-  const result = new Float32Array(16)
+function matrixProduct(first: Matrix, second: Matrix, result: Matrix = new Float32Array(16)): Matrix {
   for (let column = 0; column < 4; column++) for (let row = 0; row < 4; row++) {
     let value = 0
     for (let index = 0; index < 4; index++) value += first[index * 4 + row]! * second[column * 4 + index]!
@@ -558,6 +574,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
   let effects: HologramEffects | null = null
   let terrainMaterial: HologramTerrainMaterial | null = null
   let islandMaterial: NaturalIslandMaterial | null = null
+  let shoreEffects: IslandShoreEffects | null = null
   try {
     function compile(kind: number, source: string) {
       const shader = gl!.createShader(kind)
@@ -573,17 +590,20 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     gl.linkProgram(program)
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Hologram renderer unavailable')
     gl.useProgram(program)
-    const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal')
-    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uBrainLight', 'uBrainLightStrength', 'uRoomLight', 'uRoomLightStrength', 'uTerrainMap', 'uTerrainScale', 'uIslandMap', 'uIslandScale', 'uIslandSoil', 'uIslandMoss'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal'), coastAttribute = gl.getAttribLocation(program, 'aCoast')
+    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uWaterPhaseA', 'uWaterPhaseB', 'uWaterRipplePhase', 'uWaterDrift', 'uWaterPixelScale', 'uWaterDebug', 'uShoreImpact[0]', 'uShoreNormal[0]', 'uShoreMotion[0]', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uBrainLight', 'uBrainLightStrength', 'uRoomLight', 'uRoomLightStrength', 'uTerrainMap', 'uTerrainScale', 'uIslandMap', 'uIslandScale', 'uIslandSoil', 'uIslandMoss'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    const waterClock = createIslandWaterClock()
     terrainMaterial = createHologramTerrainMaterial(gl)
     islandMaterial = createNaturalIslandMaterial(gl)
     effects = createHologramEffects(gl)
     gl.useProgram(program)
     const mesh = (data: Geometry): Mesh => {
-      const vertices: number[] = [], directions: number[] = [], indices: number[] = []
+      const vertices: number[] = [], directions: number[] = [], coasts: number[] = [], indices: number[] = []
       const unique = new Map<string, number>()
       for (let offset = 0; offset < data.positions.length; offset += 3) {
         const values = [data.positions[offset]!, data.positions[offset + 1]!, data.positions[offset + 2]!, data.normals[offset]!, data.normals[offset + 1]!, data.normals[offset + 2]!]
+        const coastOffset = offset / 3 * 4
+        if (data.coast) values.push(...data.coast.slice(coastOffset, coastOffset + 4))
         const key = values.map(value => value.toFixed(5)).join(',')
         let index = unique.get(key)
         if (index === undefined) {
@@ -591,6 +611,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           if (index >= 65_536) throw new Error('Hologram geometry budget exceeded')
           unique.set(key, index)
           vertices.push(values[0]!, values[1]!, values[2]!); directions.push(values[3]!, values[4]!, values[5]!)
+          if (data.coast) coasts.push(values[6]!, values[7]!, values[8]!, values[9]!)
         }
         indices.push(index)
       }
@@ -601,7 +622,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         gl!.bufferData(target, indexed ? new Uint16Array(values) : new Float32Array(values), gl!.STATIC_DRAW)
         return result
       }
-      return { position: buffer(vertices, gl.ARRAY_BUFFER), normal: buffer(directions, gl.ARRAY_BUFFER), indices: buffer(indices, gl.ELEMENT_ARRAY_BUFFER, true), count: indices.length }
+      return { position: buffer(vertices, gl.ARRAY_BUFFER), normal: buffer(directions, gl.ARRAY_BUFFER), indices: buffer(indices, gl.ELEMENT_ARRAY_BUFFER, true), ...(data.coast ? { coast: buffer(coasts, gl.ARRAY_BUFFER) } : {}), count: indices.length }
     }
     const plates = shieldFractures().map(plate => ({ ...plate, body: mesh(plate.body), seam: mesh(plate.seam), transform: identity() }))
     const officeArchitecture = createOfficeArchitecture(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH)
@@ -609,42 +630,66 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       body: mesh(furniture.body), top: mesh(furniture.top), metal: mesh(furniture.metal),
       screen: mesh(furniture.screen), light: mesh(furniture.light), details: mesh(furniture.details),
     })
-    const officeMeshes = {
-      executive: furnitureMeshes(officeArchitecture.executive), department: furnitureMeshes(officeArchitecture.department),
+    const decorMeshes = (architecture: ReturnType<typeof createOfficeArchitecture>, platform: ReturnType<typeof createOrganicOfficePlatform>) => ({
+      floor: mesh(platform.foundation), rim: mesh(platform.rim),
+      standingLightPosition: architecture.standingLightPosition,
       furnishings: {
-        body: mesh(officeArchitecture.furnishings.body), metal: mesh(officeArchitecture.furnishings.metal),
-        leaves: mesh(officeArchitecture.furnishings.leaves), light: mesh(officeArchitecture.furnishings.light), shade: mesh(officeArchitecture.furnishings.shade),
+        pots: mesh(architecture.furnishings.pots), soil: mesh(architecture.furnishings.soil),
+        body: mesh(architecture.furnishings.body), metal: mesh(architecture.furnishings.metal),
+        leaves: mesh(architecture.furnishings.leaves), light: mesh(architecture.furnishings.light), shade: mesh(architecture.furnishings.shade),
       },
+    })
+    const officeMeshes = {
+      executive: furnitureMeshes(officeArchitecture.executive), station: furnitureMeshes(officeArchitecture.station),
+    }
+    const decorCache = new Map<string, ReturnType<typeof decorMeshes>>()
+    function officeDecor(placement: OfficePlacement) {
+      const key = placement.platform.key
+      let decor = decorCache.get(key)
+      if (!decor) { decor = decorMeshes(createOfficeArchitecture(placement.width, placement.depth), createOrganicOfficePlatform(placement.platform)); decorCache.set(key, decor) }
+      return decor
     }
     const officeFloorColor = palette.silver.map((value, index) => value * 0.65 + palette.gold[index]! * 0.12 + palette.steelGray[index]! * 0.23) as Vector
     const officeTopColor = palette.pearl.map((value, index) => value * 0.72 + palette.gold[index]! * 0.12 + palette.silver[index]! * 0.16) as Vector
-    const officeConcreteColor = palette.silver.map((value, index) => value * 0.68 + palette.steelGray[index]! * 0.22 + palette.navy[index]! * 0.10) as Vector
     const officeCabinetColor = palette.navy.map((value, index) => value * 0.55 + palette.steelGray[index]! * 0.45) as Vector
     const officeScreenColor = palette.navy.map((value, index) => value * 0.70 + palette.silver[index]! * 0.30) as Vector
     const officeWarmLightColor = palette.gold.map((value, index) => value * 0.65 + palette.pearl[index]! * 0.35) as Vector
     const brainAuraColor = palette.navy.map((value, index) => value * 0.55 + palette.silver[index]! * 0.45) as Vector
-    const islandTopColor = palette.charcoal.map((value, index) => value * 0.72 + palette.navy[index]! * 0.28) as Vector
-    const islandRockColor = palette.coal.map((value, index) => value * 0.52 + palette.navyDeep[index]! * 0.30 + palette.steelGray[index]! * 0.18) as Vector
-    const islandSoilColor = palette.gold.map((value, index) => value * 0.24 + palette.coal[index]! * 0.56 + palette.steelGray[index]! * 0.20) as Vector
-    const islandMossColor: Vector = [palette.gold[0] * 0.22, palette.gold[1] * 0.36, palette.navy[2] * 0.30]
-    const officeFoliageColor = palette.navy.map((value, index) => value * 0.55 + palette.gold[index]! * 0.20 + palette.steelGray[index]! * 0.25) as Vector
+    const islandTopColor = palette.steelGray.map((value, index) => value * 0.12 + palette.charcoal[index]! * 0.76 + palette.navy[index]! * 0.12) as Vector
+    const islandRockColor = palette.steelGray.map((value, index) => value * 0.10 + palette.charcoal[index]! * 0.78 + palette.navy[index]! * 0.12) as Vector
+    const islandSoilColor = palette.charcoal.map((value, index) => value * 0.80 + palette.steelGray[index]! * 0.13 + palette.gold[index]! * 0.07) as Vector
+    const islandMossColor: Vector = [palette.silver[0] * 0.13, palette.silver[1] * 0.25, palette.navy[2] * 0.46]
+    // Natural object pigments derive from the canonical palette, independently
+    // of the Navy cabinets and metallic frames.
+    const officeFoliageColor: Vector = [palette.gold[0] * 0.27, palette.silver[1] * 0.48, palette.navy[2] * 0.55]
+    const officePotColor = palette.gold.map((value, index) => value * 0.58 + palette.charcoal[index]! * 0.42) as Vector
+    const officeSoilColor = officePotColor.map((value, index) => value * 0.32 + palette.coal[index]! * 0.68) as Vector
+    const officeWoodColor = palette.gold.map((value, index) => value * 0.40 + palette.silver[index]! * 0.60) as Vector
+    const beachWoodColor = palette.gold.map((value, index) => value * 0.43 + palette.charcoal[index]! * 0.33 + palette.steelGray[index]! * 0.24) as Vector
+    const agentSkinColor = palette.gold.map((value, index) => value * 0.36 + palette.pearl[index]! * 0.56 + palette.steelGray[index]! * 0.08) as Vector
+    const agentClothesColor = palette.navy.map((value, index) => value * 0.74 + palette.steelGray[index]! * 0.26) as Vector
+    const agentHrClothesColor = palette.gold.map((value, index) => value * 0.56 + palette.charcoal[index]! * 0.44) as Vector
+    const characterGeometry = createHqAgentCharacterGeometry()
+    const characterMeshes = Object.fromEntries(Object.entries(characterGeometry).map(([key, data]) => [key, mesh(data)])) as { [Key in keyof typeof characterGeometry]: Mesh }
+    const fishingLine = mesh(tube(curve([[0, 0.89, -0.63], [0.012, 0.54, -0.67], [-0.008, -0.24, -0.73], [0, -1.0, -0.78]]), 0.0025, 4))
+    const agentMotion = createHqAgentMotion(SPATIAL_VIEWPORT_GROUND_Y)
+    const agentRootModel = identity(), agentLocalModel = identity(), agentLimbModel = identity()
+    const agentKneeModel = identity(), agentAnkleModel = identity(), agentRodModel = identity()
     let officeLayout = layoutDepartmentOffices(EMPTY_DEPARTMENTS)
-    function workplaceMeshes() {
-      const shared = createCircularWorkplaceGeometry(officeLayout, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT)
-      return { floor: mesh(shared.floor), edge: mesh(shared.edge), concrete: mesh(shared.concrete), glass: mesh(shared.glass), frames: mesh(shared.frames) }
-    }
-    let sharedWorkplaces = workplaceMeshes()
     let islandFootprint = createHqIslandFootprint(officeLayout), lastIslandLayout = officeLayout
+    const protectedLandRadius = () => Math.max(...officeLayout.rings.map(ring => ring.outerRadius)) + 0.12
     function naturalLand() {
-      return createNaturalIslandGeometry(islandFootprint, Math.max(...officeLayout.rings.map(ring => ring.outerRadius)) + 0.12, SPATIAL_VIEWPORT_GROUND_Y)
+      return createNaturalIslandGeometry(islandFootprint, protectedLandRadius(), SPATIAL_VIEWPORT_GROUND_Y)
     }
     const initialLand = naturalLand()
+    let shore = createIslandShore(initialLand.cliffs, SPATIAL_VIEWPORT_GROUND_Y - NATURAL_ISLAND_SEA_DROP)
+    let shoreImpacts = createIslandShoreImpacts(shore)
+    const foamColor = palette.navy.map((value, index) => value * 0.24 + palette.silver[index]! * 0.76)
+    shoreEffects = createIslandShoreEffects(gl, foamColor)
     const geometry = {
-      water: mesh(islandWater(islandFootprint)),
+      water: mesh(islandWater(islandFootprint, shore)),
       ground: mesh(initialLand.top),
       groundEdge: mesh(initialLand.cliffs),
-      groundLight: mesh(initialLand.topGold),
-      groundMidLight: mesh(initialLand.middleGold),
       groundShadow: mesh(islandGroundShadow(islandFootprint)),
       islandRocks: mesh(initialLand.rocks), islandGrass: mesh(initialLand.grass),
       hub: mesh(cylinder(2.16, 2.16, SPATIAL_VIEWPORT_GROUND_Y + 0.004, SPATIAL_VIEWPORT_GROUND_Y + 0.044)),
@@ -669,19 +714,25 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     let disposed = false
     let orbProjection: OrbProjection | null = null
     const staticModel = identity(), brainModel = identity(), auraFirst = identity(), auraSecond = identity(), groundModel = identity()
-    const groundLightModel = identity(), hubRingModel = model(0, SPATIAL_VIEWPORT_GROUND_Y + 0.047)
+    const hubRingModel = model(0, SPATIAL_VIEWPORT_GROUND_Y + 0.047)
     const outerRingModel = model(0, -0.48), innerRingModel = model(0, -0.30), emitterRingModel = model(0, -0.145)
     let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0, lastFloorRadius = -1
+    const visibleAgentAnchors = new Map<string, Vector>()
     let viewProjection: Matrix | null = null
     let sceneProjection: Matrix | null = null, sceneView: Matrix | null = null
     let previousDepartments: readonly HqDepartmentOffice[] | null = null, departmentSignature = ''
     let officeEntries = new Map<string, OfficeRenderEntry>()
     const firstSeen = new Map<string, number>()
     let constructionClock = 0, previousSeconds: number | null = null, brainLightPower = 0.86
-    function makeEntry(placement: OfficePlacement & { id: string }): OfficeRenderEntry {
-      const lamp = officeArchitecture.standingLightPosition, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
+    function makeEntry(placement: OfficePlacement & { id: string; agents?: HqDepartmentOffice['agents'] }): OfficeRenderEntry {
+      const lamp = officeDecor(placement).standingLightPosition, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
       return {
         placement,
+        deskModels: departmentDeskLayout(placement.agents?.length ?? 0).desks.map(desk => model(
+          placement.x + cosine * desk.x + sine * desk.z, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT,
+          placement.z - sine * desk.x + cosine * desk.z, 0, 0, placement.yaw + desk.yaw,
+        )),
+        floorModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y, placement.z, 0, 0, placement.yaw),
         wallModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT, placement.z, 0, 0, placement.yaw),
         completedHeight: 0,
         standingLight: [placement.x + cosine * lamp[0] + sine * lamp[2], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + lamp[1], placement.z - sine * lamp[0] + cosine * lamp[2]],
@@ -690,7 +741,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     let executiveEntry = makeEntry(officeLayout.executive)
     executiveEntry.completedHeight = 1
     function releaseMesh(shape: Mesh) {
-      for (const buffer of [shape.position, shape.normal, shape.indices]) {
+      for (const buffer of [shape.position, shape.normal, shape.indices, ...(shape.coast ? [shape.coast] : [])]) {
         gl!.deleteBuffer(buffer)
         const index = buffers.indexOf(buffer)
         if (index >= 0) buffers.splice(index, 1)
@@ -699,17 +750,20 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     function updateOffices(departments: readonly HqDepartmentOffice[], reduced: boolean) {
       if (departments !== previousDepartments) {
         previousDepartments = departments
-        const signature = JSON.stringify(departments.map(department => [department.id, department.approvedAt]).sort((left, right) => left[0]! < right[0]! ? -1 : left[0]! > right[0]! ? 1 : 0))
+        const signature = JSON.stringify(departments.map(department => [department.id, department.approvedAt, department.agents?.map(agent => agent.id).join(',') ?? null]).sort((left, right) => left[0]! < right[0]! ? -1 : left[0]! > right[0]! ? 1 : 0))
         if (signature !== departmentSignature) {
           departmentSignature = signature
+          for (const decor of decorCache.values()) {
+            releaseMesh(decor.floor); releaseMesh(decor.rim)
+            for (const shape of Object.values(decor.furnishings)) releaseMesh(shape)
+          }
+          decorCache.clear()
           officeLayout = layoutDepartmentOffices(departments)
           // Sector widths and existing anchors reflow with the occupied count.
           // Refresh all lightweight poses, including the CEO's picking sector;
           // construction clocks stay keyed by ID and never restart on reflow.
           executiveEntry = makeEntry(officeLayout.executive)
           executiveEntry.completedHeight = 1
-          for (const shape of Object.values(sharedWorkplaces)) releaseMesh(shape)
-          sharedWorkplaces = workplaceMeshes()
           const nextEntries = new Map<string, OfficeRenderEntry>()
           for (const placement of officeLayout.offices) {
             const entry = makeEntry(placement)
@@ -721,9 +775,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       }
       if (reduced) for (const id of officeEntries.keys()) firstSeen.set(id, Math.min(firstSeen.get(id) ?? constructionClock, constructionClock - OFFICE_BUILD_SECONDS))
     }
-    function projectAnchor(entry: OfficeRenderEntry): HologramOfficeAnchor | null {
+    function projectPoint(x: number, y: number, z: number): HologramOfficeAnchor | null {
       if (disposed || !viewProjection) return null
-      const { x, z } = entry.placement, y = SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * entry.completedHeight + 0.18
       const matrix = viewProjection
       const clipX = matrix[0]! * x + matrix[4]! * y + matrix[8]! * z + matrix[12]!
       const clipY = matrix[1]! * x + matrix[5]! * y + matrix[9]! * z + matrix[13]!
@@ -732,6 +785,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       if (clipW <= 0.05) return { x: 0, y: 0, visible: false }
       const ndcX = clipX / clipW, ndcY = clipY / clipW, ndcZ = clipZ / clipW
       return { x: (ndcX + 1) * lastWidth / 2, y: (1 - ndcY) * lastHeight / 2, visible: Math.abs(ndcX) < 0.98 && Math.abs(ndcY) < 0.96 && Math.abs(ndcZ) <= 1 }
+    }
+    function projectAnchor(entry: OfficeRenderEntry): HologramOfficeAnchor | null {
+      return projectPoint(entry.placement.x, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * entry.completedHeight + 0.18, entry.placement.z)
     }
     function configureScenePass() {
       if (!gl || !program || !sceneProjection || !sceneView || !orbProjection) return
@@ -764,40 +820,119 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       if (!gl || count <= 0) return
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.position); gl.vertexAttribPointer(position, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(position)
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.normal); gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(normal)
+      if (shape.coast) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, shape.coast); gl.vertexAttribPointer(coastAttribute, 4, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(coastAttribute)
+      } else { gl.disableVertexAttribArray(coastAttribute); gl.vertexAttrib4f(coastAttribute, 0, 1, 1, 0) }
       gl.uniformMatrix4fv(uniforms.uModel!, false, transform)
       gl.uniform3fv(uniforms.uColor!, color); gl.uniform1f(uniforms.uMaterial!, material); gl.uniform1f(uniforms.uOpacity!, opacity)
-      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11 || material === 13 || material === 14)) || (material === 4 && opacity > 0.5))
+      gl.depthMask((opacity >= 1 && ((material > 12.5 && material < 13.5) || material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11 || material === 14 || material === 15)) || (material === 4 && opacity > 0.5))
       if (singleSided) { gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK) }
       else gl.disable(gl.CULL_FACE)
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shape.indices)
       gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0)
     }
     function drawOffice(entry: OfficeRenderEntry, age: number, executive = false) {
+      const decor = officeDecor(entry.placement)
       const complete = age >= OFFICE_BUILD_SECONDS
       const furnishingRise = constructionStage(age, 1.15, 2.20)
       const lampPower = constructionStage(age, 1.55, 2.20)
-      gl!.uniform3f(uniforms.uRoomLight!, entry.standingLight[0], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + officeArchitecture.standingLightPosition[1] * furnishingRise, entry.standingLight[2])
+      gl!.uniform3f(uniforms.uRoomLight!, entry.standingLight[0], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + decor.standingLightPosition[1] * furnishingRise, entry.standingLight[2])
       gl!.uniform1f(uniforms.uRoomLightStrength!, lampPower * 0.80)
       entry.completedHeight = constructionStage(age, 0.65, 1.45)
       const material = complete ? 0 : 7
       gl!.uniform1f(uniforms.uConstruction!, complete ? 0 : 1 - constructionStage(age, 1.7, OFFICE_BUILD_SECONDS))
       gl!.uniform1f(uniforms.uSweepY!, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * constructionStage(age, 0.65, 2.2))
+      const platformRise = constructionStage(age, 0.25, 0.85)
+      entry.floorModel[5] = Math.max(0.001, platformRise)
+      entry.wallModel[5] = 1
+      if (platformRise > 0) {
+        drawMesh(decor.floor, officeFloorColor, 13.25, 1, entry.floorModel)
+        if (platformRise >= 1) drawMesh(decor.rim, palette.gold, 2, 0.76, entry.wallModel)
+      }
       entry.wallModel[5] = Math.max(0.001, furnishingRise)
       if (furnishingRise > 0) {
-        const furniture = executive ? officeMeshes.executive : officeMeshes.department
-        drawMesh(furniture.body, palette.charcoal, material, 1, entry.wallModel)
-        drawMesh(furniture.top, officeTopColor, 8, 1, entry.wallModel)
-        drawMesh(furniture.metal, palette.steelGray, 8, 1, entry.wallModel)
-        drawMesh(furniture.screen, officeScreenColor, 2, 0.94, entry.wallModel)
-        drawMesh(furniture.details, palette.silver, 8, 1, entry.wallModel)
-        drawMesh(officeMeshes.furnishings.body, officeCabinetColor, material, 1, entry.wallModel)
-        drawMesh(officeMeshes.furnishings.metal, palette.steelGray, 8, 1, entry.wallModel)
-        drawMesh(officeMeshes.furnishings.leaves, officeFoliageColor, 0, 1, entry.wallModel)
-        drawMesh(officeMeshes.furnishings.shade, officeTopColor, material, 1, entry.wallModel)
-        drawMesh(furniture.light, palette.gold, 2, 0.9, entry.wallModel)
-        drawMesh(officeMeshes.furnishings.light, officeWarmLightColor, 2, 1, entry.wallModel)
+        const furniture = executive ? officeMeshes.executive : officeMeshes.station
+        for (const transform of executive ? [entry.wallModel] : entry.deskModels) {
+          transform[5] = Math.max(0.001, furnishingRise)
+          drawMesh(furniture.body, palette.charcoal, material, 1, transform)
+          drawMesh(furniture.top, officeWoodColor, material, 1, transform)
+          drawMesh(furniture.metal, palette.steelGray, 8, 1, transform)
+          drawMesh(furniture.screen, officeScreenColor, 2, 0.94, transform)
+          drawMesh(furniture.details, palette.silver, 8, 1, transform)
+          drawMesh(furniture.light, palette.gold, 2, 0.9, transform)
+        }
+        drawMesh(decor.furnishings.body, officeCabinetColor, material, 1, entry.wallModel)
+        drawMesh(decor.furnishings.metal, palette.steelGray, 8, 1, entry.wallModel)
+        drawMesh(decor.furnishings.pots, officePotColor, material, 1, entry.wallModel)
+        drawMesh(decor.furnishings.soil, officeSoilColor, material, 1, entry.wallModel)
+        drawMesh(decor.furnishings.leaves, officeFoliageColor, material, 1, entry.wallModel)
+        drawMesh(decor.furnishings.shade, officeTopColor, material, 1, entry.wallModel)
+        drawMesh(decor.furnishings.light, officeWarmLightColor, 2, 1, entry.wallModel)
       }
       gl!.uniform1f(uniforms.uRoomLightStrength!, 0)
+    }
+    function drawAgent(pose: HqAgentPose, agent: HqAgentCharacter, reducedMotion: boolean) {
+      if (!pose.visible) return
+      if (pose.mode === 'working' && agent.role !== 'ceo') {
+        const entry = agent.departmentId && officeEntries.get(agent.departmentId)
+        if (!entry || constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock) < 1.8) return
+      }
+      const rig = HQ_AGENT_RIG
+      const characterScale = HQ_AGENT_CHARACTER_SCALE
+      const working = pose.mode === 'working', lounging = pose.mode === 'lounging', fishing = pose.mode === 'fishing'
+      const walking = pose.mode === 'walking' && !reducedMotion
+      const swing = walking ? Math.sin(pose.phase) * 0.48 : 0
+      const breath = reducedMotion ? 0 : Math.sin(pose.phase) * 0.007
+      const lean = lounging ? 0.55 : working ? 0.045 : 0
+      const bob = walking ? Math.abs(Math.sin(pose.phase)) * 0.018 : breath
+      // Recreation locations face the radial chair/pier front. The character
+      // rig itself faces -Z, while the beach furniture's local front is +Z.
+      const facing = pose.yaw + (lounging || fishing ? Math.PI : 0)
+      const rise = lounging ? -0.09 : working ? -0.08 : 0
+      const seatAnchor = working || lounging ? (rig.hipY * characterScale - HQ_AGENT_RIG.hipY) * Math.cos(lean) : 0
+      model(pose.x, pose.y + rise + bob - seatAnchor, pose.z, lean, 0, facing, characterScale, agentRootModel)
+      visibleAgentAnchors.set(agent.id, [pose.x, pose.y + rise + bob - seatAnchor + rig.height * characterScale + 0.18, pose.z])
+      const clothes = agent.role === 'ceo' ? palette.navy : agent.role === 'hr' ? agentHrClothesColor : agentClothesColor
+      drawMesh(characterMeshes.body, agentSkinColor, 0, 1, agentRootModel)
+      drawMesh(characterMeshes.head, agentSkinColor, 0, 1, agentRootModel)
+      drawMesh(characterMeshes.hair, palette.coal, 0, 1, agentRootModel)
+      drawMesh(characterMeshes.clothes, clothes, 0, 1, agentRootModel)
+      drawMesh(characterMeshes.trousers, palette.charcoal, 0, 1, agentRootModel)
+      drawMesh(characterMeshes.eyes, palette.coal, 0, 1, agentRootModel)
+      for (const side of [-1, 1] as const) {
+        const left = side < 0
+        const leg = left ? characterMeshes.leftLeg : characterMeshes.rightLeg
+        const shoe = left ? characterMeshes.leftShoe : characterMeshes.rightShoe
+        const legTilt = working ? Math.PI / 2 : lounging ? 1.05 : swing * side
+        model(side * rig.hipX, rig.hipY, 0, legTilt, 0, 0, 1, agentLocalModel)
+        if (working) {
+          // Draw a short thigh and a separate shin in seated poses instead of
+          // rotating a straight leg through the desk or leaving floating feet.
+          agentLocalModel[4] = agentLocalModel[4]! * 0.55; agentLocalModel[5] = agentLocalModel[5]! * 0.55; agentLocalModel[6] = agentLocalModel[6]! * 0.55
+        }
+        matrixProduct(agentRootModel, agentLocalModel, agentLimbModel)
+        drawMesh(leg, palette.charcoal, 0, 1, agentLimbModel)
+        if (working) {
+          model(side * rig.hipX, rig.hipY, -rig.legLength * 0.55, 0, 0, 0, 1, agentLocalModel)
+          matrixProduct(agentRootModel, agentLocalModel, agentKneeModel)
+          drawMesh(leg, palette.charcoal, 0, 1, agentKneeModel)
+        }
+        model(0, -rig.legLength, 0, working ? 0 : -legTilt * 0.35, 0, 0, 1, agentLocalModel)
+        matrixProduct(working ? agentKneeModel : agentLimbModel, agentLocalModel, agentAnkleModel)
+        drawMesh(shoe, palette.coal, 0, 1, agentAnkleModel)
+        const typing = reducedMotion ? 0 : Math.sin(pose.phase * 3.2 + side * 1.7) * 0.055
+        const armTilt = working ? 1.34 + typing : fishing ? (left ? 0.86 : 1.02) + breath : lounging ? 0.18 : -swing * side * 0.75
+        model(side * rig.shoulderX, rig.shoulderY, 0, armTilt, side * 0.05, 0, 1, agentLocalModel)
+        matrixProduct(agentRootModel, agentLocalModel, agentLimbModel)
+        drawMesh(left ? characterMeshes.leftArm : characterMeshes.rightArm, clothes, 0, 1, agentLimbModel)
+        drawMesh(left ? characterMeshes.leftHand : characterMeshes.rightHand, agentSkinColor, 0, 1, agentLimbModel)
+        if (fishing && !left) {
+          model(0, -0.325, 0.013, -armTilt - 0.10 + breath, 0, 0, 1, agentLocalModel)
+          matrixProduct(agentLimbModel, agentLocalModel, agentRodModel)
+          drawMesh(characterMeshes.rod, beachWoodColor, 0, 1, agentRodModel)
+          drawMesh(fishingLine, palette.silver, 0, 1, agentRodModel)
+        }
+      }
     }
     function rayAt(clientX: number, clientY: number): SceneRay | null {
       if (disposed || !orbProjection || gl!.isContextLost()) return null
@@ -820,39 +955,16 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     function workplaceIntersection(entry: OfficeRenderEntry, ray: SceneRay, executive = false): number {
       const age = executive ? OFFICE_BUILD_SECONDS : constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock)
       if (constructionStage(age, 0.25, 0.85) <= 0) return Infinity
-      const { startAngle, endAngle, innerRadius, outerRadius } = entry.placement.sector
-      const bottom = SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT
-      const top = bottom + OFFICE_WALL_HEIGHT * entry.completedHeight
-      const [ox, oy, oz] = ray.origin, [dx, dy, dz] = ray.direction
-      const centerAngle = (startAngle + endAngle) / 2, halfSpan = (endAngle - startAngle) / 2
-      let nearest = Infinity
-      // An annular sector is concave at its inner arc. Intersect its actual
-      // horizontal faces, circular sides and two radial sides analytically;
-      // rectangular furniture bounds and convex hulls would fill the aisle.
-      const candidate = (distance: number) => {
-        if (distance < 0.05 || distance >= nearest) return
-        const x = ox + dx * distance, y = oy + dy * distance, z = oz + dz * distance
-        const radius = Math.hypot(x, z)
-        const relativeAngle = Math.atan2(Math.sin(Math.atan2(z, x) - centerAngle), Math.cos(Math.atan2(z, x) - centerAngle))
-        if (y >= bottom - 0.0001 && y <= top + 0.0001 && radius >= innerRadius - 0.0001 && radius <= outerRadius + 0.0001 && Math.abs(relativeAngle) <= halfSpan + 0.0001) nearest = distance
-      }
-      if (Math.abs(dy) > 0.000001) { candidate((bottom - oy) / dy); candidate((top - oy) / dy) }
-      const a = dx * dx + dz * dz, b = ox * dx + oz * dz
-      if (a > 0.000001) for (const radius of [innerRadius, outerRadius]) {
-        const discriminant = b * b - a * (ox * ox + oz * oz - radius * radius)
-        if (discriminant >= 0) {
-          const root = Math.sqrt(discriminant)
-          candidate((-b - root) / a); candidate((-b + root) / a)
-        }
-      }
-      if (halfSpan < Math.PI - 0.000001) {
-        for (const angle of [startAngle, endAngle]) {
-          const nx = -Math.sin(angle), nz = Math.cos(angle), denominator = nx * dx + nz * dz
-          if (Math.abs(denominator) > 0.000001) candidate(-(nx * ox + nz * oz) / denominator)
-        }
-      }
-      return nearest
+      // Transform the ray into the independent platform's local frame so
+      // ground gaps between offices never select an invisible shared sector.
+      const { x, z, yaw } = entry.placement
+      const c = Math.cos(yaw), s = Math.sin(yaw)
+      const ox = ray.origin[0] - x, oz = ray.origin[2] - z
+      const origin = [c * ox - s * oz, ray.origin[1], s * ox + c * oz]
+      const direction = [c * ray.direction[0] - s * ray.direction[2], ray.direction[1], s * ray.direction[0] + c * ray.direction[2]]
+      return organicPrismIntersection(entry.placement.platform, origin, direction, SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * entry.completedHeight)
     }
+
     function pickSceneAt(clientX: number, clientY: number): { orb: boolean; workplaceId: string | null } {
       const ray = rayAt(clientX, clientY)
       if (!ray) return { orb: false, workplaceId: null }
@@ -884,14 +996,15 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           // water boundary, scene radius, flat workplace support and camera fit.
           islandFootprint = createHqIslandFootprint(officeLayout)
           const land = naturalLand()
-          for (const shape of [geometry.water, geometry.ground, geometry.groundEdge, geometry.groundLight, geometry.groundMidLight, geometry.groundShadow, geometry.islandRocks, geometry.islandGrass]) releaseMesh(shape)
-          geometry.water = mesh(islandWater(islandFootprint))
+          shore = createIslandShore(land.cliffs, SPATIAL_VIEWPORT_GROUND_Y - NATURAL_ISLAND_SEA_DROP)
+          shoreImpacts = createIslandShoreImpacts(shore)
+          for (const shape of [geometry.water, geometry.ground, geometry.groundEdge, geometry.groundShadow, geometry.islandRocks, geometry.islandGrass]) releaseMesh(shape)
+          geometry.water = mesh(islandWater(islandFootprint, shore))
           geometry.ground = mesh(land.top)
           geometry.groundEdge = mesh(land.cliffs)
-          geometry.groundLight = mesh(land.topGold)
-          geometry.groundMidLight = mesh(land.middleGold)
           geometry.groundShadow = mesh(islandGroundShadow(islandFootprint))
           geometry.islandRocks = mesh(land.rocks); geometry.islandGrass = mesh(land.grass)
+          agentMotion.reset()
           lastIslandLayout = officeLayout
         }
         const floorRadius = Math.max(hologramFloorRadius(layout.officeLayerCount), officeLayout.floorRadius, islandFootprint.radius)
@@ -927,14 +1040,18 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           viewProjection = matrixProduct(projection, view)
           orbProjection = {
             eye: frame.eye, right: frame.right, up: frame.up, forward: frame.forward,
-            center: [0, 0.98, 0], radius: 0.84 * HQ_ORB_SCALE, aspect: frame.aspect,
+            center: [0, HQ_ORB_CENTER_Y, 0], radius: 0.84 * HQ_ORB_SCALE, aspect: frame.aspect,
           }
           lastCamera = [camera.yaw, camera.pitch, camera.zoom, camera.panX, camera.panY]
           lastWidth = width; lastHeight = height
         }
         const time = seconds % 1000, reveal = open * open * (3 - 2 * open)
+        const agentRoster = layout.agents ?? EMPTY_AGENTS
+        visibleAgentAnchors.clear()
+        const agentPoses = agentMotion.update(officeLayout, agentRoster, constructionClock, Boolean(layout.reducedMotion))
+        const agentById = new Map(agentRoster.map(agent => [agent.id, agent]))
         brainLightPower = 0.86 + reveal * 0.26
-        const float = Math.sin(time * 0.9) * 0.028, beat = 1 + Math.sin(time * 2.15) * 0.006, orbHeight = 0.98 + float
+        const float = Math.sin(time * 0.9) * 0.028, beat = 1 + Math.sin(time * 2.15) * 0.006, orbHeight = HQ_ORB_CENTER_Y + float
         const shakeX = Math.sin(time * 31) * excited * 0.005, shakeY = Math.sin(time * 37) * excited * 0.004
         gl.uniform1f(uniforms.uTime!, time); gl.uniform3fv(uniforms.uAccent!, palette.gold)
         if (orbProjection) {
@@ -956,17 +1073,16 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, HQ_ORB_SCALE, auraFirst)
         model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, HQ_ORB_SCALE, auraSecond)
         const drawSceneObjects = () => {
-          drawMesh(geometry.groundLight, palette.gold, 2, 0.76, groundLightModel)
           drawMesh(geometry.islandRocks, islandRockColor, 9)
           drawMesh(geometry.islandGrass, islandMossColor, 14)
           drawMesh(geometry.hub, palette.navyDeep, 8)
           drawMesh(geometry.hubRing, palette.gold, 2, 0.94, hubRingModel)
-          drawMesh(sharedWorkplaces.floor, officeFloorColor, 13)
-          drawMesh(sharedWorkplaces.edge, palette.gold, 2, 0.76)
-          drawMesh(sharedWorkplaces.concrete, officeConcreteColor, 13)
-          drawMesh(sharedWorkplaces.frames, palette.steelGray, 8)
           drawOffice(executiveEntry, OFFICE_BUILD_SECONDS, true)
           for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
+          for (const pose of agentPoses) {
+            const agent = agentById.get(pose.id)
+            if (agent) drawAgent(pose, agent, Boolean(layout.reducedMotion))
+          }
           drawMesh(geometry.base, palette.navyDeep, 8)
           drawMesh(geometry.bevel, palette.steelGray, 8)
           drawMesh(geometry.deck, palette.coal, 8)
@@ -998,15 +1114,29 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
         // Water depth hides submerged rock while the opaque upper coast and
         // rooms render naturally in front. No reflection pass/target is used.
+        const waterSeconds = layout.reducedMotion ? 0 : (layout.waterSeconds ?? seconds)
+        waterClock.update(waterSeconds)
+        shoreImpacts.update(waterSeconds, Boolean(layout.reducedMotion))
+        gl.uniform4fv(uniforms['uShoreImpact[0]']!, shoreImpacts.positions)
+        gl.uniform4fv(uniforms['uShoreNormal[0]']!, shoreImpacts.normals)
+        gl.uniform4fv(uniforms['uShoreMotion[0]']!, shoreImpacts.velocities)
+        gl.uniform1f(uniforms.uWaterDebug!, ISLAND_WATER_DEBUG_MODES.indexOf(layout.waterDebug ?? 'off'))
+        gl.uniform4fv(uniforms.uWaterPhaseA!, waterClock.phaseA)
+        gl.uniform4fv(uniforms.uWaterPhaseB!, waterClock.phaseB)
+        gl.uniform4fv(uniforms.uWaterRipplePhase!, waterClock.ripples)
+        gl.uniform4fv(uniforms.uWaterDrift!, waterClock.drift)
+        gl.uniform1f(uniforms.uWaterPixelScale!, renderHeight / (2 * Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2)))
         drawMesh(geometry.water, palette.pearl, 11, 1, staticModel, true)
         drawMesh(geometry.groundShadow, palette.coal, 10, 0.48, staticModel)
         drawMesh(geometry.ground, islandTopColor, 6, 1, groundModel, true)
         drawMesh(geometry.groundEdge, islandRockColor, 9, 1, groundModel, true)
-        drawMesh(geometry.groundMidLight, palette.gold, 2, 0.68)
         drawSceneObjects()
-        // Transparent upper partitions follow all opaque objects, retaining
-        // visibility through neighbouring workplaces without writing depth.
-        drawMesh(sharedWorkplaces.glass, palette.silver, 12, 1)
+        if (!layout.reducedMotion && sceneView && sceneProjection && orbProjection) {
+          gl.disableVertexAttribArray(position); gl.disableVertexAttribArray(normal); gl.disableVertexAttribArray(coastAttribute)
+          shoreEffects?.draw(shoreImpacts, sceneView, sceneProjection, orbProjection.eye,
+            renderHeight / (2 * Math.tan(SPATIAL_VIEWPORT_VERTICAL_FOV / 2)), shore.seaLevel, ISLAND_WATER_DEBUG_MODES.indexOf(layout.waterDebug ?? 'off'))
+          gl.useProgram(program)
+        }
         if (effectsReady) effects?.compositeBloom()
 
       },
@@ -1021,12 +1151,18 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         return entry ? projectAnchor(entry) : null
       },
       projectExecutiveAnchor() { return projectAnchor(executiveEntry) },
+      projectAgentAnchor(id) {
+        const point = visibleAgentAnchors.get(id)
+        return point ? projectPoint(point[0], point[1], point[2]) : null
+      },
       dispose() {
         if (disposed) return
         disposed = true
         orbProjection = null
         viewProjection = null
-        officeEntries.clear(); firstSeen.clear()
+        officeEntries.clear(); firstSeen.clear(); visibleAgentAnchors.clear()
+        agentMotion.reset()
+        shoreEffects?.dispose(); shoreEffects = null
         effects?.dispose(); effects = null
         terrainMaterial?.dispose(); terrainMaterial = null
         islandMaterial?.dispose(); islandMaterial = null
@@ -1037,6 +1173,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
   }
   catch {
+    shoreEffects?.dispose()
     effects?.dispose()
     terrainMaterial?.dispose()
     islandMaterial?.dispose()

@@ -1,4 +1,3 @@
-import { departmentOfficeFloorRadius } from './departmentOfficeLayout.ts'
 import type { DepartmentOfficeLayout, DepartmentRoadPoint } from './departmentOfficeLayout.ts'
 
 export interface HqIslandFootprint {
@@ -13,8 +12,9 @@ export interface HqIslandFootprint {
 
 const SAMPLES = 256
 const FULL_TURN = Math.PI * 2
-const COAST_CLEARANCE = 2.4
-const INITIAL_RADIUS = departmentOfficeFloorRadius(1)
+// Compact high-cliff island; no extended lower beach shelf.
+const COAST_CLEARANCE = 4.9
+const INITIAL_RADIUS = 18.9
 
 /**
  * Support the complete circular workplace floor, leaving a natural shoreline

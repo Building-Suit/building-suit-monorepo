@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import type { HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent } from '@building-suit/ui/types/hqAgentsPresentation'
 const { locale } = useI18n()
 const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
+// Illustrative presentation fixtures only; never projected into the private HQ.
+const organicDepartments = computed<HqDepartmentOffice[]>(() => [1, 2, 3, 4, 5, 2, 1].map((count, index) => ({
+  id: `catalogue-organic-${index}`, name: c(`Sample office ${index + 1} · ${count} desks`, `مكتب توضيحي ${index + 1} · ${count} مكاتب`),
+  approvedAt: '2026-11-05', agents: Array.from({ length: count }, (_, desk) => ({ id: `catalogue-${index}-${desk}`, name: c(`Sample agent ${desk + 1}`, `وكيل توضيحي ${desk + 1}`) })),
+})))
 const content = computed<HqLayoutContent>(() => ({
   brandName: 'Building Suit',
   brandSuffix: 'HQ',
@@ -11,7 +17,7 @@ const content = computed<HqLayoutContent>(() => ({
   calendarLabel: c('Calendar', 'التقويم'),
   brainLabel: c('Brain', 'المعرفة'),
   statusLabel: c('No agents connected', 'لا يوجد وكلاء متصلون'),
-  talkToCeoLabel: c('Talk to CEO', 'تحدث مع المدير التنفيذي'),
+  talkToCeoLabel: c('Chat', 'المحادثة'),
   profileLabel: c('Profile', 'الملف الشخصي'),
   loginLabel: c('Login', 'تسجيل الدخول'),
   canvasLabel: c('Interactive 3D workspace', 'مساحة عمل ثلاثية الأبعاد تفاعلية'),
@@ -26,6 +32,44 @@ const content = computed<HqLayoutContent>(() => ({
   keyboardControlsLabel: c("Arrows rotate. Shift + arrows move. +/− zooms with side panels closed. Home resets.", "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون لوحة المعرفة مغلقة. Home لإعادة العرض."),
   zoomLabel: c('Zoom', 'التكبير'),
   workplaces: {
+    office: {
+      lifecycle: c('Lifecycle', 'مرحلة الجاهزية'),
+      department: c('Office', 'المكتب'),
+      overview: c("Overview", "نظرة عامة"),
+      runningTasks: c("Running Tasks", "المهام الجارية"),
+      calendar: c("Calendar", "التقويم"),
+      settings: c("Settings", "الإعدادات"),
+      metrics: c("Office metrics", "مؤشرات المكتب"),
+      tasksToday: c("Tasks today", "مهام اليوم"),
+      running: c("Running", "قيد التشغيل"),
+      turnaround: c("Avg. turnaround", "متوسط مدة الإنجاز"),
+      minutes: c("min", "دقيقة"),
+      connectedTools: c("Connected Tools", "الأدوات المتصلة"),
+      active: c("Active", "نشط"),
+      inactive: c("Inactive", "غير نشط"),
+      toolsEmpty: c("No tools assigned.", "لا توجد أدوات مسندة."),
+      skills: c("Skills", "المهارات"),
+      skillUsage: c("Share of recorded skill loads", "نسبة تحميل المهارات المسجّل"),
+      skillBasis: c("Share of recorded skill loads since tracking began. Loading is not proof of application. Tracking since", "النسبة من عمليات تحميل المهارات المسجلة منذ بدء التتبع. التحميل لا يثبت تطبيق المهارة. بدء التتبع"),
+      skillsEmpty: c("No skills assigned.", "لا توجد مهارات مسندة."),
+      neverUsed: c("No recorded loads since tracking began.", "لم يُسجّل أي تحميل منذ بدء التتبع."),
+      agents: c("Agents", "الوكلاء"),
+      agentsEmpty: c("No agents assigned to this office.", "لا يوجد وكلاء مسندون إلى هذا المكتب."),
+      unavailable: c("Recorded observations are unavailable. Missing history is not zero usage.", "المشاهدات المسجلة غير متاحة. غياب السجل لا يعني استخدامًا صفريًا."),
+      loading: c("Updating office observations…", "جارٍ تحديث مشاهدات المكتب…"),
+      retry: c("Refresh", "تحديث"),
+      activity: c("Activity / connection", "النشاط / الاتصال"),
+      model: c("Model / effort", "النموذج / مستوى الجهد"),
+      manager: c("Reports to", "المسؤول المباشر"),
+      profile: c("Profile", "الملف التعريفي"),
+      recentTasks: c('Recent tasks · last 7 days', 'المهام الأخيرة · آخر ٧ أيام'),
+      noRecentTasks: c('No recent tasks for this office.', 'لا توجد مهام حديثة لهذا المكتب.'),
+      noRunningTasks: c("No running tasks.", "لا توجد مهام جارية."),
+      agentDetails: c("Agent details", "تفاصيل الوكيل"),
+      back: c("Back to office", "العودة إلى المكتب"),
+      close: c("Close agent details", "إغلاق تفاصيل الوكيل"),
+      scope: c("Tasks today: Cairo time. Turnaround and chart: last 7 days.", "مهام اليوم بتوقيت القاهرة. المتوسط والرسم لآخر ٧ أيام."),
+    },
     label: c('Workplaces', 'أماكن العمل'),
     clearSelectionLabel: c('Leave selected workplace', 'مغادرة مكان العمل المحدد'),
     executiveDescription: c('Executive workspace and company plans.', 'مساحة المدير التنفيذي وخطط الشركة.'),
@@ -96,10 +140,128 @@ const content = computed<HqLayoutContent>(() => ({
     versionLabel: c("Version", "الإصدار"),
   },
 }))
+const chatPresentation: HqAgentsPresentation = {
+  status: 'unavailable', pending: false, sending: false,
+  agents: [], messages: [], queuedCount: 0, runtimeOnline: false,
+}
+const chatContent = computed<HqAgentsContent>(() => ({
+  title: c('Chat', 'المحادثة'),
+  description: c('Shared conversation with escaped text, a bounded composer and message-linked queued, working or recovery receipts. Worker availability is separate from actual agent activity. HQ supplies authorization, Brain reads and execution evidence.', 'محادثة مشتركة بنص آمن وحقل رسالة محدود وحالة انتظار أو عمل أو استعادة مرتبطة بالرسالة. يختلف توفر العامل عن نشاط الوكلاء الفعلي. يوفّر HQ التفويض وقراءة المعرفة وأدلة التنفيذ.'),
+  transcriptLabel: c('Founder and CEO conversation', 'محادثة المؤسس والمدير التنفيذي'),
+  composerLabel: c('Message to CEO', 'رسالة إلى المدير التنفيذي'),
+  composerPlaceholder: c('Describe what you want to discuss or plan…', 'اشرح ما تريد مناقشته أو التخطيط له…'),
+  sendLabel: c('Send message', 'إرسال الرسالة'),
+  sendingLabel: c('Sending…', 'جارٍ الإرسال…'),
+  dictation: {
+    start: c("Start voice transcription", "بدء تحويل الصوت إلى نص"),
+    stop: c("Stop voice transcription", "إيقاف تحويل الصوت إلى نص"),
+    starting: c("Starting microphone…", "جارٍ تشغيل الميكروفون…"),
+    listening: c("Listening…", "جارٍ الاستماع…"),
+    stopping: c("Finishing transcription…", "جارٍ إنهاء التحويل…"),
+    unsupported: c("Voice transcription is unavailable in this browser. You can still type your message.", "تحويل الصوت إلى نص غير متاح في هذا المتصفح. يمكنك كتابة الرسالة."),
+    denied: c("Microphone access was denied. Allow it in the browser to use voice transcription.", "تم رفض إذن الميكروفون. اسمح باستخدامه من المتصفح لتحويل الصوت إلى نص."),
+    noSpeech: c("No speech was detected. Try again or type your message.", "لم يتم رصد كلام. حاول مجددًا أو اكتب رسالتك."),
+    audio: c("No microphone is available. Check your microphone and try again.", "لا يوجد ميكروفون متاح. تحقق منه وحاول مجددًا."),
+    network: c("The browser speech service could not connect. Your draft has been kept.", "تعذر الاتصال بخدمة التعرف على الكلام في المتصفح. تم الاحتفاظ بالمسودة."),
+    failed: c("Voice transcription could not start. Your draft has been kept.", "تعذر بدء تحويل الصوت إلى نص. تم الاحتفاظ بالمسودة."),
+    limit: c("The message length limit has been reached. Review or shorten the draft.", "تم الوصول إلى الحد الأقصى لطول الرسالة. راجع المسودة أو اختصرها."),
+    notice: c("The browser may process audio through its speech service. Text stays in the draft; nothing is sent to Steve.", "قد يعالج المتصفح الصوت عبر خدمة التعرف على الكلام. يبقى النص في المسودة ولا يُرسل شيء إلى ستيف."),
+  },
+  emptyLabel: c('No messages yet.', 'لا توجد رسائل بعد.'),
+  loadingLabel: c('Loading conversation…', 'جارٍ تحميل المحادثة…'),
+  unavailableLabel: c('This catalogue has no private agent connection. The composer is unavailable.', 'لا يتصل هذا الكتالوج بالوكلاء الخاصين. حقل إرسال الرسائل غير متاح.'),
+  errorLabel: c('The conversation is unavailable.', 'المحادثة غير متاحة.'),
+  runtimeOnlineLabel: c('Agent runtime connected', 'بيئة تنفيذ الوكلاء متصلة'),
+  runtimeOfflineLabel: c('Agent runtime offline', 'بيئة تنفيذ الوكلاء غير متصلة'),
+  queuedLabel: c('Queued jobs', 'المهام في الانتظار'),
+  requestProgressLabels: {
+    queued: c('Waiting for a worker to review this message.', 'بانتظار عامل لمراجعة هذه الرسالة.'),
+    working: c('Reviewing this message.', 'تجري مراجعة هذه الرسالة.'),
+    recoveryNeeded: c('A reply has not been produced. Recovery is needed.', 'لم يتم إنشاء رد. يلزم استعادة التنفيذ.'),
+    recoveryQueued: c('A recovery attempt is waiting for a worker.', 'محاولة استعادة التنفيذ بانتظار عامل.'),
+    recoveryWorking: c('Working on the recorded recovery attempt.', 'يجري العمل على محاولة الاستعادة المسجلة.'),
+  },
+  lastSeenLabel: c('Last runtime update', 'آخر تحديث لبيئة التنفيذ'),
+  keyboardHint: c('Enter sends. Shift + Enter adds a new line.', 'Enter للإرسال، وShift + Enter لإضافة سطر جديد.'),
+  founderLabel: c('Founder', 'المؤسس'),
+  ceoLabel: c('Steve · CEO', 'ستيف · المدير التنفيذي'),
+  openTaskLabel: c('Open task', 'فتح المهمة'),
+  learningUpdatedLabel: c('Brain updated', 'تم تحديث المعرفة'),
+  hrLabel: c('HR', 'الموارد البشرية'),
+  systemLabel: c('System', 'النظام'),
+  locale: locale.value,
+}))
+const workforceSection = ref<'tasks' | 'team' | 'learning'>('tasks')
+function chooseWorkforceSection(value: string) { if (value === 'tasks' || value === 'team' || value === 'learning') workforceSection.value = value }
+const workforceContent = computed<HqWorkforceContent>(() => ({
+  activity: {
+    title: c("Work now", "العمل الآن"),
+    empty: c("No queued or running jobs in the current snapshot.", "لا توجد أعمال قيد التنفيذ أو الانتظار في البيانات الحالية."),
+    queued: c("Queued", "في الانتظار"),
+    working: c("Working", "يعمل الآن"),
+    unconfirmed: c("Last reported working · connection unconfirmed", "آخر حالة: يعمل · الاتصال غير مؤكد"),
+    elapsed: c("Since this stage started", "منذ بدء هذه المرحلة"),
+    waiting: c("Waiting", "مدة الانتظار"),
+    observed: c("Actual worker stages. Elapsed time is not an estimate of time remaining.", "مراحل فعلية من العامل. الوقت المنقضي ليس تقديرًا للوقت المتبقي."),
+    openTask: c("Open task", "فتح المهمة"),
+    stage: c("Processing the request", "معالجة الطلب"),
+    stages: {
+      'conversation-intake': c("Steve · assessing your request", "ستيف · تقييم طلبك"),
+      'conversation-hr': c("HR assessment", "تقييم الموارد البشرية"),
+      'conversation-ceo': c("Steve · replying", "ستيف · إعداد الرد"),
+      'task-route': c("Steve · assigning work", "ستيف · إسناد العمل"),
+      'task-ack': c("Confirming the assignment", "تأكيد استلام التكليف"),
+      'task-start': c("Preparing the next work attempt", "تجهيز محاولة العمل التالية"),
+      'task-work': c("Producing the deliverable", "إعداد نتيجة المهمة"),
+      'head-review': c("Department review", "مراجعة القسم"),
+      'ceo-review': c("Steve · reviewing the result", "ستيف · مراجعة النتيجة"),
+      'task-report': c("Reporting the reviewed result", "تقديم النتيجة المراجعة"),
+      'lesson-extract': c("Preparing a learning proposal", "إعداد مقترح تعلّم"),
+      'lesson-review': c("Reviewing the learning proposal", "مراجعة مقترح التعلّم"),
+    },
+  },
+  followup: {
+    title: c("Result ready · choose the next action", "النتيجة جاهزة · اختر الإجراء التالي"),
+    explanation: c("This deliverable is completed. Follow-up work has not started merely because the result was accepted. Review and authorize a separate, scoped task below.", "اكتملت هذه النتيجة. قبولها لا يعني بدء تنفيذ الأعمال التالية. راجع مهمة تالية محددة واعتمدها أدناه."),
+    action: c("Review next task", "مراجعة المهمة التالية"),
+    source: c("Based on completed task", "بناءً على المهمة المكتملة"),
+    scope: c("Next action to authorize", "الإجراء التالي المراد اعتماده"),
+    scopeHint: c("Copy the concrete step from the result and add the needed context. This task receives your instructions below, not the full previous document automatically.", "انسخ الخطوة المحددة من النتيجة وأضف سياقها اللازم. تتلقى المهمة التعليمات أدناه ولا يُنقل المستند السابق كاملًا تلقائيًا."),
+    criteria: c("Required result and evidence", "النتيجة المطلوبة وأدلتها"),
+    submit: c("Approve and queue this task", "اعتماد هذه المهمة وإضافتها للانتظار"),
+    cancel: c("Cancel next task", "إلغاء المهمة التالية"),
+    titlePrefix: c("Next step:", "الخطوة التالية:"),
+    briefPrefix: c("Founder-authorized follow-up to this completed task (reference only; execute only the explicit instructions below):", "متابعة معتمدة من المؤسس لهذه المهمة المكتملة (مرجع فقط؛ نفّذ التعليمات الصريحة أدناه فقط):"),
+    acceptance: c("Deliver the specified result with actual evidence. Keep the $0 additional-spend limit and current role/tool permissions. Report missing prerequisites and the next remedy; do not claim unperformed actions.", "سلّم النتيجة المحددة بأدلة فعلية. التزم بعدم الإنفاق الإضافي وبصلاحيات الدور والأدوات الحالية. وضّح المتطلبات الناقصة والخطوة العلاجية، ولا تدّعِ تنفيذ ما لم يحدث."),
+    supported: c("Approval queues a real task for Steve to assign. The current host supports planning, drafting and permitted native research; it cannot publish campaigns, contact customers, install software or deploy products. Approval does not add those capabilities.", "ينشئ الاعتماد مهمة فعلية ليسندها ستيف. يدعم المضيف الحالي التخطيط والصياغة والبحث المسموح؛ ولا ينشر حملات أو يتواصل مع العملاء أو يثبّت برامج أو ينشر منتجات. لا يضيف الاعتماد هذه القدرات."),
+    completed: c("Completed", "اكتملت"),
+    updated: c("The source result changed. Cancel and review its current version before approving.", "تغيّرت النتيجة المصدر. ألغِ الخطوة وراجع الإصدار الحالي قبل الاعتماد."),
+  },
+  chatLabel: c('Chat', 'المحادثة'), tasksLabel: c('Tasks', 'المهام'), teamLabel: c('Team', 'الفريق'), learningLabel: c('Learning', 'التعلّم'),
+  newTaskLabel: c('Create a task', 'إنشاء مهمة'), assigneeLabel: c('Assigned to', 'المكلّف'), autoAssignLabel: c('Steve — choose an employee', 'ستيف — اختيار الموظف'),
+  titleLabel: c('Title', 'العنوان'), briefLabel: c('Task brief', 'وصف المهمة'), acceptanceLabel: c('Acceptance criteria', 'معايير القبول'),
+  createLabel: c('Create task', 'إنشاء المهمة'), creatingLabel: c('Creating…', 'جارٍ الإنشاء…'), emptyTasksLabel: c('No tasks yet.', 'لا توجد مهام بعد.'),
+  emptyTeamLabel: c('The team registry is unavailable.', 'سجل الفريق غير متاح.'), emptyLessonsLabel: c('No learning receipts yet.', 'لا توجد إيصالات تعلّم بعد.'),
+  departmentLabel: c('Department', 'القسم'), lifecycleLabel: c('Employment', 'الحالة الوظيفية'), connectionLabel: c('Connection', 'الاتصال'),
+  configuredNotice: c('A configured employee is separate from an active worker connection.', 'إعداد ملف الموظف يختلف عن اتصال عامل نشط.'),
+  deliverableLabel: c('Deliverable', 'المخرج'), reviewsLabel: c('Reviews', 'المراجعات'), pendingDeliverableLabel: c('No deliverable has been submitted yet.', 'لم يُسلَّم أي مخرج بعد.'),
+  pendingReviewLabel: c('No review has completed yet.', 'لم تكتمل أي مراجعة بعد.'), lessonSourceLabel: c('Open Brain receipt', 'فتح إيصال المعرفة'), sourceTaskLabel: c('Source task', 'المهمة المصدر'),
+  backLabel: c('Back to tasks', 'العودة إلى المهام'), refreshLabel: c('Refresh', 'تحديث'), reviewedLabel: c('Reviewed', 'المراجعة'), publishedLabel: c('Published', 'النشر'), receiptLabel: c('Publication receipt', 'إيصال النشر'),
+  loadingLabel: c('Loading HQ work…', 'جارٍ تحميل أعمال المقر…'), unavailableLabel: c('This catalogue has no private workforce connection.', 'لا يتصل هذا الكتالوج بالفريق الخاص.'),
+}))
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Adjacent curved workplaces share a circular floor around the Orb, with dividers made of concrete below and glass above. Select a whole sector, its label or the Workplaces picker to focus it and open its overlay. The CEO retains a large desk and plan board; departments show four visual workstations without imaginary agents. Selection and minimap sectors stay synchronized; clearing selection restores the earlier camera. This catalogue has no cloud, Auth or approval connection.', 'تتجاور أماكن العمل المنحنية على أرضية دائرية مشتركة حول الكرة، وتفصل بينها حواجز نصفها السفلي خرساني والعلوي زجاجي. اختر القطاع كاملًا أو اسمه أو قائمة أماكن العمل لتركيز الكاميرا عليه وفتح لوحته الجانبية. يحتفظ المدير التنفيذي بمكتب كبير ولوحة للخطط، وتعرض الأقسام أربع محطات عمل مرئية دون اختلاق وكلاء. يتزامن التحديد مع قطاعات الخريطة، وتعيد مغادرة التحديد الكاميرا السابقة. لا يتصل هذا المثال بخدمة سحابية أو مصادقة أو اعتماد.')">
-    <BsHqLayoutPage :content="content" />
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Independent organic office islands use deterministic spline curves around actual furniture bounds. Existing desk-row dimensions and all office anchors remain fixed; the executive island has its own subtle curves with the original gold rim. Picking, walking exits and minimap share the same outlines. These illustrative offices and desk counts are catalogue fixtures, with no cloud, Auth or approval connection. Existing furniture, camera, lighting and office panels are preserved.', 'تستخدم جزر المكاتب المستقلة منحنيات عضوية ثابتة حول حدود الأثاث الفعلية. تبقى أبعاد صفوف المكاتب ومواقعها ثابتة، وتتميز جزيرة المدير التنفيذي بمنحنيات خاصة مع الحد الذهبي الأصلي. يشترك التحديد ومخارج المشي والخريطة في الحدود نفسها. هذه المكاتب والأعداد أمثلة للكتالوج دون اتصال بالسحابة أو المصادقة أو الاعتماد. يبقى الأثاث والكاميرا والإضاءة واللوحات كما هي.')">
+    <BsHqLayoutPage :content="content" :departments="organicDepartments" />
+  </BsContentSection>
+  <BsContentSection :title="c('HQ office inspector', 'لوحة المكتب')" :description="c('Office clicks open Overview, Running Tasks and empty Calendar/Settings tabs. Metrics, tool bindings, recorded skill-load shares and agent drill-down use typed observations. Desktop agent details occupy about 40% of the viewport; narrow screens retain the office behind the detail panel. This catalogue has no private telemetry.', 'يفتح المكتب تبويبات النظرة العامة والمهام الجارية والتقويم والإعدادات الفارغة. تعتمد المؤشرات والأدوات ونسب تحميل المهارات وتفاصيل الوكيل على مشاهدات موثّقة. تشغل التفاصيل نحو ٤٠٪ من الشاشة الكبيرة وتبقى لوحة المكتب محفوظة خلفها على الشاشات الضيقة. لا يتصل هذا المثال بالقياسات الخاصة.')" />
+  <BsContentSection :title="c('HQ characters', 'شخصيات المقر')" :description="c('All agents, including Steve, use the standard HQ character mesh and joint rig at the existing scale. Steve retains his navy outfit. Custom character work is postponed; generated models remain reference artifacts. This offline catalogue supplies no employee/runtime data.', 'تستخدم جميع الشخصيات، بما فيها ستيف، المجسم القياسي للمقر وهيكل المفاصل بالمقياس الحالي. يحتفظ ستيف بملابسه الكحلية. تم تأجيل تطوير الشخصيات المخصصة وتبقى المجسمات المولّدة مراجع فقط. لا يزوّد هذا المثال ببيانات موظفين أو تشغيل.')" />
+  <BsContentSection :title="c('HQ CEO chat', 'محادثة المدير التنفيذي في HQ')" :description="c('Shared chat with an inline textarea, draft-only Mic/Stop and icon-only Send. Wider HQ panels use canonical width tokens. This unavailable catalogue projection has no private messages, provider connection or production command.', 'محادثة مشتركة بحقل رسالة وزر إملاء أو إيقاف وزر إرسال بأيقونة في صف واحد. يستخدم عرض اللوحات الأوسع رموز التصميم المعتمدة. بيانات هذا المثال غير متاحة ولا تتضمن رسائل خاصة أو اتصالًا بمزوّد ولا تنفّذ أوامر إنتاجية.')">
+    <BsHqCeoChat :presentation="chatPresentation" :content="chatContent" />
+  </BsContentSection>
+  <BsContentSection :title="c('HQ tasks, team and learning', 'مهام المقر والفريق والتعلّم')" :description="c('Shared typed task form and receipt views, using an unavailable empty projection. The catalogue creates no tasks and connects to no worker or Brain.', 'نموذج مهام وعروض إيصالات مشتركة ذات أنواع محددة، ببيانات فارغة غير متاحة. لا ينشئ الكتالوج مهام ولا يتصل بعامل أو بذاكرة الشركة.')">
+    <BsTabs :model-value="workforceSection" :tabs="[{ value: 'tasks', label: workforceContent.tasksLabel }, { value: 'team', label: workforceContent.teamLabel }, { value: 'learning', label: workforceContent.learningLabel }]" :label="workforceContent.teamLabel" @update:model-value="chooseWorkforceSection" />
+    <BsHqWorkforce :section="workforceSection" :presentation="chatPresentation" :content="workforceContent" :locale="locale" />
   </BsContentSection>
 </template>

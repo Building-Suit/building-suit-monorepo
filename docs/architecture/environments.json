@@ -150,8 +150,8 @@
       },
       "production": {
         "projectRef": "nkpvskyugnnnozepbwzb",
-        "appUrl": "",
-        "status": "project/organization metadata verified by get_project on 2026-11-04 after reconnection; public table listing empty at observation only; Auth, provider-managed schemas, migrations and app behavior unverified; founder reports GitHub not connected; no hosted mutation or deployment",
+        "appUrl": "https://hq.building-suit.com",
+        "status": "project/organization metadata verified by get_project on 2026-11-04 after reconnection; public table listing empty at observation only; Auth, provider-managed schemas, migrations and app behavior unverified; founder reports GitHub not connected; no hosted mutation or deployment On 2026-11-05 Vercel company-hq project and this hostname were attached, with Cloudflare DNS configured; no production database changes, agent worker or app release was deployed.",
         "supersededRequestedProjectRef": "dfeiuxsqhgzontefmrjc",
         "projectName": "Production",
         "region": "eu-north-1",
@@ -160,8 +160,8 @@
       },
       "staging": {
         "projectRef": "dpruoncalmwicrqhqelu",
-        "appUrl": "",
-        "status": "Verified HQ staging project/organization. Founder-plan foundation and forward Drive sync/live-event migrations applied in November 2026; seven approved departments imported with historical evidence, cloud-only reader configured, brain-sync deployed and a 430-entry Drive index/watch registered. Periodic data refresh removed in favor of private event broadcasts; watch-renewal maintenance is separate. These setup receipts do not establish app/Auth/approval/freshness acceptance. Founder reports GitHub integration unconnected; Automatic branching dashboard state unverified.",
+        "appUrl": "https://stg.hq.building-suit.com",
+        "status": "Verified HQ staging project/organization. Founder plans, Drive sync/push and queue foundation remain applied. Workforce migration 20261105150500 and additive native-evidence migration 20261105155841 project ten canonical cloud employees with explicit model/skill/lifecycle bindings and durable bounded tasks, reviews and source-linked learning. The private Oracle service is enabled and active. Vercel staging deployment dpl_3i5Q8CEuzaZ9nPsnUPrG3reAe6vA reports READY with this custom hostname and no alias error. Actual founder BFF reads return the ten-member roster/company/Brain and anonymous equivalents return401; hosted browser Team and completed HR task are verified through the supported WebGL fallback. A real Noah to Amaya to Steve task completed; two exhausted research tasks preserved their failed reviews and published accepted lessons to the narrowly shared private Brain journal. A later draft used a real accepted lesson; its CEO review hit a provider error and remains blocked. No recurring app-data polling, paid fallback, production release or merge is claimed. GitHub integration/Automatic branching dashboard state and physical PC shutdown/3D performance remain unverified. See HQ-WORKFORCE-LEARNING-20261105 for exact scope and acceptance evidence. Final scoped reviewer-learning context migration20261105164140 and safe worker failure diagnostics are active;31 combined unit/disposable tests and the150-route architecture check pass. No further inference probe was performed.",
         "supersededRequestedProjectRef": "lwecnmsosfwovlzxauml",
         "projectName": "Staging",
         "region": "eu-west-1",

@@ -42,9 +42,15 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   Wallet04Icon,
+  Mic01Icon,
+  StopIcon,
+  SentIcon,
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  microphone: Mic01Icon,
+  stop: StopIcon,
+  send: SentIcon,
   orb: Orbit01Icon,
   chat: Chatting01Icon,
   cube: CubeIcon,

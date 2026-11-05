@@ -218,25 +218,25 @@ onBeforeUnmount(() => { disposed = true; password.value = ''; email.value = '' }
 .bs-hq-plans__toolbar { display: flex; flex-wrap: wrap; gap: var(--bs-space-2); }
 .bs-hq-plans__identity, .bs-hq-plans__meta { color: var(--bs-text-muted); font-size: 0.75rem; line-height: 1.6; overflow-wrap: anywhere; }
 .bs-hq-plans__identity { margin-block-start: var(--bs-space-1) !important; }
-.bs-hq-plans__notice, .bs-hq-plans__state { padding: var(--bs-space-3); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-color-neutral-ink); color: var(--bs-text-muted); font-size: 0.8rem; line-height: 1.7; overflow-wrap: anywhere; }
+.bs-hq-plans__notice, .bs-hq-plans__state { padding: var(--bs-space-3); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-component-hq-glass-card); color: var(--bs-text-muted); font-size: 0.8rem; line-height: 1.7; overflow-wrap: anywhere; }
 .bs-hq-plans__state { display: grid; justify-items: start; gap: var(--bs-space-3); }
 .bs-hq-plans__workspace { display: grid; gap: var(--bs-space-5); min-width: 0; }
 .bs-hq-plans__list { display: grid; gap: var(--bs-space-2); min-width: 0; }
-.bs-hq-plans .bs-hq-plans__choice { display: grid; justify-items: start; gap: var(--bs-space-1); min-width: 0; width: 100%; min-height: 44px; padding: var(--bs-space-3); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-color-neutral-ink); color: var(--bs-text); text-align: start; }
-.bs-hq-plans .bs-hq-plans__choice[aria-pressed='true'] { border-color: var(--bs-accent); background: var(--bs-color-neutral-graphite); }
+.bs-hq-plans .bs-hq-plans__choice { display: grid; justify-items: start; gap: var(--bs-space-1); min-width: 0; width: 100%; min-height: 44px; padding: var(--bs-space-3); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-component-hq-glass-card); color: var(--bs-text); text-align: start; }
+.bs-hq-plans .bs-hq-plans__choice[aria-pressed='true'] { border-color: var(--bs-accent); background: var(--bs-component-hq-glass-selected); }
 .bs-hq-plans .bs-hq-plans__choice:focus-visible { outline: 2px solid var(--bs-accent); outline-offset: 2px; }
 .bs-hq-plans__choice-title { font-size: 0.85rem; font-weight: var(--bs-weight-bold); line-height: 1.6; overflow-wrap: anywhere; }
 .bs-hq-plans__detail { display: grid; gap: var(--bs-space-5); min-width: 0; padding-block-start: var(--bs-space-4); border-block-start: 1px solid var(--bs-border); }
 .bs-hq-plans__plan-header { display: grid; gap: var(--bs-space-2); }
 .bs-hq-plans__status { color: var(--bs-accent); font-size: 0.75rem; line-height: 1.6; }
 .bs-hq-plans__prose { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.85rem; line-height: 1.85; }
-.bs-hq-plans__body { padding: var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-color-neutral-ink); }
+.bs-hq-plans__body { padding: var(--bs-space-4); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-control); background: var(--bs-component-hq-glass-card); }
 .bs-hq-plans__section { display: grid; gap: var(--bs-space-2); min-width: 0; }
 .bs-hq-plans__items { display: grid; gap: var(--bs-space-3); margin: 0; padding: 0; list-style: none; }
 .bs-hq-plans__items li { display: grid; gap: var(--bs-space-1); min-width: 0; padding-inline-start: var(--bs-space-3); border-inline-start: 1px solid var(--bs-border); }
 .bs-hq-plans__items strong { font-size: 0.85rem; line-height: 1.7; overflow-wrap: anywhere; }
 .bs-hq-plans code { display: block; width: fit-content; max-width: 100%; color: var(--bs-text-muted); direction: ltr; unicode-bidi: isolate; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.72rem; line-height: 1.7; }
 .bs-hq-plans__decisions { display: flex; flex-wrap: wrap; gap: var(--bs-space-2); padding-block-start: var(--bs-space-4); border-block-start: 1px solid var(--bs-border); }
-.bs-hq-plans :deep(.ls-input) { color: var(--bs-text); border-color: var(--bs-border); background: var(--bs-color-neutral-ink); }
+.bs-hq-plans :deep(.ls-input) { color: var(--bs-text); border-color: var(--bs-border); background: var(--bs-component-hq-glass-card); }
 .bs-hq-plans :deep(.bs-auth-form) { background: var(--bs-surface); border-color: var(--bs-border); box-shadow: none; }
 </style>

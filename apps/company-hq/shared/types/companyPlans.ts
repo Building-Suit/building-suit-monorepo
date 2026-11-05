@@ -17,6 +17,7 @@ export interface HqCompanyPlan {
 }
 
 export interface HqApprovedDepartment {
+  agents?: { id: string; name: string }[]
   id: string
   name: string
   nameAr?: string
@@ -75,6 +76,7 @@ export function parseHqCompanySnapshot(value: unknown): HqCompanySnapshot | null
     if (!source || !Array.isArray(source.plans) || source.plans.length > 128
       || !Array.isArray(source.departments) || source.departments.length > 128
       || new TextEncoder().encode(JSON.stringify(value)).byteLength > MAX_SNAPSHOT_BYTES) return null
+    const employeeIds = new Set<string>()
     const departmentIds = new Set<string>()
     const departmentNames = new Set<string>()
     const departments: HqApprovedDepartment[] = []
@@ -94,7 +96,7 @@ export function parseHqCompanySnapshot(value: unknown): HqCompanySnapshot | null
       }
     }
     for (const item of source.departments) {
-      const entry = record(item, ['id', 'name', 'nameAr', 'approvedAt'])
+      const entry = record(item, ['id', 'name', 'nameAr', 'approvedAt', 'agents'])
       if (!entry || !uuid(entry.id) || !text(entry.name, 200)
         || !(timestamp(entry.approvedAt) || dateOnly(entry.approvedAt) && legacyDates.get(entry.id.toLowerCase())?.has(entry.approvedAt))
         || !optional(entry.nameAr) && !text(entry.nameAr, 200)) return null
@@ -103,7 +105,19 @@ export function parseHqCompanySnapshot(value: unknown): HqCompanySnapshot | null
       if (departmentIds.has(id) || names.some(name => departmentNames.has(name))) return null
       departmentIds.add(id)
       names.forEach(name => departmentNames.add(name))
-      departments.push({ id, name: entry.name, ...(typeof entry.nameAr === 'string' ? { nameAr: entry.nameAr } : {}), approvedAt: entry.approvedAt })
+      let agents: HqApprovedDepartment['agents']
+      if (entry.agents !== undefined) {
+        if (!Array.isArray(entry.agents) || entry.agents.length > 256) return null
+        agents = []
+        for (const value of entry.agents) {
+          const agent = record(value, ['id', 'name'])
+          if (!agent || typeof agent.id !== 'string' || !/^AG-[A-Z]+-[0-9]{3}$/.test(agent.id)
+            || agent.id === 'AG-CEO-001' || !text(agent.name, 100) || employeeIds.has(agent.id)) return null
+          employeeIds.add(agent.id)
+          agents.push({ id: agent.id, name: agent.name })
+        }
+      }
+      departments.push({ id, name: entry.name, ...(typeof entry.nameAr === 'string' ? { nameAr: entry.nameAr } : {}), approvedAt: entry.approvedAt, ...(agents ? { agents } : {}) })
     }
     const planIds = new Set<string>()
     const plans: HqCompanyPlan[] = []

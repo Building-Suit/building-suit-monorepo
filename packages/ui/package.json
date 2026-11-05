@@ -441,12 +441,19 @@
     "./utils/hologramScene": "./src/utils/hologramScene.ts",
     "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",
     "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue",
+    "./organisms/BsHqCeoChat": "./src/organisms/BsHqCeoChat.vue",
+    "./organisms/BsHqWorkforce": "./src/organisms/BsHqWorkforce.vue",
+    "./types/hqAgentsPresentation": "./src/types/hqAgentsPresentation.ts",
     "./utils/hologramEffects": "./src/utils/hologramEffects.ts",
     "./utils/officeArchitecture": "./src/utils/officeArchitecture.ts",
+    "./utils/organicOfficePlatform": "./src/utils/organicOfficePlatform.ts",
     "./utils/circularWorkplaceGeometry": "./src/utils/circularWorkplaceGeometry.ts",
     "./utils/naturalIslandGeometry": "./src/utils/naturalIslandGeometry.ts",
     "./utils/naturalIslandMaterial": "./src/utils/naturalIslandMaterial.ts",
-    "./utils/hologramPresentationGeometry": "./src/utils/hologramPresentationGeometry.ts"
+    "./utils/hologramPresentationGeometry": "./src/utils/hologramPresentationGeometry.ts",
+    "./organisms/BsHqOfficeOverview": "./src/organisms/BsHqOfficeOverview.vue",
+    "./utils/hqOfficePresentation": "./src/utils/hqOfficePresentation.ts",
+    "./molecules/BsHqWorkActivity": "./src/molecules/BsHqWorkActivity.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

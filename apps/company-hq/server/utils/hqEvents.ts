@@ -1,8 +1,9 @@
 import { createError, setResponseHeaders, type H3Event } from 'h3'
 import { hqRealtimeUrl, hqRpc, requireHqFounder, type HqAccessConfig, type HqFounderSession } from './hqAccess.ts'
 
-type Invalidation = 'brain' | 'company' | 'access'
-type LiveEvent = Invalidation | 'ready'
+type Invalidation = 'brain' | 'company' | 'access' | 'agents'
+type LiveEvent = Invalidation | 'ready' | 'presence'
+interface PresenceObservation { observedAt: string; agentId: string | null; taskId: string | null }
 type JsonObject = Record<string, unknown>
 const TOPIC = 'realtime:hq-live'
 const JOIN_REF = '1'
@@ -61,6 +62,7 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
     const response = event.node.res
     const disconnected = new AbortController()
     const pending = new Set<Invalidation>()
+    let pendingPresence: PresenceObservation | null = null
     let closed = false
     let joined = false
     let replicationReady = false
@@ -72,9 +74,6 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
     let heartbeatRef: string | null = null
     let coalesceTimer: ReturnType<typeof setTimeout> | undefined
     let backpressureTimer: ReturnType<typeof setTimeout> | undefined
-    let joinTimer: ReturnType<typeof setTimeout> | undefined
-    let expiryTimer: ReturnType<typeof setTimeout> | undefined
-    let heartbeatTimer: ReturnType<typeof setInterval> | undefined
 
     function close(accessLost = false, destroy = false): void {
       if (closed) return
@@ -85,7 +84,7 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
       }
       closed = true
       disconnected.abort()
-      pending.clear()
+      pending.clear(); pendingPresence = null
       clearTimeout(coalesceTimer); clearTimeout(backpressureTimer)
       clearTimeout(joinTimer); clearTimeout(expiryTimer); clearInterval(heartbeatTimer)
       response.removeListener('drain', onDrain)
@@ -122,7 +121,7 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
       catch { close(); return false }
     }
 
-    function emit(kind: LiveEvent): boolean { return write(`event: ${kind}\ndata: {}\n\n`) }
+    function emit(kind: LiveEvent, payload: PresenceObservation | Record<string, never> = {}): boolean { return write(`event: ${kind}\ndata: ${JSON.stringify(payload)}\n\n`) }
 
     function send(topic: string, name: string, payload: JsonObject, ref: string, joinRef: string | null): boolean {
       if (closed || upstream.readyState !== WebSocket.OPEN || upstream.bufferedAmount > MAX_BUFFER_BYTES) { close(); return false }
@@ -132,8 +131,8 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
 
     function queueValidation(): void {
       if (closed || blocked || validating || coalesceTimer !== undefined || (!ready && !readyPending)
-        || (!readyPending && !pending.size)) return
-      // One event-driven burst coalesces to at most three invalidation kinds.
+        || (!readyPending && !pending.size && !pendingPresence)) return
+      // One event-driven burst coalesces to at most four invalidation kinds.
       // This timer exists only after a real upstream message; it never polls.
       coalesceTimer = setTimeout(() => {
         coalesceTimer = undefined
@@ -142,7 +141,7 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
     }
 
     async function validateAndForward(): Promise<void> {
-      if (closed || blocked || validating || (!ready && !readyPending) || (!readyPending && !pending.size)) return
+      if (closed || blocked || validating || (!ready && !readyPending) || (!readyPending && !pending.size && !pendingPresence)) return
       validating = true
       try {
         if (Date.now() >= expiresAt) { close(true); return }
@@ -156,6 +155,11 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
           ready = true
           readyPending = false
           clearTimeout(joinTimer)
+        }
+        if (pendingPresence) {
+          const observation = pendingPresence
+          if (!emit('presence', observation)) return
+          if (pendingPresence === observation) pendingPresence = null
         }
         for (const kind of pending) {
           if (!emit(kind)) break
@@ -219,9 +223,24 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
         }
         return
       }
+      if (frame.event === 'broadcast' && payload?.event === 'presence') {
+        const observation = object(payload.payload)
+        const observedAt = observation?.observedAt
+        const agentId = observation?.agentId
+        const taskId = observation?.taskId
+        // Select only bounded public observation fields; presence never becomes
+        // an application invalidation or grants new agent/task authority.
+        if (typeof observedAt !== 'string' || observedAt.length > 64 || !Number.isFinite(Date.parse(observedAt))
+          || Date.parse(observedAt) > Date.now() + 300_000 || Date.parse(observedAt) + 150_000 <= Date.now()
+          || !(agentId === null && taskId === null || typeof agentId === 'string' && /^AG-[A-Z]+-[0-9]{3}$/.test(agentId)
+            && typeof taskId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(taskId))) return
+        pendingPresence = { observedAt, agentId: agentId as string | null, taskId: taskId as string | null }
+        if (ready || readyPending) queueValidation()
+        return
+      }
       if (frame.event !== 'broadcast' || payload?.event !== 'invalidate') return
       const data = object(payload.payload)
-      if (data?.kind !== 'brain' && data?.kind !== 'company' && data?.kind !== 'access') return
+      if (data?.kind !== 'brain' && data?.kind !== 'company' && data?.kind !== 'access' && data?.kind !== 'agents') return
       pending.add(data.kind)
       if (ready || readyPending) queueValidation()
     }
@@ -233,9 +252,9 @@ export async function streamHqEvents(event: H3Event, config: HqAccessConfig): Pr
     upstream.addEventListener('message', onMessage)
     upstream.addEventListener('error', onSocketError)
     upstream.addEventListener('close', onSocketClose)
-    joinTimer = setTimeout(() => close(), JOIN_TIMEOUT_MS)
-    expiryTimer = setTimeout(() => close(true), Math.min(expiresAt - Date.now(), 2_147_483_647))
-    heartbeatTimer = setInterval(() => {
+    const joinTimer = setTimeout(() => close(), JOIN_TIMEOUT_MS)
+    const expiryTimer = setTimeout(() => close(true), Math.min(expiresAt - Date.now(), 2_147_483_647))
+    const heartbeatTimer = setInterval(() => {
       if (closed || upstream.readyState !== WebSocket.OPEN) return
       if (heartbeatRef !== null) { close(); return }
       heartbeatRef = String(++reference)

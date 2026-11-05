@@ -1,0 +1,30 @@
+{
+  "id": "hq-island-layout-20261105",
+  "task": "HQ-ISLAND-LAYOUT-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/island.vue",
+    "packages/ui/src/templates/BsIslandPreviewPage.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsIslandScene3d.vue",
+    "packages/ui/src/utils/islandPreviewGeometry3d.ts",
+    "packages/ui/src/utils/islandPreviewRenderer.ts",
+    "packages/ui/src/utils/islandPreviewViewport.ts",
+    "packages/ui/package.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Apply the original HQ layout to /island by reusing the canonical page chrome/panels with a typed island-content variant. Extract the existing real 3D scene into a controlled shared organism and keep its SVG fallback, geometry/materials/bloom and resource lifecycle. Share the actual coastline and orthographic camera frame with the circular overview; keep empty terrain free of invented offices/roads/orb markers. Reuse original app projections, server authority hooks and semantic commands for navigation/account/Brain/company-plan/workplace panels. The original HQ route and its default scene/behavior remain unchanged. No provider operation, new business rule, model/agent execution, production action, public activation, commit, merge or deployment is performed. Automated/browser/runtime and visual/interaction/performance acceptance remain unrun under the standing instruction; preflight timed out."
+}

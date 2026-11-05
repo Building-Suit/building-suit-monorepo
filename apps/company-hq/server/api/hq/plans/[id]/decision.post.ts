@@ -2,6 +2,7 @@ import { createError, getHeader, getRouterParam } from 'h3'
 import type { H3Event } from 'h3'
 import { HQ_PLAN_UUID, parseHqCompanySnapshot } from '../../../../../shared/types/companyPlans'
 import { assertHqAccessRequest, hqRpc, requireHqFounder } from '../../../../utils/hqAccess'
+import { withOfficeRoster } from '../../../../utils/officeRoster'
 
 function invalidRequest() { return createError({ statusCode: 400, statusMessage: 'Company plan decision unavailable' }) }
 
@@ -59,5 +60,5 @@ export default defineEventHandler(async event => {
   })
   const snapshot = parseHqCompanySnapshot(result)
   if (!snapshot) throw createError({ statusCode: 503, statusMessage: 'Company plans unavailable' })
-  return snapshot
+  return withOfficeRoster(snapshot, config)
 })

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steve — 3D character review</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101922;color:#f5f6f7;font:15px system-ui}header{position:absolute;inset:24px 30px auto;pointer-events:none}h1{font-size:22px;margin:0 0 6px}p{color:#a9b2bb;margin:0;font-size:13px}canvas{width:100vw;height:100vh;display:block;background:radial-gradient(ellipse at 50% 40%,#39404a 0,#202731 40%,#111a24 75%);touch-action:none}nav{position:absolute;inset:auto 20px 24px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}button,a{background:#16293b;border:1px solid #53606d;color:#f5f6f7;border-radius:7px;padding:10px 16px;cursor:pointer;text-decoration:none}button:hover,button[aria-pressed=true]{border-color:#d89b42;color:#e9b66c}footer{position:absolute;right:30px;top:25px;color:#d89b42;font-size:12px}#status{position:absolute;left:30px;bottom:90px;color:#bcc5ce;font-size:12px}
+</style>
+<header><h1>Steve <span style="font-weight:400;color:#d89b42">/ CEO</span></h1><p>Reference-led 3D model · drag to orbit · scroll to zoom</p></header><footer>BUILDING SUIT HQ · MODEL REVIEW</footer>
+<canvas id="view" aria-label="Interactive three-dimensional Steve character"></canvas>
+<div id="status">Authored approximation of the supplied character sheet</div>
+<nav aria-label="Character views"><button data-yaw="0">Front</button><button data-yaw="-0.65" aria-pressed="true">Three-quarter</button><button data-yaw="-1.5708">Side</button><button data-yaw="3.14159">Back</button><button id="face">Face detail</button><button id="body">Full body</button><a href="steve.glb" download>Download GLB</a></nav>
+<script>
+const data=/*MODEL_DATA*/null;
+const canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl',{antialias:true,alpha:true});
+if(!gl||!data)throw Error('WebGL model preview unavailable');
+const vsrc=`attribute vec3 p,n; uniform mat4 projection,view,model; varying vec3 vNormal,vWorld,vLocal; void main(){vec4 world=model*vec4(p,1.0);vWorld=world.xyz;vLocal=p;vNormal=mat3(model)*n;gl_Position=projection*view*world;}`;
+const fsrc=`precision highp float; uniform vec3 uColor,uEye,uSilver,uAccent,uBrainLight; uniform float uMaterial,uOpacity,uBrainLightStrength; varying vec3 vNormal,vWorld,vLocal; void main(){${data.fragment}}`;
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vsrc));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fsrc));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
+const uniforms=Object.fromEntries(['projection','view','model','uColor','uEye','uSilver','uAccent','uBrainLight','uMaterial','uOpacity','uBrainLightStrength'].map(n=>[n,gl.getUniformLocation(program,n)]));
+const attrs={p:gl.getAttribLocation(program,'p'),n:gl.getAttribLocation(program,'n')};
+function buffer(a,index=false){const b=gl.createBuffer(),target=index?gl.ELEMENT_ARRAY_BUFFER:gl.ARRAY_BUFFER;gl.bindBuffer(target,b);gl.bufferData(target,index?new Uint16Array(a):new Float32Array(a),gl.STATIC_DRAW);return b}
+const parts=data.parts.map(p=>({...p,p:buffer(p.geometry.positions),n:buffer(p.geometry.normals),i:buffer(p.geometry.indices,true),count:p.geometry.indices.length}));
+const ident=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+function model(x=0,y=0,z=0,rz=0){const m=ident(),c=Math.cos(rz),s=Math.sin(rz);m[0]=c;m[1]=s;m[4]=-s;m[5]=c;m[12]=x;m[13]=y;m[14]=z;return m}
+const unit=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+function look(eye,target){const z=unit(eye.map((v,i)=>v-target[i])),x=unit(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1])}
+function projection(aspect){const f=1/Math.tan(.48/2),a=.01,b=100;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(b+a)/(a-b),-1,0,0,2*b*a/(a-b),0])}
+let yaw=-.65,pitch=.06,radius=3.95,targetY=.77,drag=null;
+const rig=data.rig,matrices={root:ident(),leftArm:model(-rig.shoulderX,rig.shoulderY,0,-.12),rightArm:model(rig.shoulderX,rig.shoulderY,0,.12),leftLeg:model(-rig.hipX,rig.hipY),rightLeg:model(rig.hipX,rig.hipY),leftShoe:model(-rig.hipX,rig.hipY-rig.legLength),rightShoe:model(rig.hipX,rig.hipY-rig.legLength)};
+gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);
+gl.uniform3f(uniforms.uSilver,.78,.82,.85);gl.uniform3f(uniforms.uAccent,.847,.608,.259);gl.uniform3f(uniforms.uBrainLight,0,1,0);gl.uniform1f(uniforms.uBrainLightStrength,0);gl.uniform1f(uniforms.uOpacity,1);
+function draw(){const dpr=Math.min(devicePixelRatio,2),w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const cp=Math.cos(pitch),eye=[Math.sin(yaw)*radius*cp,targetY+Math.sin(pitch)*radius,-Math.cos(yaw)*radius*cp];gl.uniformMatrix4fv(uniforms.projection,false,projection(w/h));gl.uniformMatrix4fv(uniforms.view,false,look(eye,[0,targetY,0]));gl.uniform3fv(uniforms.uEye,eye);
+for(const p of parts){for(const a of ['p','n']){gl.bindBuffer(gl.ARRAY_BUFFER,p[a]);gl.enableVertexAttribArray(attrs[a]);gl.vertexAttribPointer(attrs[a],3,gl.FLOAT,false,0,0)}gl.uniformMatrix4fv(uniforms.model,false,matrices[p.joint]);gl.uniform3fv(uniforms.uColor,data.colors[p.pigment]);const c=p.pigment;gl.uniform1f(uniforms.uMaterial,['gold','eyeWhite','iris','pupil'].includes(c)?24:['skin','skinShade','lip'].includes(c)?21:['hair','hairRidge'].includes(c)?22:p.joint.endsWith('Shoe')?23:20);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,p.i);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0)}}
+function select(button){document.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)))}
+document.querySelectorAll('[data-yaw]').forEach(b=>b.onclick=()=>{yaw=Number(b.dataset.yaw);select(b);draw()});
+document.querySelector('#face').onclick=e=>{targetY=1.37;radius=.64;pitch=.01;select(e.target);draw()};document.querySelector('#body').onclick=e=>{targetY=.77;radius=3.95;pitch=.06;select(e.target);draw()};
+canvas.onpointerdown=e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)};canvas.onpointermove=e=>{if(!drag)return;yaw-=(e.clientX-drag[0])*.008;pitch=Math.max(-.9,Math.min(.9,pitch+(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY];draw()};canvas.onpointerup=()=>drag=null;canvas.onwheel=e=>{e.preventDefault();radius=Math.max(.25,Math.min(7,radius*Math.exp(e.deltaY*.001)));draw()};addEventListener('resize',draw);draw();
+</script></html>

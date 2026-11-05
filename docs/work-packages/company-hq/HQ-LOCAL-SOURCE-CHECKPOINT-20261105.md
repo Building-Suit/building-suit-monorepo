@@ -1,0 +1,9 @@
+# HQ local source checkpoint — 5 November 2026
+
+The founder requests publishing pending local code so a cloud checkout can consume the latest HQ chat and dictation implementation. Continue the existing primary checkout and open Company HQ root PR #528, branch `codex/company-hq/office-design`, targeting `stg`. Include the two existing unpublished camera commits and all pending tracked/untracked source in this checkout, including HQ runtime/migrations, shared UI/UX/tokens, task receipts, release provenance, upload exclusions and CLAUDE guidance pointers. Other worktrees remain outside this checkpoint.
+
+This publication is a source handoff. It does not merge, deploy, apply migrations, restart workers, send messages, or certify runtime acceptance. Existing task receipts retain their dated scoped verification and limitations. Broad tests, builds, lint/typechecks and release/boundary suites are not rerun under the standing HQ restriction. Git preflight and PR topology inspection are administrative. A narrow credential-pattern inventory of pending source found no private-key/token matches; this is not a comprehensive security audit.
+
+The cloud chat should fetch the published branch and use its exact remote head SHA, then retain the scoped test/provider limits documented by each task. Prior source-only or no-Git-action statements describe their original task phases; this founder-authorized checkpoint supplies the later Git publication.
+
+Administrative preflight completed at 2026-11-05T21:12:38Z with no errors: current branch ahead 2/behind 0, open root #528 and dependent #529 → #530, staging baseline 14039a60d9c7e59b1052cca3ee5b97015339c6a1. Staging has a historical failed publish-releases run; this publication makes no release-readiness claim. Concurrent HQ work-activity/follow-up source was present during checkpoint preparation and is included as in-progress source, without a completion or validation claim.

@@ -19,10 +19,29 @@ export interface OfficeArchitecture {
   floorInset: OfficeArchitectureGeometry
   executive: OfficeFurnitureGeometry
   department: OfficeFurnitureGeometry
-  furnishings: { body: OfficeArchitectureGeometry; metal: OfficeArchitectureGeometry; leaves: OfficeArchitectureGeometry; light: OfficeArchitectureGeometry; shade: OfficeArchitectureGeometry }
+  station: OfficeFurnitureGeometry
+  furnishings: { pots: OfficeArchitectureGeometry; soil: OfficeArchitectureGeometry; body: OfficeArchitectureGeometry; metal: OfficeArchitectureGeometry; leaves: OfficeArchitectureGeometry; light: OfficeArchitectureGeometry; shade: OfficeArchitectureGeometry }
   /** Local bulb center, shared by the visible fixture and analytic room light. */
   standingLightPosition: OfficeArchitectureVector
   executiveHitRegions: OfficeExecutiveHitRegions
+  /** Actual mesh bounds, independent of the presentation floor silhouette. */
+  furnitureFootprints: { executive: OfficeArchitectureBounds; station: OfficeArchitectureBounds; fixtures: OfficeArchitectureBounds[] }
+}
+
+export interface OfficeDeskPose { x: number; z: number; yaw: number }
+/** One pose per assigned employee; no spare stations or silent count cap. */
+export function departmentDeskLayout(count: number): { width: number; depth: number; desks: OfficeDeskPose[] } {
+  const total = Number.isSafeInteger(count) && count >= 0 && count <= 256 ? count : 0
+  const rows = Math.ceil(total / 2)
+  const depth = Math.max(5.2, 1.92 + rows * 1.64)
+  const desks: OfficeDeskPose[] = []
+  for (let index = 0; index < total; index++) {
+    const side = index % 2 === 0 ? -1 : 1
+    desks.push(total === 1 ? { x: 0, z: 0, yaw: 0 } : {
+      x: side * 1.05, z: (Math.floor(index / 2) - (rows - 1) / 2) * 1.64, yaw: side * Math.PI / 2,
+    })
+  }
+  return { width: 6.2, depth, desks }
 }
 
 const DEFAULT_WIDTH = 6.2
@@ -39,6 +58,18 @@ type Geometry = OfficeArchitectureGeometry
 
 function empty(): Geometry { return { positions: [], normals: [] } }
 function furniture(): OfficeFurnitureGeometry { return { body: empty(), top: empty(), metal: empty(), screen: empty(), light: empty(), details: empty() } }
+function meshBounds(parts: readonly Geometry[], starts: readonly number[] = []): OfficeArchitectureBounds {
+  const min: Vector = [Infinity, Infinity, Infinity], max: Vector = [-Infinity, -Infinity, -Infinity]
+  parts.forEach((part, index) => {
+    for (let offset = starts[index] ?? 0; offset < part.positions.length; offset += 3) {
+      for (let axis = 0; axis < 3; axis++) {
+        min[axis] = Math.min(min[axis]!, part.positions[offset + axis]!)
+        max[axis] = Math.max(max[axis]!, part.positions[offset + axis]!)
+      }
+    }
+  })
+  return { min, max }
+}
 function append(target: Geometry, ...parts: Geometry[]) {
   for (const part of parts) {
     for (const value of part.positions) target.positions.push(value)
@@ -224,7 +255,13 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   const rim = border(roomWidth - 0.12, roomDepth - 0.12, 0.18, 0.023, 0.008, 0.018)
   const floorInset = roundedBox(roomWidth - 0.38, roomDepth - 0.34, 0.002, 0.012, 0.15, 0.003)
   const walls = empty(), wallTrim = empty(), executive = furniture(), department = furniture()
-  const furnishings = { body: empty(), metal: empty(), leaves: empty(), light: empty(), shade: empty() }
+  const furnishings = { pots: empty(), soil: empty(), body: empty(), metal: empty(), leaves: empty(), light: empty(), shade: empty() }
+  const fixtureParts = Object.values(furnishings), fixtures: OfficeArchitectureBounds[] = []
+  let fixtureStarts = fixtureParts.map(part => part.positions.length)
+  function finishFixture() {
+    fixtures.push(meshBounds(fixtureParts, fixtureStarts))
+    fixtureStarts = fixtureParts.map(part => part.positions.length)
+  }
   // Enclosing room walls are deliberately empty. Neighbouring workplaces share
   // only the radial concrete/glass dividers generated for the circular floor.
 
@@ -253,6 +290,7 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   append(furnishings.body, roundedBox(1.12, 0.38, 0.025, 0.59, 0.045, 0.015, cabinetX, cabinetZ))
   append(furnishings.metal, box(1.05, 0.022, 0.36, cabinetX, 0.59, cabinetZ), box(0.012, 0.45, 0.012, cabinetX, 0.075, cabinetZ - 0.196))
   for (const side of [-1, 1]) append(furnishings.metal, box(0.12, 0.018, 0.018, cabinetX + side * 0.24, 0.39, cabinetZ - 0.201))
+  finishFixture()
   // Cabinet remains freestanding; the former wall-mounted shelves are removed.
   // Rear-right perimeter fixture leaves the middle/front/outer-chair aisles
   // untouched. Its 1.815 height stays inside the existing 1.9 room hit volume.
@@ -266,15 +304,29 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   append(furnishings.light,
     cylinder(0.304, 0.304, 1.513, 1.535, lampX, lampZ, 24),
     transformed(ellipsoid(0.095, 0.075, 0.095, 12, 8), lampX, standingLightPosition[1], lampZ))
+  finishFixture()
   const leaf = ellipsoid(0.09, 0.29, 0.13, 10, 6)
   for (const side of [-1, 1]) {
     const plantX = side * (halfWidth - 0.55), plantZ = -halfDepth + 0.55
-    append(furnishings.body, cylinder(0.17, 0.22, 0.015, 0.33, plantX, plantZ), cylinder(0.018, 0.018, 0.32, 0.68, plantX, plantZ, 10))
-    append(furnishings.metal, cylinder(0.225, 0.225, 0.30, 0.325, plantX, plantZ))
+    append(furnishings.pots, cylinder(0.17, 0.22, 0.015, 0.30, plantX, plantZ), cylinder(0.225, 0.225, 0.30, 0.325, plantX, plantZ))
+    append(furnishings.soil, cylinder(0.205, 0.205, 0.325, 0.328, plantX, plantZ))
+    append(furnishings.leaves, cylinder(0.018, 0.018, 0.328, 0.68, plantX, plantZ, 10))
     for (let petal = 0; petal < 5; petal++) {
       const angle = petal * Math.PI * 2 / 5
       append(furnishings.leaves, transformed(leaf, plantX + Math.sin(angle) * 0.12, 0.64 + (petal % 2) * 0.05, plantZ + Math.cos(angle) * 0.12, angle, 0.43))
     }
+    finishFixture()
   }
-  return { foundation, rim, walls, wallTrim, floorInset, executive, department, furnishings, standingLightPosition, executiveHitRegions: officeExecutiveHitRegions(roomWidth, roomDepth) }
+  return { foundation, rim, walls, wallTrim, floorInset, executive, department, station, furnishings, standingLightPosition, executiveHitRegions: officeExecutiveHitRegions(roomWidth, roomDepth), furnitureFootprints: { executive: meshBounds(Object.values(executive)), station: meshBounds(Object.values(station)), fixtures } }
+}
+
+/** Project the existing meshes/desk poses; enlarging a floor never moves furniture. */
+export function officeFurnitureFootprints(architecture: OfficeArchitecture, deskCount: number, executive = false): OfficeArchitectureBounds[] {
+  if (executive) return [...architecture.furnitureFootprints.fixtures, architecture.furnitureFootprints.executive]
+  const station = architecture.furnitureFootprints.station
+  return [...architecture.furnitureFootprints.fixtures, ...departmentDeskLayout(deskCount).desks.map(pose => {
+    const c = Math.cos(pose.yaw), s = Math.sin(pose.yaw)
+    const corners = [station.min[0], station.max[0]].flatMap(x => [station.min[2], station.max[2]].map(z => [pose.x + c * x + s * z, pose.z - s * x + c * z]))
+    return { min: [Math.min(...corners.map(p => p[0]!)), station.min[1], Math.min(...corners.map(p => p[1]!))] as Vector, max: [Math.max(...corners.map(p => p[0]!)), station.max[1], Math.max(...corners.map(p => p[1]!))] as Vector }
+  })]
 }

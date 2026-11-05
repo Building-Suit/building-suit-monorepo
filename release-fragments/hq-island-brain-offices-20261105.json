@@ -1,0 +1,33 @@
+{
+  "id": "hq-island-brain-offices-20261105",
+  "task": "HQ-ISLAND-BRAIN-OFFICES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/island.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsIslandScene3d.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/islandWorkspaceLayout.ts",
+    "packages/ui/src/utils/islandPreviewGeometry3d.ts",
+    "packages/ui/src/utils/islandPreviewViewport.ts",
+    "packages/ui/package.json",
+    "packages/ux/src/composables/useSpatialWorkspaceSelection.ts",
+    "packages/ux/src/orthographicWorkspaceCamera.ts",
+    "packages/ux/src/index.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Add original HQ central shielded Brain, furnished CEO and approved department offices, lights, roads, construction, hover/reveal, room/label picking and reversible panel focus to /island. Preserve approved reference terrain/coast/material through an opt-in reference-island renderer environment and a safe common object scale. Keep mesh/light/label/pick/minimap/focus transforms consistent, omit loose decorations from occupied footprints, retain SVG fallback and existing bounded animation/context lifecycle. Reuse existing approved records/data/server authority; no invented department/employee/agent or business/provider change. Original HQ defaults stay on their existing environment. Preflight timed out; no tests/builds/lint/typecheck/boundary/release/browser/runtime/visual/interaction/Auth/performance acceptance was run under the standing instruction. No commit/push/merge/deployment/public activation."
+}

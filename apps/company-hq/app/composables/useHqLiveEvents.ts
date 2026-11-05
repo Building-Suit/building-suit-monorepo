@@ -1,4 +1,5 @@
-export type HqLiveTopic = 'brain' | 'company' | 'access'
+export type HqLiveTopic = 'brain' | 'company' | 'agents' | 'access'
+export interface HqLivePresence { observedAt: string; agentId: string | null; taskId: string | null }
 type ResetReason = 'scope' | 'offline'
 interface Listener { refresh: () => unknown | Promise<unknown>; reset?: (reason: ResetReason) => void }
 interface TopicQueue { listeners: Set<Listener>; running: boolean; dirty: boolean }
@@ -7,11 +8,14 @@ function createLiveEvents() {
   const topics: Record<HqLiveTopic, TopicQueue> = {
     brain: { listeners: new Set(), running: false, dirty: false },
     company: { listeners: new Set(), running: false, dirty: false },
+    agents: { listeners: new Set(), running: false, dirty: false },
     access: { listeners: new Set(), running: false, dirty: false },
   }
   let founder = false, mounted = false, consumers = 0, generation = 0, failures = 0
   let connection: AbortController | null = null
   let retry: ReturnType<typeof setTimeout> | null = null
+  let resuming: Promise<void> | null = null
+  const presenceListeners = new Set<(value: HqLivePresence) => void>()
 
   const visibleOnline = () => mounted && !document.hidden && navigator.onLine
   const allowed = (topic: HqLiveTopic) => visibleOnline() && (topic === 'access' || founder)
@@ -37,6 +41,41 @@ function createLiveEvents() {
     topics[topic].dirty = false
     for (const listener of topics[topic].listeners) listener.reset?.(reason)
   }
+  function readySnapshot() {
+    const queues = (['brain', 'company', 'agents'] as const).filter(topic => allowed(topic) && topics[topic].listeners.size)
+    const selected = queues.filter(topic => !topics[topic].running)
+    for (const topic of queues) topics[topic].dirty = true
+    for (const topic of selected) topics[topic].running = true
+    void Promise.resolve().then(async () => {
+      const callbacks = new Set<Listener['refresh']>()
+      for (const topic of selected) {
+        if (!allowed(topic)) continue
+        topics[topic].dirty = false
+        for (const listener of topics[topic].listeners) callbacks.add(listener.refresh)
+      }
+      await Promise.allSettled([...callbacks].map(refresh => Promise.resolve().then(refresh)))
+    }).finally(() => {
+      for (const topic of selected) {
+        topics[topic].running = false
+        if (topics[topic].dirty && allowed(topic)) invalidate(topic)
+      }
+    })
+  }
+  function notifyPresence(data: string) {
+    let value: unknown
+    try { value = JSON.parse(data) } catch { return }
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return
+    const entry = value as Record<string, unknown>
+    if (Object.keys(entry).length !== 3 || typeof entry.observedAt !== 'string' || entry.observedAt.length > 64
+      || !Number.isFinite(Date.parse(entry.observedAt)) || Date.parse(entry.observedAt) > Date.now() + 300_000
+      || Date.parse(entry.observedAt) + 150_000 <= Date.now()
+      || !(entry.agentId === null || typeof entry.agentId === 'string' && /^AG-[A-Z]+-[0-9]{3}$/.test(entry.agentId))
+      || !(entry.taskId === null || typeof entry.taskId === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(entry.taskId))
+      || (entry.agentId === null) !== (entry.taskId === null)) return
+    for (const listener of presenceListeners) {
+      try { listener(entry as unknown as HqLivePresence) } catch { /* A display subscriber cannot restart the transport. */ }
+    }
+  }
   function stop() {
     generation += 1
     connection?.abort()
@@ -59,6 +98,7 @@ function createLiveEvents() {
     connection = request
     let reader: ReadableStreamDefaultReader<Uint8Array> | null = null
     let needsAccess = false, receivedAccess = false
+    let readyAt: number | null = null
     try {
       const response = await fetch('/api/hq/events', {
         headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1', Accept: 'text/event-stream' },
@@ -68,7 +108,7 @@ function createLiveEvents() {
       if (!response.ok || !response.headers.get('content-type')?.toLowerCase().startsWith('text/event-stream') || !response.body) throw new Error('HQ live connection unavailable')
       reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let buffer = '', event = '', frameSize = 0, hasData = false, ready = false
+      let buffer = '', event = '', frameSize = 0, hasData = false, ready = false, data = ''
       while (!request.signal.aborted) {
         const chunk = await reader.read()
         if (chunk.done) throw new Error('HQ live connection ended')
@@ -84,18 +124,19 @@ function createLiveEvents() {
           if (!line) {
             if (hasData && expected === generation && founder && visibleOnline()) {
               if (event === 'ready' && !ready) {
-                ready = true; failures = 0
+                ready = true; readyAt = Date.now()
                 // The server has already validated founder access and joined
                 // its private channel. This snapshot also covers missed events.
-                invalidate('brain'); invalidate('company')
+                readySnapshot()
               }
-              else if (event === 'brain' || event === 'company') invalidate(event)
+              else if (event === 'presence' && ready) notifyPresence(data)
+              else if (event === 'brain' || event === 'company' || event === 'agents') invalidate(event)
               else if (event === 'access') { receivedAccess = true; stop(); invalidate('access') }
             }
-            event = ''; frameSize = 0; hasData = false
+            event = ''; frameSize = 0; hasData = false; data = ''
           }
           else if (line.startsWith('event:')) event = line.slice(6).trim()
-          else if (line.startsWith('data:')) hasData = true
+          else if (line.startsWith('data:')) { hasData = true; data += `${data ? '\n' : ''}${line.slice(5).trimStart()}` }
           // Comments/heartbeats carry no invalidation and trigger no fetch.
         }
       }
@@ -104,17 +145,21 @@ function createLiveEvents() {
     finally {
       await reader?.cancel().catch(() => undefined)
       if (connection === request) connection = null
-      if (request.signal.aborted || expected !== generation) return
-      if (needsAccess) {
-        reset('brain', 'scope'); reset('company', 'scope')
-        // Repeated transport denial must not create a rapid access/read loop
-        // when an upstream configuration error still reports founder access.
-        retry = setTimeout(() => {
-          retry = null
-          invalidate('access')
-        }, Math.min(30_000, 1_000 * 2 ** Math.min(failures++, 5)))
+      if (!request.signal.aborted && expected === generation) {
+        // A server that repeatedly joins then closes must not reset recovery to
+        // a one-second loop. Only a sustained connection earns a fresh budget.
+        if (readyAt !== null && Date.now() - readyAt >= 30_000) failures = 0
+        if (needsAccess) {
+          reset('brain', 'scope'); reset('company', 'scope'); reset('agents', 'scope')
+          // Repeated transport denial must not create a rapid access/read loop
+          // when an upstream configuration error still reports founder access.
+          retry = setTimeout(() => {
+            retry = null
+            invalidate('access')
+          }, Math.min(30_000, 1_000 * 2 ** Math.min(failures++, 5)))
+        }
+        else if (!receivedAccess) reconnectAfterFailure()
       }
-      else if (!receivedAccess) reconnectAfterFailure()
     }
   }
   function setFounder(value: boolean) {
@@ -122,22 +167,28 @@ function createLiveEvents() {
     founder = value
     if (!value) {
       stop()
-      if (previous) { reset('brain', 'scope'); reset('company', 'scope') }
+      if (previous) { reset('brain', 'scope'); reset('company', 'scope'); reset('agents', 'scope') }
       return
     }
-    if (retry === null) void connect()
+    if (retry === null && !resuming) void connect()
   }
   function resume() {
     if (!visibleOnline()) { stop(); return }
-    // Visibility/online recovery revalidates identity once. A successfully
-    // reopened stream then supplies one ready snapshot, without a fetch loop.
-    invalidate('access')
-    void connect()
+    if (resuming) return
+    // Revalidate once before reopening. setFounder must not connect with a
+    // previous identity while this check is still in flight.
+    const task = Promise.resolve().then(async () => {
+      await Promise.allSettled([...topics.access.listeners].map(listener => Promise.resolve().then(listener.refresh)))
+    }).finally(() => {
+      if (resuming === task) resuming = null
+      if (visibleOnline() && founder) void connect()
+    })
+    resuming = task
   }
   function offline() {
     stop()
     founder = false
-    reset('brain', 'offline'); reset('company', 'offline'); reset('access', 'offline')
+    reset('brain', 'offline'); reset('company', 'offline'); reset('agents', 'offline'); reset('access', 'offline')
   }
   function mount() {
     if (mounted) return
@@ -165,7 +216,11 @@ function createLiveEvents() {
     topics[topic].listeners.add(listener)
     return () => { topics[topic].listeners.delete(listener) }
   }
-  return { mount, acquire, release, subscribe, setFounder, invalidate }
+  function subscribePresence(listener: (value: HqLivePresence) => void) {
+    presenceListeners.add(listener)
+    return () => { presenceListeners.delete(listener) }
+  }
+  return { mount, acquire, release, subscribe, subscribePresence, setFounder, invalidate }
 }
 
 // Nuxt creates one app per SSR request and one per browser tab. Weak keys keep
@@ -189,6 +244,11 @@ export function useHqLiveEvents() {
     invalidate: events.invalidate,
     subscribe(topic: HqLiveTopic, refresh: Listener['refresh'], clear?: Listener['reset']) {
       const unsubscribe = events.subscribe(topic, refresh, clear)
+      subscriptions.push(unsubscribe)
+      return unsubscribe
+    },
+    subscribePresence(listener: (value: HqLivePresence) => void) {
+      const unsubscribe = events.subscribePresence(listener)
       subscriptions.push(unsubscribe)
       return unsubscribe
     },

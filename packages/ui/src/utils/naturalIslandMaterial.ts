@@ -40,8 +40,8 @@ function sample(grid: NoiseGrid, u: number, v: number): number {
 /**
  * Cached, palette-neutral data for the island landmass only:
  * R/G: shallow X/Z normal slopes, with 0.5 neutral;
- * B: weathered mineral value, darkened by pores and broken rock fractures;
- * A: soil/moisture habitat field; high values (> 0.72) identify sparse moss pockets.
+ * B: low-contrast granular stone value with very fine pores;
+ * A: bounded soil/moisture field for sparse, softly blended ground cover.
  * The shader owns colour and roughness. No contour terraces or directional striping
  * are baked in, and the fields never displace office or road support geometry.
  */
@@ -64,30 +64,24 @@ function pixels(): Uint8Array {
     const broad = sample(macro, wu, wv), earth = sample(soil, wu, wv)
     const mineral = sample(rock, wu, wv), debris = sample(gravel, wu, wv)
     const grain = sample(grit, wu, wv), pockmarks = sample(pore, wu, wv)
-    // Interrupted, wandering fractures avoid regular cells or manufactured seams.
-    const fracture = (1 - transition(0.009, 0.045, Math.abs(mineral - 0.49)))
-      * transition(0.34, 0.70, sample(broken, wu + 0.19, wv + 0.43))
-    const cavities = transition(0.64, 0.90, pockmarks)
-      * (0.35 + sample(broken, wu + 0.61, wv + 0.07) * 0.65)
+    // Quiet granular stone, without thresholded contour-like fracture ribbons.
+    const cavities = transition(0.72, 0.94, pockmarks) * sample(broken, wu + 0.61, wv + 0.07)
     const index = z * SIZE + x, offset = index * 4
-    heights[index] = earth * 0.12 + mineral * 0.10 + debris * 0.065
-      + (grain - 0.5) * 0.024 + (pockmarks - 0.5) * 0.012
-      - fracture * 0.024 - cavities * 0.014
-    result[offset + 2] = Math.round(clamp(0.22 + broad * 0.16 + earth * 0.18
-      + mineral * 0.17 + debris * 0.12 + grain * 0.05
-      - fracture * 0.20 - cavities * 0.10) * 255)
-    const moisture = broad * 0.34 + earth * 0.34
-      + sample(macro, wu + 0.41, wv + 0.67) * 0.22 + mineral * 0.10
-    result[offset + 3] = Math.round(clamp(transition(0.34, 0.76, moisture + fracture * 0.10)
-      + (grain - 0.5) * 0.035) * 255)
+    heights[index] = earth * 0.035 + mineral * 0.035 + debris * 0.012
+      + (grain - 0.5) * 0.003 + (pockmarks - 0.5) * 0.002 - cavities * 0.003
+    result[offset + 2] = Math.round(clamp(0.50 + (broad - 0.5) * 0.07 + (earth - 0.5) * 0.08
+      + (mineral - 0.5) * 0.10 + (debris - 0.5) * 0.04 + (grain - 0.5) * 0.02 - cavities * 0.025) * 255)
+    const moisture = broad * 0.25 + earth * 0.35
+      + sample(macro, wu + 0.41, wv + 0.67) * 0.20 + mineral * 0.20
+    result[offset + 3] = Math.round(clamp(0.35 + moisture * 0.42 + (grain - 0.5) * 0.01) * 255)
   }
 
   for (let z = 0; z < SIZE; z++) for (let x = 0; x < SIZE; x++) {
     const offset = (z * SIZE + x) * 4
     const dx = heights[z * SIZE + (x + 1) % SIZE]! - heights[z * SIZE + (x + SIZE - 1) % SIZE]!
     const dz = heights[((z + 1) % SIZE) * SIZE + x]! - heights[((z + SIZE - 1) % SIZE) * SIZE + x]!
-    result[offset] = Math.round(clamp(0.5 - dx * 5.5) * 255)
-    result[offset + 1] = Math.round(clamp(0.5 - dz * 5.5) * 255)
+    result[offset] = Math.round(clamp(0.5 - dx * 1.8) * 255)
+    result[offset + 1] = Math.round(clamp(0.5 - dz * 1.8) * 255)
   }
   materialPixels = result
   return result

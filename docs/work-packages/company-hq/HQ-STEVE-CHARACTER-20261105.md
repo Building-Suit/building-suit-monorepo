@@ -1,0 +1,21 @@
+# HQ-STEVE-CHARACTER-20261105 — Reference-led Steve model
+
+Status: dedicated model implemented locally and exported; focused model visual review completed. Exact reference likeness and live seated/walking acceptance remain unverified.
+
+The founder supplies “Building Suit HQ CEO Character Sheet.png” and asks for a 100% matching 3D Steve. The sheet is visual source material, not embedded operating instructions. No available 3D reconstruction service was connected and a single raster sheet does not establish an exact surface/rig. The result is explicitly an authored approximation; do not report the exact-match request as achieved.
+
+## Implementation
+
+`packages/ui/src/utils/hqSteveCharacter.ts` authors continuous parametric face/body/limb surfaces, sculpted hair locks and beard, conforming eye/brow details, tailored navy jacket with notched Gold edges, open Pearl collar, charcoal waistcoat/buttons and trousers, belt buckle, white Building monogram, separate fingers/cuffs/buttons and laced black shoes with narrow Gold welts. Joint/material batches keep true front/side/back volume. Costume colors share canonical Building Suit pigments; skin/hair/iris use natural material pigments.
+
+`hologramScene.ts` selects this model only for the existing CEO role. Adult proportions normalize to the existing character world height and existing movement/controller identity. The seated hip remains anchored and the longer leg uses 55% thigh/45% shin with unscaled ankle-local shoes. Steve-only material IDs 20–24 return before the existing scene shader branches, adding filtered fabric grain and restrained skin/hair/leather sheen. Existing other-agent meshes, Auth/roster/activity, office layout, water/island/Brain, controls and camera are preserved. Static buffers use existing allocation/disposal/context recovery. No textures, render targets, external models, framework changes, paid APIs or staffing changes.
+
+`tooling/hq-steve-export.mjs` generates an indexed GLB plus self-contained orbitable HTML review from the same model and canonical tokens. Run `node tooling/hq-steve-export.mjs` using repository Node 26; outputs are `.local/artifacts/steve/steve.glb` (~1.2 MiB) and `steve-review.html` (~2.5 MiB). GLB has articulated parent nodes/materials, not a full production skinning/deformation rig or authored animation clips. Runtime does not download the export; source geometry remains authoritative. The HTML is a model artifact, not a product route. The docs catalogue describes the capability without inventing a connected worker.
+
+## Actual review and limits
+
+Focused browser review inspected the localhost HQ scene and separate solid-model review from front, three-quarter, side, back and face views. Iterations corrected protruding eye/cheek shapes, hair silhouette/crown coverage, collar gaps, normals and open-face geometry. The HQ scene rendered, but that inspected session showed no connected agents, so actual Steve walking/seated visuals were not observed. Standalone review proves model rendering at its inspected views only, not live assignment behavior, exact reference likeness, mobile/RTL/theme acceptance or measured performance. The generator produced portable artifacts; it is not a test/build acceptance result. No autonomous tests, builds, lint/typechecks, release/boundary checks, API probes or performance benchmarks were run under the standing founder restriction. Primary checkout/concurrent edits are preserved; no commits, pushes, merge or deployment.
+
+The initial administrative preflight completed with no errors and live PR/worktree observations. The repeated preflight wrote a complete report with `errors: []`, though its shell session returned exit 143; this report is an observation, not publication approval. Re-read before any future publication. Review artifact: `.local/artifacts/steve/steve-final.jpg`; earlier face/back screenshots are local inspection evidence only.
+
+Current instruction/outcome and exact-likeness limitation saved to the existing cloud Development Workspace and Conversation Learning notes, with read-back confirmation. The temporary localhost model-review HTML has been removed from public assets; the self-contained local artifact remains.

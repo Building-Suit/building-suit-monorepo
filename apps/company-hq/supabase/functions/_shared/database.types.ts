@@ -14,6 +14,389 @@ export type Database = {
   }
   public: {
     Tables: {
+      hq_agent_conversations: {
+        Row: {
+          created_at: string
+          founder_user_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          founder_user_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          founder_user_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hq_agent_jobs: {
+        Row: {
+          agent_id: string
+          artifact_id: string | null
+          attempt: number
+          completed_at: string | null
+          conversation_id: string
+          created_at: string
+          depends_on: string | null
+          error: string | null
+          founder_message_id: string
+          founder_user_id: string
+          id: string
+          kind: string
+          lease_expires_at: string | null
+          lease_token: string | null
+          lesson_id: string | null
+          recovery_count: number
+          recovery_of: string | null
+          request_key: string
+          result_digest: string | null
+          result_text: string | null
+          started_at: string | null
+          status: string
+          task_id: string | null
+          worker_id: string | null
+        }
+        Insert: {
+          agent_id: string
+          artifact_id?: string | null
+          attempt?: number
+          completed_at?: string | null
+          conversation_id: string
+          created_at?: string
+          depends_on?: string | null
+          error?: string | null
+          founder_message_id: string
+          founder_user_id: string
+          id?: string
+          kind?: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          lesson_id?: string | null
+          recovery_count?: number
+          recovery_of?: string | null
+          request_key: string
+          result_digest?: string | null
+          result_text?: string | null
+          started_at?: string | null
+          status?: string
+          task_id?: string | null
+          worker_id?: string | null
+        }
+        Update: {
+          agent_id?: string
+          artifact_id?: string | null
+          attempt?: number
+          completed_at?: string | null
+          conversation_id?: string
+          created_at?: string
+          depends_on?: string | null
+          error?: string | null
+          founder_message_id?: string
+          founder_user_id?: string
+          id?: string
+          kind?: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          lesson_id?: string | null
+          recovery_count?: number
+          recovery_of?: string | null
+          request_key?: string
+          result_digest?: string | null
+          result_text?: string | null
+          started_at?: string | null
+          status?: string
+          task_id?: string | null
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_agent_jobs_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "hq_task_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_jobs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_jobs_depends_on_fkey"
+            columns: ["depends_on"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_jobs_founder_message_id_fkey"
+            columns: ["founder_message_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_jobs_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_jobs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "hq_business_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_chat_recovery_source_fk"
+            columns: [
+              "recovery_of",
+              "conversation_id",
+              "founder_message_id",
+              "founder_user_id",
+              "agent_id",
+              "kind",
+            ]
+            isOneToOne: false
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: [
+              "id",
+              "conversation_id",
+              "founder_message_id",
+              "founder_user_id",
+              "agent_id",
+              "kind",
+            ]
+          },
+        ]
+      }
+      hq_agent_lessons: {
+        Row: {
+          agent_id: string
+          body: string
+          content_digest: string
+          created_at: string
+          digest: string
+          founder_user_id: string
+          id: string
+          publication_digest: string | null
+          publication_reference: string | null
+          published_at: string | null
+          reviewed_at: string | null
+          reviewed_by_job_id: string | null
+          source_digest: string
+          source_id: string
+          source_type: string
+          status: string
+          summary: string
+        }
+        Insert: {
+          agent_id: string
+          body: string
+          content_digest: string
+          created_at?: string
+          digest: string
+          founder_user_id: string
+          id?: string
+          publication_digest?: string | null
+          publication_reference?: string | null
+          published_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by_job_id?: string | null
+          source_digest: string
+          source_id: string
+          source_type: string
+          status?: string
+          summary: string
+        }
+        Update: {
+          agent_id?: string
+          body?: string
+          content_digest?: string
+          created_at?: string
+          digest?: string
+          founder_user_id?: string
+          id?: string
+          publication_digest?: string | null
+          publication_reference?: string | null
+          published_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by_job_id?: string | null
+          source_digest?: string
+          source_id?: string
+          source_type?: string
+          status?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_agent_lessons_reviewed_by_job_id_fkey"
+            columns: ["reviewed_by_job_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hq_agent_messages: {
+        Row: {
+          agent_id: string
+          conversation_id: string
+          created_at: string
+          id: string
+          job_id: string | null
+          kind: string
+          mention_ids: string[]
+          reply_to: string | null
+          role: string
+          task_id: string | null
+          text: string
+        }
+        Insert: {
+          agent_id: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          mention_ids?: string[]
+          reply_to?: string | null
+          role: string
+          task_id?: string | null
+          text: string
+        }
+        Update: {
+          agent_id?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          mention_ids?: string[]
+          reply_to?: string | null
+          role?: string
+          task_id?: string | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_agent_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_messages_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_agent_messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "hq_business_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hq_business_tasks: {
+        Row: {
+          acceptance: string
+          assignee_id: string | null
+          brief: string
+          completed_at: string | null
+          conversation_id: string
+          created_at: string
+          deliverable: string | null
+          error: string | null
+          founder_message_id: string
+          founder_user_id: string
+          id: string
+          repair_count: number
+          request_key: string
+          requested_assignee_id: string | null
+          review_summary: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acceptance: string
+          assignee_id?: string | null
+          brief: string
+          completed_at?: string | null
+          conversation_id: string
+          created_at?: string
+          deliverable?: string | null
+          error?: string | null
+          founder_message_id: string
+          founder_user_id: string
+          id?: string
+          repair_count?: number
+          request_key: string
+          requested_assignee_id?: string | null
+          review_summary?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acceptance?: string
+          assignee_id?: string | null
+          brief?: string
+          completed_at?: string | null
+          conversation_id?: string
+          created_at?: string
+          deliverable?: string | null
+          error?: string | null
+          founder_message_id?: string
+          founder_user_id?: string
+          id?: string
+          repair_count?: number
+          request_key?: string
+          requested_assignee_id?: string | null
+          review_summary?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_business_tasks_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_business_tasks_founder_message_id_fkey"
+            columns: ["founder_message_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hq_company_plans: {
         Row: {
           approved_at: string | null
@@ -159,11 +542,70 @@ export type Database = {
           },
         ]
       }
+      hq_task_artifacts: {
+        Row: {
+          agent_id: string
+          created_at: string
+          digest: string
+          id: string
+          input_artifact_id: string | null
+          job_id: string
+          kind: string
+          task_id: string | null
+          text: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          digest: string
+          id?: string
+          input_artifact_id?: string | null
+          job_id: string
+          kind: string
+          task_id?: string | null
+          text: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          digest?: string
+          id?: string
+          input_artifact_id?: string | null
+          job_id?: string
+          kind?: string
+          task_id?: string | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_task_artifacts_input_artifact_id_fkey"
+            columns: ["input_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "hq_task_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_task_artifacts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_task_artifacts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "hq_business_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      hq_agent_snapshot: { Args: never; Returns: Json }
       hq_brain_authorize_worker: {
         Args: { p_token_hash: string }
         Returns: boolean
@@ -223,8 +665,20 @@ export type Database = {
         Returns: Json
       }
       hq_brain_sync_status: { Args: never; Returns: Json }
+      hq_can_receive_agent_jobs: { Args: never; Returns: boolean }
       hq_can_receive_events: { Args: never; Returns: boolean }
+      hq_cancel_task: { Args: { p_task_id: string }; Returns: Json }
       hq_company_snapshot: { Args: never; Returns: Json }
+      hq_create_task: {
+        Args: {
+          p_acceptance: string
+          p_assignee_id: string
+          p_brief: string
+          p_request_key: string
+          p_title: string
+        }
+        Returns: Json
+      }
       hq_decide_company_plan: {
         Args: {
           p_decision: string
@@ -236,7 +690,74 @@ export type Database = {
       }
       hq_founder_access: { Args: never; Returns: Json }
       hq_live_flush: { Args: { p_limit?: number }; Returns: number }
+      hq_office_observations: { Args: never; Returns: Json }
       hq_publish_company_plan: { Args: { p_document: Json }; Returns: Json }
+      hq_send_ceo_message: {
+        Args: { p_prompt: string; p_request_key: string }
+        Returns: Json
+      }
+      hq_worker_claim: {
+        Args: { p_lease_seconds: number; p_worker_id: string }
+        Returns: Json
+      }
+      hq_worker_finish: {
+        Args: {
+          p_error: string
+          p_job_id: string
+          p_lease_token: string
+          p_reply: string
+          p_worker_id: string
+        }
+        Returns: Json
+      }
+      hq_worker_finish_v2: {
+        Args: {
+          p_error: string
+          p_evidence: Json
+          p_job_id: string
+          p_lease_token: string
+          p_reply: string
+          p_worker_id: string
+        }
+        Returns: Json
+      }
+      hq_worker_heartbeat: {
+        Args: {
+          p_job_id: string
+          p_lease_token: string
+          p_status: string
+          p_worker_id: string
+        }
+        Returns: Json
+      }
+      hq_worker_pending_lessons: {
+        Args: { p_worker_id: string }
+        Returns: Json
+      }
+      hq_worker_presence: { Args: { p_worker_id: string }; Returns: Json }
+      hq_worker_publish_lesson: {
+        Args: {
+          p_digest: string
+          p_lesson_id: string
+          p_reference: string
+          p_worker_id: string
+        }
+        Returns: Json
+      }
+      hq_worker_roster_sources: { Args: { p_worker_id: string }; Returns: Json }
+      hq_worker_skill_context: {
+        Args: {
+          p_job_id: string
+          p_lease_token: string
+          p_skill_ids: Json
+          p_worker_id: string
+        }
+        Returns: Json
+      }
+      hq_worker_sync_roster: {
+        Args: { p_agents: Json; p_worker_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,0 +1,27 @@
+{
+  "id": "hq-island-preview-20261105",
+  "task": "HQ-ISLAND-PREVIEW-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/island.vue",
+    "apps/company-hq/README.md",
+    "apps/company-hq/AGENTS.md",
+    "packages/ui/src/templates/BsIslandPreviewPage.vue",
+    "packages/ui/src/types/islandPreviewPresentation.ts",
+    "packages/ui/src/utils/islandPreviewScene.ts",
+    "packages/ui/package.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Add a private standalone HQ /island Nuxt preview of the founder-supplied floating stone island without buildings, roads or the Brain orb. The app supplies only typed bilingual title/description content; the explicitly exported shared template and utility own a static scalable SVG illustration with reference-traced terrain layers, sculpted facets, Gold seams, contours, grain, two sparse rock/grass clusters and shadow, preserving the 1045-by-602 reference composition with canonical Building Suit colors. Maintain route ownership, a static catalogue reference and local usage documentation. The active HQ workspace and company-data flows are preserved. Reference fidelity and tests/builds/lint/typechecks/boundary/release/browser/API/runtime acceptance are unverified and unrun under the standing HQ phase instruction. No provider change, deployment, merge, workforce execution or public product activation is introduced."
+}

@@ -1,5 +1,5 @@
 import type { HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
-import { HQ_PLAN_UUID, parseHqCompanySnapshot, type HqCompanySnapshot } from '../../shared/types/companyPlans'
+import { HQ_PLAN_UUID, parseHqCompanySnapshot, type HqCompanySnapshot } from '#shared/types/companyPlans'
 
 export interface HqCompanyPlanMessages {
   unavailable: string
@@ -140,6 +140,8 @@ export function useHqCompanyPlans(getAccessStatus: () => HqFounderAccessPresenta
     return run(attempt)
   }
 
+  // Actual plan/department/roster changes publish company. Brain knowledge and
+  // worker-presence updates do not require reading this independent snapshot.
   live.subscribe('company', refresh, reason => invalidate(false, reason === 'offline' ? 'unavailable' : null))
   watch(getAccessStatus, value => {
     if (value !== 'founder') {

@@ -1,0 +1,22 @@
+{
+  "id": "hq-character-scale-20261105",
+  "task": "HQ-CHARACTER-SCALE-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hqAgentCharacters.ts",
+    "apps/company-hq/README.md",
+    "apps/company-hq/AGENTS.md",
+    "docs/work-packages/company-hq/HQ-CHARACTER-SCALE-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder enlarges every standard HQ character by a further 25%, changing the existing shared rig scale from 1.28 to 1.6 while retaining derived seated hip compensation and nameplate anchors. Furniture and scene scale are unchanged."
+}

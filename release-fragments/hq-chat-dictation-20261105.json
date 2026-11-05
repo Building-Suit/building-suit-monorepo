@@ -1,0 +1,36 @@
+{
+  "id": "hq-chat-dictation-20261105",
+  "task": "HQ-CHAT-DICTATION-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useSpeechDictation.ts",
+    "packages/ux/tests/speech-dictation.test.mjs",
+    "packages/ui/src/atoms/BsIcon.vue",
+    "docs/work-packages/company-hq/HQ-CHAT-DICTATION-20261105.md",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/design-tokens/tokens.json",
+    "packages/design-tokens/generated/tokens.css",
+    "packages/design-tokens/generated/tokens.ts",
+    "packages/ux/src/index.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "release-changes/items.json"
+  ],
+  "reason": "Private HQ wider panels and inline draft-only voice transcription, preserving explicit message send and existing business authority. No public Suit activation or hosted deployment."
+}

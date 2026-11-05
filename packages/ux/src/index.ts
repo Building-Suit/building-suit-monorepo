@@ -279,3 +279,8 @@ export { spatialViewportFrame, spatialViewportScreenRectangle, spatialViewportGr
 export type { SpatialViewportFrame, SpatialViewportPoint, SpatialViewportVector } from './spatialViewportGeometry.ts'
 export { useSpatialWorkspaceSelection } from './composables/useSpatialWorkspaceSelection.ts'
 export type { SpatialWorkspaceTarget, SpatialWorkspaceSelectionPolicy } from './composables/useSpatialWorkspaceSelection.ts'
+export { useHqOfficeInspection } from './composables/useHqOfficeInspection.ts'
+export type { HqOfficeSection } from './composables/useHqOfficeInspection.ts'
+export { useSpeechDictation } from './composables/useSpeechDictation.ts'
+export { useDisplayClock } from './composables/useDisplayClock.ts'
+export type { SpeechDictationError, SpeechDictationPhase } from './composables/useSpeechDictation.ts'

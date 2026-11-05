@@ -1,0 +1,22 @@
+{
+  "id": "hq-doughnut-workplaces-20261105",
+  "task": "HQ-DOUGHNUT-WORKPLACES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/src/utils/hqIslandGeometry.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder-requested doughnut tiled floor and closer office ring: radii 7–14, furniture anchor 10.5, seven-unit overflow bands and 4.9-unit coastal reserve while preserving existing first-band island envelope. Shared layout updates dividers/picking/minimap/focus. Preserve furniture dimensions, larger Orb, current materials and other terrain/beach edits. Source inspection only; tests/checks/browser acceptance remain deferred under standing instruction. No merge/deployment."
+}

@@ -1,58 +1,143 @@
 import { expect, test } from '@playwright/test'
+import { canonicalRoleFallbacks, installWorkforceFixture, lessonId, taskId } from './workforce-fixture'
 
-for (const sample of [
-  { name: 'desktop', locale: 'en', theme: 'dark', width: 1600, height: 900 },
-  { name: 'desktop-light-preference', locale: 'en', theme: 'light', width: 1440, height: 1000 },
-  { name: 'mobile', locale: 'en', theme: 'dark', width: 390, height: 844 },
-  { name: 'mobile-ar', locale: 'ar', theme: 'light', width: 390, height: 844 },
-  { name: 'mobile-ar-375', locale: 'ar', theme: 'dark', width: 375, height: 812 },
-  { name: 'mobile-320', locale: 'en', theme: 'light', width: 320, height: 568 },
-  { name: 'desktop-ar', locale: 'ar', theme: 'dark', width: 1600, height: 900 },
-]) {
-  test(`empty static HQ layout: ${sample.name}`, async ({ page, context }) => {
-    const errors: string[] = [], apiRequests: string[] = []
-    page.on('pageerror', error => errors.push(error.message))
-    page.on('request', request => {
-      if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url())
-    })
-    await context.addCookies([{ name: 'building-suit-locale', value: sample.locale, domain: '127.0.0.1', path: '/' }])
-    await page.addInitScript(theme => localStorage.setItem('building-suit.theme', theme), sample.theme)
-    await page.setViewportSize({ width: sample.width, height: sample.height })
-    await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Building Suit HQ' })).toBeVisible()
-    await expect(page.getByRole('main')).toHaveAccessibleName(sample.locale === 'ar' ? 'مساحة عمل المقر الفارغة' : 'Empty HQ workspace')
-    await expect(page.locator('html')).toHaveAttribute('dir', sample.locale === 'ar' ? 'rtl' : 'ltr')
-    await expect(page.locator('.bs-hq-layout__minimap')).toBeEmpty()
-    await expect(page.locator('.bs-hq-layout__canvas > :not(.bs-hq-layout__footer)')).toHaveCount(0)
-    await expect(page.getByRole('dialog')).toHaveCount(0)
-    for (const button of await page.getByRole('button').all()) await expect(button).toBeDisabled()
-    await page.evaluate(() => document.fonts.ready)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true)
-    const clippedHeaderElements = await page.locator('.bs-hq-layout__header *').evaluateAll(elements => elements.filter(element => {
-      const bounds = element.getBoundingClientRect()
-      return bounds.width > 0 && (bounds.left < 0 || bounds.right > innerWidth)
-    }).map(element => element.textContent))
-    expect(clippedHeaderElements).toEqual([])
-    const containedViewControls = await page.locator('.bs-hq-layout__view').evaluate(element => {
-      const panel = element.getBoundingClientRect()
-      return [...element.querySelectorAll('button')].every(button => {
-        const bounds = button.getBoundingClientRect()
-        return bounds.left >= panel.left && bounds.right <= panel.right
-      })
-    })
-    expect(containedViewControls).toBe(true)
-    await page.screenshot({ path: `test-results/hq-layout-${sample.name}.png`, fullPage: true })
-    expect(apiRequests).toEqual([])
-    expect(errors).toEqual([])
-  })
-}
+test('full roster distinguishes configured employees from actual individual connections', async ({ page }) => {
+  const fixture = await installWorkforceFixture(page)
+  await fixture.open()
+  await expect(page.getByRole('region', { name: 'Interactive 3D workspace', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click()
+  await page.getByRole('tab', { name: /^Team/ }).click()
+  const panel = page.getByRole('tabpanel')
+  await expect(panel.getByText('Steve Fixture', { exact: true })).toBeVisible()
+  await expect(panel.locator('.bs-hq-workforce__employee')).toHaveCount(10)
+  for (const agent of fixture.snapshot().agents) await expect(panel.getByText(agent.name, { exact: true })).toHaveCount(1)
+  await expect(panel.getByText('Configured · not connected', { exact: true })).toHaveCount(9)
+  await expect(panel.getByText('Connected', { exact: true })).toHaveCount(1)
+  await expect(panel.getByText('Fixture department', { exact: true })).toHaveCount(9)
+  await expect(page.locator('.bs-hologram-scene__agent-label[data-cosmetic="true"][data-activity="offline"]')).toHaveCount(9)
+  await expect(page.getByText('Worker connected · Agents working: 0', { exact: true })).toBeVisible()
+  await fixture.publish(canonicalRoleFallbacks(fixture.snapshot()))
+  for (const role of ['HR Recruiter', 'HR Evaluator', 'Research & Market Intelligence Lead', 'Customer Acquisition & Partnerships Lead', 'Customer Success & Onboarding Lead', 'Social & Community Lead', 'Email & Lifecycle Lead', 'Development & Maintenance Lead']) await expect(panel.getByText(role, { exact: true })).toHaveCount(1)
+  await expect(panel.getByText('HR & Agent Development', { exact: true })).toHaveCount(2)
+  await expect(panel.getByText('hr-agent-development', { exact: true })).toHaveCount(0)
+  await fixture.publish({ ...fixture.snapshot(), agents: fixture.snapshot().agents.map(agent => agent.id === 'AG-DEV-001' ? { ...agent, role: 'Fixture specialist', departmentKey: 'unmapped-fixture-department' } : agent) })
+  await expect(panel.getByText('Fixture specialist', { exact: true })).toHaveCount(1)
+  await expect(panel.getByText('unmapped-fixture-department', { exact: true })).toHaveCount(1)
+  const reads = fixture.requests.filter(request => request === 'GET /api/hq/agents').length
+  await page.waitForTimeout(1200)
+  expect(fixture.requests.filter(request => request === 'GET /api/hq/agents')).toHaveLength(reads)
+  await page.getByRole('combobox', { name: 'Workplaces', exact: true }).click()
+  await page.getByRole('option', { name: 'Fixture department', exact: true }).click()
+  const office = page.getByRole('complementary', { name: 'Fixture department', exact: true })
+  await expect(office.getByRole('region', { name: 'Office metrics', exact: true })).toBeVisible()
+  for (const agent of fixture.snapshot().agents.slice(1)) await expect(office.getByText(agent.name, { exact: true })).toHaveCount(1)
+  await expect(office.getByText('Offline', { exact: true })).toHaveCount(9)
+  await fixture.publish({ ...fixture.snapshot(), runtime: { connected: false, lastSeenAt: null } })
+  await expect(page.getByText('No agents connected', { exact: true })).toBeVisible()
+  await expect(page.locator('.bs-hologram-scene__agent-label[data-cosmetic="true"]')).toHaveCount(0)
+  expect(fixture.unexpected).toEqual([])
+  expect(fixture.errors).toEqual([])
+})
 
-test('retired HQ endpoints and sign-in are unavailable', async ({ request }) => {
-  for (const path of ['/api/hq/state', '/api/hq/bridge/state', '/auth/login', '/hq-assets/office-scene.png']) {
-    expect((await request.get(path)).status(), path).toBe(404)
-  }
-  for (const path of ['/api/mcp', '/api/hq/action', '/api/hq/bridge/action', '/api/hq/auth/login', '/api/hq/auth/logout']) {
-    expect((await request.post(path, { data: {} })).status(), path).toBe(404)
-  }
+test('task submission, event-driven review and published learning use snapshot receipts', async ({ page }) => {
+  const fixture = await installWorkforceFixture(page)
+  await fixture.open()
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click()
+  const panel = page.getByRole('tabpanel')
+  await panel.getByLabel('Title', { exact: false }).fill('Fixture task')
+  await panel.getByLabel('Task brief', { exact: false }).fill('Prepare a bounded draft from approved sources.')
+  await panel.getByLabel('Acceptance criteria', { exact: false }).fill('Include source receipts and a clear recommendation.')
+  await panel.getByRole('combobox', { name: 'Assigned to' }).click()
+  await page.getByRole('option', { name: 'Fixture employee 2 · HR Lead', exact: true }).click()
+  await panel.getByRole('button', { name: 'Create task', exact: true }).click()
+  await expect(panel.getByRole('heading', { name: 'Fixture task' })).toBeVisible()
+  expect(fixture.taskRequests).toHaveLength(1)
+  expect(fixture.taskRequests[0]).toEqual({ title: 'Fixture task', brief: 'Prepare a bounded draft from approved sources.', acceptance: 'Include source receipts and a clear recommendation.', assigneeId: 'AG-HR-001', requestKey: expect.stringMatching(/^[\da-f-]{36}$/i) })
+  await expect(panel.getByText('No deliverable has been submitted yet.')).toBeVisible()
+  const snapshot = fixture.snapshot(), now = new Date().toISOString()
+  await fixture.publish({ ...snapshot, tasks: snapshot.tasks!.map(task => ({ ...task, status: 'completed', completedAt: now, updatedAt: now, deliverable: 'Reviewed fixture draft <img src=x onerror="window.untrustedRan=true">', reviewSummary: 'Acceptance criteria verified against the submitted draft.' })), lessons: [{ id: lessonId, sourceType: 'task', sourceId: taskId, status: 'published', summary: 'Source receipts improve review', body: 'Keep <script>window.untrustedRan=true</script> as escaped source text.', agentId: 'AG-HR-001', createdAt: now, reviewedAt: now, publishedAt: now, publicationReference: 'https://drive.google.com/file/d/fixture_receipt/view' }] })
+  await expect(panel.getByText('Completed', { exact: true })).toBeVisible()
+  await expect(panel.getByText('Acceptance criteria verified against the submitted draft.', { exact: true })).toBeVisible()
+  await expect(panel.getByText('Reviewed fixture draft <img src=x onerror="window.untrustedRan=true">', { exact: true })).toBeVisible()
+  await expect(panel.locator('img')).toHaveCount(0)
+  await page.getByRole('tab', { name: /^Learning/ }).click()
+  await expect(panel.getByRole('heading', { name: 'Source receipts improve review' })).toBeVisible()
+  await expect(panel.getByText('Keep <script>window.untrustedRan=true</script> as escaped source text.', { exact: true })).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'Open Brain receipt' })).toHaveAttribute('href', 'https://drive.google.com/file/d/fixture_receipt/view')
+  expect(await page.evaluate(() => (window as unknown as { untrustedRan?: boolean }).untrustedRan)).toBeUndefined()
+  expect(fixture.unexpected).toEqual([])
+  expect(fixture.errors).toEqual([])
+})
+
+test('uncertain task delivery retains the draft and reuses its idempotency key', async ({ page }) => {
+  const fixture = await installWorkforceFixture(page, { rejectTasks: true })
+  await fixture.open()
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click()
+  const panel = page.getByRole('tabpanel')
+  await panel.getByLabel('Title', { exact: false }).fill('Retryable fixture')
+  await panel.getByLabel('Task brief', { exact: false }).fill('Draft a proposal.')
+  await panel.getByLabel('Acceptance criteria', { exact: false }).fill('Cite the sources.')
+  await panel.getByRole('button', { name: 'Create task', exact: true }).click()
+  await expect(panel.getByRole('alert')).toContainText('Task creation could not be confirmed.')
+  await expect(panel.getByLabel('Title', { exact: false })).toHaveValue('Retryable fixture')
+  expect(fixture.taskRequests).toHaveLength(1)
+  // Recovery is an explicit user action, not an automatic POST retry.
+  await panel.getByRole('button', { name: 'Refresh', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Create task', exact: true })).toBeEnabled()
+  await panel.getByRole('button', { name: 'Create task', exact: true }).click()
+  await expect(panel.getByRole('alert')).toContainText('Task creation could not be confirmed.')
+  expect(fixture.taskRequests).toHaveLength(2)
+  expect(fixture.taskRequests[1]).toEqual(fixture.taskRequests[0])
+  expect(fixture.taskRequests[0]?.assigneeId).toBeNull()
+})
+
+test('chat keyboard submission stays available alongside the workforce tabs', async ({ page }) => {
+  const fixture = await installWorkforceFixture(page)
+  await fixture.open()
+  await page.getByRole('button', { name: 'Chat', exact: true }).click()
+  const composer = page.getByLabel('Message Steve', { exact: false })
+  await expect(composer).toBeEnabled()
+  await composer.fill('First fixture line')
+  await composer.press('Shift+Enter')
+  await composer.pressSequentially('Second fixture line')
+  expect(fixture.chatRequests).toHaveLength(0)
+  await composer.press('Enter')
+  await expect(page.getByRole('log', { name: 'Company conversation' })).toContainText('First fixture line\nSecond fixture line')
+  await expect(composer).toHaveValue('')
+  expect(fixture.chatRequests).toHaveLength(1)
+  expect(fixture.chatRequests[0]?.prompt).toBe('First fixture line\nSecond fixture line')
+})
+
+test('anonymous presentation exposes founder login without reading the private workforce', async ({ page }) => {
+  const fixture = await installWorkforceFixture(page, { founder: false })
+  await fixture.open()
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Founder login' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create task', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('tab', { name: /^Team/ })).toHaveCount(0)
+  expect(fixture.requests).not.toContain('GET /api/hq/agents')
+  expect(fixture.requests).not.toContain('GET /api/hq/company')
+  expect(fixture.taskRequests).toEqual([])
+})
+
+test('Arabic workforce fits a narrow viewport and preserves locale direction', async ({ page, context }) => {
+  await context.addCookies([{ name: 'building-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' }])
+  await page.setViewportSize({ width: 375, height: 812 })
+  const fixture = await installWorkforceFixture(page)
+  await fixture.open()
+  await fixture.publish(canonicalRoleFallbacks(fixture.snapshot()))
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await page.getByRole('button', { name: 'المهام', exact: true }).click()
+  const panel = page.getByRole('tabpanel')
+  await expect(panel.getByRole('heading', { name: 'إنشاء مهمة', exact: true })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'إنشاء المهمة', exact: true })).toBeDisabled()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  const teamTab = page.getByRole('tab', { name: /^الفريق/ })
+  await expect(teamTab).toBeVisible()
+  expect((await teamTab.boundingBox())?.height).toBeGreaterThanOrEqual(40)
+  await teamTab.click()
+  await expect(panel.locator('.bs-hq-workforce__employee')).toHaveCount(10)
+  for (const role of ['مسؤول التوظيف', 'مسؤول تقييم الوكلاء', 'رئيس الأبحاث وذكاء السوق', 'رئيس استقطاب العملاء والشراكات', 'رئيس نجاح العملاء والتهيئة', 'رئيس التواصل والمجتمع', 'رئيس البريد الإلكتروني ودورة العميل', 'رئيس التطوير والصيانة']) await expect(panel.getByText(role, { exact: true })).toHaveCount(1)
+  await expect(panel.getByText('الموارد البشرية وتطوير الوكلاء', { exact: true })).toHaveCount(2)
+  expect(fixture.errors).toEqual([])
 })

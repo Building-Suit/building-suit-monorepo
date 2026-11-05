@@ -19,7 +19,7 @@ export function useCompanyBrain() {
   let refreshQueued = false
   let epoch = 0
   let disposed = false
-  const headers = { 'X-HQ-Brain': '1' }
+  const headers = { 'X-HQ-Brain': '1', 'X-HQ-Access': '1' }
   const dateFormatter = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'medium' }))
   const formatDate = (value: string) => dateFormatter.value.format(new Date(value))
   const summary = (value: BrainNoteSummary) => ({ id: value.id, title: value.title, path: value.path, modifiedLabel: formatDate(value.modifiedAt), version: value.version.split(':', 1)[0] || value.version })

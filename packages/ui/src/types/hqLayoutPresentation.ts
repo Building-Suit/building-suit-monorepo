@@ -1,3 +1,4 @@
+import type { HqAgentsContent } from './hqAgentsPresentation'
 /** HQ presentation copy. Product adapters own access and data retrieval. */
 export interface HqLayoutContent {
   brandName: string
@@ -25,10 +26,12 @@ export interface HqLayoutContent {
   workplaces: HqWorkplacesCopy
   companyPlans: HqCompanyPlansCopy
   companyBrain: HqBrainContent
+  agents?: HqAgentsContent
 }
 
-/** Workplace presentation and visual capacity, without employee-assignment claims. */
+/** Workplace presentation; assignments are supplied by the product roster. */
 export interface HqWorkplacesCopy {
+  office?: import('./hqAgentsPresentation').HqOfficeCopy
   label: string
   clearSelectionLabel: string
   executiveDescription: string
@@ -98,6 +101,8 @@ export interface HqDepartmentOffice {
   name: string
   nameAr?: string
   approvedAt: string
+  /** Undefined means roster unavailable; an empty list means no assigned employees. */
+  agents?: readonly { id: string; name: string }[]
 }
 
 export interface HqFounderAccessPresentation {

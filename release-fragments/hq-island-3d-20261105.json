@@ -1,0 +1,28 @@
+{
+  "id": "hq-island-3d-20261105",
+  "task": "HQ-ISLAND-3D-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/island.vue",
+    "packages/ui/src/templates/BsIslandPreviewPage.vue",
+    "packages/ui/src/types/islandPreviewPresentation.ts",
+    "packages/ui/src/utils/islandPreviewGeometry3d.ts",
+    "packages/ui/src/utils/islandPreviewRenderer.ts",
+    "packages/ui/package.json",
+    "apps/company-hq/README.md",
+    "apps/company-hq/AGENTS.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue"
+  ],
+  "reason": "Convert only the standalone /island preview to actual deterministic WebGL mesh geometry with a reference-framed orthographic starting camera, pan/orbit/zoom/reset through existing shared UX, canonical palette, procedural stone material, Gold tubes/bloom and a soft floor shadow. Retain the approved SVG as initial/no-JavaScript/context-unavailable fallback, preserve bilingual/RTL controls, render on demand with bounded pixels and release resources on context loss/disposal. No buildings, roads, orb, HQ workspace/renderer, business/Brain/Auth/provider, production or public product activation changes. Visual fidelity, interaction, performance and all automated/browser/runtime checks remain unverified and unrun under the standing founder instruction. Preflight timed out; no publication, commit, merge or deployment."
+}

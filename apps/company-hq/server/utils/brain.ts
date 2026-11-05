@@ -54,8 +54,26 @@ interface ScanResult {
   files: IndexedNote[]
 }
 
-/** This local preview has no remote identity boundary: Brain routes stay loopback-only. */
-export function assertLocalBrainRequest(event: H3Event, config: { hqBrainDevProxyToken?: unknown }): void {
+export interface HqTransportConfig { hqBrainDevProxyToken?: unknown; hqAppOrigin?: unknown; hqEnvironment?: unknown }
+const HQ_HOSTED_ORIGINS = { staging: 'https://stg.hq.building-suit.com', production: 'https://hq.building-suit.com' } as const
+
+/** Configuration selects an exact public origin; request/forwarded headers cannot select it. */
+export function hqHostedOrigin(config: HqTransportConfig): string | null {
+  if (import.meta.dev) return null
+  const origin = config.hqAppOrigin
+  if (origin === undefined || origin === '') {
+    if (process.env.VERCEL) throw createError({ statusCode: 503, statusMessage: 'HQ origin unavailable' })
+    return null
+  }
+  const environment = config.hqEnvironment ?? 'staging'
+  if (typeof origin !== 'string' || (environment !== 'staging' && environment !== 'production') || origin !== HQ_HOSTED_ORIGINS[environment]) {
+    throw createError({ statusCode: 503, statusMessage: 'HQ origin unavailable' })
+  }
+  return origin
+}
+
+/** Transport only. Hosted private data additionally requires the fresh founder guard. */
+export function assertLocalBrainRequest(event: H3Event, config: HqTransportConfig): void {
   setResponseHeaders(event, {
     'Cache-Control': 'private, no-store, max-age=0',
     'Pragma': 'no-cache',
@@ -64,6 +82,25 @@ export function assertLocalBrainRequest(event: H3Event, config: { hqBrainDevProx
     'X-Content-Type-Options': 'nosniff',
   })
 
+  const hostedOrigin = hqHostedOrigin(config)
+  const host = getHeader(event, 'host') ?? ''
+  const fetchSite = getHeader(event, 'sec-fetch-site')
+  if (getHeader(event, 'x-hq-brain') !== '1'
+    || (fetchSite !== undefined && fetchSite !== 'same-origin' && fetchSite !== 'none')) {
+    throw createError({ statusCode: 403, statusMessage: 'Brain access unavailable' })
+  }
+  if (hostedOrigin) {
+    if (host !== new URL(hostedOrigin).host) throw createError({ statusCode: 403, statusMessage: 'Brain access unavailable' })
+    for (const name of ['origin', 'referer']) {
+      const value = getHeader(event, name)
+      if (!value) continue
+      try { if (new URL(value).origin !== hostedOrigin) throw new Error('Origin rejected') }
+      catch { throw createError({ statusCode: 403, statusMessage: 'Brain access unavailable' }) }
+    }
+    // TLS terminates at the configured HTTPS host. Neither forwarded headers
+    // nor a development proxy attestation authorize this public path.
+    return
+  }
   const peer = event.node.req.socket?.remoteAddress
   const proxyToken = getHeader(event, DEV_PROXY_HEADER)
   const expectedToken = config.hqBrainDevProxyToken
@@ -71,10 +108,8 @@ export function assertLocalBrainRequest(event: H3Event, config: { hqBrainDevProx
     && typeof expectedToken === 'string' && /^[a-f0-9]{64}$/.test(expectedToken)
     && typeof proxyToken === 'string' && /^[a-f0-9]{64}$/.test(proxyToken)
     && timingSafeEqual(Buffer.from(proxyToken, 'hex'), Buffer.from(expectedToken, 'hex'))
-  const host = getHeader(event, 'host') ?? ''
   const match = HOST_PATTERN.exec(host)
   const port = match?.[1] ? Number(match[1]) : null
-  const fetchSite = getHeader(event, 'sec-fetch-site')
 
   if (!(peer !== undefined && LOOPBACK_PEERS.has(peer) || trustedDevProxy) || !match || (port !== null && (port < 1 || port > 65_535))
     || getHeader(event, 'x-hq-brain') !== '1'

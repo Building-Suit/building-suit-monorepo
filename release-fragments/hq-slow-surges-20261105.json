@@ -1,0 +1,23 @@
+{
+  "id": "hq-slow-surges-20261105",
+  "task": "HQ-SLOW-SURGES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-SLOW-SURGES-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder reports dense/high wave patterns hurt their eyes and clarifies slow incoming/receding surges, cliff impact and occasional splash. Remove constant Gerstner chop/fast ripples/sharp glints/offshore whitecaps; use a shared 18-second approach-impact-backwash clock, gentle open water and sparse soft depth-tested non-emissive ballistic spray at rock contacts. Preserve high hill/no beach/no hill neon, current workplace/Orb state and reduced motion. Source-only; tests/checks/runtime/visual acceptance remain deferred under standing instruction. No publication/deployment. Before handback, founder clarifies that waves must remain visible, smaller/smoother and randomized. Final source uses noise-warped/modulated broad rolling components and variable impact delays/foam/contact positions, superseding the near-flat surface and fixed beat."
+}
