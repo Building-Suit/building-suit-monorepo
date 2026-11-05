@@ -3,7 +3,7 @@ import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } fro
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
 import { hologramFloorRadius } from '../utils/hologramScene'
-import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout.ts'
+import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
 
@@ -107,7 +107,21 @@ async function openWorkplace(id: string) {
   if (selectedWorkplaceId.value === id) workplaceTitleRef.value?.focus({ preventScroll: true })
 }
 function workplaceTarget(workplace: OfficePlacement & { id: string }) {
-  return { id: `workplace:${workplace.id}`, x: workplace.x, z: workplace.z, width: workplace.width, depth: workplace.depth, height: 1.9, bottom: SPATIAL_VIEWPORT_GROUND_Y + 0.14, yaw: workplace.yaw }
+  const cosine = Math.cos(workplace.yaw), sine = Math.sin(workplace.yaw)
+  const localPoints = workplaceFootprint(workplace).map(point => {
+    const x = point.x - workplace.x, z = point.z - workplace.z
+    return { x: cosine * x - sine * z, z: sine * x + cosine * z }
+  })
+  const minX = Math.min(...localPoints.map(point => point.x)), maxX = Math.max(...localPoints.map(point => point.x))
+  const minZ = Math.min(...localPoints.map(point => point.z)), maxZ = Math.max(...localPoints.map(point => point.z))
+  const centerX = (minX + maxX) / 2, centerZ = (minZ + maxZ) / 2
+  return {
+    id: `workplace:${workplace.id}`,
+    x: workplace.x + cosine * centerX + sine * centerZ,
+    z: workplace.z - sine * centerX + cosine * centerZ,
+    width: maxX - minX, depth: maxZ - minZ,
+    height: 1.9, bottom: SPATIAL_VIEWPORT_GROUND_Y + 0.14, yaw: workplace.yaw,
+  }
 }
 function chooseWorkplace(value: string | number | null) {
   if (typeof value === 'string') void openWorkplace(value)
@@ -127,7 +141,7 @@ watch(resetVersion, () => closeSelection(false))
 watch(() => founderAccess.value.status, (status, previous) => {
   if (previous === 'founder' && status !== 'founder' && selectedWorkplaceId.value) closeSelection()
 })
-watch(() => availableWorkplaces.value.map(({ id, x, z, width, depth, yaw }) => [id, x, z, width, depth, yaw].join(',')).join(';'), () => {
+watch(() => availableWorkplaces.value.map(({ id, x, z, width, depth, yaw, sector }) => [id, x, z, width, depth, yaw, sector.startAngle, sector.endAngle, sector.innerRadius, sector.outerRadius].join(',')).join(';'), () => {
   if (!selectedWorkplaceId.value) return
   if (selectedWorkplace.value) focusTarget(workplaceTarget(selectedWorkplace.value))
   else closeSelection()
@@ -142,13 +156,7 @@ const workplacePanelId = useId()
 const workplaceTitleId = useId()
 const mapPolygon = (points: readonly { x: number; z: number }[]) => points.map(point => `${(50 + point.x * mapScale.value).toFixed(3)},${(50 + point.z * mapScale.value).toFixed(3)}`).join(' ')
 const islandMapOutline = computed(() => mapPolygon(islandFootprint.value.outline))
-const officeFootprint = (office: OfficePlacement) => {
-  const cosine = Math.cos(office.yaw), sine = Math.sin(office.yaw)
-  return mapPolygon(([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([side, end]) => {
-    const x = side * office.width / 2, z = end * office.depth / 2
-    return { x: office.x + cosine * x + sine * z, z: office.z - sine * x + cosine * z }
-  }))
-}
+const officeFootprint = (office: OfficePlacement) => mapPolygon(workplaceFootprint(office))
 const mapOffices = computed(() => [
   { id: officeLayout.value.executive.id, name: props.content.companyPlans.executiveLabel, executive: true, points: officeFootprint(officeLayout.value.executive), road: mapPolygon(officeLayout.value.executive.roadPoints) },
   ...officeLayout.value.offices.map(office => ({ id: office.id, name: office.name, executive: false, points: officeFootprint(office), road: mapPolygon(office.roadPoints) })),

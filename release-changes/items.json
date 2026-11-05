@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-LIVE-EVENTS-20261105",
+    "task": "HQ-CIRCULAR-WORKPLACES-20261105",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5287,9 +5287,11 @@
       "packages/ui/src/utils/hqIslandGeometry.ts",
       "packages/ui/src/utils/hologramTerrainMaterial.ts",
       "docs/work-packages/company-hq/HQ-LIVE-EVENTS-20261105.md",
-      "docs/work-packages/company-hq/HQ-OFFICE-RING-BALANCE-20261105.md"
+      "docs/work-packages/company-hq/HQ-OFFICE-RING-BALANCE-20261105.md",
+      "packages/ui/src/utils/circularWorkplaceGeometry.ts",
+      "docs/work-packages/company-hq/HQ-CIRCULAR-WORKPLACES-20261105.md"
     ],
-    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The procedural matte Coal/Navy/Gold island grows only near actual new office/road footprints and shares its coast with the minimap. Cached 512-square stone/normal/grain material, softened lamps, Gold seams, faceted rock, bounded coastal Navy water/Pearl foam and bloom replace the removed reflection pass/sampler/targets. Office rings now use one fixed top phase and alternating clockwise/counterclockwise slots with full-capacity spacing, preserving ordinary appended assignments under the existing approved-date/ID sort; road gaps, minimap and directional land share that layout. Existing shared-template/UX ownership, bilingual overlays, reversible focus, camera/zoom bounds, picking and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
+    "reason": "Internal HQ combines a private cloud Brain, trusted founder sessions and exact-revision atomic whole-company-plan decisions with approved department workspaces. Seven historical departments retain documentary date precision/null original reviews; hiring/skills do not execute staff. Current delivery uses one founder-only persistent fetch-SSE/private hq-live WebSocket path: ready/reconnect snapshots, then category invalidations/user actions, with no recurring Brain/company/access fetches or minute provider data job. Heartbeats query no data; renewal-only scheduling maintains watches. Staging sync/live-push migrations and worker v4 are active; historical 430-file/watch receipts are setup only, with durable pending-event dispatch/retry/watchdog migration 20261105002521 applied and no idle jobs at the setup observation. Optional JSON plan publication remains unselected/unbound, with no live CEO/HR or agent runtime. The matte Coal/Navy/Gold island shares its coast with the minimap and supports the continuous workplace floor through its occupied outer band. Cached 512-square stone/normal/grain material, softened lamps, Gold seams, faceted rock, bounded coastal Navy water/Pearl foam and bloom replace the removed reflection pass/sampler/targets. Current workplaces occupy adjacent annular sectors on one circular floor, with only lower-concrete/upper-glass radial partitions between occupied neighbors. The fixed first band reserves the top CEO slot and accommodates seven departments; later approvals fill clockwise then wider bands, retaining ordinary appended assignments under approved-date/ID ordering. Separate enclosing room walls, platforms and road spokes are replaced; furniture, lamps, freestanding CEO plan board, whole-sector picking, minimap and reversible workplace focus follow the sector layout. Existing shared-template/UX ownership, bilingual overlays, camera/zoom bounds and no-character/assignment rules remain. Preserve prior dated evidence/accepted fragments. No new app/Auth/approval/event/freshness/visual/performance acceptance, tests/checks/tester agents, Brain writes, production action, merge or public activation is claimed.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5313,7 +5315,8 @@
       "hq-brain-sync-20261105",
       "hq-island-lighting-20261105",
       "hq-live-events-20261105",
-      "hq-office-ring-balance-20261105"
+      "hq-office-ring-balance-20261105",
+      "hq-circular-workplaces-20261105"
     ],
     "evidence": [
       {
@@ -5402,7 +5405,27 @@
       },
       {
         "path": "packages/ui/src/utils/departmentOfficeLayout.ts",
-        "contains": "function ringSlotAngle(ring: number, slot: number): number"
+        "contains": "export function workplaceFootprint(office: OfficePlacement)"
+      },
+      {
+        "path": "packages/ui/src/utils/circularWorkplaceGeometry.ts",
+        "contains": "export function createCircularWorkplaceGeometry(layout: DepartmentOfficeLayout"
+      },
+      {
+        "path": "packages/ui/package.json",
+        "contains": "\"./utils/circularWorkplaceGeometry\": \"./src/utils/circularWorkplaceGeometry.ts\""
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "drawMesh(sharedWorkplaces.concrete, officeConcreteColor, 13)"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "const { startAngle, endAngle, innerRadius, outerRadius } = entry.placement.sector"
+      },
+      {
+        "path": "packages/ui/src/utils/hqIslandGeometry.ts",
+        "contains": "const COAST_CLEARANCE = 2.4"
       },
       {
         "path": "packages/ui/src/utils/hologramScene.ts",

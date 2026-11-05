@@ -1,0 +1,31 @@
+{
+  "id": "hq-circular-workplaces-20261105",
+  "task": "HQ-CIRCULAR-WORKPLACES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "packages/ui/package.json",
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/src/utils/circularWorkplaceGeometry.ts",
+    "packages/ui/src/utils/officeArchitecture.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hqIslandGeometry.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "docs/work-packages/company-hq/HQ-CIRCULAR-WORKPLACES-20261105.md",
+    "release-changes/items.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json"
+  ],
+  "reason": "Replace separate internal HQ rooms and road spokes with adjacent annular workplace sectors on a shared circular floor around the Orb. Fixed first-band capacity accommodates CEO plus seven approved departments; later approvals fill clockwise and wider bands. Only boundaries shared by occupied neighbors receive lower-concrete/upper-glass radial partitions. Existing furniture, freestanding CEO plan board, lamps, sector picking/minimap/focus and island support remain presentation owned; no department authority, staffing, characters, provider or integration changes. Preserve earlier dated records and accepted fragments. Source implementation and visual/runtime acceptance are unverified; autonomous tests/checks/browser/runtime/tester agents remain unrun under the founder instruction. No merge, deployment, production action or public product activation."
+}

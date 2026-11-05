@@ -442,7 +442,8 @@
     "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",
     "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue",
     "./utils/hologramEffects": "./src/utils/hologramEffects.ts",
-    "./utils/officeArchitecture": "./src/utils/officeArchitecture.ts"
+    "./utils/officeArchitecture": "./src/utils/officeArchitecture.ts",
+    "./utils/circularWorkplaceGeometry": "./src/utils/circularWorkplaceGeometry.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

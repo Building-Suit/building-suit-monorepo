@@ -1,11 +1,12 @@
 import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
-import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, OFFICE_WALKWAY_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
+import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
 import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
 import type { HologramEffects } from './hologramEffects.ts'
 import { createOfficeArchitecture } from './officeArchitecture.ts'
+import { createCircularWorkplaceGeometry } from './circularWorkplaceGeometry.ts'
 import { createHqIslandFootprint, hqIslandRadiusAt } from './hqIslandGeometry.ts'
 import type { HqIslandFootprint } from './hqIslandGeometry.ts'
 import { createHologramTerrainMaterial } from './hologramTerrainMaterial.ts'
@@ -23,17 +24,10 @@ interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
 interface SceneRay { origin: Vector; direction: Vector }
-interface WorkplaceFootprintPlane { x: number; z: number; offset: number }
 interface OfficeRenderEntry {
   placement: OfficePlacement & { id: string }
-  roadKey: string
-  road: Mesh
-  roadDeck: Mesh
-  trace: Mesh
-  foundationModel: Matrix
   wallModel: Matrix
   completedHeight: number
-  footprintPlanes: readonly WorkplaceFootprintPlane[]
   standingLight: Vector
 }
 
@@ -48,22 +42,6 @@ export interface HologramRenderer {
   projectOfficeAnchor: (id: string) => HologramOfficeAnchor | null
   projectExecutiveAnchor: () => HologramOfficeAnchor | null
   dispose: () => void
-}
-
-function workplaceFootprintPlanes(width: number, depth: number): readonly WorkplaceFootprintPlane[] {
-  const radius = Math.min(0.22, width / 2, depth / 2), halfWidth = width / 2, halfDepth = depth / 2
-  const corners = [[halfWidth - radius, halfDepth - radius], [-halfWidth + radius, halfDepth - radius], [-halfWidth + radius, -halfDepth + radius], [halfWidth - radius, -halfDepth + radius]] as const
-  const points: [number, number][] = []
-  // Match the platform's five segments per rounded corner. Cache the convex
-  // half-planes per placement instead of rebuilding polygons on pointer moves.
-  for (let corner = 0; corner < 4; corner++) for (let step = 0; step <= 5; step++) {
-    const angle = (corner + step / 5) * Math.PI / 2, center = corners[corner]!
-    points.push([center[0] + Math.cos(angle) * radius, center[1] + Math.sin(angle) * radius])
-  }
-  return points.map((point, index) => {
-    const next = points[(index + 1) % points.length]!, x = next[1] - point[1], z = point[0] - next[0]
-    return { x, z, offset: x * point[0] + z * point[1] }
-  })
 }
 
 const vertexShader = `
@@ -107,6 +85,26 @@ uniform float uConstruction;
 varying vec3 vWorld;
 varying vec3 vNormal;
 void main() {
+  if (uMaterial > 12.5) {
+    // Honed concrete stays diffuse: no reflected office/orb image or clearcoat.
+    vec3 surfaceNormal = normalize(vNormal);
+    vec4 stone = texture2D(uTerrainMap, vWorld.xz * uTerrainScale * 3.0);
+    float grain = texture2D(uTerrainMap, (vWorld.xz + vWorld.yy) * uTerrainScale * 24.0).a;
+    float diffuse = max(dot(surfaceNormal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
+    vec3 color = uColor * (0.66 + 0.34 * diffuse) * (0.94 + stone.b * 0.08 + (grain - 0.5) * 0.055);
+    vec3 brainOffset = uBrainLight - vWorld;
+    color += mix(uAccent, uSilver, 0.32) * uBrainLightStrength * 0.10 / (1.0 + dot(brainOffset, brainOffset) * 0.58);
+    gl_FragColor = vec4(color, uOpacity);
+    return;
+  }
+  if (uMaterial > 11.5) {
+    vec3 view = normalize(uEye - vWorld), normal = normalize(vNormal);
+    float rim = pow(1.0 - abs(dot(normal, view)), 3.0);
+    float highlight = pow(abs(dot(normalize(vec3(-1.5, 3.0, 2.0)) + view, normal)) * 0.5, 32.0);
+    vec3 color = mix(uColor, uNavy, 0.18) + uSilver * highlight * 0.32;
+    gl_FragColor = vec4(color, uOpacity * (0.16 + rim * 0.30));
+    return;
+  }
   if (uMaterial > 10.5 && uMaterial < 11.5) {
     // This independent water material precedes the contact-shadow branch.
     // Geometry carries coastal distance and offshore blend in vNormal.xy;
@@ -413,29 +411,16 @@ function merge(...parts: Geometry[]): Geometry {
 }
 function islandDecorations(footprint: HqIslandFootprint, workspaces: readonly OfficePlacement[]): { rocks: Geometry; grass: Geometry } {
   const rocks: Geometry = { positions: [], normals: [] }, grass: Geometry = { positions: [], normals: [] }
-  const initialRadius = departmentOfficeFloorRadius(1), candidates: DepartmentRoadPoint[] = [], placed: DepartmentRoadPoint[] = []
+  const floorOuterRadius = Math.max(...workspaces.map(office => office.sector.outerRadius))
+  const candidates: DepartmentRoadPoint[] = [], placed: DepartmentRoadPoint[] = []
   for (let index = 0; index < 36; index++) {
-    const angle = index * Math.PI * (3 - Math.sqrt(5)) + 0.35, radius = initialRadius * (index % 2 ? 0.87 : 0.74)
+    const angle = index * Math.PI * (3 - Math.sqrt(5)) + 0.35, radius = floorOuterRadius + 1.1
     candidates.push({ x: Math.cos(angle) * radius, z: Math.sin(angle) * radius })
-  }
-  for (const office of workspaces) {
-    const angle = Math.atan2(office.z, office.x) + 0.22, radius = Math.hypot(office.x, office.z) + 1.8
-    candidates.push({ x: Math.cos(angle) * radius, z: Math.sin(angle) * radius })
-  }
-  function segmentDistance(point: DepartmentRoadPoint, a: DepartmentRoadPoint, b: DepartmentRoadPoint): number {
-    const x = b.x - a.x, z = b.z - a.z, length = x * x + z * z
-    const amount = length ? Math.max(0, Math.min(1, ((point.x - a.x) * x + (point.z - a.z) * z) / length)) : 0
-    return Math.hypot(point.x - a.x - x * amount, point.z - a.z - z * amount)
   }
   function clear(point: DepartmentRoadPoint): boolean {
     const radius = Math.hypot(point.x, point.z)
-    if (radius < 4.3 || radius + 0.85 > hqIslandRadiusAt(footprint, Math.atan2(point.z, point.x))) return false
+    if (radius < floorOuterRadius + 0.85 || radius + 0.85 > hqIslandRadiusAt(footprint, Math.atan2(point.z, point.x))) return false
     if (placed.some(previous => Math.hypot(point.x - previous.x, point.z - previous.z) < 2.4)) return false
-    for (const office of workspaces) {
-      const x = point.x - office.x, z = point.z - office.z, cosine = Math.cos(office.yaw), sine = Math.sin(office.yaw)
-      if (Math.abs(cosine * x - sine * z) < office.width / 2 + 1.1 && Math.abs(sine * x + cosine * z) < office.depth / 2 + 1.1) return false
-      for (let index = 1; index < office.roadPoints.length; index++) if (segmentDistance(point, office.roadPoints[index - 1]!, office.roadPoints[index]!) < OFFICE_WALKWAY_WIDTH / 2 + 0.90) return false
-    }
     return true
   }
   function rock(x: number, z: number, width: number, height: number, depth: number, turn: number) {
@@ -470,60 +455,6 @@ function islandDecorations(footprint: HqIslandFootprint, workspaces: readonly Of
     if (placed.length >= 8) break
   }
   return { rocks, grass }
-}
-function roadGeometry(points: readonly DepartmentRoadPoint[], width: number, height: number, lateralOffset = 0): Geometry {
-  // Fillet sharp corridor turns before tessellation; broad paths keep a
-  // continuous, rounded shoulder instead of meeting at a spiked joint.
-  const rounded: DepartmentRoadPoint[] = points.length ? [points[0]!] : []
-  for (let index = 1; index < points.length - 1; index++) {
-    const before = points[index - 1]!, corner = points[index]!, after = points[index + 1]!
-    const incoming = Math.hypot(corner.x - before.x, corner.z - before.z)
-    const outgoing = Math.hypot(after.x - corner.x, after.z - corner.z)
-    if (incoming < 0.00001 || outgoing < 0.00001) continue
-    const alignment = ((corner.x - before.x) * (after.x - corner.x) + (corner.z - before.z) * (after.z - corner.z)) / (incoming * outgoing)
-    if (alignment > 0.98) { rounded.push(corner); continue }
-    const cut = Math.min(0.42, incoming * 0.3, outgoing * 0.3)
-    const start = { x: corner.x + (before.x - corner.x) * cut / incoming, z: corner.z + (before.z - corner.z) * cut / incoming }
-    const end = { x: corner.x + (after.x - corner.x) * cut / outgoing, z: corner.z + (after.z - corner.z) * cut / outgoing }
-    rounded.push(start)
-    for (let step = 1; step <= 6; step++) {
-      const t = step / 6, rest = 1 - t
-      rounded.push({ x: rest * rest * start.x + 2 * rest * t * corner.x + t * t * end.x, z: rest * rest * start.z + 2 * rest * t * corner.z + t * t * end.z })
-    }
-  }
-  if (points.length > 1) rounded.push(points[points.length - 1]!)
-  const sampled: DepartmentRoadPoint[] = []
-  for (let index = 0; index < rounded.length - 1; index++) {
-    const start = rounded[index]!, end = rounded[index + 1]!, distance = Math.hypot(end.x - start.x, end.z - start.z)
-    if (distance < 0.00001) continue
-    const steps = Math.max(1, Math.ceil(distance / 0.22))
-    if (!sampled.length) sampled.push(start)
-    for (let step = 1; step <= steps; step++) sampled.push({ x: start.x + (end.x - start.x) * step / steps, z: start.z + (end.z - start.z) * step / steps })
-  }
-  const geometry: Geometry = { positions: [], normals: [] }
-  const sides = sampled.map((_point, index): Vector => {
-    const before = sampled[Math.max(0, index - 1)]!, after = sampled[Math.min(sampled.length - 1, index + 1)]!
-    const tangent = normalize([after.x - before.x, 0, after.z - before.z])
-    return [-tangent[2], 0, tangent[0]]
-  })
-  function vertex(index: number, side: number) {
-    const point = sampled[index]!, offset = sides[index]!
-    const distance = lateralOffset + width / 2 * side
-    const end = sampled[sampled.length - 1]!
-    // The final approach ramps gently to the finished office floor. Future
-    // characters need no abrupt foundation step at the open entrance.
-    const remaining = Math.hypot(end.x - point.x, end.z - point.z)
-    const ramp = Math.max(0, Math.min(1, (0.85 - remaining) / 0.85))
-    geometry.positions.push(point.x + offset[0] * distance, height + ramp * 0.10, point.z + offset[2] * distance)
-    const before = sampled[Math.max(0, index - 1)]!, after = sampled[Math.min(sampled.length - 1, index + 1)]!
-    const tangent = normalize([after.x - before.x, 0, after.z - before.z])
-    geometry.normals.push(...normalize([-tangent[0] * (ramp > 0 ? 0.10 / 0.85 : 0), 1, -tangent[2] * (ramp > 0 ? 0.10 / 0.85 : 0)]))
-  }
-  for (let index = 0; index < sampled.length - 1; index++) {
-    vertex(index, -1); vertex(index, 1); vertex(index + 1, -1)
-    vertex(index, 1); vertex(index + 1, 1); vertex(index + 1, -1)
-  }
-  return geometry
 }
 function constructionStage(age: number, start: number, end: number): number {
   const progress = Math.max(0, Math.min(1, (age - start) / (end - start)))
@@ -757,9 +688,6 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       screen: mesh(furniture.screen), light: mesh(furniture.light), details: mesh(furniture.details),
     })
     const officeMeshes = {
-      foundation: mesh(officeArchitecture.foundation), rim: mesh(officeArchitecture.rim),
-      walls: mesh(officeArchitecture.walls), wallTrim: mesh(officeArchitecture.wallTrim),
-      floorInset: mesh(officeArchitecture.floorInset),
       executive: furnitureMeshes(officeArchitecture.executive), department: furnitureMeshes(officeArchitecture.department),
       furnishings: {
         body: mesh(officeArchitecture.furnishings.body), metal: mesh(officeArchitecture.furnishings.metal),
@@ -768,7 +696,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
     const officeFloorColor = palette.silver.map((value, index) => value * 0.65 + palette.gold[index]! * 0.12 + palette.steelGray[index]! * 0.23) as Vector
     const officeTopColor = palette.pearl.map((value, index) => value * 0.72 + palette.gold[index]! * 0.12 + palette.silver[index]! * 0.16) as Vector
-    const officeWallColor = palette.silver.map((value, index) => value * 0.62 + palette.navy[index]! * 0.23 + palette.pearl[index]! * 0.15) as Vector
+    const officeConcreteColor = palette.silver.map((value, index) => value * 0.68 + palette.steelGray[index]! * 0.22 + palette.navy[index]! * 0.10) as Vector
     const officeCabinetColor = palette.navy.map((value, index) => value * 0.55 + palette.steelGray[index]! * 0.45) as Vector
     const officeScreenColor = palette.navy.map((value, index) => value * 0.70 + palette.silver[index]! * 0.30) as Vector
     const officeWarmLightColor = palette.gold.map((value, index) => value * 0.65 + palette.pearl[index]! * 0.35) as Vector
@@ -778,6 +706,11 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     const islandGrassColor = palette.gold.map((value, index) => value * 0.22 + palette.steelGray[index]! * 0.34 + palette.navyDeep[index]! * 0.44) as Vector
     const officeFoliageColor = palette.navy.map((value, index) => value * 0.55 + palette.gold[index]! * 0.20 + palette.steelGray[index]! * 0.25) as Vector
     let officeLayout = layoutDepartmentOffices(EMPTY_DEPARTMENTS)
+    function workplaceMeshes() {
+      const shared = createCircularWorkplaceGeometry(officeLayout, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT)
+      return { floor: mesh(shared.floor), edge: mesh(shared.edge), concrete: mesh(shared.concrete), glass: mesh(shared.glass), frames: mesh(shared.frames) }
+    }
+    let sharedWorkplaces = workplaceMeshes()
     let islandFootprint = createHqIslandFootprint(officeLayout), lastIslandLayout = officeLayout
     const initialDecorations = islandDecorations(islandFootprint, [officeLayout.executive, ...officeLayout.offices])
     const geometry = {
@@ -822,14 +755,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     function makeEntry(placement: OfficePlacement & { id: string }): OfficeRenderEntry {
       const lamp = officeArchitecture.standingLightPosition, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
       return {
-        placement, roadKey: JSON.stringify(placement.roadPoints),
-        road: mesh(roadGeometry(placement.roadPoints, OFFICE_WALKWAY_WIDTH + 0.08, SPATIAL_VIEWPORT_GROUND_Y + 0.024)),
-        roadDeck: mesh(roadGeometry(placement.roadPoints, OFFICE_WALKWAY_WIDTH, SPATIAL_VIEWPORT_GROUND_Y + 0.040)),
-        trace: mesh(merge(...[-1, 1].map(side => roadGeometry(placement.roadPoints, 0.018, SPATIAL_VIEWPORT_GROUND_Y + 0.046, side * (OFFICE_WALKWAY_WIDTH / 2 - 0.022))))),
-        foundationModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y, placement.z, 0, 0, placement.yaw),
+        placement,
         wallModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT, placement.z, 0, 0, placement.yaw),
         completedHeight: 0,
-        footprintPlanes: workplaceFootprintPlanes(placement.width, placement.depth),
         standingLight: [placement.x + cosine * lamp[0] + sine * lamp[2], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + lamp[1], placement.z - sine * lamp[0] + cosine * lamp[2]],
       }
     }
@@ -849,17 +777,16 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         if (signature !== departmentSignature) {
           departmentSignature = signature
           officeLayout = layoutDepartmentOffices(departments)
+          for (const shape of Object.values(sharedWorkplaces)) releaseMesh(shape)
+          sharedWorkplaces = workplaceMeshes()
           const nextEntries = new Map<string, OfficeRenderEntry>()
           for (const placement of officeLayout.offices) {
             let entry = officeEntries.get(placement.id)
-            if (entry && entry.roadKey !== JSON.stringify(placement.roadPoints)) {
-              releaseMesh(entry.road); releaseMesh(entry.roadDeck); releaseMesh(entry.trace); entry = undefined
-            }
+            if (entry && (entry.placement.x !== placement.x || entry.placement.z !== placement.z || entry.placement.yaw !== placement.yaw)) entry = undefined
             if (!entry) entry = makeEntry(placement)
             nextEntries.set(placement.id, entry)
             if (!firstSeen.has(placement.id)) firstSeen.set(placement.id, constructionClock)
           }
-          for (const [id, entry] of officeEntries) if (!nextEntries.has(id)) { releaseMesh(entry.road); releaseMesh(entry.roadDeck); releaseMesh(entry.trace) }
           officeEntries = nextEntries
         }
       }
@@ -906,7 +833,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.normal); gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(normal)
       gl.uniformMatrix4fv(uniforms.uModel!, false, transform)
       gl.uniform3fv(uniforms.uColor!, color); gl.uniform1f(uniforms.uMaterial!, material); gl.uniform1f(uniforms.uOpacity!, opacity)
-      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11)) || (material === 4 && opacity > 0.5))
+      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8 || material === 9 || material === 11 || material === 13)) || (material === 4 && opacity > 0.5))
       if (singleSided) { gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK) }
       else gl.disable(gl.CULL_FACE)
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shape.indices)
@@ -918,29 +845,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const lampPower = constructionStage(age, 1.55, 2.20)
       gl!.uniform3f(uniforms.uRoomLight!, entry.standingLight[0], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + officeArchitecture.standingLightPosition[1] * furnishingRise, entry.standingLight[2])
       gl!.uniform1f(uniforms.uRoomLightStrength!, lampPower * 0.80)
-      const roadProgress = constructionStage(age, 0, 0.5)
-      const roadCount = Math.floor(entry.road.count * roadProgress / 6) * 6
-      drawMesh(entry.road, palette.steelGray, 8, 1, staticModel, false, roadCount)
-      drawMesh(entry.roadDeck, palette.graphite, 0, 1, staticModel, false, Math.floor(entry.roadDeck.count * roadProgress / 6) * 6)
-      drawMesh(entry.trace, palette.gold, 2, 0.9, staticModel, false, Math.floor(entry.trace.count * roadProgress / 6) * 6)
-      const foundation = constructionStage(age, 0.25, 0.85)
-      entry.foundationModel[5] = Math.max(0.001, foundation)
-      if (foundation > 0) drawMesh(officeMeshes.foundation, palette.steelGray, 8, 1, entry.foundationModel)
-      const wallRise = constructionStage(age, 0.65, 1.45)
-      entry.completedHeight = wallRise
+      entry.completedHeight = constructionStage(age, 0.65, 1.45)
       const material = complete ? 0 : 7
       gl!.uniform1f(uniforms.uConstruction!, complete ? 0 : 1 - constructionStage(age, 1.7, OFFICE_BUILD_SECONDS))
       gl!.uniform1f(uniforms.uSweepY!, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * constructionStage(age, 0.65, 2.2))
-      entry.wallModel[5] = Math.max(0.001, wallRise)
-      if (wallRise > 0) {
-        drawMesh(officeMeshes.walls, officeWallColor, material, 1, entry.wallModel)
-        drawMesh(officeMeshes.wallTrim, palette.gold, 2, 0.92, entry.wallModel)
-      }
-      entry.wallModel[5] = Math.max(0.001, foundation)
-      if (foundation > 0) {
-        drawMesh(officeMeshes.floorInset, officeFloorColor, 0, 1, entry.wallModel)
-        drawMesh(officeMeshes.rim, palette.gold, 2, 0.9, entry.wallModel)
-      }
       entry.wallModel[5] = Math.max(0.001, furnishingRise)
       if (furnishingRise > 0) {
         const furniture = executive ? officeMeshes.executive : officeMeshes.department
@@ -967,19 +875,6 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const { eye, right, up, forward } = orbProjection
       return { origin: eye, direction: normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical]) }
     }
-    function rayBox(origin: Vector, direction: Vector, minimum: Vector, maximum: Vector): [number, number] | null {
-      let near = 0.05, far = Infinity
-      for (let axis = 0; axis < 3; axis++) {
-        if (Math.abs(direction[axis]!) < 0.000001) {
-          if (origin[axis]! < minimum[axis]! || origin[axis]! > maximum[axis]!) return null
-          continue
-        }
-        const first = (minimum[axis]! - origin[axis]!) / direction[axis]!, second = (maximum[axis]! - origin[axis]!) / direction[axis]!
-        near = Math.max(near, Math.min(first, second)); far = Math.min(far, Math.max(first, second))
-        if (near > far) return null
-      }
-      return [near, far]
-    }
     function orbIntersection(ray: SceneRay): number {
       if (!orbProjection) return Infinity
       const { center, radius } = orbProjection
@@ -991,29 +886,37 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
     function workplaceIntersection(entry: OfficeRenderEntry, ray: SceneRay, executive = false): number {
       const age = executive ? OFFICE_BUILD_SECONDS : constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock)
-      const foundation = constructionStage(age, 0.25, 0.85)
-      if (foundation <= 0) return Infinity
-      const placement = entry.placement, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
-      const x = ray.origin[0] - placement.x, z = ray.origin[2] - placement.z
-      const origin: Vector = [cosine * x - sine * z, ray.origin[1] - SPATIAL_VIEWPORT_GROUND_Y, sine * x + cosine * z]
-      const direction: Vector = [cosine * ray.direction[0] - sine * ray.direction[2], ray.direction[1], sine * ray.direction[0] + cosine * ray.direction[2]]
-      const height = entry.completedHeight > 0 ? OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * entry.completedHeight : OFFICE_FOUNDATION_HEIGHT * foundation
-      const interval = rayBox(origin, direction, [-placement.width / 2, 0, -placement.depth / 2], [placement.width / 2, height, placement.depth / 2])
-      if (!interval) return Infinity
-      let [near, far] = interval
-      for (const plane of entry.footprintPlanes) {
-        const denominator = plane.x * direction[0] + plane.z * direction[2]
-        const remaining = plane.offset - plane.x * origin[0] - plane.z * origin[2]
-        if (Math.abs(denominator) < 0.000001) {
-          if (remaining < 0) return Infinity
-          continue
-        }
-        const distance = remaining / denominator
-        if (denominator > 0) far = Math.min(far, distance)
-        else near = Math.max(near, distance)
-        if (near > far) return Infinity
+      if (constructionStage(age, 0.25, 0.85) <= 0) return Infinity
+      const { startAngle, endAngle, innerRadius, outerRadius } = entry.placement.sector
+      const bottom = SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT
+      const top = bottom + OFFICE_WALL_HEIGHT * entry.completedHeight
+      const [ox, oy, oz] = ray.origin, [dx, dy, dz] = ray.direction
+      const centerAngle = (startAngle + endAngle) / 2, halfSpan = (endAngle - startAngle) / 2
+      let nearest = Infinity
+      // An annular sector is concave at its inner arc. Intersect its actual
+      // horizontal faces, circular sides and two radial sides analytically;
+      // rectangular furniture bounds and convex hulls would fill the aisle.
+      const candidate = (distance: number) => {
+        if (distance < 0.05 || distance >= nearest) return
+        const x = ox + dx * distance, y = oy + dy * distance, z = oz + dz * distance
+        const radius = Math.hypot(x, z)
+        const relativeAngle = Math.atan2(Math.sin(Math.atan2(z, x) - centerAngle), Math.cos(Math.atan2(z, x) - centerAngle))
+        if (y >= bottom - 0.0001 && y <= top + 0.0001 && radius >= innerRadius - 0.0001 && radius <= outerRadius + 0.0001 && Math.abs(relativeAngle) <= halfSpan + 0.0001) nearest = distance
       }
-      return near
+      if (Math.abs(dy) > 0.000001) { candidate((bottom - oy) / dy); candidate((top - oy) / dy) }
+      const a = dx * dx + dz * dz, b = ox * dx + oz * dz
+      if (a > 0.000001) for (const radius of [innerRadius, outerRadius]) {
+        const discriminant = b * b - a * (ox * ox + oz * oz - radius * radius)
+        if (discriminant >= 0) {
+          const root = Math.sqrt(discriminant)
+          candidate((-b - root) / a); candidate((-b + root) / a)
+        }
+      }
+      for (const angle of [startAngle, endAngle]) {
+        const nx = -Math.sin(angle), nz = Math.cos(angle), denominator = nx * dx + nz * dz
+        if (Math.abs(denominator) > 0.000001) candidate(-(nx * ox + nz * oz) / denominator)
+      }
+      return nearest
     }
     function pickSceneAt(clientX: number, clientY: number): { orb: boolean; workplaceId: string | null } {
       const ray = rayAt(clientX, clientY)
@@ -1042,8 +945,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         previousSeconds = seconds
         updateOffices(layout.departments ?? EMPTY_DEPARTMENTS, Boolean(layout.reducedMotion))
         if (officeLayout !== lastIslandLayout) {
-          // The visible coast follows actual occupied sectors. A newly used
-          // outer ring never scales land on the opposite side of the island.
+          // The coast supports the entire shared circular floor and leaves a
+          // natural rocky shoreline beyond its outside edge.
           islandFootprint = createHqIslandFootprint(officeLayout)
           const decorations = islandDecorations(islandFootprint, [officeLayout.executive, ...officeLayout.offices])
           for (const shape of [geometry.water, geometry.ground, geometry.groundEdge, geometry.groundLight, geometry.groundMidLight, geometry.groundShadow, geometry.islandRocks, geometry.islandGrass]) releaseMesh(shape)
@@ -1123,6 +1026,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           drawMesh(geometry.islandGrass, islandGrassColor, 0)
           drawMesh(geometry.hub, palette.navyDeep, 8)
           drawMesh(geometry.hubRing, palette.gold, 2, 0.94, hubRingModel)
+          drawMesh(sharedWorkplaces.floor, officeFloorColor, 13)
+          drawMesh(sharedWorkplaces.edge, palette.gold, 2, 0.76)
+          drawMesh(sharedWorkplaces.concrete, officeConcreteColor, 13)
+          drawMesh(sharedWorkplaces.frames, palette.steelGray, 8)
           drawOffice(executiveEntry, OFFICE_BUILD_SECONDS, true)
           for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
           drawMesh(geometry.base, palette.navyDeep, 8)
@@ -1162,6 +1069,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         drawMesh(geometry.groundEdge, islandRockColor, 9, 1, groundModel, true)
         drawMesh(geometry.groundMidLight, palette.gold, 2, 0.68)
         drawSceneObjects()
+        // Transparent upper partitions follow all opaque objects, retaining
+        // visibility through neighbouring workplaces without writing depth.
+        drawMesh(sharedWorkplaces.glass, palette.silver, 12, 1)
         if (effectsReady) effects?.compositeBloom()
 
       },

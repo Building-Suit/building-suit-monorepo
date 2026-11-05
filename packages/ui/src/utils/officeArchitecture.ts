@@ -27,7 +27,6 @@ export interface OfficeArchitecture {
 
 const DEFAULT_WIDTH = 6.2
 const DEFAULT_DEPTH = 5.2
-const WALL_HEIGHT = 1.9
 const EXECUTIVE_DESK_WIDTH = 2.35
 const EXECUTIVE_DESK_DEPTH = 0.92
 const EXECUTIVE_DESK_TOP = 0.76
@@ -226,20 +225,16 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   const floorInset = roundedBox(roomWidth - 0.38, roomDepth - 0.34, 0.002, 0.012, 0.15, 0.003)
   const walls = empty(), wallTrim = empty(), executive = furniture(), department = furniture()
   const furnishings = { body: empty(), metal: empty(), leaves: empty(), light: empty(), shade: empty() }
-  const wallZ = halfDepth - 0.16, returnDepth = Math.min(1.35, roomDepth * 0.31), returnZ = wallZ + 0.075 - returnDepth / 2
-  append(walls, roundedBox(roomWidth - 0.24, 0.15, 0, WALL_HEIGHT, 0.04, 0.018, 0, wallZ, 3))
-  append(wallTrim, box(roomWidth - 0.30, 0.018, 0.021, 0, WALL_HEIGHT - 0.026, wallZ - 0.078))
-  for (const side of [-1]) {
-    const wallX = side * (halfWidth - 0.16), innerX = side * (halfWidth - 0.239)
-    append(walls, roundedBox(0.15, returnDepth, 0, WALL_HEIGHT, 0.04, 0.018, wallX, returnZ, 3))
-    // The upright meets its side top trim, which meets the back top trim.
-    append(wallTrim, box(0.018, WALL_HEIGHT - 0.012, 0.021, innerX, 0.004, returnZ - returnDepth / 2 + 0.018), box(0.018, 0.018, returnDepth - 0.035, innerX, WALL_HEIGHT - 0.026, returnZ))
-  }
-  append(wallTrim, box(0.018, WALL_HEIGHT - 0.012, 0.021, halfWidth - 0.155, 0.004, wallZ - 0.078))
+  // Enclosing room walls are deliberately empty. Neighbouring workplaces share
+  // only the radial concrete/glass dividers generated for the circular floor.
 
   const executivePose = executivePlacement(roomDepth)
   addFurniture(executive, workstation(true), 0, executivePose.deskZ)
   append(executive.body, uprightPanel(EXECUTIVE_BOARD_WIDTH, EXECUTIVE_BOARD_HEIGHT, 0.08, 0, EXECUTIVE_BOARD_BOTTOM, executivePose.boardZ, 0.05))
+  // The CEO's plan board stands on its own instead of relying on a rear wall.
+  for (const side of [-1, 1]) append(executive.metal,
+    box(0.05, EXECUTIVE_BOARD_BOTTOM + 0.035, 0.065, side * 0.91, 0.035, executivePose.boardZ),
+    roundedBox(0.28, 0.36, 0.015, 0.055, 0.04, 0.01, side * 0.91, executivePose.boardZ, 3))
   append(executive.screen, uprightPanel(2.20, 0.92, 0.012, 0, 0.84, executivePose.boardZ - 0.047, 0.035))
   // A quiet plan-board diagram is geometric presentation, never an invented
   // task, approval, employee, document text or operational state.
@@ -258,15 +253,7 @@ export function createOfficeArchitecture(width = DEFAULT_WIDTH, depth = DEFAULT_
   append(furnishings.body, roundedBox(1.12, 0.38, 0.025, 0.59, 0.045, 0.015, cabinetX, cabinetZ))
   append(furnishings.metal, box(1.05, 0.022, 0.36, cabinetX, 0.59, cabinetZ), box(0.012, 0.45, 0.012, cabinetX, 0.075, cabinetZ - 0.196))
   for (const side of [-1, 1]) append(furnishings.metal, box(0.12, 0.018, 0.018, cabinetX + side * 0.24, 0.39, cabinetZ - 0.201))
-  for (const shelfY of [1.02, 1.47]) {
-    append(furnishings.body, roundedBox(1.10, 0.27, shelfY, shelfY + 0.035, 0.025, 0.008, cabinetX, halfDepth - 0.39))
-    append(furnishings.metal, box(0.025, 0.16, 0.11, cabinetX - 0.45, shelfY - 0.12, halfDepth - 0.34), box(0.025, 0.16, 0.11, cabinetX + 0.45, shelfY - 0.12, halfDepth - 0.34))
-  }
-  for (let book = 0; book < 3; book++) {
-    append(furnishings.body, box(0.075, 0.21 + book * 0.025, 0.14, cabinetX - 0.38 + book * 0.095, 1.06, halfDepth - 0.39))
-    append(furnishings.metal, box(0.045, 0.012, 0.008, cabinetX - 0.38 + book * 0.095, 1.17, halfDepth - 0.464))
-  }
-  append(furnishings.light, box(0.68, 0.010, 0.012, cabinetX, 1.008, halfDepth - 0.45))
+  // Cabinet remains freestanding; the former wall-mounted shelves are removed.
   // Rear-right perimeter fixture leaves the middle/front/outer-chair aisles
   // untouched. Its 1.815 height stays inside the existing 1.9 room hit volume.
   const lampX = halfWidth - 0.55, lampZ = halfDepth - 0.66
