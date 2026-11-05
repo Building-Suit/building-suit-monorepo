@@ -62,14 +62,14 @@ function ringRadius(ring: number): number {
 }
 function ringCapacity(ring: number): number {
   // The nearest furniture corners need the most angular clearance. Capacity
-  // belongs to the band, never the current count, so existing anchors stay put.
+  // remains a furniture-fit limit; occupied sectors divide the whole band.
   const nearestFurnitureEdge = ringRadius(ring) - DEPARTMENT_OFFICE_DEPTH / 2
   const halfAngle = Math.atan2(DEPARTMENT_OFFICE_WIDTH / 2 + FURNITURE_SIDE_CLEARANCE, nearestFurnitureEdge)
   return Math.max(8, Math.floor(Math.PI / halfAngle))
 }
 function point(radius: number, angle: number): DepartmentRoadPoint { return { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius } }
-function placement(ring: number, slot: number): OfficePlacement {
-  const step = FULL_TURN / ringCapacity(ring)
+function placement(ring: number, slot: number, occupied: number): OfficePlacement {
+  const step = FULL_TURN / occupied
   const angle = RING_START_ANGLE + slot * step
   return {
     ...point(ringRadius(ring), angle), yaw: Math.PI / 2 - angle,
@@ -97,22 +97,32 @@ export function layoutDepartmentOffices(departments: readonly HqDepartmentOffice
     const timeDifference = (Number.isFinite(leftTime) ? leftTime : Number.MAX_SAFE_INTEGER) - (Number.isFinite(rightTime) ? rightTime : Number.MAX_SAFE_INTEGER)
     return timeDifference || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
   })
+  // Fill safe-capacity bands first, then divide each occupied band equally.
+  // Adding a workplace intentionally reflows that band's existing sectors.
+  const rings: WorkplaceRing[] = []
+  const occupantsPerRing: number[] = []
+  let remaining = oldestFirst.length + 1
+  while (remaining > 0) {
+    const ring = rings.length + 1
+    const capacity = ringCapacity(ring)
+    const occupied = Math.min(capacity, remaining)
+    rings.push({ ring, ...ringBounds(ring), capacity })
+    occupantsPerRing.push(occupied)
+    remaining -= occupied
+  }
   const executive: ExecutiveWorkspacePlacement = {
-    id: 'executive-workspace', ...placement(1, 0),
+    id: 'executive-workspace', ...placement(1, 0, occupantsPerRing[0] ?? 1),
   }
   const offices: DepartmentOfficePlacement[] = []
   // Slot zero belongs to the existing CEO workspace, including before any plan
   // is approved. It consumes space without creating a department/roster record.
-  let ring = 1, slot = 1, capacity = ringCapacity(ring)
+  let ring = 1, slot = 1
   for (const department of oldestFirst) {
-    if (slot >= capacity) { ring += 1; slot = 0; capacity = ringCapacity(ring) }
-    offices.push({ ...department, ...placement(ring, slot) })
+    if (slot >= (occupantsPerRing[ring - 1] ?? 1)) { ring += 1; slot = 0 }
+    offices.push({ ...department, ...placement(ring, slot, occupantsPerRing[ring - 1] ?? 1) })
     slot += 1
   }
-  const layerCount = ring
-  const rings = Array.from({ length: layerCount }, (_, index): WorkplaceRing => ({
-    ring: index + 1, ...ringBounds(index + 1), capacity: ringCapacity(index + 1),
-  }))
+  const layerCount = rings.length
   return {
     executive, offices, layerCount, rings,
     floorRadius: departmentOfficeFloorRadius(layerCount),

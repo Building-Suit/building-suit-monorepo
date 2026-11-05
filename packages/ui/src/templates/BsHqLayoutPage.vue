@@ -6,6 +6,7 @@ import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
+import { HQ_ORB_SCALE } from '../utils/hologramPresentationGeometry.ts'
 
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()
@@ -80,7 +81,7 @@ async function openBrain() {
   emit('refreshBrain')
   rememberReturnFocus()
   brainPanelPresent.value = true
-  focusTarget({ id: 'brain', x: 0, z: 0, width: 1.8, depth: 1.8, height: 2, yaw: 0, viewYaw: 0.35, pitch: 0.2, distance: 5 })
+  focusTarget({ id: 'brain', x: 0, z: 0, width: 1.8 * HQ_ORB_SCALE, depth: 1.8 * HQ_ORB_SCALE, height: 2 * HQ_ORB_SCALE, yaw: 0, viewYaw: 0.35, pitch: 0.2, distance: 5 * HQ_ORB_SCALE })
   await nextTick()
   if (brainVisible.value) panelTitleRef.value?.focus({ preventScroll: true })
 }

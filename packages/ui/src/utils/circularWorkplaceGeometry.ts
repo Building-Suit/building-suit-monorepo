@@ -69,8 +69,8 @@ function sameAngle(a: number, b: number): boolean {
 }
 
 /**
- * One continuous annular floor, with a divider only at a boundary shared by
- * two occupied sectors. Empty slots never acquire an enclosing wall. floorY
+ * One continuous annular floor, with a divider at each boundary shared by
+ * two occupied sectors. A sole workplace owns the full ring with no wall. floorY
  * is the finished floor elevation; furniture uses this same Y as its origin.
  * The transparent glass batch must be drawn after opaque room furniture.
  */
@@ -87,6 +87,7 @@ export function createCircularWorkplaceGeometry(layout: DepartmentOfficeLayout, 
   const offices: readonly OfficePlacement[] = [layout.executive, ...layout.offices]
   for (const ring of layout.rings) {
     const occupied = offices.filter(office => office.ring === ring.ring)
+    if (occupied.length < 2) continue
     const emitted: number[] = []
     for (const office of occupied) {
       const angle = office.sector.endAngle

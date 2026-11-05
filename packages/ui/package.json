@@ -445,7 +445,8 @@
     "./utils/officeArchitecture": "./src/utils/officeArchitecture.ts",
     "./utils/circularWorkplaceGeometry": "./src/utils/circularWorkplaceGeometry.ts",
     "./utils/naturalIslandGeometry": "./src/utils/naturalIslandGeometry.ts",
-    "./utils/naturalIslandMaterial": "./src/utils/naturalIslandMaterial.ts"
+    "./utils/naturalIslandMaterial": "./src/utils/naturalIslandMaterial.ts",
+    "./utils/hologramPresentationGeometry": "./src/utils/hologramPresentationGeometry.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

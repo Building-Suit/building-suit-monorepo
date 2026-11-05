@@ -14,6 +14,7 @@ import type { HologramTerrainMaterial } from './hologramTerrainMaterial.ts'
 import { createNaturalIslandGeometry } from './naturalIslandGeometry.ts'
 import { createNaturalIslandMaterial } from './naturalIslandMaterial.ts'
 import type { NaturalIslandMaterial } from './naturalIslandMaterial.ts'
+import { HQ_ORB_SCALE } from './hologramPresentationGeometry.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -686,7 +687,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         standingLight: [placement.x + cosine * lamp[0] + sine * lamp[2], SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + lamp[1], placement.z - sine * lamp[0] + cosine * lamp[2]],
       }
     }
-    const executiveEntry = makeEntry(officeLayout.executive)
+    let executiveEntry = makeEntry(officeLayout.executive)
     executiveEntry.completedHeight = 1
     function releaseMesh(shape: Mesh) {
       for (const buffer of [shape.position, shape.normal, shape.indices]) {
@@ -702,13 +703,16 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         if (signature !== departmentSignature) {
           departmentSignature = signature
           officeLayout = layoutDepartmentOffices(departments)
+          // Sector widths and existing anchors reflow with the occupied count.
+          // Refresh all lightweight poses, including the CEO's picking sector;
+          // construction clocks stay keyed by ID and never restart on reflow.
+          executiveEntry = makeEntry(officeLayout.executive)
+          executiveEntry.completedHeight = 1
           for (const shape of Object.values(sharedWorkplaces)) releaseMesh(shape)
           sharedWorkplaces = workplaceMeshes()
           const nextEntries = new Map<string, OfficeRenderEntry>()
           for (const placement of officeLayout.offices) {
-            let entry = officeEntries.get(placement.id)
-            if (entry && (entry.placement.x !== placement.x || entry.placement.z !== placement.z || entry.placement.yaw !== placement.yaw)) entry = undefined
-            if (!entry) entry = makeEntry(placement)
+            const entry = makeEntry(placement)
             nextEntries.set(placement.id, entry)
             if (!firstSeen.has(placement.id)) firstSeen.set(placement.id, constructionClock)
           }
@@ -841,9 +845,11 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           candidate((-b - root) / a); candidate((-b + root) / a)
         }
       }
-      for (const angle of [startAngle, endAngle]) {
-        const nx = -Math.sin(angle), nz = Math.cos(angle), denominator = nx * dx + nz * dz
-        if (Math.abs(denominator) > 0.000001) candidate(-(nx * ox + nz * oz) / denominator)
+      if (halfSpan < Math.PI - 0.000001) {
+        for (const angle of [startAngle, endAngle]) {
+          const nx = -Math.sin(angle), nz = Math.cos(angle), denominator = nx * dx + nz * dz
+          if (Math.abs(denominator) > 0.000001) candidate(-(nx * ox + nz * oz) / denominator)
+        }
       }
       return nearest
     }
@@ -921,7 +927,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           viewProjection = matrixProduct(projection, view)
           orbProjection = {
             eye: frame.eye, right: frame.right, up: frame.up, forward: frame.forward,
-            center: [0, 0.98, 0], radius: 0.84, aspect: frame.aspect,
+            center: [0, 0.98, 0], radius: 0.84 * HQ_ORB_SCALE, aspect: frame.aspect,
           }
           lastCamera = [camera.yaw, camera.pitch, camera.zoom, camera.panX, camera.panY]
           lastWidth = width; lastHeight = height
@@ -933,22 +939,22 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         gl.uniform1f(uniforms.uTime!, time); gl.uniform3fv(uniforms.uAccent!, palette.gold)
         if (orbProjection) {
           orbProjection.center[0] = shakeX; orbProjection.center[1] = orbHeight + shakeY
-          orbProjection.radius = (0.84 - reveal * 0.14) * beat
+          orbProjection.radius = (0.84 - reveal * 0.14) * beat * HQ_ORB_SCALE
         }
         // Pose once for shield motion, build progress and neural/aura animation.
         for (const plate of plates) {
           const vibration = Math.sin(time * 33 + plate.phase) * excited * 0.014
           const drift = Math.sin(time * 0.65 + plate.phase) * reveal * 0.006
           model(
-            plate.center[0] * beat + plate.travel[0] * reveal + plate.direction[0] * vibration + shakeX,
-            orbHeight + plate.center[1] * beat + plate.travel[1] * reveal + drift + shakeY,
-            plate.center[2] * beat + plate.travel[2] * reveal + plate.direction[2] * vibration,
-            plate.rotation[0] * reveal + vibration, plate.rotation[1] * reveal + vibration, plate.rotation[2] * reveal, beat, plate.transform,
+            (plate.center[0] * beat + plate.travel[0] * reveal + plate.direction[0] * vibration) * HQ_ORB_SCALE + shakeX,
+            orbHeight + (plate.center[1] * beat + plate.travel[1] * reveal + drift) * HQ_ORB_SCALE + shakeY,
+            (plate.center[2] * beat + plate.travel[2] * reveal + plate.direction[2] * vibration) * HQ_ORB_SCALE,
+            plate.rotation[0] * reveal + vibration, plate.rotation[1] * reveal + vibration, plate.rotation[2] * reveal, beat * HQ_ORB_SCALE, plate.transform,
           )
         }
-        model(shakeX, orbHeight + shakeY, 0, 0, 0, 0, beat, brainModel)
-        model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, 1, auraFirst)
-        model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, 1, auraSecond)
+        model(shakeX, orbHeight + shakeY, 0, 0, 0, 0, beat * HQ_ORB_SCALE, brainModel)
+        model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, HQ_ORB_SCALE, auraFirst)
+        model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, HQ_ORB_SCALE, auraSecond)
         const drawSceneObjects = () => {
           drawMesh(geometry.groundLight, palette.gold, 2, 0.76, groundLightModel)
           drawMesh(geometry.islandRocks, islandRockColor, 9)

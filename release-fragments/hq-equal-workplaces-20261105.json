@@ -1,0 +1,29 @@
+{
+  "id": "hq-equal-workplaces-20261105",
+  "task": "HQ-EQUAL-WORKPLACES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "packages/ui/package.json",
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/src/utils/circularWorkplaceGeometry.ts",
+    "packages/ui/src/utils/hologramPresentationGeometry.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "docs/work-packages/company-hq/HQ-EQUAL-WORKPLACES-20261105.md",
+    "release-changes/items.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json"
+  ],
+  "reason": "Clarify internal HQ circular workplaces as equal full-circle shares by actual occupied count, including the CEO, rather than fixed angular slots: two workplaces receive 180 degrees each, three 120. Existing furniture-fit capacities and band radii remain; overflow uses outer bands and additions/removals intentionally reflow the affected band. All neighboring boundaries, including wraparound, retain lower-concrete/upper-glass radial dividers without perimeter enclosure. Shared 1.15 Orb scale coordinates drawing, picking and Brain focus. Preserve furniture, natural island materials, water, lighting, controls, page layout and existing approval/Brain/event runtime. No new department authority, characters, provider work or employee execution. Preserve prior dated records/accepted fragments. Source inspection only; no tests/checks/browser/runtime/tester agents or acceptance/performance claim under the founder instruction. No merge, deployment, production action or public product activation."
+}
