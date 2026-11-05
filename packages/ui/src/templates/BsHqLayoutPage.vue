@@ -108,19 +108,12 @@ async function openWorkplace(id: string) {
   if (selectedWorkplaceId.value === id) workplaceTitleRef.value?.focus({ preventScroll: true })
 }
 function workplaceTarget(workplace: OfficePlacement & { id: string }) {
-  const cosine = Math.cos(workplace.yaw), sine = Math.sin(workplace.yaw)
-  const localPoints = workplaceFootprint(workplace).map(point => {
-    const x = point.x - workplace.x, z = point.z - workplace.z
-    return { x: cosine * x - sine * z, z: sine * x + cosine * z }
-  })
-  const minX = Math.min(...localPoints.map(point => point.x)), maxX = Math.max(...localPoints.map(point => point.x))
-  const minZ = Math.min(...localPoints.map(point => point.z)), maxZ = Math.max(...localPoints.map(point => point.z))
-  const centerX = (minX + maxX) / 2, centerZ = (minZ + maxZ) / 2
+  // Focus the desks and usable work area; wide circular floor shares should
+  // remain selectable without forcing a distant view of their empty edges.
   return {
     id: `workplace:${workplace.id}`,
-    x: workplace.x + cosine * centerX + sine * centerZ,
-    z: workplace.z - sine * centerX + cosine * centerZ,
-    width: maxX - minX, depth: maxZ - minZ,
+    x: workplace.x, z: workplace.z,
+    width: workplace.width, depth: workplace.depth,
     height: 1.9, bottom: SPATIAL_VIEWPORT_GROUND_Y + 0.14, yaw: workplace.yaw,
   }
 }
