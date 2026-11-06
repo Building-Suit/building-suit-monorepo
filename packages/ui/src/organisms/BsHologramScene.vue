@@ -15,7 +15,9 @@ let renderer: HologramRenderer | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let motion: MediaQueryList | null = null
-let frame = 0, visible = true, elapsed = 0, waterElapsed = 0, lastFrame = 0, disposed = false
+let frame = 0, visible = false, elapsed = 0, waterElapsed = 0, lastFrame = 0, disposed = false
+// Offscreen catalogues must not allocate WebGL, geometry or procedural textures.
+let rendererNeeded = true
 let lastPaint = 0, needsDraw = true
 let openAmount = props.opened ? 1 : 0, excitedAmount = 0, excitedTarget = 0
 let hoverActive = false
@@ -131,11 +133,13 @@ function updateVisibility() {
   if (frame) cancelAnimationFrame(frame)
   frame = 0
   lastFrame = 0; lastPaint = 0
+  if (visible && !document.hidden && rendererNeeded) startRenderer()
   requestDraw()
 }
 function startRenderer() {
   const canvas = canvasRef.value
-  if (!canvas) return
+  if (!canvas || disposed || !visible || document.hidden || !rendererNeeded) return
+  rendererNeeded = false
   clearHoverAndShake()
   hideLabels()
   renderer?.dispose()
@@ -162,7 +166,12 @@ function onContextLost(event: Event) {
   if (frame) cancelAnimationFrame(frame)
   frame = 0
   renderer?.dispose(); renderer = null
+  rendererNeeded = false
   unavailable.value = true
+}
+function onContextRestored() {
+  rendererNeeded = true
+  updateVisibility()
 }
 watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.camera.panX, props.camera.panY], () => {
   clearHoverAndShake()
@@ -202,12 +211,16 @@ onMounted(() => {
   if (!canvas) return
   resizeObserver = new ResizeObserver(() => requestDraw())
   resizeObserver.observe(canvas)
-  intersectionObserver = new IntersectionObserver(entries => {
-    visible = entries.some(entry => entry.isIntersecting)
+  if (typeof IntersectionObserver === 'undefined') {
+    visible = true
     updateVisibility()
-  })
-  intersectionObserver.observe(canvas)
-  startRenderer()
+  } else {
+    intersectionObserver = new IntersectionObserver(entries => {
+      visible = entries.some(entry => entry.isIntersecting)
+      updateVisibility()
+    })
+    intersectionObserver.observe(canvas)
+  }
 })
 onBeforeUnmount(() => {
   disposed = true
@@ -225,7 +238,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="bs-hologram-scene">
-    <canvas ref="canvasRef" :aria-label="label" role="img" class="bs-hologram-scene__canvas" @webglcontextlost="onContextLost" @webglcontextrestored="startRenderer" />
+    <canvas ref="canvasRef" :aria-label="label" role="img" class="bs-hologram-scene__canvas" @webglcontextlost="onContextLost" @webglcontextrestored="onContextRestored" />
     <div class="bs-hologram-scene__labels">
       <button v-for="department in departments" :key="department.id" :ref="element => setOfficeLabel(department.id, element)" type="button" class="bs-hologram-scene__office-label" :aria-label="department.name" :aria-pressed="selectedWorkplaceId === department.id" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace(department.id)">{{ department.name }}</button>
       <button v-if="executiveLabel" ref="executiveLabelRef" type="button" class="bs-hologram-scene__office-label bs-hologram-scene__executive-label" :aria-label="executiveLabel" :aria-pressed="selectedWorkplaceId === 'executive-workspace'" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace('executive-workspace')">{{ executiveLabel }}</button>

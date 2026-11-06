@@ -154,3 +154,35 @@ parallel HQ run passed 99/100 and hit the unchanged synthetic SQLite schema-lock
 timing test; that test passed in isolation and the complete serial HQ run passed
 100/100. These results do not replace exact-head CI or the final staging-root
 aggregate verification, which must pass before integration into `stg`.
+
+## Aggregate browser repair (6 November 2026)
+
+Root candidate `ba8515d504d9ac4a2d52832a9c45458418e72e4c` passed typecheck, lint,
+build and built-assets but failed aggregate browser tests twice: first one Docs
+palette diagnostic timeout (125 passed, 1 skipped), then three Docs palette,
+settings and administration timeouts (123 passed, 1 skipped). No further blind
+rerun was used.
+
+A real browser probe observed WebGL creation with the canvas 27,992px below a
+900px viewport. The renderer now waits for actual visibility, including deferred
+hidden/offscreen context restoration, with a safe observer-unavailable fallback.
+The patched probe had zero contexts/draw calls initially and during full-page
+capture; explicit scrolling initialized one context and produced 232 GL draw
+calls and a canvas-specific image. This is explicit in-view rendering evidence,
+not an inference from a full-page image.
+
+Local traces also measured a 24.4-second whole-gallery palette screenshot and a
+concurrent 20.2-second settings keypress. Docs palette diagnostics now capture
+the tested viewport; both image files, all color/opacity/interaction/theme
+assertions and original 30-second deadlines remain. The complete catalogue,
+settings test and administration test are unchanged.
+
+The three original failing flows passed together with two workers, no retries
+and unchanged deadlines: palette 28.9s, settings 19.8s, administration 13.9s.
+Four new actual-component lifecycle tests passed: no offscreen construction,
+in-view controls, pause/resume, reduced motion, fallback, context restoration
+and unmount disposal. The full UI unit run passed 79 cases and had two missing-
+browser-cache failures; those two receipt cases passed after selecting the
+installed temporary browser cache. Fresh exact-head aggregate CI is still
+required before staging integration. No Oracle, live SQL or production action
+is part of this repair.
