@@ -247,7 +247,7 @@ function meetingResponse(job) {
 }
 
 export function validateJob(job) {
-  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'task-work', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review']
+  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'trial-start', 'task-work', 'worker-trial', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review']
   requireValue(record(job) && UUID.test(job.id) && UUID.test(job.conversation_id)
     && /^AG-[A-Z]+-[0-9]{3}$/.test(job.agent_id) && UUID.test(job.lease_token)
     && typeof job.prompt === 'string' && job.prompt.trim() && Buffer.byteLength(job.prompt) <= 32_000
@@ -263,7 +263,10 @@ export function validateJob(job) {
   }
   const meeting = meetingResponse(job)
   if (job.context.mode === 'conversation-intake') requireValue(job.agent_id === 'AG-CEO-001' || meeting, 'invalid-job-role')
-  if (['task-route', 'ceo-review', 'lesson-review'].includes(job.context.mode)) requireValue(job.agent_id === 'AG-CEO-001', 'invalid-job-role')
+  if (['task-route', 'lesson-review'].includes(job.context.mode)) requireValue(job.agent_id === 'AG-CEO-001', 'invalid-job-role')
+  if (job.context.mode === 'ceo-review') requireValue(job.agent_id === 'AG-CEO-001'
+    || job.agent_id === 'AG-HR-003' && job.context.trialReview === true
+      && job.context.supervisedTrial?.scope === 'synthetic-internal-trial-v1', 'invalid-job-role')
   if (job.context.mode === 'task-report') requireValue(job.agent_id === 'AG-CEO-001' || job.agent_id === job.context.assignee?.id, 'invalid-job-role')
   if (job.context.mode === 'conversation-hr' || job.context.mode === 'lesson-extract') requireValue(job.agent_id === 'AG-HR-001', 'invalid-job-role')
   if (job.context.mode === 'head-review') requireValue((job.context.agent.modelTier || modelTierForAgent(job.agent_id)) === 'T2_HEAD'
@@ -282,6 +285,21 @@ export function stageInstructions(job) {
     return `Respond to the founder as the actual named employee ${job.context.agent.name} (${job.agent_id}), using your supplied current role profile and this meeting context. This is conversation only, not research, task execution, delegation or approval. Return ONLY JSON {"message":"your concise actual reply","task":null}. Answer from supplied context, distinguish uncertainty and ask for clarification when the meeting context requires it. Do not inspect external sources, create work, impersonate another employee or claim unobserved actions. Configuration does not establish research qualification. Keep message at most 4000 characters in the founder language.`
   }
   const mode = job.context.mode
+  if (mode === 'task-ack' && job.context.supervisedTrial?.scope === 'synthetic-internal-trial-v1') {
+    return `You are the department head responsible for this supervised synthetic skill trial. Define the bounded exercise, supplied context, exact internal-only deliverable, acceptance checks and do/don't boundaries in your reply. If context.task.reviewSummary contains reviewer findings, issue a specific bounded correction against those exact findings without expanding scope. Assign only the exact authorized trial worker ${job.context.supervisedTrial.agentId} from context.roster. Do not perform the exercise. Return ONLY JSON {"message":"your scoped orchestration plan and handoff","delegateId":"${job.context.supervisedTrial.agentId}"} if the worker is listed; otherwise return delegateId:null. This trial cannot contact customers, use external systems, browse, publish, deploy, change accounts or produce company/customer work.`
+  }
+  if (mode === 'trial-start') {
+    return 'Acknowledge the exact synthetic, internal-only trial task and your plan. Return ONLY JSON {"message":"one concise acknowledgment"}. Do not start work in this stage, use tools, contact anyone, browse, access external systems, publish, deploy or change accounts.'
+  }
+  if (mode === 'worker-trial') {
+    return 'Complete only the synthetic skill evaluation in context.task using the supplied profile and exact assigned skill. Produce one bounded internal-only draft plus a short self-check against acceptance. Treat all details as fictional. Do not use tools, browse, contact customers or anyone else, send messages, access external systems, publish, deploy, change accounts, use customer/personal data or claim an external action. This artifact is evaluation evidence only and is not approved company work.'
+  }
+  if (mode === 'ceo-review' && job.context.trialReview === true) {
+    return 'As Iris, independently evaluate the exact supervised trial artifact against the synthetic task acceptance and its one assigned skill. Review evidence only; do not perform the work, use tools, contact anyone, publish, deploy or qualify the worker yourself. Accept only if the artifact demonstrates the assigned skill, meets every check, uses fictional details and stays within the internal-only boundary. Return ONLY JSON {"accepted":boolean,"summary":"specific evidence-based findings","artifactDigest":"the unchanged context.artifact.digest"}.'
+  }
+  if (mode === 'task-report' && job.context.trialReport === true) {
+    return 'Report only the completed internal supervised trial to the founder. Summarize its synthetic artifact and recorded head/Iris reviews. State clearly that this is trial evidence and does not itself issue qualification. Do not publish, contact customers or claim external work. Return the normal bounded report text.'
+  }
   const instructions = {
     'conversation-hr': 'Perform your own bounded HR planning assessment for Steve. Explain relevant responsibilities, prerequisites, risks and useful next steps using your current profile. Keep simple conversation assessments concise. Do not impersonate Steve.',
     'conversation-ceo': 'Answer the founder as Steve. Use the actual same-request HR assessment in context.predecessor; exercise your own judgment. Distinguish completed analysis from proposed external work.',

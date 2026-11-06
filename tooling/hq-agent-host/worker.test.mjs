@@ -54,6 +54,22 @@ test('head roles never execute task work; T1 execution requires a current qualif
  const managerStart=job('AG-RES-001','task-start')
  assert.equal(workerExecutionBlock(managerStart),'staffing-required')
 })
+test('only an exact, live synthetic trial grant permits the isolated T1 trial stages',()=>{
+ const worker=job('AG-HR-002','worker-trial'),taskId=randomUUID()
+ worker.context.task={id:taskId};worker.context.agent.lifecycle='Configured; supervised trial pending'
+ worker.context.agent.skillFileIds=['skill_file_02'];worker.context.agent.headAuthorization=true
+ worker.context.supervisedTrial={id:randomUUID(),taskId,agentId:'AG-HR-002',managerId:'AG-HR-001',skillFileId:'skill_file_02',
+   bindingDigest:'a'.repeat(64),scope:'synthetic-internal-trial-v1',status:'active',expiresAt:new Date(Date.now()+60_000).toISOString(),
+   externalActionsAllowed:false,publishingAllowed:false}
+ assert.equal(workerExecutionBlock(worker),null);assert.equal(webAllowed(worker),false)
+ const reviewer={...worker,agent_id:'AG-HR-003',context:{...worker.context,mode:'ceo-review',trialReview:true,
+   agent:{...worker.context.agent,id:'AG-HR-003'},artifact:{id:randomUUID(),digest:'b'.repeat(64),text:'trial'}}}
+ validateJob(reviewer)
+ worker.context.supervisedTrial.externalActionsAllowed=true;assert.equal(workerExecutionBlock(worker),'trial-authorization-required')
+ worker.context.supervisedTrial.externalActionsAllowed=false;worker.context.supervisedTrial.agentId='AG-SOC-002';assert.equal(workerExecutionBlock(worker),'trial-authorization-required')
+ worker.context.supervisedTrial.agentId='AG-HR-002';worker.context.supervisedTrial.expiresAt=new Date(Date.now()-1).toISOString()
+ assert.equal(workerExecutionBlock(worker),'trial-authorization-required')
+})
 test('partial UTF8 JSONL preserves real final text and observed native search evidence',async()=>{
  const events=[...successful.slice(0,2),{type:'item.completed',item:{type:'web_search',action:{type:'open_page',url:'https://example.com/evidence'}}},...successful.slice(2)]
  const reply=await fake(events,config=>invokeCodex(config,job(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))

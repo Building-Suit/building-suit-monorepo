@@ -15,6 +15,17 @@ const hasCurrentQualification = (agent, qualification) => {
   return assigned.length > 0 && JSON.stringify(assigned) === JSON.stringify(qualified)
 }
 
+const supervisedTrialAllowed = (job, agent) => {
+  const trial = job.context?.supervisedTrial
+  const expiresAt = Date.parse(trial?.expiresAt || '')
+  return trial?.scope === 'synthetic-internal-trial-v1' && trial.status === 'active'
+    && trial.externalActionsAllowed === false && trial.publishingAllowed === false
+    && trial.agentId === job.agent_id && trial.agentId === agent?.id
+    && trial.taskId === job.context?.task?.id && trial.managerId === agent?.managerId
+    && trial.skillFileId && (agent?.skillFileIds || []).includes(trial.skillFileId)
+    && /^[0-9a-f]{64}$/.test(trial.bindingDigest || '') && Number.isFinite(expiresAt) && expiresAt > Date.now()
+}
+
 /**
  * A model tier is only a configuration label. A worker is eligible only with a
  * current HR qualification receipt bound to that worker's exact profile and
@@ -47,10 +58,16 @@ export function assessDepartmentCapacity(departmentKey, roster, qualifications =
 
 /** Reject worker execution unless the durable job's author is an eligible T1 report. */
 export function workerExecutionBlock(job) {
-  if (!job || !['task-ack', 'task-work', 'task-start'].includes(job.context?.mode)) return null
+  if (!job || !['task-ack', 'task-work', 'task-start', 'worker-trial', 'trial-start'].includes(job.context?.mode)) return null
   const agent = job.context?.agent
   const tier = agent?.modelTier ?? modelTierForAgent(job.agent_id)
   if (job.context.mode === 'task-ack') return tier === 'T2_HEAD' ? null : 'staffing-required'
+  if (['worker-trial','trial-start'].includes(job.context.mode)) {
+    if (tier !== 'T1_WORKER' || !agent || agent.id !== job.agent_id || !agent.profileFileId
+      || agent.managerModelTier !== 'T2_HEAD' || agent.headAuthorization !== true
+      || !supervisedTrialAllowed(job, agent)) return 'trial-authorization-required'
+    return null
+  }
   if (tier !== 'T1_WORKER') return 'staffing-required'
   if (!agent || agent.id !== job.agent_id || agent.lifecycle === undefined
     || blockedLifecycle.test(agent.lifecycle) || !agent.profileFileId
