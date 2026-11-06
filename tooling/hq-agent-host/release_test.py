@@ -174,6 +174,37 @@ class Releases(unittest.TestCase):
         self.assertEqual(self.host.calls.count('resume'), 1)
         self.assertLess(self.host.calls.index('health:' + A), self.host.calls.index('resume'))
 
+    def test_database_health_loss_still_rolls_back_a_never_admitted_candidate(self):
+        self.host.fail_health = B
+        original = self.host.control
+        def control(action):
+            result = original(action)
+            if self.host.running == B:
+                return {**result, 'ready': False, 'activeJobs': None}
+            return result
+        self.host.control = control
+        with self.assertRaisesRegex(RuntimeError, 'startup-health-failed'):
+            r.install(self.host, package(B), B)
+        self.assertEqual(r.current_sha(self.root), A)
+        self.assertEqual(self.host.running, A)
+        self.assertEqual(self.host.calls.count('resume'), 1)
+
+    def test_crashed_candidate_without_socket_is_stopped_before_switching_back(self):
+        r.stage(self.root, package(B), B)
+        r.activate(self.root, B)
+        r.atomic_json(self.root / 'transaction.json', {'old': A, 'new': B, 'phase': 'activated'})
+        self.host.running = None
+        self.host.paused = True
+        original = self.host.control
+        def control(action):
+            if self.host.running is None:
+                raise ConnectionRefusedError()
+            return original(action)
+        self.host.control = control
+        self.assertTrue(r.recover(self.host))
+        self.assertEqual(self.host.calls[:2], ['stop', 'start'])
+        self.assertEqual(r.current_sha(self.root), A)
+
     def test_interrupted_stop_and_candidate_start_recover(self):
         for point in ['stop', 'start', 'health']:
             with self.subTest(point=point):
@@ -272,6 +303,31 @@ class Releases(unittest.TestCase):
             child.wait(timeout=5)
             child.stdin.close()
             child.stdout.close()
+
+    def test_local_paused_receipt_survives_db_outage_without_accepting_unknown_health(self):
+        config = {'root': str(self.root), 'node': '/fixed/node', 'gh': '/fixed/gh', 'systemctl': '/usr/bin/systemctl',
+                  'trustedRoot': '/operator/trusted-root.json', 'socket': '/private/maintenance.sock',
+                  'unit': 'company-hq-worker.service', 'schemaContract': 1}
+        host = r.Host(config)
+        host.command = lambda *_: '42'
+        status = {'protocol': 1, 'pid': 42, 'release': B, 'paused': True, 'busy': 0,
+                  'uncertain': False, 'ready': False, 'activeJobs': None}
+        class Client:
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def settimeout(self, *_): pass
+            def connect(self, *_): pass
+            def sendall(self, *_): pass
+            def recv(self, *_): return json.dumps(status).encode() + b'\n'
+        with patch.object(r.socket, 'socket', return_value=Client()):
+            self.assertEqual(host.control('status'), status)
+            status['ready'] = True
+            with self.assertRaisesRegex(RuntimeError, 'worker-schema-unavailable'):
+                host.control('status')
+            status['ready'] = False
+            status['uncertain'] = True
+            with self.assertRaisesRegex(RuntimeError, 'worker-unsettled'):
+                host.control('status')
 
     def test_provenance_flags_no_credential_and_repository_identity(self):
         config = {'root': str(self.root), 'node': '/fixed/node', 'gh': '/fixed/gh', 'systemctl': '/usr/bin/systemctl',

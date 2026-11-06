@@ -1,96 +1,127 @@
-# Worker release implementation verification — 6 November 2026
+# Worker release source verification — 6 November 2026
 
-Source task only. Base: `d1a274fa9573e411c38b5d7f9ffba86739f7601d`
-(`codex/company-hq/staging-migration-parity`). Worktree:
-`/workspace/hq-release`; branch: `codex/company-hq/worker-release`.
-No inherited work was merged, rebased, replaced or reset. No Oracle, personal
-computer/network, live worker/job, Brain, credential cache, hosted database or
-security setting was accessed or changed. No deployment or PR was requested.
+Worktree: `/workspace/hq-release`; branch: `codex/company-hq/worker-release`.
+Base: `d1a274fa9573e411c38b5d7f9ffba86739f7601d` from
+`codex/company-hq/staging-migration-parity`. All inherited history is preserved.
+While this task ran, the parent advanced to `4a94c6605b1d1e83c96116d25daf8b62133c83e7`
+with the missing HQ UI exports. That concurrent repair was inspected and left
+untouched; it is not merged into this independent source branch. Validation
+below describes this branch's actual `d1a274fa` baseline, not that newer parent.
 
-Executor: Node 24.19.0, pnpm 10.33.0 installed in disposable `/tmp` cache,
-Python 3.12. pnpm's original launcher was version 11.25.0; the pinned project
-version was used for verification after that mismatch was identified.
+This is source implementation/testing only. No Oracle, personal computer/network,
+live worker/job, Brain, credential cache, hosted database or security setting was
+accessed or changed. No deployment, PR publication or timer activation occurred.
 
-Passing checks completed before the source checkpoint:
+## Passing verification
 
-- Dependency installation with the frozen root lockfile and existing prepare
-  scripts; no lockfile or dependency-policy changes.
-- Actual worker lifecycle + maintenance gate: **11/11**, including paused
-  read-only health, claim-in-flight drain, repeated SIGTERM, lease renewal during
-  active mocked inference, exact-once journal/delivery, unknown claim poison,
-  durable intent after process loss, and incompatible schema refusal.
-- Python updater/builder: **19/19**. Tests use disposable directories/fake
-  services; verify package validation, deterministic committed-source builder,
-  tamper/path/duplicate rejection, complete baseline, lock exclusion, startup
-  health criteria, schema rejection before drain/stop, busy drain timeout,
-  success/no-op, failure rollback, interruption at stop/start/health, and durable
-  accepted-state recovery that cannot terminate newly admitted work.
-- Full host suite before the additional server capability tests: **59/59**, including worker/Brain/roster, the original 10 maintenance/
-  lifecycle checks and disposable PGlite database tests. The later bounded lesson-
-  publication pause refinement was rechecked by the maintenance/lifecycle suite.
-- ESLint for the four changed/new `.mjs` files passed. A wider host-directory
-  lint also exposed six inherited errors in unchanged `brainPublisher.mjs`,
-  `workforceRoster.mjs`, `intake-recovery-db.test.mjs`.
-- Staging migration parity: **17 active migrations unchanged**, archived
-  never-applied SQL unchanged. No active migration or DB rollback is added. The read-only server contract is
-  prepared/tested as a separate SQL proposal outside that chain; its authorized
-  migration/deployment is an explicit installation blocker.
-- Real offline provenance verification with official GitHub CLI **2.103.3**,
-  empty `GH_TOKEN`/`GITHUB_TOKEN`, isolated config/cache and separately generated
-  trusted roots. Official CLI `v2.103.3`'s signed `actions/attest-demo` fixture
-  verified successfully with exact source SHA/ref/workflow identity and numeric
-  repository ID **763287532**. Wrong SHA, ref, workflow identity and tampered
-  artifact each exited 1. This establishes credential-free offline verification
-  behavior, not an already-published HQ release attestation. The HQ repository's
-  real numeric ID **1376504404** was independently checked via its public API.
-  The experiment found CLI policy selector flags are mutually exclusive; source
-  uses exact `--cert-identity` (which includes repo/workflow/ref) plus SHA/ref,
-  rather than combining it with `--signer-workflow`.
+Executor: Node 24.19.0, pnpm 10.33.0 from a disposable `/tmp` cache, Python 3.12.
+The initial pnpm launcher was 11.25.0; checks used the required project version.
+Frozen-lockfile dependency installation and `pnpm run setup` passed without
+lockfile or dependency-policy changes.
 
-Repository-wide results so far:
-
-- `pnpm check` failed on the nine inherited missing HQ UI utility exports in
-  `packages/ui/package.json`; design token verification passed. No affected UI
-  source or package export was changed by this task.
-- `pnpm lint` failed on seven inherited HQ errors in `nuxt.config.ts`,
-  `server/utils/brain.ts`, `server/utils/officeRoster.ts`,
-  `shared/types/companyPlans.ts`, `shared/types/officeObservations.ts`, and
-  `supabase/functions/brain-sync/index.ts`. Those files match the parent commit.
-- `pnpm test`: **2,929 total; 2,898 passed, 8 failed, 23 skipped**. Failures were
-  four browser tests requiring missing Chromium, the inherited workspace/UI
-  export assertions (2), one 20,000-row workbook timing assertion and one owned
-  child startup timeout. The last two are unrelated timing failures in unchanged
-  source under concurrent executor load; their pre-existence as failures has not
-  been established. This is not a green full-repository test result.
+- **Full host suite: 61/61** (`node --test tooling/hq-agent-host/*.test.mjs`).
+  Includes six actual worker-process/Unix-socket lifecycle tests, five gate/API
+  tests, existing mocked CLI/Brain/roster checks and disposable PGlite DB tests.
+  Tests cover paused/read-only candidate health, claim-in-flight drain, repeated
+  SIGTERM, lease renewal throughout mocked active inference, exact-once durable
+  delivery, unknown claim poison, durable intent after process loss, incompatible
+  schema and a server-side working lease despite local idle.
+- **Python builder/updater: 22/22**. Disposable files/fake services verify immutable
+  committed-source building, exact manifest validation, tamper/path/duplicate
+  rejection, HTTPS redirect restrictions, full baseline validation, exclusive
+  lock and process-loss release, startup health, schema rejection before drain,
+  bounded busy timeout, success/no-op, rollback and interruption recovery.
+  Accepted/resume-response-loss recovery cannot stop newly admitted work.
+  Additional regressions prove DB health loss still permits rollback of a locally
+  paused never-admitted candidate and a crashed candidate's unit is stopped before
+  swapping back, suppressing a `Restart=always` race. A real control-parser test
+  distinguishes a local paused receipt from unknown/unacceptable startup health.
+- **Full typecheck: 9/9 successful tasks**, 20m12.716s after root setup.
+- **Full build: 9/9 successful tasks**, 22m47.295s, using only synthetic local
+  `SUPABASE_URL`/`SUPABASE_KEY` build values.
+- **Built Shop public assets: 1/1**, after its build completed. An earlier attempt
+  before the Shop output existed failed on that missing prerequisite; the final
+  post-build run passed.
+- ESLint passed for all five changed/new `.mjs` files. Wider host-directory lint
+  separately exposed six inherited errors in unchanged `brainPublisher.mjs`,
+  `workforceRoster.mjs` and `intake-recovery-db.test.mjs`.
+- Migration parity passed: **all 17 applied sources and the archived never-applied
+  SQL remain unchanged**. No active migration or DB rollback is added.
 - Release classification passed against the migration-parity parent and the full
-  main-to-head candidate. The exact source checkpoint `9dbb82c300118d8f03175148533d951a76128b70`
-  built a 101,825-byte code-only package (SHA256 `765a4a96b44146267b23ad0f1bb28ba967f7c63df5b0c8ec75b46b96f1f0a8a8`).
-  A later final commit build will be recorded below.
-- The proposed read-only release-status SQL passed its disposable PGlite test:
-  anonymous/service-role denial, worker/session guard, foreign-worker denial,
-  no table access grant, scoped working-lease count, unchanged job rows, preserved
-  existing RPC, zero-job case and incompatible-signature refusal. The six actual
-  worker lifecycle tests plus five gate/API tests pass after wiring this required
-  server capability. No SQL was sent to a hosted database.
-- Initial full typecheck stopped on missing generated Docs JSON because root setup
-  had not yet been run. `pnpm run setup` then passed; typecheck is being rerun.
-  This initial executor setup failure is not evidence of an inherited type error.
-- systemd example syntax was checked with `systemd-analyze verify --man=no` using
-  disposable copied unit files. It reported only the expected absence of the
-  historical Oracle Node executable in this executor. No live unit was installed
-  or started. YAML parsed successfully.
-- Full build and the post-setup typecheck remain in progress; final results follow.
+  main-to-head candidate. Packages were built from exact committed source using
+  the allowlist; final commit/package hashes are reported in the delivery handoff.
+- systemd example syntax was checked with `systemd-analyze verify --man=no` on
+  disposable copies. Only the expected absence of the historical Oracle Node
+  executable was reported. No live unit was installed/started. Release YAML parsed
+  successfully; stg-only/exact-SHA/verify-success gates were inspected.
+- `bash -n` passed for the retired legacy updater entrypoint. Its disposable run
+  exited 1 with its fail-closed message and performed no file/service operation.
 
-Network verification limit: fetching a public CLI-release attestation bundle
-from `tmaproduction.blob.core.windows.net` was denied by the executor proxy
-(HTTP tunnel 403). It was not retried or bypassed. The independent official
-GitHub repository fixture above was used for the offline CLI experiment.
+The proposed read-only server capability SQL passed disposable PGlite checks:
+anonymous/service-role denial, calls through the existing worker identity guard,
+foreign-worker denial, no new table grants, scoped working-job counts, unchanged
+job rows, preserved old RPCs, zero-job case and incompatible-signature refusal.
+The new isolated SQL fixture stubs the existing identity guard; the inherited
+full DB suite separately exercises actual HQ authorization/session behavior.
+This SQL is a proposal outside the active migration chain. It was not sent to a
+hosted database and is deliberately absent from worker release packages.
 
-Installation acceptance remains unrun: no live systemd installation, unit start,
-Oracle architecture/path/permissions check, real HQ release signature, real
-PostgREST metadata availability, worker identity/authentication, Realtime queue,
-Brain, model/subscription, paid inference or founder-message journey was tested.
-A verified legacy producer/claim pause, complete baseline bootstrap, deployment
-of the proposed read-only server capability and additive schema-contract approval in `RELEASES.md`
-remain mandatory operator-reviewed actions before activation. No persistent
-GitHub credential is needed by the proposed host verification path.
+## Provenance experiment
+
+Official GitHub CLI **2.103.3** successfully verified an official signed
+`actions/attest-demo` fixture offline with empty `GH_TOKEN`/`GITHUB_TOKEN`, isolated
+CLI configuration/cache and independently generated trusted roots. Exact source
+SHA/ref/workflow certificate identity and verified numeric repository ID
+**763287532** matched. Wrong SHA, ref, workflow identity and modified artifact
+bytes each exited 1. This proves credential-free offline verification behavior;
+it does not claim an HQ release already exists.
+
+The HQ repository's numeric ID **1376504404** was independently checked through
+its public API. The implementation enforces that ID in verified certificate
+output. Current CLI policy selectors are mutually exclusive: source uses exact
+`--cert-identity` (including repo/workflow/ref), source SHA/ref and hosted-runner
+policy, without also passing `--signer-workflow`.
+
+A public CLI-release sample bundle fetch from
+`tmaproduction.blob.core.windows.net` was denied by the executor proxy (tunnel
+403). It was not retried/bypassed; the independent official GitHub repository
+fixture above was used instead.
+
+## Repository-wide failures and limits
+
+- `pnpm check` failed on nine inherited missing HQ UI utility exports in
+  `packages/ui/package.json`; token verification passed. The newer parent
+  `4a94c660` fixes those exports but is intentionally excluded here.
+- `pnpm lint` failed on seven inherited errors in unchanged HQ `nuxt.config.ts`,
+  `server/utils/{brain,officeRoster}.ts`,
+  `shared/types/{companyPlans,officeObservations}.ts`, and
+  `supabase/functions/brain-sync/index.ts`.
+- `pnpm test`: **2,929 total; 2,898 passed, 8 failed, 23 skipped**. Four failures
+  require missing Chromium, two assert the inherited workspace/UI export gap,
+  one is a 20,000-row report timing limit and one an owned-child startup timeout.
+  Both timing failures passed isolated reruns after concurrent checks completed:
+  report 5,286ms, child lifecycle 6,542ms. The original full run remains failed;
+  it was not relabeled green or repeated in full.
+- Chromium absence was explicitly confirmed. Full browser/e2e checks remain
+  unrun; no browser acceptance or green aggregate CI is claimed.
+- The first typecheck stopped on missing generated Docs JSON before root setup.
+  Root setup and the complete subsequent typecheck passed. This was executor
+  preparation, not an inherited source type error.
+
+The executor briefly disconnected after the broad checks. On recovery the exact
+same workspace was confirmed clean at
+`77191e9809ccf64320429da54e01eef82102415e`. The interrupted edit had not executed;
+the recovery refinements were then applied and all 22 Python tests passed. Final
+build/typecheck success summaries were recovered from their logs. Nothing was
+reset, recreated or lost, and no uncertain push occurred.
+
+## Installation remains blocked pending separate approval
+
+No live host paths/architecture/permissions, systemd behavior, real HQ release
+signature, PostgREST metadata/capability availability, Auth/Realtime, Brain,
+Codex subscription/inference or founder journey was tested. Mandatory prerequisites
+are a verified legacy producer/claim pause (child/job absence is insufficient),
+a complete independently reviewed rollback baseline, authorized staging migration
+and deployment of the proposed read-only server capability, additive schema
+contract approval, and operator-reviewed units/paths/trust roots. See `RELEASES.md`.
+No new persistent GitHub credential is required by the proposed verification path.

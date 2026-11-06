@@ -206,7 +206,11 @@ publish before acceptance, so health rollback cannot kill candidate-paid work.
 
 `transaction.json` is atomically written/fsynced through prepared, stopped,
 activated, accepted or rollback-accepted. A crash before acceptance recovers the
-old release; a crash after durable acceptance **never stops** the accepted worker,
+old release; the updater stops that never-admitted candidate unit even if its
+socket is absent, suppressing a systemd restart race. If database health is lost,
+a PID-bound local paused/idle/non-uncertain receipt can still permit returning
+to the baseline; admission still requires healthy contract/zero-job evidence.
+ a crash after durable acceptance **never stops** the accepted worker,
 which may have begun paid work. A failed resume is retried through accepted-state
 recovery instead of triggering rollback. Recovery refuses uncertain/busy worker
 states rather than killing them. A rollback whose baseline health also fails

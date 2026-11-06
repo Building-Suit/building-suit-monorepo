@@ -208,7 +208,8 @@ class Host:
                 response += chunk
         result = decode(response)
         if action != 'drain':
-            require(type(result.get('activeJobs')) is int and result['activeJobs'] >= 0, 'worker-schema-unavailable')
+            require((type(result.get('activeJobs')) is int and result['activeJobs'] >= 0)
+                    or (result.get('activeJobs') is None and result.get('ready') is False), 'worker-schema-unavailable')
         require(result.get('protocol') == 1 and not result.get('uncertain') and 'error' not in result, 'worker-unsettled')
         # Bind the local socket receipt to systemd's actual worker process.
         pid = int(self.command([self.config['systemctl'], 'show', self.config['unit'], '--property=MainPID', '--value']).strip())
@@ -300,8 +301,10 @@ def recover(host):
         except (ConnectionError, FileNotFoundError):
             pass
         if status:
-            require(status['paused'] and status['busy'] == 0 and status['activeJobs'] == 0, 'recovery-worker-busy')
-            host.service('stop')
+            require(status['paused'] and status['busy'] == 0 and status['activeJobs'] in (0, None), 'recovery-worker-busy')
+        # Stop even without a socket to suppress a Restart=always race. In these
+        # pre-acceptance phases managed startup has never been admitted.
+        host.service('stop')
         activate(root, old)
         host.service('start')
         host.health(old)
