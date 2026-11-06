@@ -212,9 +212,10 @@ recovery instead of triggering rollback. Recovery refuses uncertain/busy worker
 states rather than killing them. A rollback whose baseline health also fails
 remains paused for operator investigation; it never runs a DB rollback.
 
-The existing `upgrade-meeting-worker.sh` is retained for historical provenance.
-It is not a safe automatic updater and must not be used for this release flow.
-Its child-count and unit-active checks do not establish safe drain or health.
+The old module-only implementation of `upgrade-meeting-worker.sh` remains in
+Git history. Its current entrypoint is deliberately disabled and changes no
+files/services: child-count and unit-active checks cannot establish safe drain
+or health. This prevents the unsafe legacy helper from bypassing bootstrap.
 
 ## Disposable verification
 

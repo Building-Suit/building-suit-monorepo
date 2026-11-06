@@ -106,6 +106,11 @@ The updated host sends `p_meeting_protocol: 1` on every claim. Apply the prepare
 
 A trusted `meetingResponse` marker permits the actual configured employee to answer in the existing `conversation-intake` stage using that employee's bound profile, model and effort. The host validates the exact marker fields, actor, generation and identifiers; the database checks the current binding digest at claim. This is context-only conversation: native web search and every other tool remain disabled, the provider result must be response-only JSON with `task: null`, and a model-suggested task is a genuine blocked outcome. Conversation configuration does not establish research qualification or observed runtime availability. Research and execution keep their separate qualification and approval gates.
 
+The old module-only upgrade helper is now disabled because it cannot exclude an
+in-flight claim. Follow the separate approved bootstrap and release procedure in
+[RELEASES.md](RELEASES.md); the historical meeting installation discussion below
+does not authorize a legacy stop or establish safe quiescence.
+
 Upgrade the existing service in place after inspecting its actual unit, `ExecStart`, OS user and runtime directory. The paths in the example unit above are examples, not observed deployment values. Preserve the same service identity, private environment file, authorized `.codex` cache and delivery journal; do not start a second worker or clear pending journal entries. This change replaces `worker.mjs` and retains its existing runtime imports (`workforceRoster.mjs` and `brainPublisher.mjs`); it needs no package installation. Back up the installed runtime module before replacement, use the existing service's restart path and retain the prior module for rollback. Installing this source does not itself apply the migration, restart a host or establish successful model/meeting acceptance.
 
 The applied queue foundation is `apps/company-hq/supabase/migrations/20261105035454_hq_agent_messages_worker_queue.sql`; the forward workforce migration is `20261105150500_hq_workforce_tasks_learning.sql`. It installs no Auth user or worker membership. After an authorized administrator provisions a separate, confirmed technical account through the supported Auth Admin API, bind its actual UID to the persistent host UUID using the private database-owner-only helper:
