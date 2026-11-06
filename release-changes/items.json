@@ -5471,6 +5471,7 @@
       "apps/shop-suit/supabase/CLAUDE.md",
       "apps/super-admin-suit/CLAUDE.md",
       "apps/super-admin-suit/supabase/CLAUDE.md",
+      "packages/testing/e2e/shell-navigation-hydration.spec.ts",
       "packages/ui/CLAUDE.md",
       "packages/ui/package.json",
       "release-changes/items.json",
@@ -5481,6 +5482,6 @@
     "sources": [
       "hq-staging-migration-parity-20261106"
     ],
-    "reason": "Archive only the never-applied workspace migration unchanged, preserve the 17 staging-matched SQL sources and guard the reviewed active migration set; cover the inherited CLAUDE inventory path."
+    "reason": "Archive only the never-applied workspace migration unchanged, preserve the 17 staging-matched SQL sources and guard the reviewed active migration set; cover the inherited CLAUDE inventory path and make the shared-shell hydration check deterministic on a focused Docs route."
   }
 ]

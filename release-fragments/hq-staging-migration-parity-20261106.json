@@ -30,6 +30,7 @@
     "apps/shop-suit/supabase/CLAUDE.md",
     "apps/super-admin-suit/CLAUDE.md",
     "apps/super-admin-suit/supabase/CLAUDE.md",
+    "packages/testing/e2e/shell-navigation-hydration.spec.ts",
     "packages/ui/CLAUDE.md",
     "packages/ui/package.json",
     "release-changes/items.json",
@@ -37,5 +38,5 @@
     "supabase/CLAUDE.md",
     "supabase/legacy/company-hq/migrations/20261103194908_hq_dedicated_workspace.sql"
   ],
-  "reason": "Keep the never-applied HQ workspace migration outside the active chain without changing its bytes; pin the 17 independently matched staging migrations and guard the source inventory. Classify the inherited root CLAUDE redirect. This source check does not inspect or modify hosted staging."
+  "reason": "Keep the never-applied HQ workspace migration outside the active chain without changing its bytes; pin the 17 independently matched staging migrations and guard the source inventory. Classify the inherited root CLAUDE redirect and stabilize the shared-shell hydration test on a focused Docs route with a complete startup-script gate. This source check does not inspect or modify hosted staging."
 }
