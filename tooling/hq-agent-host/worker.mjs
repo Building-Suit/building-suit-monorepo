@@ -320,7 +320,17 @@ export function stageInstructions(job) {
 
 export function webAllowed(job) {
   if (Object.hasOwn(record(job?.context) || {}, 'meetingResponse')) return false
-  return job.context.mode === 'task-work' && ['AG-RES-001', 'AG-HR-002'].includes(job.agent_id)
+  const agent = record(job?.context?.agent), qualification = record(agent?.qualification)
+  if (job?.context?.mode !== 'task-work' || job.agent_id !== agent?.id
+    || agent?.modelTier !== 'T1_WORKER' || agent?.departmentKey !== 'research-market-intelligence'
+    || agent?.headAuthorization !== true || agent?.managerModelTier !== 'T2_HEAD'
+    || qualification?.status !== 'qualified' || qualification.scope !== 'bounded-drafting-v1'
+    || qualification.profileFileId !== agent.profileFileId || qualification.modelTier !== agent.modelTier
+    || qualification.managerId !== agent.managerId || qualification.departmentKey !== agent.departmentKey
+    || !Array.isArray(agent.skillFileIds) || !agent.skillFileIds.length
+    || !Array.isArray(qualification.skillFileIds)
+    || JSON.stringify([...qualification.skillFileIds].sort()) !== JSON.stringify([...agent.skillFileIds].sort())) return false
+  return true
 }
 
 export function workerClaimInput(workerId) {

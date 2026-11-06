@@ -18,6 +18,14 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 } })
 const { parseHqAgentSnapshot } = await import('../../apps/company-hq/shared/types/agents.ts')
 const job = (id='AG-RES-001',mode='task-work') => ({id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1',modelTier:id==='AG-HR-002'?'T1_WORKER':id==='AG-CEO-001'?'T3_EXEC':'T2_HEAD',managerId:id==='AG-HR-002'?'AG-HR-001':id==='AG-CEO-001'?null:'AG-CEO-001',managerModelTier:id==='AG-HR-002'?'T2_HEAD':id==='AG-CEO-001'?null:'T3_EXEC',departmentKey:id==='AG-HR-002'?'hr-agent-development':id==='AG-CEO-001'?null:'research-market-intelligence'},brain_files:[{id:'profile_source_1'}]}})
+function qualifiedResearchJob(){
+ const value=job('AG-RES-002'),agent=value.context.agent
+ Object.assign(agent,{modelTier:'T1_WORKER',managerId:'AG-RES-001',managerModelTier:'T2_HEAD',departmentKey:'research-market-intelligence',
+   lifecycle:'Active',headAuthorization:true,skillFileIds:['research_skill_01']})
+ agent.qualification={status:'qualified',scope:'bounded-drafting-v1',bindingDigest:'a'.repeat(64),evidenceId:'receipt_0001',
+   profileFileId:agent.profileFileId,skillFileIds:[...agent.skillFileIds],modelTier:agent.modelTier,managerId:agent.managerId,departmentKey:agent.departmentKey}
+ return value
+}
 async function fake(events,action,{meeting=false}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
@@ -32,7 +40,8 @@ const values=${JSON.stringify(events)};for(const event of values){const bytes=Bu
 }
 const successful=[{type:'thread.started'},{type:'turn.started'},{type:'item.completed',item:{type:'agent_message',text:'Useful draft. عمل حقيقي'}},{type:'turn.completed'}]
 test('fresh bound role/model instructions; invalid modes and CEO without actual HR assessment fail closed',()=>{
- assert.equal(validateJob(job()).context.agent.effort,'medium');assert.equal(webAllowed(job()),true);assert.equal(webAllowed(job('AG-EMAIL-001')),false)
+ assert.equal(validateJob(job()).context.agent.effort,'medium');assert.equal(webAllowed(job()),false);assert.equal(webAllowed(job('AG-EMAIL-001')),false)
+ assert.equal(webAllowed(qualifiedResearchJob()),true);assert.equal(webAllowed(job('AG-RES-001')),false)
  assert.throws(()=>validateJob(job('AG-CEO-001','conversation-ceo')),/hr-review-required/)
  assert.throws(()=>validateJob(job('AG-RES-001','unknown-stage')),/invalid-job-role/)
  const invalid=job();invalid.context.agent.model='external-paid-provider';assert.throws(()=>validateJob(invalid),/invalid-job-role/)
@@ -72,7 +81,7 @@ test('only an exact, live synthetic trial grant permits the isolated T1 trial st
 })
 test('partial UTF8 JSONL preserves real final text and observed native search evidence',async()=>{
  const events=[...successful.slice(0,2),{type:'item.completed',item:{type:'web_search',action:{type:'open_page',url:'https://example.com/evidence'}}},...successful.slice(2)]
- const reply=await fake(events,config=>invokeCodex(config,job(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
+ const reply=await fake(events,config=>invokeCodex(config,qualifiedResearchJob(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
  assert.match(reply.reply,/عمل حقيقي/);assert.doesNotMatch(reply.reply,/Observed web sources/);assert.equal(reply.evidence[0].sources[0].url,'https://example.com/evidence')
 })
 test('disabled search/tool/error outputs and incomplete turns cannot masquerade as completion',async()=>{
@@ -96,7 +105,7 @@ test('native receipts redact credentials, preserve available excerpts and never 
  const receipt=nativeToolReceipt(item)
  assert.equal(receipt.sources[0].url,'https://example.com/doc?page=1');assert.match(receipt.sources[0].excerpt,/\[redacted\]/);assert.doesNotMatch(JSON.stringify(receipt),/fixture-secret|sk-abcdefghijklmnopqrstuv/)
  assert.ok(receipt.sources.some(x=>x.url==='https://example.com/other'));assert.equal(receipt.action,'search')
- const output=await fake([...successful.slice(0,2),{type:'item.completed',item},...successful.slice(2)],config=>invokeCodex(config,job(),[],AbortSignal.timeout(5000)))
+ const output=await fake([...successful.slice(0,2),{type:'item.completed',item},...successful.slice(2)],config=>invokeCodex(config,qualifiedResearchJob(),[],AbortSignal.timeout(5000)))
  assert.equal(output.reply,'Useful draft. عمل حقيقي');assert.equal(output.evidence.length,1);assert.equal(output.evidence[0].eventId,'web_7')
  assert.match(stageInstructions(job('AG-HR-001','lesson-extract')),/never turn them into standing company mandates/)
 })
@@ -146,8 +155,8 @@ test('versioned meeting intake uses the actual employee binding and never grants
  }
  assert.equal(validateJob(job('AG-CEO-001','conversation-intake')).agent_id,'AG-CEO-001')
  assert.throws(()=>validateJob(job('AG-HR-002','conversation-intake')),/invalid-job-role/)
- assert.equal(webAllowed(job('AG-HR-002','task-work')),true)
- assert.equal(webAllowed(job('AG-RES-001','task-work')),true)
+ assert.equal(webAllowed(job('AG-HR-002','task-work')),false)
+ assert.equal(webAllowed(job('AG-RES-001','task-work')),false)
  const id=randomUUID()
  assert.deepEqual(workerClaimInput(id),{p_worker_id:id,p_lease_seconds:300,p_meeting_protocol:1})
  assert.throws(()=>workerClaimInput('invalid-worker'),/stable-worker-id-required/)
