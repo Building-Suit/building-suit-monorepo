@@ -31,6 +31,7 @@
     "apps/super-admin-suit/CLAUDE.md",
     "apps/super-admin-suit/supabase/CLAUDE.md",
     "packages/ui/CLAUDE.md",
+    "packages/ui/package.json",
     "release-changes/items.json",
     "release-fragments/hq-staging-migration-parity-20261106.json",
     "supabase/CLAUDE.md",
