@@ -13,7 +13,7 @@ WorkingDirectory=/opt/building-suit-hq-agent-host/current
 EnvironmentFile=/home/ubuntu/.config/building-suit-hq/worker.env
 Environment=HQ_CODEX_BIN=/home/ubuntu/.local/bin/codex
 Environment=HQ_WORKER_STATE_DIR=/home/ubuntu/.local/state/building-suit-hq-worker
-Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=/home/ubuntu/.local/lib/node-v24.15.0-linux-x64/bin:/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HQ_RELEASE_MANAGED=1
 ExecStart=/home/ubuntu/.local/lib/node-v24.15.0-linux-x64/bin/node /opt/building-suit-hq-agent-host/current/worker.mjs
 Restart=always

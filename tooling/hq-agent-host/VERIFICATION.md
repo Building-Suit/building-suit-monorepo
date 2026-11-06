@@ -15,7 +15,7 @@ Passing checks completed before the source checkpoint:
 
 - Dependency installation with the frozen root lockfile and existing prepare
   scripts; no lockfile or dependency-policy changes.
-- Actual worker lifecycle + maintenance gate: **10/10**, including paused
+- Actual worker lifecycle + maintenance gate: **11/11**, including paused
   read-only health, claim-in-flight drain, repeated SIGTERM, lease renewal during
   active mocked inference, exact-once journal/delivery, unknown claim poison,
   durable intent after process loss, and incompatible schema refusal.
@@ -25,14 +25,16 @@ Passing checks completed before the source checkpoint:
   health criteria, schema rejection before drain/stop, busy drain timeout,
   success/no-op, failure rollback, interruption at stop/start/health, and durable
   accepted-state recovery that cannot terminate newly admitted work.
-- Full host suite: **59/59**, including worker/Brain/roster, the 10 maintenance/
+- Full host suite before the additional server capability tests: **59/59**, including worker/Brain/roster, the original 10 maintenance/
   lifecycle checks and disposable PGlite database tests. The later bounded lesson-
   publication pause refinement was rechecked by the maintenance/lifecycle suite.
 - ESLint for the four changed/new `.mjs` files passed. A wider host-directory
   lint also exposed six inherited errors in unchanged `brainPublisher.mjs`,
   `workforceRoster.mjs`, `intake-recovery-db.test.mjs`.
 - Staging migration parity: **17 active migrations unchanged**, archived
-  never-applied SQL unchanged. No migration or DB rollback is added.
+  never-applied SQL unchanged. No active migration or DB rollback is added. The read-only server contract is
+  prepared/tested as a separate SQL proposal outside that chain; its authorized
+  migration/deployment is an explicit installation blocker.
 - Real offline provenance verification with official GitHub CLI **2.103.3**,
   empty `GH_TOKEN`/`GITHUB_TOKEN`, isolated config/cache and separately generated
   trusted roots. Official CLI `v2.103.3`'s signed `actions/attest-demo` fixture
@@ -64,6 +66,12 @@ Repository-wide results so far:
   main-to-head candidate. The exact source checkpoint `9dbb82c300118d8f03175148533d951a76128b70`
   built a 101,825-byte code-only package (SHA256 `765a4a96b44146267b23ad0f1bb28ba967f7c63df5b0c8ec75b46b96f1f0a8a8`).
   A later final commit build will be recorded below.
+- The proposed read-only release-status SQL passed its disposable PGlite test:
+  anonymous/service-role denial, worker/session guard, foreign-worker denial,
+  no table access grant, scoped working-lease count, unchanged job rows, preserved
+  existing RPC, zero-job case and incompatible-signature refusal. The six actual
+  worker lifecycle tests plus five gate/API tests pass after wiring this required
+  server capability. No SQL was sent to a hosted database.
 - Initial full typecheck stopped on missing generated Docs JSON because root setup
   had not yet been run. `pnpm run setup` then passed; typecheck is being rerun.
   This initial executor setup failure is not evidence of an inherited type error.
@@ -82,6 +90,7 @@ Installation acceptance remains unrun: no live systemd installation, unit start,
 Oracle architecture/path/permissions check, real HQ release signature, real
 PostgREST metadata availability, worker identity/authentication, Realtime queue,
 Brain, model/subscription, paid inference or founder-message journey was tested.
-The baseline bootstrap and additive schema-contract approval in `RELEASES.md`
+A verified legacy producer/claim pause, complete baseline bootstrap, deployment
+of the proposed read-only server capability and additive schema-contract approval in `RELEASES.md`
 remain mandatory operator-reviewed actions before activation. No persistent
 GitHub credential is needed by the proposed host verification path.

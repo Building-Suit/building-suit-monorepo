@@ -49,7 +49,7 @@ class FakeHost:
             self.paused = False
             # Model work immediately upon admission. Recovery must not stop it.
             self.busy = 1
-        return {'protocol': 1, 'release': self.running, 'ready': True, 'contract': 1, 'paused': self.paused, 'busy': self.busy, 'uncertain': False}
+        return {'protocol': 1, 'release': self.running, 'ready': True, 'contract': 1, 'paused': self.paused, 'busy': self.busy, 'activeJobs': self.busy, 'uncertain': False}
 
     def preflight(self, sha):
         self.calls.append('preflight')
@@ -209,7 +209,7 @@ class Releases(unittest.TestCase):
                   'unit': 'company-hq-worker.service', 'schemaContract': 1, 'drainSeconds': 1}
         host = r.Host(config)
         calls = []
-        host.control = lambda action: calls.append(action) or {'release': A, 'paused': True, 'busy': 1, 'ready': True}
+        host.control = lambda action: calls.append(action) or {'release': A, 'paused': True, 'busy': 1, 'activeJobs': 1, 'ready': True}
         with patch.object(r.time, 'monotonic', side_effect=[0, 0, 2]), patch.object(r.time, 'sleep'):
             with self.assertRaisesRegex(RuntimeError, 'drain-deferred'):
                 host.drain(A)
@@ -220,8 +220,8 @@ class Releases(unittest.TestCase):
                   'trustedRoot': '/operator/trusted-root.json', 'socket': '/private/maintenance.sock',
                   'unit': 'company-hq-worker.service', 'schemaContract': 1, 'healthSeconds': 1}
         host = r.Host(config)
-        good = {'release': B, 'ready': True, 'contract': 1, 'paused': True, 'busy': 0}
-        for field, value in [('release', A), ('ready', False), ('contract', None), ('paused', False), ('busy', 1)]:
+        good = {'release': B, 'ready': True, 'contract': 1, 'paused': True, 'busy': 0, 'activeJobs': 0}
+        for field, value in [('release', A), ('ready', False), ('contract', None), ('paused', False), ('busy', 1), ('activeJobs', 1)]:
             host.control = lambda action, field=field, value=value: {**good, field: value}
             with patch.object(r.time, 'monotonic', side_effect=[0, 0, 2]), patch.object(r.time, 'sleep'):
                 with self.assertRaisesRegex(RuntimeError, 'startup-health-failed'):

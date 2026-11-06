@@ -207,6 +207,8 @@ class Host:
                 require(chunk and len(response) < 4096, 'invalid-control-response')
                 response += chunk
         result = decode(response)
+        if action != 'drain':
+            require(type(result.get('activeJobs')) is int and result['activeJobs'] >= 0, 'worker-schema-unavailable')
         require(result.get('protocol') == 1 and not result.get('uncertain') and 'error' not in result, 'worker-unsettled')
         # Bind the local socket receipt to systemd's actual worker process.
         pid = int(self.command([self.config['systemctl'], 'show', self.config['unit'], '--property=MainPID', '--value']).strip())
@@ -230,7 +232,7 @@ class Host:
             try:
                 status = self.control('status')
                 if (status['release'] == sha and status['ready'] and status['contract'] == 1
-                        and status['paused'] and status['busy'] == 0):
+                        and status['paused'] and status['busy'] == 0 and status['activeJobs'] == 0):
                     return
             except (OSError, RuntimeError, subprocess.SubprocessError, ValueError, KeyError):
                 pass
@@ -243,7 +245,7 @@ class Host:
         while time.monotonic() < deadline:
             status = self.control('status')
             require(status['release'] == sha and status['paused'], 'drain-identity')
-            if status['busy'] == 0 and status['ready']:
+            if status['busy'] == 0 and status['activeJobs'] == 0 and status['ready']:
                 return
             time.sleep(1)
         raise RuntimeError('drain-deferred')
@@ -298,7 +300,7 @@ def recover(host):
         except (ConnectionError, FileNotFoundError):
             pass
         if status:
-            require(status['paused'] and status['busy'] == 0, 'recovery-worker-busy')
+            require(status['paused'] and status['busy'] == 0 and status['activeJobs'] == 0, 'recovery-worker-busy')
             host.service('stop')
         activate(root, old)
         host.service('start')

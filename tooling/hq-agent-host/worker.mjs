@@ -483,9 +483,9 @@ export async function start(adapters = {}) {
     const spec = await jsonRequest(config.url + '/rest/v1/', { headers: { apikey: config.key, Authorization: 'Bearer ' + token, Accept: 'application/openapi+json' } })
     checkApiContract(spec)
     // Read-only RPC also verifies the current enabled worker identity/session.
-    const lessons = await api.rpc('hq_worker_pending_lessons', { p_worker_id: config.id })
-    requireValue(Array.isArray(lessons), 'schema-incompatible')
-    return 1
+    const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
+    requireValue(status?.contract === 1 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
+    return status
   }
   if (process.argv.includes('--release-preflight')) {
     requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
@@ -509,16 +509,16 @@ export async function start(adapters = {}) {
         void (async () => {
           const command = JSON.parse(input)
           if (command.action === 'drain') gate.pause()
-          let ready = false
+          let ready = false, activeJobs = null
           if (['status', 'resume'].includes(command.action)) {
-            try { await compatible(); ready = connected && !stopping } catch { /* Fail closed; no diagnostic data on socket. */ }
+            try { const schema = await compatible(); activeJobs = schema.activeJobs; ready = connected && !stopping } catch { /* Fail closed; no diagnostic data on socket. */ }
           }
           if (command.action === 'resume') {
-            requireValue(ready, 'release-not-ready')
+            requireValue(ready && activeJobs === 0, 'release-not-ready')
             gate.resume(); requestDrain()
           }
           requireValue(['drain', 'status', 'resume'].includes(command.action), 'invalid-control')
-          client.end(JSON.stringify({ protocol: 1, pid: process.pid, release, ready, contract: ready ? 1 : null, ...gate.snapshot() }) + '\n')
+          client.end(JSON.stringify({ protocol: 1, pid: process.pid, release, ready, activeJobs, contract: ready ? 1 : null, ...gate.snapshot() }) + '\n')
         })().catch(() => client.end('{"error":"maintenance-unavailable"}\n'))
       })
     })

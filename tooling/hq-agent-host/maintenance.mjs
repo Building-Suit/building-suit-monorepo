@@ -19,6 +19,7 @@ export function maintenanceGate({ paused = false, uncertain = false, poison = as
 // This is an API-shape check, not proof of semantic compatibility. The separate
 // operator-approved schema contract must remain additive across both releases.
 export const REQUIRED_RPCS = {
+  hq_worker_release_status: ['p_worker_id'],
   hq_worker_claim: ['p_worker_id', 'p_lease_seconds', 'p_meeting_protocol'],
   hq_worker_finish_v2: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence'],
   hq_worker_heartbeat: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_status'],

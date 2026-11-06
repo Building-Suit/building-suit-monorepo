@@ -54,6 +54,16 @@ References: [GitHub offline verification](https://docs.github.com/en/actions/how
 [CLI verification policy flags](https://cli.github.com/manual/gh_attestation_verify),
 [artifact attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
 
+## Installation blockers that source tests do not remove
+
+The legacy installed worker has no maintenance gate, no proven complete release
+manifest/rollback baseline, and no verified producer/claim pause procedure. Its
+lack of a visible Codex child or active queue item cannot rule out an in-flight
+claim. There is also no evidence that the proposed `hq_worker_release_status`
+capability has been deployed. These are **real installation blockers**. This
+updater must not be activated until all are independently resolved under separate
+operator approval. It deliberately provides no automatic legacy SIGTERM bootstrap.
+
 ## One-time operator-reviewed setup — requires separate host approval
 
 Do not run these steps as part of repository implementation or CI. The actual
@@ -71,8 +81,13 @@ Historical paths in the examples are context, not proof of the current machine.
 3. Establish a **complete rollback baseline**. Historical installed file hashes
    or a single saved `worker.mjs` do not qualify. Inventory and independently
    review all runtime imports and source bytes. Archive the full previous install
-   outside automated release directories. With the operator's explicit safe
-   maintenance approval, install a reviewed release supporting maintenance
+   outside automated release directories. Before stopping or replacing the legacy
+   worker, establish an approved producer/claim pause or another verified
+   host-specific quiescence procedure that closes the claim-in-flight race.
+   Preserve the unknown-current complete installation before switching. If no
+   such procedure exists, bootstrap is blocked; obtain a separately reviewed
+   server/host capability rather than using SIGTERM as a drain. After that
+   quiescence proof and explicit maintenance approval, install a reviewed release supporting maintenance
    protocol 1, verify all four files against its manifest, and prove a paused
    startup, read-only health acceptance, safe drain and rollback before enabling
    automatic operation. An old worker lacking this protocol needs a manual,
@@ -99,7 +114,14 @@ Historical paths in the examples are context, not proof of the current machine.
    incomplete/modified/symlinked baseline. Retain old SHA directories; no automatic
    garbage collection removes rollback evidence.
 7. Review database compatibility **before** approving `schemaContract: 1` in the
-   root-owned updater config. Preserve the existing 17 applied migration source
+   root-owned updater config. `database-release-contract.sql` is an additive,
+   guarded read-only capability proposal outside the active migration chain.
+   Generate a new canonical forward migration through the repository CLI only
+   after separate approval, review/test it against the real staging schema,
+   deliberately extend the source parity inventory for that new migration, then
+   deploy it through the existing authorized DB workflow. Never edit the 17
+   applied sources, run this SQL from the updater, or silently change a live DB.
+   The new worker requires this server capability; its absence blocks updates. Preserve the existing 17 applied migration source
    hashes and archive unchanged. Both releases must continue to use the same
    queue/lease/journal semantics, `hq_worker_finish_v2`, three-argument meeting
    claim protocol 1 and additive roster/learning APIs. Future DB changes must be
@@ -112,7 +134,7 @@ Historical paths in the examples are context, not proof of the current machine.
    `company-hq-worker-preflight.service` uses the same OS identity/environment as
    the worker and runs only fixed `candidate/worker.mjs --release-preflight`.
    `candidate` is a root-controlled link to already verified staged source.
-   Its checks authenticate and read API metadata/pending lessons; they do not
+   Its checks authenticate and read API metadata plus the scoped release capability; they do not
    claim jobs, renew leases, sync roster, recover journals or publish lessons.
    A disabled PostgREST OpenAPI endpoint fails closed and needs an explicit
    operator decision, not an automatic settings change.
@@ -144,14 +166,16 @@ A kernel `flock` serializes installation and crash recovery. Download races may
 perform redundant read-only HTTPS work but cannot install concurrently. After
 provenance and package verification, the updater validates the full old release,
 stages the candidate and runs the read-only candidate preflight before requesting
-any drain. The approved old/new schema contracts must match.
+any drain. The approved old/new schema contracts and the server-declared contract must match.
 
 The worker exposes only a private Unix-domain control socket under its existing
 private state directory. Receipts bind protocol, PID (checked against systemd
 MainPID), exact release SHA, readiness, pause, busy count and uncertainty. Health
-requires a real authenticated read-only RPC/API contract check plus observed
+requires a real authenticated read-only server contract/API shape check plus observed
 private Realtime join **and replication readiness**. `systemctl is-active` alone
-is never accepted. Health establishes queue/database readiness, not successful
+is never accepted. Health also requires zero server-side working jobs for this
+worker, including expired but unreconciled leases; local idle alone is insufficient.
+Health establishes queue/database readiness, not successful
 paid inference, Brain write qualification or an end-to-end founder reply.
 
 Drain pauses admission synchronously. It covers the entire serialized recovery,

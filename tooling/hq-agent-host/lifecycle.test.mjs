@@ -26,6 +26,7 @@ async function fixture(t, extra = {}) {
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
 const root = ${JSON.stringify(root)}, spec = ${JSON.stringify(spec)}
+let activeJobs = 0
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
 globalThis.fetch = async (url) => {
@@ -34,14 +35,15 @@ globalThis.fetch = async (url) => {
   else if (url.endsWith('/rest/v1/')) {
     body = spec
     if (process.env.FIXTURE_SCHEMA_BAD) delete body.paths['/rpc/hq_worker_claim']
-  } else if (url.endsWith('/hq_worker_pending_lessons')) body = []
+  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
+  else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
-  else if (url.endsWith('/hq_worker_finish_v2')) { await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true} }
+  else if (url.endsWith('/hq_worker_finish_v2')) { await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
   else if (url.endsWith('/hq_worker_claim')) {
     await appendFile(root + '/events', 'claim\\n')
     if (process.env.FIXTURE_CLAIM_ERROR) { status = 503; body = {} }
-    else if (process.env.FIXTURE_ACTIVE_JOB) body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-RES-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'task-work',agent:{id:'AG-RES-001',name:'Fixture',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}}
+    else if (process.env.FIXTURE_ACTIVE_JOB) { activeJobs = 1; body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-RES-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'task-work',agent:{id:'AG-RES-001',name:'Fixture',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}} }
     else { while (!await exists(root + '/settle')) await wait(10); body = {job:null} }
   } else if (url.endsWith('/hq_worker_presence')) await appendFile(root + '/events', 'presence\\n')
   else throw Error('unexpected-remote-request')
@@ -188,4 +190,14 @@ test('process loss during a claim leaves durable intent and restart cannot silen
   assert.equal(status.paused, true)
   assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
   assert.equal((await f.events()).match(/claim/g)?.length, 1)
+})
+
+
+test('server-side working lease prevents admission even when the local worker is idle', async t => {
+  const f = await fixture(t, { FIXTURE_FOREIGN_LEASE: '1' })
+  const status = await f.control('status')
+  assert.equal(status.busy, 0)
+  assert.equal(status.activeJobs, 1)
+  assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
+  assert.equal(await f.events(), '')
 })
