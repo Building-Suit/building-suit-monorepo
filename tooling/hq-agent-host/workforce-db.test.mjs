@@ -45,6 +45,7 @@ async function setup(withEvidence = true, withChat = false, withPresence = true)
   await db.exec(await readFile(new URL('20261106010000_hq_department_orchestration_contract.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261106020000_hq_supervised_worker_trials.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261106030000_hq_qualified_research_web_search.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261106114053_hq_worker_model_execution_receipts.sql',root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
   await db.query(`select set_config('request.jwt.claims',$1,false)`,[JSON.stringify({sub:founder,role:'authenticated',session_id:session})])
@@ -92,6 +93,29 @@ test('founder task → actual employee artifact → reviews → report → accep
     j=await h.claim();await as('founder');await rpc('hq_cancel_task',[cancelId]);assert.equal((await h.finish(j,'Late result must not publish')).discarded,true)
     await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
   } finally {await db.close()}
+})
+
+test('model execution receipt is immutable, artifact-bound and records fallback model as Luna',async()=>{
+ const h=await setup();const {db,as,rpc}=h
+ try {
+  await as('founder')
+  const created=await rpc('hq_create_task',['Receipt test','Create one internal draft.','Return one draft and no external action.','AG-HR-002',randomUUID()])
+  const job=await h.claim()
+  const evidence={schemaVersion:1,workerJobId:job.id,workerId:worker,agentId:job.agent_id,
+   policy:'terra-primary-luna-fallback-v1',configuredModel:'gpt-6.1-terra',selectedModel:'gpt-6-luna',
+   providerServedModel:'unknown',fallbackUsed:true,outcome:'completed',attempts:[
+    {model:'gpt-6.1-terra',outcome:'failed',errorCode:'provider-model-unavailable',toolEventCount:0,rerouteCount:0,turnsStarted:0,turnsCompleted:0},
+    {model:'gpt-6-luna',outcome:'completed',errorCode:null,toolEventCount:0,rerouteCount:0,turnsStarted:1,turnsCompleted:1},
+   ]}
+  await as('worker')
+  await rpc('hq_worker_finish_v3',[job.id,job.lease_token,worker,'Actual fallback draft.',null,'[]',JSON.stringify(evidence)])
+  await db.exec('reset role')
+  const stored=await db.query(`select r.configured_model,r.selected_model,r.provider_served_model,r.fallback_used,r.evidence
+   from hq_private.workforce_model_execution_receipts r where r.job_id=$1`,[job.id])
+  assert.deepEqual(stored.rows[0],{configured_model:'gpt-6.1-terra',selected_model:'gpt-6-luna',provider_served_model:'unknown',fallback_used:true,evidence})
+  await assert.rejects(()=>db.query(`update hq_private.workforce_model_execution_receipts set selected_model='gpt-6.1-terra' where job_id=$1`,[job.id]),/HQ_IMMUTABLE_RECORD/)
+  assert.equal(created.tasks[0].assigneeId,'AG-HR-002')
+ } finally {await db.close()}
 })
 
 test('staffing-required worker failure creates one durable HR-owned need and leaves the task blocked',async()=>{

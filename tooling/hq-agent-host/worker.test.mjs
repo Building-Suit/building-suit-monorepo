@@ -32,7 +32,7 @@ function qualifiedResearchJob(){
    profileFileId:agent.profileFileId,skillFileIds:[...agent.skillFileIds],modelTier:agent.modelTier,managerId:agent.managerId,departmentKey:agent.departmentKey}
  return value
 }
-async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',appServer={}}={}){
+async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',appServer={},eventsByModel={}}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
 import {readFile} from 'node:fs/promises';
@@ -61,10 +61,10 @@ if(args[0]==='app-server'){
  lines.on('close',()=>process.exit(done?0:0));
 } else {
 let prompt='';for await(const c of process.stdin)prompt+=c;
-if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!['gpt-6.1-sol','gpt-6.1-terra','gpt-6-astra'].some(model=>args.includes(model))||args.includes('gpt-6-luna')||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
+if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!['gpt-6.1-sol','gpt-6.1-terra','gpt-6-luna','gpt-6-astra'].some(model=>args.includes(model))||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
 if(!prompt.includes('profile_source_1')||!prompt.includes('untrusted data'))process.exit(1);
 if(${JSON.stringify(meeting)}&&(!args.includes('web_search="disabled"')||args[args.indexOf('--sandbox')+1]!=='read-only'||!args.includes('mcp_servers={}')||!args.includes('shell_tool')||!args.includes('browser_use')||!prompt.includes('actual named employee Noah (AG-HR-002)')||!prompt.includes('conversation from supplied context only')||prompt.includes('You are Steve, the CEO')))process.exit(1);
-const values=${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
+const selected=['gpt-6-astra','gpt-6.1-sol','gpt-6.1-terra','gpt-6-luna'].find(model=>args.includes(model));const byModel=${JSON.stringify(eventsByModel)};const values=byModel[selected]??${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
 }
 `,{mode:0o700})
  try{return await action({bin})}finally{await rm(directory,{recursive:true,force:true})}
@@ -224,6 +224,39 @@ test('provider JSONL errors expose only fixed safe quota/capacity/auth/context c
  }
  assert.equal(codeOf(Object.assign(new Error('private provider detail'),{code:'learning-cas-required'})),'learning-cas-required')
  assert.equal(codeOf(Object.assign(new Error('private provider detail'),{code:'learning-private-token-value'})),'worker-unavailable')
+})
+
+test('T1 Terra primary uses one truthful Luna fallback only for safe pre-tool model failures',async()=>{
+ const terraUnavailable=[{type:'turn.started'},{type:'turn.failed',error:{code:'model_not_found',message:'model not found'}}]
+ const terraOk=[{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},{type:'item.completed',item:{type:'agent_message',text:'Terra draft'}},{type:'turn.completed'}]
+ const lunaOk=[{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},{type:'item.completed',item:{type:'agent_message',text:'Luna draft'}},{type:'turn.completed'}]
+ assert.equal(providerErrorCode({error:{code:'model_not_found'}}),'provider-model-unavailable')
+ await fake([],async config=>{
+  const output=await invokeCodex({...config,id:randomUUID()},qualifiedResearchJob(),[],AbortSignal.timeout(5000))
+  assert.equal(output.reply,'Luna draft')
+  assert.deepEqual(output.modelExecutionEvidence.attempts.map(x=>[x.model,x.outcome,x.errorCode]),[
+   ['gpt-6.1-terra','failed','provider-model-unavailable'],['gpt-6-luna','completed',null]])
+  assert.equal(output.modelExecutionEvidence.selectedModel,'gpt-6-luna')
+  assert.equal(output.modelExecutionEvidence.providerServedModel,'unknown')
+  assert.equal(output.modelExecutionEvidence.fallbackUsed,true)
+ },{eventsByModel:{'gpt-6.1-terra':terraUnavailable,'gpt-6-luna':lunaOk}})
+ await fake([],async config=>{
+  await assert.rejects(()=>invokeCodex({...config,id:randomUUID()},qualifiedResearchJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-auth');assert.equal(error.modelExecutionEvidence.fallbackUsed,false);return true
+  })
+ },{eventsByModel:{'gpt-6.1-terra':[{type:'turn.started'},{type:'turn.failed',error:{code:'authentication_error'}}]}})
+ await fake([],async config=>{
+  await assert.rejects(()=>invokeCodex({...config,id:randomUUID()},qualifiedResearchJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-tool-rejected');assert.equal(error.modelExecutionEvidence.fallbackUsed,false)
+   assert.equal(error.modelExecutionEvidence.attempts.length,1);return true
+  })
+ },{eventsByModel:{'gpt-6.1-terra':[{type:'turn.started'},{type:'item.completed',item:{type:'browser_use'}},{type:'turn.failed',error:{message:'provider error'}}]}})
+ const startStage=qualifiedResearchJob();startStage.context.mode='task-start'
+ await fake([],async config=>{
+  await assert.rejects(()=>invokeCodex({...config,id:randomUUID()},startStage,[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-model-unavailable');assert.equal(error.modelExecutionEvidence,undefined);return true
+  })
+ },{eventsByModel:{'gpt-6.1-terra':terraUnavailable}})
 })
 
 

@@ -20,6 +20,8 @@ const MAX_BRAIN_SOURCE_BYTES = 128_000, MAX_BRAIN_CONTEXT_BYTES = 250_000
 const JOB_MS = 600_000, LEASE_SECONDS = 300, LEASE_INTERVAL_MS = 60_000
 const MEETING_PROTOCOL = 1
 const TRIAL_CODEX_CLI_VERSIONS = new Set(['codex-cli 0.159.2', 'codex-cli 0.160.0'])
+const TERRA_MODEL = 'gpt-6.1-terra', LUNA_FALLBACK_MODEL = 'gpt-6-luna'
+const FALLBACK_PROVIDER_ERRORS = new Set(['provider-model-unavailable', 'provider-capacity', 'provider-error'])
 const TOPIC = 'realtime:hq-agent-jobs'
 class WorkerProblem extends Error { constructor(code) { super(code); this.code = code } }
 const problem = code => new WorkerProblem(code)
@@ -36,6 +38,7 @@ export function providerErrorCode(value) {
   const fields = candidate => typeof candidate === 'string' ? [candidate] : record(candidate)
     ? ['code','type','message','status','status_code'].map(key => typeof candidate[key] === 'string' || typeof candidate[key] === 'number' ? String(candidate[key]) : '') : []
   const diagnostic = [...fields(value), ...fields(record(value)?.error)].join(' ').slice(0, 16000).toLowerCase()
+  if (/model_not_found|model not found|model unavailable|unsupported model|unknown model|invalid model/.test(diagnostic)) return 'provider-model-unavailable'
   if (/context_length_exceeded|context_window|context window|maximum context|input too long|prompt too long|too many input tokens/.test(diagnostic)) return 'provider-context'
   if (/insufficient_quota|usage_limit|usage limit|quota|weekly limit|monthly limit|daily limit|out of credits|credits exhausted|limit reached|limit has been reached/.test(diagnostic)) return 'provider-quota'
   if (/authentication|invalid_api_key|invalid auth|unauthori[sz]ed|not logged in|sign[ -]in required|login required|token expired|expired token|refresh token|\b40[13]\b/.test(diagnostic)) return 'provider-auth'
@@ -615,7 +618,8 @@ function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, wor
   })
 }
 
-export async function invokeCodex(config, job, brain, signal) {
+async function invokeCodexAttempt(config, job, brain, signal, executionModel = job.context.agent.model) {
+  if (executionModel !== job.context.agent.model) job = { ...job, context: { ...job.context, agent: { ...job.context.agent, model: executionModel } } }
   const directory = await mkdtemp(join(tmpdir(), 'hq-agent-'))
   const isTrialWorker = job.context.mode === 'worker-trial'
   const disabled = ['shell_tool', 'shell_snapshot', 'multi_agent', 'apps', 'hooks', 'memories', 'plugins',
@@ -623,7 +627,7 @@ export async function invokeCodex(config, job, brain, signal) {
     'computer_use', 'skill_search', 'remote_plugin', 'image_generation', 'in_app_browser', 'daemon_auto_start']
   const trialPlan = isTrialWorker ? trialAppServerPlan(job,directory,disabled) : null
   const args = ['exec', '--json', '--ephemeral', '--ignore-user-config', '--ignore-rules', '--strict-config',
-    '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', directory, '--color', 'never', '--model', job.context.agent.model]
+    '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', directory, '--color', 'never', '--model', executionModel]
   for (const feature of disabled) args.push('--disable', feature)
   for (const setting of ['approval_policy="never"', 'model_provider="openai"', 'forced_login_method="chatgpt"',
     'web_search=' + JSON.stringify(webAllowed(job) ? 'live' : 'disabled'), 'model_reasoning_effort=' + JSON.stringify(job.context.agent.effort), 'project_doc_max_bytes=0', 'developer_instructions=""', 'mcp_servers={}',
@@ -681,7 +685,8 @@ export async function invokeCodex(config, job, brain, signal) {
       config,job,directory,environment,prompt,argv:trialPlan.argv,startParams:trialPlan.params,signal})
     return await new Promise((resolveReply, rejectReply) => {
       let child, failure = null, total = 0, lineBuffer = '', answer = '', completed = 0, evidence = [], killTimer
-      let threadId = null, turnStarted = 0
+      let threadId = null, turnStarted = 0, toolEventCount = 0, rerouteCount = 0
+      const toolItems = new Set()
       const observedErrors = [], observedReroutes = []
       const noteError = code => { if (isTrialWorker && !observedErrors.includes(code)) observedErrors.push(code) }
       const trialEvidence = (outcome, reply = '') => isTrialWorker ? {
@@ -698,6 +703,9 @@ export async function invokeCodex(config, job, brain, signal) {
         observedErrors, observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,
         artifactDigest: outcome === 'completed' ? createHash('sha256').update(reply).digest('hex') : null,
       } : null
+      const modelAttemptEvidence = (outcome, errorCode = null) => ({
+        model: executionModel, outcome, errorCode, toolEventCount, rerouteCount, turnsStarted: turnStarted, turnsCompleted: completed,
+      })
       const decoder = new StringDecoder('utf8')
       const kill = () => {
         if (!child?.pid) return
@@ -716,7 +724,7 @@ export async function invokeCodex(config, job, brain, signal) {
           const from = event.fromModel ?? event.from_model, to = event.toModel ?? event.to_model
           if (typeof from !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(from)
             || typeof to !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(to)) { fail('provider-output-invalid'); return }
-          observedReroutes.push({ from, to }); fail('provider-model-rerouted'); return
+          observedReroutes.push({ from, to }); rerouteCount++; fail('provider-model-rerouted'); return
         }
         if (event.type === 'thread.started') {
           const id = event.thread_id ?? event.threadId
@@ -728,6 +736,10 @@ export async function invokeCodex(config, job, brain, signal) {
         if (event.type.startsWith('item.')) {
           const item = record(event.item)
           if (!item || !['agent_message', 'reasoning', ...(webAllowed(job) ? ['web_search', 'web_search_call'] : [])].includes(item.type)) { fail(item?.type === 'error' ? providerErrorCode(item) : 'provider-tool-rejected'); return }
+          if (!['agent_message', 'reasoning'].includes(item.type)) {
+            const itemId = typeof item.id === 'string' ? item.id : `${event.type}:${item.type}`
+            if (!toolItems.has(itemId)) { toolItems.add(itemId); toolEventCount++ }
+          }
           if (event.type === 'item.completed' && ['web_search', 'web_search_call'].includes(item.type)) {
             const receipt = nativeToolReceipt(item)
             if (evidence.length < 24 && Buffer.byteLength(JSON.stringify([...evidence, receipt])) <= 36_000) evidence.push(receipt)
@@ -769,17 +781,66 @@ export async function invokeCodex(config, job, brain, signal) {
           catch { fail('provider-cli-changed') }
         }
         if (failure) {
+          failure.modelAttemptEvidence = modelAttemptEvidence('failed', failure.code)
+          failure.modelFallbackEligible = !isTrialWorker && FALLBACK_PROVIDER_ERRORS.has(failure.code)
+            && toolEventCount === 0 && rerouteCount === 0
           failure.modelBindingEvidence = trialEvidence('failed')
           rejectReply(failure)
         } else {
           const reply = answer.trim()
-          resolveReply({ reply, evidence, modelBindingEvidence: trialEvidence('completed', reply) })
+          resolveReply({ reply, evidence, modelBindingEvidence: trialEvidence('completed', reply), modelAttemptEvidence: modelAttemptEvidence('completed') })
         }
       })
       if (signal.aborted) abort()
       else child.stdin.end(prompt)
     })
   } finally { await rm(directory, { recursive: true, force: true }) }
+}
+
+function modelExecutionReceipt(job, workerId, attempts, selectedModel) {
+  const configuredModel = job.context.agent.model
+  return {
+    schemaVersion: 1, workerJobId: job.id, workerId, agentId: job.agent_id,
+    policy: job.context.agent.modelTier === 'T1_WORKER' && configuredModel === TERRA_MODEL
+      ? 'terra-primary-luna-fallback-v1' : 'canonical-model-only-v1',
+    configuredModel, selectedModel, providerServedModel: 'unknown',
+    fallbackUsed: attempts.length === 2, outcome: selectedModel ? 'completed' : 'failed', attempts,
+  }
+}
+
+/** Retry only a provider model failure before any tool event; trials stay pinned to Terra for qualification. */
+export async function invokeCodex(config, job, brain, signal) {
+  // Only task-work produces a reviewed artifact eligible for a durable receipt.
+  // Other stages, especially conversations and manager review, remain single-attempt.
+  if (job.context.mode !== 'task-work') return invokeCodexAttempt(config, job, brain, signal)
+  const configuredModel = job.context.agent.model
+  const canUseFallback = job.context.agent.modelTier === 'T1_WORKER'
+    && configuredModel === TERRA_MODEL
+  try {
+    const output = await invokeCodexAttempt(config, job, brain, signal, configuredModel)
+    output.modelExecutionEvidence = modelExecutionReceipt(job, config.id, [output.modelAttemptEvidence], configuredModel)
+    return output
+  } catch (error) {
+    const primaryAttempt = error?.modelAttemptEvidence
+    if (!primaryAttempt) throw error
+    if (!canUseFallback || !error.modelFallbackEligible) {
+      error.modelExecutionEvidence = modelExecutionReceipt(job, config.id, [primaryAttempt], null)
+      throw error
+    }
+    try {
+      const fallback = await invokeCodexAttempt(config, job, brain, signal, LUNA_FALLBACK_MODEL)
+      const attempts = [primaryAttempt, fallback.modelAttemptEvidence]
+      fallback.modelExecutionEvidence = modelExecutionReceipt(job, config.id, attempts, LUNA_FALLBACK_MODEL)
+      return fallback
+    } catch (fallbackError) {
+      const attempts = [primaryAttempt, fallbackError?.modelAttemptEvidence || {
+        model: LUNA_FALLBACK_MODEL, outcome: 'failed', errorCode: codeOf(fallbackError),
+        toolEventCount: 0, rerouteCount: 0, turnsStarted: 0, turnsCompleted: 0,
+      }]
+      fallbackError.modelExecutionEvidence = modelExecutionReceipt(job, config.id, attempts, null)
+      throw fallbackError
+    }
+  }
 }
 
 async function start() {
@@ -815,10 +876,11 @@ async function start() {
   }
   async function deliver(entry) {
     const input = { p_job_id: entry.job.id, p_lease_token: entry.job.lease_token, p_worker_id: config.id,
-      p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [] }
+      p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [],
+      p_model_evidence: entry.modelExecutionEvidence || null }
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const result = await api.rpc('hq_worker_finish_v2', input)
+        const result = await api.rpc('hq_worker_finish_v3', input)
         requireValue(accepted(result), 'delivery-rejected')
         await journal.write({ ...entry, phase: 'delivered', reply: '', error: null, evidence: [] })
         return result
@@ -838,6 +900,9 @@ async function start() {
         && (entry.modelBindingEvidence === undefined || entry.modelBindingEvidence === null
           || record(entry.modelBindingEvidence) && entry.modelBindingEvidence.schemaVersion === 1
             && entry.modelBindingEvidence.workerJobId === id && Buffer.byteLength(JSON.stringify(entry.modelBindingEvidence)) <= 32_000)
+        && (entry.modelExecutionEvidence === undefined || entry.modelExecutionEvidence === null
+          || record(entry.modelExecutionEvidence) && entry.modelExecutionEvidence.schemaVersion === 1
+            && entry.modelExecutionEvidence.workerJobId === id && Buffer.byteLength(JSON.stringify(entry.modelExecutionEvidence)) <= 16_000)
         && (entry.error === null || typeof entry.error === 'string' && /^[a-z-]{1,80}$/.test(entry.error)), 'invalid-journal')
       if (entry.phase === 'delivered') continue
       requireValue(['started', 'finished'].includes(entry.phase), 'invalid-journal')
@@ -852,7 +917,7 @@ async function start() {
     validateJob(job)
     const previous = await journal.read(job.id)
     requireValue(!previous, 'job-already-attempted')
-    let entry = { version: 3, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [], modelBindingEvidence: null }
+    let entry = { version: 3, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [], modelBindingEvidence: null, modelExecutionEvidence: null }
     // Flush before any model invocation. A crash can block a job, never repeat inference silently.
     await journal.write(entry)
     const executionBlock = workerExecutionBlock(job)
@@ -889,9 +954,11 @@ async function start() {
       controller.signal.throwIfAborted()
       const output = await invokeCodex(config, job, documents, controller.signal)
       entry.reply = output.reply; entry.evidence = output.evidence; entry.modelBindingEvidence = output.modelBindingEvidence
+      entry.modelExecutionEvidence = output.modelExecutionEvidence
     } catch (error) {
       entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error)
       entry.modelBindingEvidence = error?.modelBindingEvidence || null
+      entry.modelExecutionEvidence = error?.modelExecutionEvidence || null
     }
     finally { clearInterval(leaseTimer); clearTimeout(timeout); activeController = null }
     entry.phase = 'finished'; await journal.write(entry)
