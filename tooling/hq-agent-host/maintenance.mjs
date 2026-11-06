@@ -21,7 +21,7 @@ export function maintenanceGate({ paused = false, uncertain = false, poison = as
 export const REQUIRED_RPCS = {
   hq_worker_release_status: ['p_worker_id'],
   hq_worker_claim: ['p_worker_id', 'p_lease_seconds', 'p_meeting_protocol'],
-  hq_worker_finish_v2: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence'],
+  hq_worker_finish_v3: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence', 'p_model_evidence'],
   hq_worker_heartbeat: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_status'],
   hq_worker_presence: ['p_worker_id'], hq_worker_skill_context: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_skill_ids'],
   hq_worker_roster_sources: ['p_worker_id'], hq_worker_sync_roster: ['p_worker_id', 'p_agents'],
@@ -34,5 +34,5 @@ export function checkApiContract(spec) {
     const definition = body?.$ref?.startsWith('#/definitions/') ? spec.definitions?.[body.$ref.slice(14)] : body
     if (!definition?.properties || names.some(key => !Object.hasOwn(definition.properties, key))) throw Error('schema-incompatible')
   }
-  return 1
+  return 2
 }

@@ -16,10 +16,10 @@ async function until(check) {
 }
 async function fixture(t, extra = {}) {
   const root = await mkdtemp(join(tmpdir(), 'hq-lifecycle-'))
-  for (const name of ['worker.mjs', 'maintenance.mjs']) await copyFile(new URL(name, import.meta.url), join(root, name))
+  for (const name of ['worker.mjs', 'maintenance.mjs', 'departmentWorkflow.mjs']) await copyFile(new URL(name, import.meta.url), join(root, name))
   const sha = 'a'.repeat(40)
   await writeFile(join(root, 'manifest.json'), JSON.stringify({ sha }))
-  await writeFile(join(root, 'workforceRoster.mjs'), 'export const createWorkforceRoster = () => ({sync: async () => {}})')
+  await copyFile(new URL('workforceRoster.mjs', import.meta.url), join(root, 'workforceRoster.mjs'))
   await writeFile(join(root, 'brainPublisher.mjs'), 'export const createBrainPublisher = () => ({})')
   const spec = { paths: {}, definitions: {} }
   for (const [name, args] of Object.entries(REQUIRED_RPCS)) spec.paths['/rpc/' + name] = { post: { parameters: [{ in: 'body', schema: { properties: Object.fromEntries(args.map(key => [key, {}])) } }] } }
@@ -29,21 +29,21 @@ const root = ${JSON.stringify(root)}, spec = ${JSON.stringify(spec)}
 let activeJobs = 0
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
-globalThis.fetch = async (url) => {
+globalThis.fetch = async (url, options = {}) => {
   let body = true, status = 200
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
     body = spec
     if (process.env.FIXTURE_SCHEMA_BAD) delete body.paths['/rpc/hq_worker_claim']
-  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
+  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:2,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
   else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
-  else if (url.endsWith('/hq_worker_finish_v2')) { await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
+  else if (url.endsWith('/hq_worker_finish_v3')) { const receipt = JSON.parse(options.body); if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence)); await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
   else if (url.endsWith('/hq_worker_claim')) {
     await appendFile(root + '/events', 'claim\\n')
     if (process.env.FIXTURE_CLAIM_ERROR) { status = 503; body = {} }
-    else if (process.env.FIXTURE_ACTIVE_JOB) { activeJobs = 1; body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-RES-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'task-work',agent:{id:'AG-RES-001',name:'Fixture',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}} }
+    else if (process.env.FIXTURE_ACTIVE_JOB) { activeJobs = 1; body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-CEO-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'conversation-intake',agent:{id:'AG-CEO-001',name:'Fixture',model:'gpt-6-astra',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}} }
     else { while (!await exists(root + '/settle')) await wait(10); body = {job:null} }
   } else if (url.endsWith('/hq_worker_presence')) await appendFile(root + '/events', 'presence\\n')
   else throw Error('unexpected-remote-request')
@@ -69,7 +69,7 @@ import './bootstrap.mjs'
 import { appendFile, access } from 'node:fs/promises'
 import { start } from './worker.mjs'
 const root = ${JSON.stringify(root)}
-const adapters = {}
+const adapters = {roster:{sync:async()=>{}}}
 if (process.env.FIXTURE_ACTIVE_JOB) {
   const originalInterval = globalThis.setInterval
   globalThis.setInterval = (fn, ms, ...args) => originalInterval(fn, ms === 60_000 ? 30 : ms, ...args)
@@ -80,7 +80,7 @@ if (process.env.FIXTURE_ACTIVE_JOB) {
     for (;;) {
       try { await access(root + '/settle-inference'); break } catch { await new Promise(done => setTimeout(done, 10)) }
     }
-    return {reply:'Fixture draft completed once',evidence:[]}
+    return {reply:'Fixture draft completed once',evidence:[],modelExecutionEvidence:{schemaVersion:1,workerJobId:_job.id,workerId:_config.id,agentId:_job.agent_id,configuredModel:'gpt-6-astra',selectedModel:'gpt-6-astra',fallbackUsed:false}}
   }
 }
 await start(adapters)
@@ -170,6 +170,10 @@ test('active inference keeps renewing while drained and SIGTERM waits for durabl
   assert.doesNotMatch(events, /inference-aborted/)
   const journal = JSON.parse(await readFile(join(f.state, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb.json'), 'utf8'))
   assert.equal(journal.phase, 'delivered')
+  assert.equal(journal.version, 3)
+  const receipt = JSON.parse(await readFile(join(f.root, 'receipt.json'), 'utf8'))
+  assert.equal(receipt.workerJobId, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
+  assert.deepEqual(receipt, journal.modelExecutionEvidence)
 })
 
 

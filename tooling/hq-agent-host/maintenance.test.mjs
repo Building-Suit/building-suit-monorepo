@@ -54,7 +54,11 @@ test('schema shape fails closed on missing RPCs, arguments or references', () =>
     spec.paths['/rpc/' + name] = { post: { parameters: [{ in: 'body', schema: { $ref: '#/definitions/' + name } }] } }
     spec.definitions[name] = { properties: Object.fromEntries(args.map(key => [key, { type: 'string' }])) }
   }
-  assert.equal(checkApiContract(spec), 1)
+  assert.equal(checkApiContract(spec), 2)
+  const evidence = spec.definitions.hq_worker_finish_v3.properties.p_model_evidence
+  delete spec.definitions.hq_worker_finish_v3.properties.p_model_evidence
+  assert.throws(() => checkApiContract(spec), /schema-incompatible/)
+  spec.definitions.hq_worker_finish_v3.properties.p_model_evidence = evidence
   delete spec.definitions.hq_worker_claim.properties.p_meeting_protocol
   assert.throws(() => checkApiContract(spec), /schema-incompatible/)
   assert.throws(() => checkApiContract({}), /schema-incompatible/)

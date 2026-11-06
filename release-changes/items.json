@@ -5504,5 +5504,28 @@
     "sources": [
       "hq-worker-release-20261106"
     ]
+  },
+  {
+    "id": "company-hq-worker-release-review",
+    "task": "HQ-WORKER-RELEASE-REVIEW-20261106",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/ci.yml",
+      "tooling/hq-agent-host",
+      "release-changes/items.json"
+    ],
+    "reason": "Serialize freshness decisions, verify complete draft releases, smoke-check packages and reconcile qualified pilot runtime with explicit undeployed v3 schema proposals; source only.",
+    "sources": [
+      "hq-worker-release-review-20261106"
+    ]
   }
 ]

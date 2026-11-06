@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import socket
+import shutil
 import subprocess
 import tempfile
 import time
@@ -22,7 +23,7 @@ from urllib.parse import urlsplit
 REPO = 'Building-Suit/building-suit-monorepo'
 REPO_ID = '1376504404'
 WORKFLOW = REPO + '/.github/workflows/ci.yml'
-FILES = ('worker.mjs', 'workforceRoster.mjs', 'brainPublisher.mjs', 'maintenance.mjs')
+FILES = ('worker.mjs', 'workforceRoster.mjs', 'brainPublisher.mjs', 'maintenance.mjs', 'departmentWorkflow.mjs')
 MAX_BYTES = 4_000_000
 SHA = re.compile(r'[a-f0-9]{40}')
 
@@ -57,7 +58,7 @@ def validate(package, expected_sha):
     require(all(type(manifest[key]) is int for key in ('format', 'nodeMajor', 'schemaContract', 'maintenanceProtocol')), 'invalid-manifest-types')
     require(manifest['format'] == 1 and manifest['sha'] == expected_sha and manifest['repositoryId'] == REPO_ID
             and manifest['ref'] == 'refs/heads/stg' and manifest['nodeMajor'] == 22
-            and manifest['schemaContract'] == 1 and manifest['maintenanceProtocol'] == 1, 'incompatible-manifest')
+            and manifest['schemaContract'] == 2 and manifest['maintenanceProtocol'] == 1, 'incompatible-manifest')
     require(set(package['files']) == set(FILES) == set(manifest['files']), 'unsafe-package-paths')
     contents = {}
     for name in FILES:
@@ -65,6 +66,34 @@ def validate(package, expected_sha):
         require(len(data) <= 1_000_000 and manifest['files'][name] == {'sha256': digest(data), 'bytes': len(data)}, 'file-integrity')
         contents[name] = data
     return manifest, contents
+
+
+def smoke_package(package, sha):
+    # Resolve imports only from the extracted allowlist or Node builtins. The
+    # no-start entrypoint has no argv[1], worker credentials or inherited config.
+    manifest, contents = validate(package, sha)
+    node = shutil.which('node')
+    require(node and Path(node).is_absolute(), 'builder-node-required')
+    with tempfile.TemporaryDirectory(prefix='hq-package-smoke-') as temporary:
+        directory = Path(temporary)
+        for name, data in contents.items():
+            (directory / name).write_bytes(data)
+        (directory / 'manifest.json').write_text(json.dumps(manifest))
+        script = """
+import {registerHooks} from 'node:module';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.env.HQ_PACKAGE_ROOT+'/').href;
+registerHooks({resolve(specifier,context,next){const result=next(specifier,context);
+  if(!result.url.startsWith('node:')&&!result.url.startsWith(root))throw Error('outside-package-import');
+  return result;}});
+globalThis.fetch=()=>{throw Error('package-import-network');};
+globalThis.WebSocket=class{constructor(){throw Error('package-import-network');}};
+await import(root+'worker.mjs');
+"""
+        result = subprocess.run([node, '--input-type=module', '--eval', script], cwd=directory,
+                                env={'PATH': '/usr/bin:/bin', 'HQ_PACKAGE_ROOT': str(directory)},
+                                capture_output=True, timeout=30)
+        require(result.returncode == 0, 'package-import-incomplete')
 
 
 def build(root, sha, output):
@@ -77,11 +106,11 @@ def build(root, sha, output):
         require(not re.search(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\r\n]|(?:sb_secret_|ghp_)[A-Za-z0-9]{20,}', data), 'secret-material')
         files[name] = data
     manifest = {'format': 1, 'sha': sha, 'repositoryId': REPO_ID, 'ref': 'refs/heads/stg', 'nodeMajor': 22,
-                'schemaContract': 1, 'maintenanceProtocol': 1,
+                'schemaContract': 2, 'maintenanceProtocol': 1,
                 'files': {name: {'sha256': digest(data), 'bytes': len(data)} for name, data in files.items()}}
     package = {'manifest': manifest, 'files': {name: base64.b64encode(data).decode() for name, data in files.items()}}
     data = json.dumps(package, sort_keys=True, separators=(',', ':')).encode()
-    validate(decode(data), sha)
+    smoke_package(decode(data), sha)
     Path(output).write_bytes(data)
 
 
@@ -168,6 +197,24 @@ def stage(root, package, sha):
         sync_dir(releases)
 
 
+def verify_provenance(artifact, bundle, sha, *, gh, trusted_root, command):
+    # Offline bundle + independently installed roots. No cached GitHub login,
+    # injected GH token, extensions, or package-supplied trust root.
+    with tempfile.TemporaryDirectory() as config_dir:
+        env = {'PATH': '/usr/bin:/bin', 'GH_CONFIG_DIR': config_dir, 'XDG_CACHE_HOME': config_dir, 'GH_PROMPT_DISABLED': '1', 'GH_TOKEN': '', 'GITHUB_TOKEN': '', 'GH_HOST': 'github.com'}
+        result = command([gh, 'attestation', 'verify', str(artifact), '--bundle', str(bundle),
+                               '--custom-trusted-root', trusted_root, '--repo', REPO,
+                               '--source-ref', 'refs/heads/stg', '--source-digest', sha,
+                               '--cert-identity', 'https://github.com/' + WORKFLOW + '@refs/heads/stg',
+                               '--predicate-type', 'https://slsa.dev/provenance/v1', '--deny-self-hosted-runners', '--format', 'json'], env=env)
+    results = decode(result.encode())
+    require(isinstance(results, list) and results, 'provenance-required')
+    for item in results:
+        certificate = item['verificationResult']['signature']['certificate']
+        require(str(certificate['sourceRepositoryIdentifier']) == REPO_ID, 'repository-identity-mismatch')
+
+
+
 class Host:
     def __init__(self, config):
         self.config = config
@@ -175,26 +222,14 @@ class Host:
         for name in ('node', 'gh', 'systemctl', 'trustedRoot', 'socket'):
             require(Path(config[name]).is_absolute(), 'absolute-path-required')
         require(config['unit'] == 'company-hq-worker.service', 'unexpected-service')
-        require(type(config['schemaContract']) is int and config['schemaContract'] == 1, 'operator-schema-contract-required')
+        require(type(config['schemaContract']) is int and config['schemaContract'] == 2, 'operator-schema-contract-required')
 
     def command(self, argv, timeout=60, env=None):
         return subprocess.check_output(argv, timeout=timeout, env=env, stderr=subprocess.DEVNULL, text=True)
 
     def verify(self, artifact, bundle, sha):
-        # Offline bundle + independently installed roots. No cached GitHub login,
-        # injected GH token, extensions, or package-supplied trust root.
-        with tempfile.TemporaryDirectory() as config_dir:
-            env = {'PATH': '/usr/bin:/bin', 'GH_CONFIG_DIR': config_dir, 'XDG_CACHE_HOME': config_dir, 'GH_PROMPT_DISABLED': '1', 'GH_TOKEN': '', 'GITHUB_TOKEN': '', 'GH_HOST': 'github.com'}
-            result = self.command([self.config['gh'], 'attestation', 'verify', str(artifact), '--bundle', str(bundle),
-                                   '--custom-trusted-root', self.config['trustedRoot'], '--repo', REPO,
-                                   '--source-ref', 'refs/heads/stg', '--source-digest', sha,
-                                   '--cert-identity', 'https://github.com/' + WORKFLOW + '@refs/heads/stg',
-                                   '--predicate-type', 'https://slsa.dev/provenance/v1', '--deny-self-hosted-runners', '--format', 'json'], env=env)
-        results = decode(result.encode())
-        require(isinstance(results, list) and results, 'provenance-required')
-        for item in results:
-            certificate = item['verificationResult']['signature']['certificate']
-            require(str(certificate['sourceRepositoryIdentifier']) == REPO_ID, 'repository-identity-mismatch')
+        verify_provenance(artifact, bundle, sha, gh=self.config['gh'],
+                          trusted_root=self.config['trustedRoot'], command=self.command)
 
     def control(self, action):
         with socket.socket(socket.AF_UNIX) as client:
@@ -232,7 +267,7 @@ class Host:
         while time.monotonic() < deadline:
             try:
                 status = self.control('status')
-                if (status['release'] == sha and status['ready'] and status['contract'] == 1
+                if (status['release'] == sha and status['ready'] and status['contract'] == 2
                         and status['paused'] and status['busy'] == 0 and status['activeJobs'] == 0):
                     return
             except (OSError, RuntimeError, subprocess.SubprocessError, ValueError, KeyError):
@@ -317,51 +352,65 @@ def recover(host):
 
 
 def install(host, package, sha):
-    root = host.root
-    with exclusive(root):
+    # Local verified-package/test entrypoint; production discovery uses update().
+    with exclusive(host.root):
         if recover(host):
-            return 'recovered'  # Never immediately retry a failed candidate.
-        old = current_sha(root)  # Mandatory complete, verified rollback baseline.
-        manifest, _ = validate(package, sha)
-        require(installed(root, old)['schemaContract'] == manifest['schemaContract'] == host.config['schemaContract'], 'schema-incompatible')
-        if old == sha:
-            status = host.control('status')
-            require(status['release'] == sha and status['ready'], 'current-unhealthy')
-            if status['paused']:
-                host.health(sha)
-                host.control('resume')
-            return 'no-op'
-        stage(root, package, sha)
-        candidate_link(root, sha)
-        host.preflight(sha)  # Before requesting drain or stopping the old worker.
-        transaction = {'old': old, 'new': sha, 'phase': 'prepared'}
-        atomic_json(root / 'transaction.json', transaction)
-        try:
-            host.drain(old)
-        except Exception:
-            # Timeout/unknown claim: do not stop, cancel inference or clear poison.
-            # Retain pause; operator/timer can observe completion and safely resume.
-            raise
-        try:
-            host.service('stop')
-            transaction['phase'] = 'stopped'
-            atomic_json(root / 'transaction.json', transaction)
-            activate(root, sha)
-            transaction['phase'] = 'activated'
-            atomic_json(root / 'transaction.json', transaction)
-            host.service('start')
+            return 'recovered'
+        return _install_locked(host, package, sha)
+
+
+def _install_locked(host, package, sha, freshness=None):
+    # Caller owns the one transaction lock; never recursively acquire flock.
+    root = host.root
+    old = current_sha(root)  # Mandatory complete, verified rollback baseline.
+    manifest, _ = validate(package, sha)
+    require(installed(root, old)['schemaContract'] == manifest['schemaContract'] == host.config['schemaContract'], 'schema-incompatible')
+    if old == sha:
+        status = host.control('status')
+        require(status['release'] == sha and status['ready'], 'current-unhealthy')
+        if status['paused']:
             host.health(sha)
-            transaction['phase'] = 'accepted'
-            atomic_json(root / 'transaction.json', transaction)
-        except Exception:
-            recover(host)
-            raise
-        # Outside rollback try: admission can launch paid work. Failures after
-        # this boundary leave accepted state for non-destructive recovery.
-        host.control('resume')
-        (root / 'transaction.json').unlink()
-        sync_dir(root)
-        return 'installed'
+            host.control('resume')
+        return 'no-op'
+    stage(root, package, sha)
+    candidate_link(root, sha)
+    host.preflight(sha)  # Before requesting drain or stopping the old worker.
+    if freshness:
+        freshness()
+    transaction = {'old': old, 'new': sha, 'phase': 'prepared'}
+    atomic_json(root / 'transaction.json', transaction)
+    try:
+        host.drain(old)
+    except Exception:
+        # Timeout/unknown claim: do not stop, cancel inference or clear poison.
+        # Retain pause; operator/timer can observe completion and safely resume.
+        raise
+    try:
+        if freshness:
+            freshness()
+        host.service('stop')
+        transaction['phase'] = 'stopped'
+        atomic_json(root / 'transaction.json', transaction)
+        if freshness:
+            freshness()
+        activate(root, sha)
+        transaction['phase'] = 'activated'
+        atomic_json(root / 'transaction.json', transaction)
+        host.service('start')
+        host.health(sha)
+        if freshness:
+            freshness()
+        transaction['phase'] = 'accepted'
+        atomic_json(root / 'transaction.json', transaction)
+    except Exception:
+        recover(host)
+        raise
+    # Outside rollback try: admission can launch paid work. Failures after
+    # this boundary leave accepted state for non-destructive recovery.
+    host.control('resume')
+    (root / 'transaction.json').unlink()
+    sync_dir(root)
+    return 'installed'
 
 
 def allowed_url(url):
@@ -378,26 +427,45 @@ class HttpsOnly(urllib.request.HTTPRedirectHandler):
 
 def fetch(url):
     allowed_url(url)
-    with urllib.request.build_opener(HttpsOnly()).open(urllib.request.Request(url, headers={'User-Agent': 'company-hq-updater/1'}), timeout=30) as response:
+    with urllib.request.build_opener(HttpsOnly()).open(urllib.request.Request(url, headers={'User-Agent': 'company-hq-updater/1', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache'}), timeout=30) as response:
         data = response.read(MAX_BYTES + 1)
         require(len(data) <= MAX_BYTES, 'download-too-large')
         return data
 
 
-def update(host):
-    # Discover exact current stg SHA, never trust latest release tag ordering.
+def staging_sha():
+    repository = decode(fetch('https://api.github.com/repos/' + REPO))
+    require(str(repository.get('id')) == REPO_ID, 'repository-identity-mismatch')
     ref = decode(fetch('https://api.github.com/repos/' + REPO + '/git/ref/heads/stg'))
     sha = ref['object']['sha']
-    require(SHA.fullmatch(sha), 'invalid-stg-sha')
-    base = 'https://github.com/' + REPO + '/releases/download/hq-worker-stg-' + sha + '/'
-    with tempfile.TemporaryDirectory(prefix='hq-download-') as directory:
-        artifact = Path(directory) / 'worker.json'
-        bundle = Path(directory) / 'worker.sigstore.json'
-        artifact.write_bytes(fetch(base + artifact.name))
-        bundle.write_bytes(fetch(base + bundle.name))
-        host.verify(artifact, bundle, sha)
-        package = decode(artifact.read_bytes())
-        return install(host, package, sha)
+    require(isinstance(sha, str) and SHA.fullmatch(sha), 'invalid-stg-sha')
+    return sha
+
+
+def update(host):
+    # Serialize recovery, baseline admission, discovery, verification AND install.
+    # A downloader can never carry an old decision across another install.
+    with exclusive(host.root):
+        if recover(host):
+            return 'recovered'  # Recovery never needs GitHub/network discovery.
+        old = current_sha(host.root)
+        status = host.control('status')
+        require(status['release'] == old and status['ready'], 'baseline-unhealthy')
+        if status['paused']:
+            host.health(old)
+            host.control('resume')
+        sha = staging_sha()
+        def freshness():
+            require(staging_sha() == sha, 'staging-head-moved')
+        base = 'https://github.com/' + REPO + '/releases/download/hq-worker-stg-' + sha + '/'
+        with tempfile.TemporaryDirectory(prefix='hq-download-') as directory:
+            artifact = Path(directory) / 'worker.json'
+            bundle = Path(directory) / 'worker.sigstore.json'
+            artifact.write_bytes(fetch(base + artifact.name))
+            bundle.write_bytes(fetch(base + bundle.name))
+            host.verify(artifact, bundle, sha)
+            package = decode(artifact.read_bytes())
+            return _install_locked(host, package, sha, freshness)
 
 
 def main():
@@ -415,17 +483,6 @@ def main():
         build(args.root, args.sha, args.output)
     else:
         host = Host(decode(Path(args.config).read_bytes()))
-        # Recovery precedes network discovery; outages cannot strand a transaction.
-        with exclusive(host.root):
-            if recover(host):
-                print('recovered')
-                return
-            sha = current_sha(host.root)
-            status = host.control('status')
-            require(status['release'] == sha and status['ready'], 'baseline-unhealthy')
-            if status['paused']:
-                host.health(sha)
-                host.control('resume')
         print(update(host))
 
 

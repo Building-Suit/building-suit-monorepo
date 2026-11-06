@@ -11,18 +11,32 @@ Production is excluded. The private release catalog remains separate.
 `refs/heads/stg`. That job already depends on `review` and branch policy admission.
 Review also runs the full disposable host/PGlite and Python release suites.
 The release job checks out **exact `github.sha`**, runs maintenance and updater
-regressions, then builds committed source using `git show SHA:path`. It publishes
-`hq-worker-stg-SHA` once and never replaces assets. It needs no workflow on
+regressions, then builds committed source using `git show SHA:path`. It creates
+`hq-worker-stg-SHA` as a draft, uploads both assets without clobbering, downloads
+them for exact package-byte and provenance verification, and only then publishes
+the staging prerelease. Existing releases are not successful merely because the
+tag exists: target/tag SHA, staging-prerelease state, exact two-asset inventory,
+package bytes and signed bundle must all match. A complete verified draft can be
+published on rerun; a complete published release is a verified no-op. A partial,
+conflicting or incorrectly signed release fails clearly without replacing assets.
+Failed uploads remain drafts; an operator must review a partial draft or use a
+new reviewed SHA. No automatic deletion or overwrite repairs unknown state. It needs no workflow on
 `main` and uses no `workflow_run`, hosted worker credentials or environment files.
 A failed/cancelled required validation produces no worker release. Since `stg`
 is currently unprotected, this explicit dependency is necessary; repository
 settings are not changed by this implementation.
 
-`worker.json` is a bounded JSON envelope, not a tarball. Its exact allowlist is
-`worker.mjs`, `workforceRoster.mjs`, `brainPublisher.mjs`, `maintenance.mjs` and a
+`worker.json` is a bounded JSON envelope, not a tarball. Its exact five-module allowlist is
+`worker.mjs`, `workforceRoster.mjs`, `brainPublisher.mjs`, `maintenance.mjs`,
+`departmentWorkflow.mjs` and a
 manifest containing their byte counts/hashes, exact SHA and contract versions.
 Downloads and redirects are restricted to HTTPS on the fixed GitHub/API and
-GitHub release-asset domains. The decoder rejects duplicate keys, unknown fields, extra/path-like file names,
+GitHub release-asset domains. The builder also extracts precisely those modules and smoke-imports the worker
+without CLI startup, service credentials, inherited configuration or network
+access. Resolution is restricted to the extracted package and Node builtins.
+A future static import missing from the allowlist fails the build before signing.
+The allowlist must be deliberately reconciled whenever runtime imports change.
+The decoder rejects duplicate keys, unknown fields, extra/path-like file names,
 wrong SHA/ref/contract and modified bytes. It never interprets commands from the
 manifest. Extraction writes fixed names into a fresh staging directory, flushes
 files/directories and renames into an immutable SHA directory. No symlinks,
@@ -64,6 +78,17 @@ capability has been deployed. These are **real installation blockers**. This
 updater must not be activated until all are independently resolved under separate
 operator approval. It deliberately provides no automatic legacy SIGTERM bootstrap.
 
+The packaged runtime is reconciled from department pilot commit
+`116477e5e63495efc6702e8d6a745d3e053310d4`; see `INTEGRATION.md`. It preserves
+qualification/trial gates, head routing, model evidence and bounded fallback.
+It is **not** a verified replacement for an unknown installed/pilot baseline.
+Contract 2 requires the five pilot SQL proposals plus the read-only capability.
+Those SQL files are stored only under `proposed-migrations/`, outside the active
+17-migration chain, and none are packaged or deployed. A contract-1-to-2 transition
+is a coordinated schema/app/runtime bootstrap decision, not an automatic upgrade
+or proven legacy rollback path. Automatic updates require a complete known
+contract-2 baseline compatible with the same deployed contract.
+
 ## One-time operator-reviewed setup — requires separate host approval
 
 Do not run these steps as part of repository implementation or CI. The actual
@@ -88,7 +113,7 @@ Historical paths in the examples are context, not proof of the current machine.
    such procedure exists, bootstrap is blocked; obtain a separately reviewed
    server/host capability rather than using SIGTERM as a drain. After that
    quiescence proof and explicit maintenance approval, install a reviewed release supporting maintenance
-   protocol 1, verify all four files against its manifest, and prove a paused
+   protocol 1, verify all five files against its manifest, and prove a paused
    startup, read-only health acceptance, safe drain and rollback before enabling
    automatic operation. An old worker lacking this protocol needs a manual,
    reconciled bootstrap; do not let the updater stop it based on child-count or
@@ -113,7 +138,7 @@ Historical paths in the examples are context, not proof of the current machine.
    The updater revalidates baseline files before any upgrade and refuses an
    incomplete/modified/symlinked baseline. Retain old SHA directories; no automatic
    garbage collection removes rollback evidence.
-7. Review database compatibility **before** approving `schemaContract: 1` in the
+7. Review database compatibility **before** approving `schemaContract: 2` in the
    root-owned updater config. `database-release-contract.sql` is an additive,
    guarded read-only capability proposal outside the active migration chain.
    Generate a new canonical forward migration through the repository CLI only
@@ -123,11 +148,11 @@ Historical paths in the examples are context, not proof of the current machine.
    applied sources, run this SQL from the updater, or silently change a live DB.
    The new worker requires this server capability; its absence blocks updates. Preserve the existing 17 applied migration source
    hashes and archive unchanged. Both releases must continue to use the same
-   queue/lease/journal semantics, `hq_worker_finish_v2`, three-argument meeting
+   queue/lease/journal semantics, `hq_worker_finish_v3` with `p_model_evidence`, three-argument meeting
    claim protocol 1 and additive roster/learning APIs. Future DB changes must be
    explicit, additive and independently deployed/tested for both versions. This
    release path never runs SQL or migrations. API-shape checks cannot prove
-   behavioral compatibility of an altered SQL body: do not retain contract 1 for
+   behavioral compatibility of an altered SQL body: do not retain contract 2 for
    a breaking semantic change. Such a change requires a separately reviewed
    deployment/rollback plan and updater-contract change; it must fail closed here.
 8. Adapt the example config and three services/timer to actual inspected paths.
@@ -153,6 +178,11 @@ Historical paths in the examples are context, not proof of the current machine.
 
 ## Automatic operation after approved setup
 
+A new unrelated `stg` SHA deliberately gets its own provenanced package and
+may cause a bounded drain/restart even if module hashes are unchanged. Content
+hash deduplication is not implemented; it must not weaken exact-source identity
+or the required freshness fences.
+
 The timer checks at boot and roughly every five minutes, with jitter. It first
 recovers any durable transaction without needing a network download. An ordinary
 paused worker restart is accepted/resumed from its validated baseline before
@@ -162,8 +192,18 @@ public release and signature bundle. A missing release/check failure/network
 failure defers; it never selects arbitrary `latest` or falls back to a branch
 archive. Public API rate limits defer without adding a credential.
 
-A kernel `flock` serializes installation and crash recovery. Download races may
-perform redundant read-only HTTPS work but cannot install concurrently. After
+One kernel `flock` covers recovery, baseline acceptance, current repository/ref
+lookup, download, signature verification and installation. A competing invocation
+fails before discovery rather than retaining a stale decision to install later.
+There is no recursive lock acquisition. Recovery runs before GitHub requests, so
+GitHub outages do not prevent rollback/recovery; normal DB health is still needed
+before admitting jobs. Repository discovery also checks the fixed numeric ID.
+The updater checks `stg` again after verification/preflight, after drain, after
+stop immediately before activation, and after health before acceptance. An
+observed moved head defers or rolls back the never-admitted candidate, without
+stopping busy work. It never installs a previously downloaded SHA merely because
+it was once current. These are observed remote-ref fences, not a distributed
+transaction locking GitHub: a subsequent ref move is handled by the next run. After
 provenance and package verification, the updater validates the full old release,
 stages the candidate and runs the read-only candidate preflight before requesting
 any drain. The approved old/new schema contracts and the server-declared contract must match.
@@ -226,8 +266,8 @@ or health. This prevents the unsafe legacy helper from bypassing bootstrap.
 Run from the repository root with the pinned pnpm/Node versions:
 
 ```sh
-node --test tooling/hq-agent-host/*.test.mjs
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p release_test.py -v
+node --test --test-concurrency=2 tooling/hq-agent-host/*.test.mjs
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p '*_test.py' -v
 node apps/company-hq/supabase/verify-staging-migration-parity.mjs
 pnpm exec eslint tooling/hq-agent-host/*.mjs
 pnpm release:check

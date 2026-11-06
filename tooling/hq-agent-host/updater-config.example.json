@@ -6,7 +6,7 @@
   "trustedRoot": "/etc/building-suit-hq/sigstore-trusted-root.json",
   "socket": "/home/ubuntu/.local/state/building-suit-hq-worker/maintenance.sock",
   "unit": "company-hq-worker.service",
-  "schemaContract": 1,
+  "schemaContract": 2,
   "drainSeconds": 900,
   "healthSeconds": 90
 }
