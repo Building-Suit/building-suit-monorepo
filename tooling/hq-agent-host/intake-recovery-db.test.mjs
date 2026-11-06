@@ -72,7 +72,11 @@ test('size recovery creates one fresh source-bound job, preserves original lease
   const job = snapshot.jobs.find(job => job.id === recovered.id)
   assert.equal(job.kind, 'conversation-intake'); assert.equal(job.founderMessageId, original.founder_message_id); assert.equal(job.recoveryOf, original.id)
   assert.ok(parseHqAgentSnapshot(snapshot))
-  assert.ok(parseHqAgentSnapshot({ ...snapshot, jobs: snapshot.jobs.map(({ kind, founderMessageId, recoveryOf, ...legacy }) => legacy) }))
+  assert.ok(parseHqAgentSnapshot({ ...snapshot, jobs: snapshot.jobs.map(job => {
+    const legacy = { ...job }
+    delete legacy.kind; delete legacy.founderMessageId; delete legacy.recoveryOf
+    return legacy
+  }) }))
   for (const invalid of [{ kind: 'invented-stage' }, { founderMessageId: 'invalid' }, { recoveryOf: 'invalid' }, { leaseToken: randomUUID() }]) assert.equal(parseHqAgentSnapshot({ ...snapshot, jobs: [{ ...job, ...invalid }] }), null)
 })
 

@@ -136,3 +136,21 @@ actual paths/binaries/trust roots and unit/timer setup. The old/unknown installe
 worker is not proven compatible with the new pilot schema. No SQL migration,
 automatic legacy bootstrap, production promotion or new persistent GitHub
 credential is part of this source task.
+
+## Staging-stack lint repair (6 November 2026)
+
+After #534 and #533 were merged through their parents, the combined source at
+`037a46138ffff0a8a45f9a22cc9e71a1100ee833` still contained inherited lint errors.
+The integration repair retains exact control-character rejection and development
+proxy stripping, removes an unused reader initialization and fixture bindings,
+and expresses the existing viewport keyboard pan/orbit choice with explicit branches.
+An exhaustive comparison of all 65,536 UTF-16 code units confirmed the rewritten
+control predicates match their previous regular expressions. No lint rule was disabled.
+
+Local repair-tree results: full `pnpm lint` passed (existing warnings remain),
+`pnpm check` passed, HQ typecheck passed, 94 worker tests and 45 Python tests passed,
+and source parity still verifies all 17 applied migrations unchanged. The first
+parallel HQ run passed 99/100 and hit the unchanged synthetic SQLite schema-lock
+timing test; that test passed in isolation and the complete serial HQ run passed
+100/100. These results do not replace exact-head CI or the final staging-root
+aggregate verification, which must pass before integration into `stg`.

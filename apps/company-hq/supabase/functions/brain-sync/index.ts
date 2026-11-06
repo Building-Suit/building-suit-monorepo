@@ -314,11 +314,11 @@ class Drive {
 
 function cursor(value: unknown, optional = false): string | null {
   if (optional && (value === undefined || value === null)) return null
-  if (typeof value !== 'string' || !value || value.length > 32_768 || /[\u0000-\u001f]/.test(value)) throw new SyncFailure('invalid-source')
+  if (typeof value !== 'string' || !value || value.length > 32_768 || [...value].some(character => character.charCodeAt(0) < 32)) throw new SyncFailure('invalid-source')
   return value
 }
 
-function validResource(value: string): boolean { return value.length > 0 && value.length <= 1_024 && !/[\u0000-\u0020\u007f]/.test(value) }
+function validResource(value: string): boolean { return value.length > 0 && value.length <= 1_024 && ![...value].some(character => character.charCodeAt(0) <= 32 || character.charCodeAt(0) === 127) }
 
 function parseFile(value: unknown): DriveFile {
   const row = object(value)

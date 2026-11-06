@@ -5529,5 +5529,36 @@
     "sources": [
       "hq-worker-release-review-20261106"
     ]
+  },
+  {
+    "id": "company-hq-worker-release-integration-lint",
+    "task": "HQ-WORKER-RELEASE-INTEGRATION-20261106",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/nuxt.config.ts",
+      "apps/company-hq/server/utils/brain.ts",
+      "apps/company-hq/server/utils/officeRoster.ts",
+      "apps/company-hq/shared/types/companyPlans.ts",
+      "apps/company-hq/shared/types/officeObservations.ts",
+      "apps/company-hq/supabase/functions/brain-sync/index.ts",
+      "tooling/hq-agent-host/brainPublisher.mjs",
+      "tooling/hq-agent-host/intake-recovery-db.test.mjs",
+      "packages/ux/src/composables/useSpatialViewport.ts",
+      "tooling/hq-agent-host/VERIFICATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Repair inherited HQ lint blockers for the combined Oracle release staging candidate, preserving exact control-character rejection, development proxy header stripping and legacy fixture coverage. Retain identical viewport keyboard pan/orbit behavior using explicit branches.",
+    "sources": [
+      "hq-worker-release-integration-lint-20261106"
+    ]
   }
 ]

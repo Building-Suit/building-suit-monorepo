@@ -247,10 +247,22 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     if (policy.zoomLocked?.() && ['+', '=', '-', '_'].includes(event.key)) { event.preventDefault(); return }
     stopCameraTransition()
     switch (event.key) {
-      case 'ArrowLeft': event.shiftKey ? pan(-28, 0) : orbit(-12, 0); break
-      case 'ArrowRight': event.shiftKey ? pan(28, 0) : orbit(12, 0); break
-      case 'ArrowUp': event.shiftKey ? pan(0, -28) : orbit(0, -12); break
-      case 'ArrowDown': event.shiftKey ? pan(0, 28) : orbit(0, 12); break
+      case 'ArrowLeft':
+        if (event.shiftKey) pan(-28, 0)
+        else orbit(-12, 0)
+        break
+      case 'ArrowRight':
+        if (event.shiftKey) pan(28, 0)
+        else orbit(12, 0)
+        break
+      case 'ArrowUp':
+        if (event.shiftKey) pan(0, -28)
+        else orbit(0, -12)
+        break
+      case 'ArrowDown':
+        if (event.shiftKey) pan(0, 28)
+        else orbit(0, 12)
+        break
       case '+': case '=': zoomBy(1.15); break
       case '-': case '_': zoomBy(1 / 1.15); break
       case 'Home': case '0': reset(); break

@@ -8,7 +8,7 @@ const hqBrainDevProxyHeader = 'x-hq-brain-dev-proxy'
 const hqBrainLoopbackPeers = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
 const attestHqDevelopmentRequest = (event: { node: { req: IncomingMessage } }) => {
   const request = event.node.req
-  delete request.headers[hqBrainDevProxyHeader]
+  delete request.headers['x-hq-brain-dev-proxy']
   if (!request.socket.remoteAddress || !hqBrainLoopbackPeers.has(request.socket.remoteAddress)) {
     throw Object.assign(new Error('HQ access unavailable'), { statusCode: 403, statusMessage: 'HQ access unavailable' })
   }

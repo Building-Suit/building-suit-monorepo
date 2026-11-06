@@ -6,7 +6,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const HASH = /^[0-9a-f]{64}$/
 const MARKER = '<!-- hq-learning-entries -->'
 const MAX_BYTES = 40_000
-const CONTROLS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/
+const hasControls = value => [...value].some(character => character.charCodeAt(0) < 32 && ![9, 10, 13].includes(character.charCodeAt(0)))
 const hash = text => createHash('sha256').update(text).digest('hex')
 function demand(value, code) { if (!value) { const error = new Error(code); error.code = code; throw error } }
 function plain(value) { return value && typeof value === 'object' && !Array.isArray(value) }
@@ -15,7 +15,7 @@ function validLesson(lesson) {
     && UUID.test(lesson.source_id || '') && HASH.test(lesson.source_digest || '') && HASH.test(lesson.digest || '')
     && typeof lesson.summary === 'string' && lesson.summary.trim() && lesson.summary.length <= 240
     && typeof lesson.body === 'string' && lesson.body.trim() && Buffer.byteLength(lesson.body) <= 8000
-    && !CONTROLS.test(lesson.summary + lesson.body) && !/<!--\s*\/?hq-/i.test(lesson.summary + lesson.body), 'learning-invalid-record')
+    && !hasControls(lesson.summary + lesson.body) && !/<!--\s*\/?hq-/i.test(lesson.summary + lesson.body), 'learning-invalid-record')
   demand(hash(lesson.source_type + lesson.source_id + lesson.body) === lesson.digest, 'learning-invalid-digest')
 }
 function header(text) {
