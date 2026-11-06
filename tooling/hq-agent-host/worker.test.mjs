@@ -91,17 +91,18 @@ test('partial UTF8 JSONL preserves real final text and observed native search ev
  const reply=await fake(events,config=>invokeCodex(config,qualifiedResearchJob(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
  assert.match(reply.reply,/عمل حقيقي/);assert.doesNotMatch(reply.reply,/Observed web sources/);assert.equal(reply.evidence[0].sources[0].url,'https://example.com/evidence')
 })
-test('trial evidence candidate records host-resolved invocation and labels provider-served model unknown',async()=>{
+test('trial evidence candidate records launch settings only and labels host/provider resolution unknown',async()=>{
  const trial=trialWorkerJob(),workerId=randomUUID()
  const output=await fake(successful,config=>invokeCodex({ ...config,id:workerId },trial,[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
  const receipt=output.modelBindingEvidence
- assert.equal(receipt.attestationLevel,'host-resolved-invocation');assert.equal(receipt.providerServedModel,'unknown')
+ assert.equal(receipt.attestationLevel,'host-launch-settings');assert.equal(receipt.hostResolution,null);assert.equal(receipt.providerServedModel,'unknown')
  assert.equal(receipt.agentId,trial.agent_id);assert.equal(receipt.workerId,workerId);assert.equal(receipt.workerJobId,trial.id)
  assert.equal(receipt.trialId,trial.context.supervisedTrial.id);assert.equal(receipt.taskId,trial.context.task.id)
  assert.equal(receipt.threadId,successful[0].thread_id);assert.equal(receipt.cliVersion,'codex-cli 0.101.0')
  assert.match(receipt.cliBinaryDigest,/^[0-9a-f]{64}$/);assert.match(receipt.workerSourceDigest,/^[0-9a-f]{64}$/)
- assert.equal(receipt.configuredModel,trial.context.agent.model);assert.equal(receipt.resolvedModel,trial.context.agent.model)
- assert.equal(receipt.configuredEffort,trial.context.agent.effort);assert.equal(receipt.resolvedEffort,trial.context.agent.effort)
+ assert.equal(receipt.configuredModel,trial.context.agent.model);assert.equal(receipt.launchModel,trial.context.agent.model)
+ assert.equal(receipt.configuredEffort,trial.context.agent.effort);assert.equal(receipt.launchEffort,trial.context.agent.effort)
+ assert.equal('resolvedModel' in receipt,false);assert.equal('resolvedEffort' in receipt,false)
  assert.ok(receipt.invocation.argv.includes('--model'));assert.ok(receipt.invocation.argv.includes('model_reasoning_effort="medium"'))
  assert.equal(receipt.observedErrors.length,0);assert.equal(receipt.observedReroutes.length,0);assert.equal(receipt.outcome,'completed')
  assert.equal(receipt.artifactDigest,createHash('sha256').update(output.reply).digest('hex'))
@@ -127,7 +128,8 @@ test('CLI preflight failure is a not-launched observation with no resolved-model
  await fake(successful,config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
    const evidence=error.modelBindingEvidence
    assert.equal(evidence.attestationLevel,'host-cli-preflight');assert.equal(evidence.invocationStatus,'not-launched')
-   assert.equal(evidence.providerServedModel,'unknown');assert.equal(evidence.resolvedModel,null);assert.equal(evidence.resolvedEffort,null)
+   assert.equal(evidence.providerServedModel,'unknown');assert.equal(evidence.hostResolution,null)
+   assert.equal(evidence.launchModel,null);assert.equal(evidence.launchEffort,null)
    assert.deepEqual(evidence.observedErrors,['provider-cli-version-invalid']);assert.equal(evidence.threadId,null)
    assert.equal(evidence.outcome,'failed');assert.equal(evidence.artifactDigest,null);return true
  }),{cliVersion:'unrecognized CLI output'})

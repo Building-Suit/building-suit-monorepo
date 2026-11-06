@@ -468,13 +468,13 @@ export async function invokeCodex(config, job, brain, signal) {
       cliVersion = await probeCliVersion(executable, { ...environment, HOME: directory, CODEX_HOME: directory }, signal)
     } catch (error) {
       error.modelBindingEvidence = {
-        schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown',
+        schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown', hostResolution: null,
         agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
         trialId: trial.id, taskId: trial.taskId, workerSourceDigest, nodeVersion: process.versions.node, cliVersion: null,
         cliVersionSource: 'same-binary-version-probe', cliExecutable: executable,
-        cliBinaryDigest, configuredModel: job.context.agent.model, resolvedModel: null,
-        configuredEffort: job.context.agent.effort, resolvedEffort: null,
-        settingResolutionSource: 'not-resolved-cli-preflight-failed', invocationStatus: 'not-launched',
+        cliBinaryDigest, configuredModel: job.context.agent.model, launchModel: null,
+        configuredEffort: job.context.agent.effort, launchEffort: null,
+        settingObservationSource: 'not-resolved-cli-preflight-failed', invocationStatus: 'not-launched',
         threadId: null, invocation: { executable, plannedArgv: [...args], environment,
           stdinSha256: createHash('sha256').update('cli-preflight-not-run').digest('hex') },
         turnsStarted: 0, turnsCompleted: 0, observedErrors: [codeOf(error)], observedReroutes: [],
@@ -505,14 +505,14 @@ export async function invokeCodex(config, job, brain, signal) {
       const observedErrors = [], observedReroutes = []
       const noteError = code => { if (isTrialWorker && !observedErrors.includes(code)) observedErrors.push(code) }
       const trialEvidence = (outcome, reply = '') => isTrialWorker ? {
-        schemaVersion: 1, attestationLevel: 'host-resolved-invocation', providerServedModel: 'unknown',
+        schemaVersion: 1, attestationLevel: 'host-launch-settings', providerServedModel: 'unknown', hostResolution: null,
         agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
         trialId: job.context.supervisedTrial.id, taskId: job.context.supervisedTrial.taskId,
         workerSourceDigest, nodeVersion: process.versions.node, cliVersion, cliVersionSource: 'same-binary-version-probe',
         cliExecutable: executable, cliBinaryDigest,
-        configuredModel: job.context.agent.model, resolvedModel: job.context.agent.model,
-        configuredEffort: job.context.agent.effort, resolvedEffort: job.context.agent.effort,
-        settingResolutionSource: 'explicit-host-generated-codex-exec-argv-and-locked-config', invocationStatus: 'launched',
+        configuredModel: job.context.agent.model, launchModel: job.context.agent.model,
+        configuredEffort: job.context.agent.effort, launchEffort: job.context.agent.effort,
+        settingObservationSource: 'explicit-host-generated-codex-exec-argv-and-locked-config', invocationStatus: 'launched',
         threadId, invocation: { executable, argv: [...args], environment, stdinSha256: createHash('sha256').update(prompt).digest('hex') },
         turnsStarted: turnStarted, turnsCompleted: completed,
         observedErrors, observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,

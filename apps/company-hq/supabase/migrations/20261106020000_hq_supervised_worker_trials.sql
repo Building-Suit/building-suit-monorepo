@@ -51,10 +51,10 @@ revoke all on hq_private.workforce_qualification_receipts from public,anon,authe
 create trigger workforce_qualification_receipt_immutable before update or delete on hq_private.workforce_qualification_receipts
   for each row execute function hq_private.immutable_record();
 
--- This immutable record captures exactly what the trusted worker host invoked
--- for a supervised trial. It attests to host-resolved command settings only;
--- Codex CLI JSONL does not report the provider-served model for an ordinary
--- completed turn, so that value is deliberately fixed to 'unknown'.
+-- This immutable record separates the command settings launched by the host
+-- from optional host-returned resolution for this exact thread. Invocation
+-- arguments alone never populate host-returned fields. Neither proves which
+-- model the provider actually served.
 create table hq_private.workforce_trial_host_execution_receipts (
   id uuid primary key default gen_random_uuid(),
   trial_id uuid not null references hq_private.workforce_trials(id),
@@ -63,7 +63,7 @@ create table hq_private.workforce_trial_host_execution_receipts (
   worker_job_id uuid not null unique references public.hq_agent_jobs(id),
   artifact_id uuid references public.hq_task_artifacts(id),
   artifact_digest text check(artifact_digest ~ '^[0-9a-f]{64}$'),
-  attestation_level text not null check(attestation_level in ('host-resolved-invocation','host-cli-preflight')),
+  attestation_level text not null check(attestation_level in ('host-launch-settings','host-returned-resolution','host-cli-preflight')),
   worker_source_digest text not null check(worker_source_digest ~ '^[0-9a-f]{64}$'),
   node_version text not null check(node_version ~ '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'),
   cli_version text check(cli_version ~ '^codex-cli [A-Za-z0-9.+-]{1,80}$'),
@@ -71,10 +71,16 @@ create table hq_private.workforce_trial_host_execution_receipts (
   cli_executable text not null check(octet_length(cli_executable) between 1 and 1024),
   cli_binary_digest text check(cli_binary_digest ~ '^[0-9a-f]{64}$'),
   configured_model text not null check(configured_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
-  resolved_model text check(resolved_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
+  launch_model text check(launch_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
   configured_effort text not null check(configured_effort in ('minimal','low','medium','high','xhigh')),
-  resolved_effort text check(resolved_effort in ('minimal','low','medium','high','xhigh')),
-  setting_resolution_source text not null check(setting_resolution_source in ('explicit-host-generated-codex-exec-argv-and-locked-config','not-resolved-cli-preflight-failed')),
+  launch_effort text check(launch_effort in ('minimal','low','medium','high','xhigh')),
+  host_returned_model text check(host_returned_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
+  host_returned_provider text check(host_returned_provider ~ '^[A-Za-z0-9._-]{1,80}$'),
+  host_returned_effort text check(host_returned_effort in ('minimal','low','medium','high','xhigh')),
+  host_returned_thread_id text check(host_returned_thread_id ~ '^[0-9a-fA-F-]{36}$'),
+  host_resolution_source text check(host_resolution_source='codex-app-server-thread-start'),
+  later_model_override_count integer check(later_model_override_count=0),
+  setting_observation_source text not null check(setting_observation_source in ('explicit-host-generated-codex-exec-argv-and-locked-config','not-resolved-cli-preflight-failed')),
   invocation_status text not null check(invocation_status in ('launched','not-launched')),
   thread_id text check(thread_id ~ '^[0-9a-fA-F-]{36}$'),
   turns_started integer not null check(turns_started between 0 and 1),
@@ -89,14 +95,22 @@ create table hq_private.workforce_trial_host_execution_receipts (
   evidence_reference text not null check(evidence_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$'),
   recorded_by text not null,
   recorded_at timestamptz not null default clock_timestamp(),
-  check((attestation_level='host-resolved-invocation' and invocation_status='launched'
-      and configured_model=resolved_model and configured_effort=resolved_effort
-      and setting_resolution_source='explicit-host-generated-codex-exec-argv-and-locked-config')
+  check((attestation_level in ('host-launch-settings','host-returned-resolution') and invocation_status='launched'
+      and configured_model=launch_model and configured_effort=launch_effort
+      and setting_observation_source='explicit-host-generated-codex-exec-argv-and-locked-config')
     or (attestation_level='host-cli-preflight' and invocation_status='not-launched'
-      and resolved_model is null and resolved_effort is null and setting_resolution_source='not-resolved-cli-preflight-failed')),
+      and launch_model is null and launch_effort is null
+      and setting_observation_source='not-resolved-cli-preflight-failed')),
+  check((attestation_level='host-returned-resolution' and host_returned_model is not null
+      and host_returned_provider is not null and host_returned_effort is not null
+      and host_returned_thread_id=thread_id and host_resolution_source='codex-app-server-thread-start'
+      and later_model_override_count=0)
+    or (attestation_level<>'host-returned-resolution' and host_returned_model is null
+      and host_returned_provider is null and host_returned_effort is null and host_returned_thread_id is null
+      and host_resolution_source is null and later_model_override_count is null)),
   check((outcome='completed' and artifact_id is not null and artifact_digest is not null
     and thread_id is not null and turns_started=1 and turns_completed=1
-    and attestation_level='host-resolved-invocation' and observed_errors='[]'::jsonb and observed_reroutes='[]'::jsonb)
+    and attestation_level in ('host-launch-settings','host-returned-resolution') and observed_errors='[]'::jsonb and observed_reroutes='[]'::jsonb)
     or (outcome='failed' and artifact_id is null and artifact_digest is null
       and (jsonb_array_length(observed_errors)>0 or jsonb_array_length(observed_reroutes)>0))),
   unique(trial_id,worker_job_id)
@@ -128,7 +142,7 @@ begin
     or v_job.agent_id is distinct from v_agent.id or v_job.kind<>'task-work'
     or v_job.worker_id is distinct from nullif(p_evidence->>'workerId','')::uuid
     or p_evidence->>'schemaVersion' is distinct from '1'
-    or v_level not in ('host-resolved-invocation','host-cli-preflight')
+    or v_level not in ('host-launch-settings','host-returned-resolution','host-cli-preflight')
     or p_evidence->>'providerServedModel' is distinct from 'unknown'
     or p_evidence->>'agentId' is distinct from v_agent.id
     or p_evidence->>'workerJobId' is distinct from v_job.id::text
@@ -166,13 +180,27 @@ begin
     or p_evidence_reference !~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$' then
     raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
   end if;
-  if v_level='host-resolved-invocation' then
+  if v_level in ('host-launch-settings','host-returned-resolution') then
     if p_evidence->>'invocationStatus' is distinct from 'launched'
-      or p_evidence->>'settingResolutionSource' is distinct from 'explicit-host-generated-codex-exec-argv-and-locked-config'
-      or p_evidence->>'resolvedModel' is distinct from v_agent.model
-      or p_evidence->>'resolvedEffort' is distinct from v_agent.effort
+      or p_evidence->>'settingObservationSource' is distinct from 'explicit-host-generated-codex-exec-argv-and-locked-config'
+      or p_evidence->>'launchModel' is distinct from v_agent.model
+      or p_evidence->>'launchEffort' is distinct from v_agent.effort
       or p_evidence->>'cliBinaryDigest' !~ '^[0-9a-f]{64}$'
       or p_evidence->>'cliVersion' !~ '^codex-cli [A-Za-z0-9.+-]{1,80}$' then
+      raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+    end if;
+    if (v_level='host-launch-settings' and p_evidence->'hostResolution' is distinct from 'null'::jsonb)
+      or (v_level='host-returned-resolution' and (
+        jsonb_typeof(p_evidence->'hostResolution') is distinct from 'object'
+        or p_evidence->'hostResolution'->>'source' is distinct from 'codex-app-server-thread-start'
+        or p_evidence->'hostResolution'->>'model' is distinct from v_agent.model
+        or p_evidence->'hostResolution'->>'modelProvider' is null
+        or p_evidence->'hostResolution'->>'reasoningEffort' is distinct from v_agent.effort
+        or p_evidence->'hostResolution'->>'threadId' is distinct from p_evidence->>'threadId'
+        or p_evidence->'hostResolution'->>'laterModelOverrideCount' is distinct from '0'
+        or (select count(*) from jsonb_each(p_evidence->'hostResolution'))<>6
+        or exists(select 1 from jsonb_each(p_evidence->'hostResolution') e(key,value)
+          where e.key not in ('source','model','modelProvider','reasoningEffort','threadId','laterModelOverrideCount')))) then
       raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
     end if;
     if v_outcome='completed' then
@@ -193,8 +221,8 @@ begin
     else raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023'; end if;
   elsif v_level='host-cli-preflight' then
     if v_outcome<>'failed' or p_evidence->>'invocationStatus' is distinct from 'not-launched'
-      or p_evidence->>'settingResolutionSource' is distinct from 'not-resolved-cli-preflight-failed'
-      or p_evidence->>'resolvedModel' is not null or p_evidence->>'resolvedEffort' is not null
+      or p_evidence->>'settingObservationSource' is distinct from 'not-resolved-cli-preflight-failed'
+      or p_evidence->>'launchModel' is not null or p_evidence->>'launchEffort' is not null
       or p_artifact_id is not null or v_job.status<>'blocked'
       or p_evidence->'artifactDigest' is distinct from 'null'::jsonb
       or jsonb_array_length(p_evidence->'observedErrors')=0 then
@@ -211,14 +239,22 @@ begin
   end if;
   insert into hq_private.workforce_trial_host_execution_receipts(
     trial_id,agent_id,worker_id,worker_job_id,artifact_id,artifact_digest,attestation_level,worker_source_digest,node_version,
-    cli_version,cli_version_source,cli_executable,cli_binary_digest,configured_model,resolved_model,
-    configured_effort,resolved_effort,setting_resolution_source,invocation_status,thread_id,turns_started,turns_completed,
+    cli_version,cli_version_source,cli_executable,cli_binary_digest,configured_model,launch_model,
+    configured_effort,launch_effort,host_returned_model,host_returned_provider,host_returned_effort,host_returned_thread_id,
+    host_resolution_source,later_model_override_count,setting_observation_source,invocation_status,thread_id,turns_started,turns_completed,
     provider_served_model,invocation,observed_errors,observed_reroutes,observed_event_coverage,outcome,
     evidence_digest,evidence_reference,recorded_by)
   values(p_trial_id,v_agent.id,v_worker.worker_id,v_job.id,v_artifact.id,v_artifact.digest,p_evidence->>'attestationLevel',
     p_evidence->>'workerSourceDigest',p_evidence->>'nodeVersion',p_evidence->>'cliVersion',p_evidence->>'cliVersionSource',p_evidence->>'cliExecutable',
-    p_evidence->>'cliBinaryDigest',p_evidence->>'configuredModel',p_evidence->>'resolvedModel',
-    p_evidence->>'configuredEffort',p_evidence->>'resolvedEffort',p_evidence->>'settingResolutionSource',p_evidence->>'invocationStatus',p_evidence->>'threadId',
+    p_evidence->>'cliBinaryDigest',p_evidence->>'configuredModel',p_evidence->>'launchModel',
+    p_evidence->>'configuredEffort',p_evidence->>'launchEffort',
+    case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'model' end,
+    case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'modelProvider' end,
+    case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'reasoningEffort' end,
+    case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'threadId' end,
+    case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'source' end,
+    case when v_level='host-returned-resolution' then (p_evidence->'hostResolution'->>'laterModelOverrideCount')::integer end,
+    p_evidence->>'settingObservationSource',p_evidence->>'invocationStatus',p_evidence->>'threadId',
     (p_evidence->>'turnsStarted')::integer,(p_evidence->>'turnsCompleted')::integer,p_evidence->>'providerServedModel',
     p_evidence->'invocation',p_evidence->'observedErrors',p_evidence->'observedReroutes',p_evidence->>'observedEventCoverage',
     p_evidence->>'outcome',v_digest,p_evidence_reference,session_user) returning id into v_id;
@@ -281,8 +317,10 @@ language sql stable security definer set search_path='' as $$
     join hq_private.workforce_trial_host_execution_receipts x on x.id=q.host_execution_id
       and x.trial_id=t.id and x.agent_id=r.id and x.artifact_id=a.id and x.artifact_digest=a.digest
       and x.worker_job_id=a.job_id and x.outcome='completed' and x.provider_served_model='unknown'
-      and x.configured_model=r.model and x.resolved_model=r.model
-      and x.configured_effort=r.effort and x.resolved_effort=r.effort
+      and x.attestation_level='host-returned-resolution'
+      and x.configured_model=r.model and x.launch_model=r.model
+      and x.configured_effort=r.effort and x.launch_effort=r.effort
+      and x.host_returned_model=r.model and x.host_returned_effort=r.effort and x.host_returned_thread_id=x.thread_id
     join public.hq_agent_jobs review on review.id=q.review_job_id and review.id=t.review_job_id
     join hq_private.brain_files e on e.file_id=r.profile_file_id and e.in_scope and not e.trashed
     where r.id=p_agent_id and r.enabled and r.model_tier='T1_WORKER' and m.model_tier='T2_HEAD'
@@ -574,8 +612,10 @@ begin
   select * into v_execution from hq_private.workforce_trial_host_execution_receipts x
     where x.trial_id=v_trial.id and x.agent_id=v_agent.id and x.artifact_id=v_artifact.id
       and x.artifact_digest=v_artifact.digest and x.outcome='completed' and x.provider_served_model='unknown'
-      and x.configured_model=v_agent.model and x.resolved_model=v_agent.model
-      and x.configured_effort=v_agent.effort and x.resolved_effort=v_agent.effort;
+      and x.attestation_level='host-returned-resolution'
+      and x.configured_model=v_agent.model and x.launch_model=v_agent.model
+      and x.configured_effort=v_agent.effort and x.launch_effort=v_agent.effort
+      and x.host_returned_model=v_agent.model and x.host_returned_effort=v_agent.effort and x.host_returned_thread_id=x.thread_id;
   if v_trial.id is null or v_trial.status<>'passed' or v_trial.completed_at>v_trial.expires_at
     or v_task.status<>'completed' or not exists(select 1 from public.hq_agent_jobs r where r.task_id=v_task.id and r.kind='task-report' and r.status='completed')
     or not exists(select 1 from public.hq_agent_jobs l where l.task_id=v_task.id and l.kind='lesson-extract' and l.status='blocked' and l.error='trial-learning-disabled')
