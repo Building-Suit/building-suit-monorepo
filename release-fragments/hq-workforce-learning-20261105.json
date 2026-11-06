@@ -1,0 +1,31 @@
+{
+  "id": "hq-workforce-learning-20261105",
+  "task": "HQ-WORKFORCE-LEARNING-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/organisms/BsHqWorkforce.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/src/utils/hqAgentCharacters.ts",
+    "packages/ui/tests/hq-agent-motion.test.mjs",
+    "packages/ui/package.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "tooling/hq-agent-host",
+    "docs/work-packages/company-hq/HQ-WORKFORCE-LEARNING-20261105.md",
+    "docs/architecture/environments.json",
+    "release-changes/items.json"
+  ],
+  "reason": "Project the ten existing cloud Brain employees with scoped skills, lifecycle and explicit model bindings. Add founder-only durable drafting tasks, actual employee/supervisor review, bounded repairs, immutable evidence and reviewed source-linked learning with narrow conditional Brain publication. Separate named decorative avatars from true activity. Authorize and record targeted workflow tests without granting production release, external messaging, hiring or broader tool permissions."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "hq-local-source-checkpoint-20261105",
+  "task": "HQ-LOCAL-SOURCE-CHECKPOINT-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/company-hq/HQ-LOCAL-SOURCE-CHECKPOINT-20261105.md",
+    ".vercelignore",
+    "CLAUDE.md",
+    "apps/building-suit-docs/CLAUDE.md",
+    "apps/company-hq/CLAUDE.md",
+    "apps/doctor-suit/CLAUDE.md",
+    "apps/doctor-suit/mobile/doctor/CLAUDE.md",
+    "apps/doctor-suit/supabase/CLAUDE.md",
+    "apps/inventory-suit/CLAUDE.md",
+    "apps/inventory-suit/supabase/CLAUDE.md",
+    "apps/ledger-suit/CLAUDE.md",
+    "apps/ledger-suit/supabase/CLAUDE.md",
+    "apps/shop-suit/CLAUDE.md",
+    "apps/shop-suit/supabase/CLAUDE.md",
+    "apps/super-admin-suit/CLAUDE.md",
+    "apps/super-admin-suit/supabase/CLAUDE.md",
+    "packages/ui/CLAUDE.md",
+    "supabase/CLAUDE.md"
+  ],
+  "reason": "Founder-authorized private HQ source handoff and repository guidance/upload exclusions; preserve existing task fragments and release inventory without public Suit activation."
+}

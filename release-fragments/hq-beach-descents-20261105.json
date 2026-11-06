@@ -1,0 +1,24 @@
+{
+  "id": "hq-beach-descents-20261105",
+  "task": "HQ-BEACH-DESCENTS-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/naturalIslandGeometry.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-BEACH-DESCENTS-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Remove both Gold neon contours from the hill and their renderer allocations/draws. Add three supported sandy descents, three wider lower coves, six lounge chairs and three umbrellas/tables; retain existing pier. Strengthen coordinated vertex/normal water waves and moving broken shoreline foam. Preserve protected terrace, current offices/assigned desks, Orb and controls. No new worker/provider/mutation authority. Source inspection only; tests/checks/browser/runtime acceptance remain unrun under standing founder instruction. No merge/deployment."
+}

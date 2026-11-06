@@ -1,0 +1,223 @@
+{
+  "observedAt": "2026-11-06T00:12:42.894Z",
+  "conditions": "Actual headless Chromium154 browser Worker/WASM inference; pinned locally served model artifacts; licensed prerecorded16kWAV through generated MediaStream, actual engine AudioWorklet/VAD and packaged Worker. Quiet English fixture amplitude multiplied by100; Arabic unmodified. Manual Stop ends synthetic input tracks before inference results; graceful finishing must retain the final draft. No hardware microphone or hosted inference; no external network requests.",
+  "results": [
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "elapsedIncludingPlaybackMs": 21138,
+      "deliveredAfterManualStop": true,
+      "text": " It's worth half an hour to stroll about the intriguing village.",
+      "language": "en",
+      "confidence": null
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "elapsedIncludingPlaybackMs": 20207.599999999627,
+      "deliveredAfterManualStop": true,
+      "text": " في مونخ الشرق الأوسط الدفع العمياء للمنزل أهمية كبيرة",
+      "language": "ar",
+      "confidence": null
+    }
+  ],
+  "errors": [],
+  "realMicrophoneCalls": 0,
+  "state": {
+    "phase": "ready",
+    "progress": 100,
+    "prepared": true,
+    "processing": false,
+    "error": null
+  },
+  "finished": [
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "at": 21142
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "at": 20208.799999998882
+    }
+  ],
+  "stages": [
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "begin",
+      "at": 0
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "source:running",
+      "at": 132.30000000074506
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "source-resumed",
+      "at": 132.59999999962747
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "decoded",
+      "at": 278.5
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "documented-quiet-fixture-gain:100",
+      "at": 294
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "session-creating",
+      "at": 296
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "session-created",
+      "at": 356.40000000037253
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "source-started",
+      "at": 357.7000000011176
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "manual-stop-tracks-ended",
+      "at": 5241.5
+    },
+    {
+      "file": "fleurs-en_us-validation-28.wav",
+      "value": "recognition-finished",
+      "at": 21142
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "begin",
+      "at": 0
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "source:running",
+      "at": 9.199999999254942
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "source-resumed",
+      "at": 9.299999998882413
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "decoded",
+      "at": 31.40000000037253
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "session-creating",
+      "at": 32.29999999888241
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "session-created",
+      "at": 53.09999999962747
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "source-started",
+      "at": 53.19999999925494
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "manual-stop-tracks-ended",
+      "at": 5808.5999999996275
+    },
+    {
+      "file": "fleurs-ar_eg-test-86.wav",
+      "value": "recognition-finished",
+      "at": 20208.799999998882
+    }
+  ],
+  "workletMessages": [
+    {
+      "type": "speech-start",
+      "at": 16552.299999998882
+    },
+    {
+      "type": "chunk",
+      "length": 70528,
+      "at": 20831.799999998882
+    },
+    {
+      "type": "finished",
+      "at": 21184.599999999627
+    },
+    {
+      "type": "speech-start",
+      "at": 37742.699999999255
+    },
+    {
+      "type": "chunk",
+      "length": 68352,
+      "at": 41837.89999999851
+    },
+    {
+      "type": "finished",
+      "at": 42909.79999999888
+    }
+  ],
+  "workerEvents": [
+    {
+      "type": "prepare",
+      "id": "prepare:1",
+      "at": 672.1999999992549
+    },
+    {
+      "type": "prepared",
+      "id": "prepare:1",
+      "at": 15906.89999999851
+    },
+    {
+      "type": "transcribe",
+      "id": "chunk:3",
+      "length": 70528,
+      "at": 20833.599999999627
+    },
+    {
+      "type": "result",
+      "id": "chunk:3",
+      "at": 37077
+    },
+    {
+      "type": "cancel",
+      "at": 37079.39999999851
+    },
+    {
+      "type": "transcribe",
+      "id": "chunk:5",
+      "length": 68352,
+      "at": 41838.89999999851
+    },
+    {
+      "type": "result",
+      "id": "chunk:5",
+      "at": 57306.89999999851
+    },
+    {
+      "type": "cancel",
+      "at": 57308.29999999888
+    }
+  ],
+  "modelFiles": [
+    "preprocessor_config.json",
+    "tokenizer_config.json",
+    "config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json"
+  ],
+  "externalRequests": [],
+  "browserErrors": []
+}

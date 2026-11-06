@@ -1,0 +1,13 @@
+# HQ slow coastal surges and intermittent spray — 5 November 2026
+
+The founder clarifies that dense/high wave patterns hurt their eyes. The intended “heavy and strong” behavior is water approaching and receding, striking the high cliff, with occasional splashes. This supersedes the prior constant choppy Gerstner waves and offshore whitecaps.
+
+The open water now has only two broad low-amplitude motions (0.035/0.020) and a slow water-level variation (0.055), plus a shoreline pulse (0.34) moving inward on an 18-second source-time cycle. The cycle varies smoothly by coastal angle, with impact around 8.8 seconds, a short foam buildup and a longer recession/backwash. No fast ripple normals, sharp specular glints or widespread whitecap pattern remains. Vertex normals follow the displaced height field.
+
+A cached sparse spray mesh has sixteen coast contacts and eighteen seeded droplets per contact. Camera-facing soft quads launch around the same impact time, spread outward, rise/fall ballistically and fade within 1.7 seconds. They render after opaque scene objects, depth-tested with depth writes disabled and no emissive material. Geometry releases on layout replacement/disposal. No timers, polling, texture target or employee/runtime work is introduced. The existing reduced-motion time-zero policy keeps all effects static; at time zero the spray launch window is inactive.
+
+The high cliff island, absent beach/furniture/descents, removed Gold hill lines, workplaces/desks, Orb, bounds and controls remain. Source review only; tests, builds, lint/typechecks, release/boundary checks and browser/API/runtime/visual acceptance remain unrun under the standing founder restriction. Administrative preflight failed with code 128, so fresh GitHub/fetch state remains unverified; no publication, merge or deployment.
+
+## Follow-up: retain visible, smoother, irregular rolling waves
+
+Before handback the founder reports that the first calmer setting removed the waves too much. The intended revision retains visible rolling motion while reducing crest height/speed and avoiding fixed patterns. Source now uses three broad components (0.14/0.09/0.045), slowly interpolated noise to warp phase and modulate strength, and the existing 0.34 shoreline pulse. Arrival delay varies continuously by coast and per 30-second event window, yielding approximately 22–38-second impact intervals per contact; foam patches and spray contact placement are irregular as well. The pulse/spray still share one clock, recession remains gradual, and time-zero spray is explicitly disabled. These final values supersede the first near-flat amplitudes and fixed 18-second beat above. No additional verification is claimed.

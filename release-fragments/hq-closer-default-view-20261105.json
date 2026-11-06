@@ -1,0 +1,21 @@
+{
+  "id": "hq-closer-default-view-20261105",
+  "task": "HQ-CLOSER-DEFAULT-VIEW-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/spatialViewportGeometry.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Rebase the internal HQ default/reset overview to the previous 139-percent camera distance while retaining normalized camera zoom 1 and the displayed 100-percent default. Keep floor-radius/aspect fitting and derive rendering, minimap, pan scale and selection focus from the same actual frame. Preserve island, Orb, workplaces, materials, lighting, water, controls and page layout. No tests/checks/browser/API/runtime acceptance or tester/reviewer agents under the founder instruction. No provider changes, merge, deployment, production action or public product activation."
+}

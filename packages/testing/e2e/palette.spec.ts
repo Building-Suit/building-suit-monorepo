@@ -59,7 +59,9 @@ for (const app of [
     // Release outside the button so checking :active never submits a form.
     await page.mouse.move(1, 1)
     await page.mouse.up()
-    await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-light.png`, fullPage: true })
+    // Palette evidence covers the tested viewport. The complete Docs gallery
+    // includes independent spatial demos and is not a bounded capture surface.
+    await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-light.png`, fullPage: app.product })
 
     await settings.click()
     if (app.product) {
@@ -80,7 +82,7 @@ for (const app of [
     await page.reload()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
-    await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-dark.png`, fullPage: true })
+    await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-dark.png`, fullPage: app.product })
 
     await settings.click()
     if (app.product) {

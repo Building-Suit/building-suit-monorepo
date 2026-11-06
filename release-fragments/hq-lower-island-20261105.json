@@ -1,0 +1,25 @@
+{
+  "id": "hq-lower-island-20261105",
+  "task": "HQ-LOWER-ISLAND-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/naturalIslandGeometry.ts",
+    "packages/ui/src/utils/naturalIslandMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/islandWaterConfig.ts",
+    "docs/work-packages/company-hq/HQ-LOWER-ISLAND-20261105.md",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Latest island refinement (5 November): reduce the exposed hill by 55%, from a 3.2 to 1.44 scene-unit terrace-to-sea drop. Keep the occupied terrace, offices, Brain and camera at their existing height; scale exposed rim/cliff relief to 45% and derive sea/contact/shadow from the shared drop. Refit cached contact slices to the shorter cliff. Replace muddy high-contrast patches, contour-like texture ribbons and cliff bands with low-contrast matte gray stone grain, quiet soil and sparse muted green cover, reusing the existing 1024-square land texture and palette. The founder explicitly authorizes browser visual inspection for this refinement: the local rendered result was inspected before/after, including the shorter cliff and quieter material. This narrow visual review does not lift the standing ban on autonomous tests/builds/lint/typechecks/release/boundary/API/performance checks. Earlier high-cliff/material descriptions are historical where superseded. See HQ-LOWER-ISLAND-20261105."
+}

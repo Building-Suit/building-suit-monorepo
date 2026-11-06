@@ -1,0 +1,276 @@
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import type { SpatialViewportCamera } from '@building-suit/ux'
+import type { HqAgentPresentation } from '../types/hqAgentsPresentation'
+import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
+import { createHologramRenderer } from '../utils/hologramScene'
+import type { HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
+import { islandWaterDebug } from '../utils/islandWaterConfig'
+
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentPresentation[]; executiveLabel?: string; selectedWorkplaceId?: string | null }>(), { opened: false, officeLayerCount: 0, departments: () => [], agents: () => [], executiveLabel: '', selectedWorkplaceId: null })
+const emit = defineEmits<{ activate: []; selectWorkplace: [id: string]; hoverChange: [active: boolean] }>()
+const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
+const unavailable = ref(false)
+let renderer: HologramRenderer | null = null
+let resizeObserver: ResizeObserver | null = null
+let intersectionObserver: IntersectionObserver | null = null
+let motion: MediaQueryList | null = null
+let frame = 0, visible = false, elapsed = 0, waterElapsed = 0, lastFrame = 0, disposed = false
+// Offscreen catalogues must not allocate WebGL, geometry or procedural textures.
+let rendererNeeded = true
+let lastPaint = 0, needsDraw = true
+let openAmount = props.opened ? 1 : 0, excitedAmount = 0, excitedTarget = 0
+let hoverActive = false
+let constructionUntil = 0
+const knownDepartments = new Set<string>()
+const officeLabels = new Map<string, HTMLElement>()
+const agentLabels = new Map<string, HTMLElement>()
+const labelPoses = new WeakMap<HTMLElement, string>()
+const executiveLabelRef = shallowRef<HTMLButtonElement | null>(null)
+const sceneLayout: HologramLayout = { officeLayerCount: props.officeLayerCount, departments: props.departments, agents: props.agents }
+
+function publishHover(active: boolean) {
+  if (active === hoverActive) return
+  hoverActive = active
+  emit('hoverChange', active)
+}
+function clearHoverAndShake() {
+  excitedTarget = 0; excitedAmount = 0
+  publishHover(false)
+}
+function activateAt(clientX: number, clientY: number) {
+  if (disposed || unavailable.value || !visible || !renderer) return false
+  if (renderer.hitTestOrb(clientX, clientY)) { emit('activate'); return true }
+  const workplace = renderer.hitTestWorkplace(clientX, clientY)
+  if (workplace) { emit('selectWorkplace', workplace); return true }
+  return false
+}
+function selectWorkplace(id: string) {
+  if (disposed || unavailable.value || !visible) return
+  if (id !== 'executive-workspace' && !props.departments.some(department => department.id === id)) return
+  emit('selectWorkplace', id)
+}
+function setExcitedAt(clientX: number, clientY: number, active: boolean) {
+  const eligible = active && !disposed && !unavailable.value && visible && typeof document !== 'undefined' && !document.hidden
+  const orbHit = eligible && Boolean(renderer?.hitTestOrb(clientX, clientY))
+  const workplaceHit = eligible && !orbHit && Boolean(renderer?.hitTestWorkplace(clientX, clientY))
+  const nextTarget = orbHit && !props.opened && openAmount < 0.001 ? 1 : 0
+  publishHover(nextTarget === 1 || workplaceHit)
+  if (nextTarget !== excitedTarget) {
+    excitedTarget = nextTarget
+    if (props.opened || openAmount > 0.001) excitedAmount = 0
+    if (typeof window !== 'undefined') requestDraw()
+  }
+  return orbHit || workplaceHit
+}
+defineExpose({ activateAt, setExcitedAt })
+
+function setAgentLabel(id: string, element: unknown) {
+  if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) agentLabels.set(id, element)
+  else agentLabels.delete(id)
+}
+function setOfficeLabel(id: string, element: unknown) {
+  if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) officeLabels.set(id, element)
+  else officeLabels.delete(id)
+}
+function updateLabel(element: HTMLElement, anchor: ReturnType<HologramRenderer['projectExecutiveAnchor']>) {
+  const hidden = !anchor?.visible || unavailable.value || !visible
+  const pose = hidden || !anchor ? 'hidden' : `${anchor.x.toFixed(1)},${anchor.y.toFixed(1)}`
+  if (labelPoses.get(element) === pose) return
+  labelPoses.set(element, pose)
+  element.hidden = hidden
+  if (!hidden && anchor) element.style.transform = `translate3d(${anchor.x.toFixed(1)}px, ${anchor.y.toFixed(1)}px, 0) translate(-50%, -100%)`
+}
+function updateLabels() {
+  for (const [id, element] of agentLabels) updateLabel(element, renderer?.projectAgentAnchor(id) ?? null)
+  for (const [id, element] of officeLabels) updateLabel(element, renderer?.projectOfficeAnchor(id) ?? null)
+  if (executiveLabelRef.value) updateLabel(executiveLabelRef.value, renderer?.projectExecutiveAnchor() ?? null)
+}
+function hideLabels() {
+  for (const element of agentLabels.values()) updateLabel(element, null)
+  for (const element of officeLabels.values()) updateLabel(element, null)
+  if (executiveLabelRef.value) updateLabel(executiveLabelRef.value, null)
+}
+function noteNewDepartments() {
+  let added = false
+  for (const department of props.departments) if (!knownDepartments.has(department.id)) { knownDepartments.add(department.id); added = true }
+  if (added && typeof performance !== 'undefined') constructionUntil = performance.now() + 2600
+}
+
+function requestDraw(force = true) {
+  if (force) needsDraw = true
+  if (!disposed && !frame && visible && !document.hidden && renderer) frame = requestAnimationFrame(draw)
+}
+function draw(time: number) {
+  frame = 0
+  if (!renderer || !visible || document.hidden) return
+  const reduced = motion?.matches ?? false
+  const openTarget = props.opened ? 1 : 0
+  const transitioning = Math.abs(openTarget - openAmount) > 0.001
+  const minimumFrame = transitioning || excitedTarget || time < constructionUntil ? 1000 / 60 : 1000 / 30
+  if (!reduced && !needsDraw && lastPaint && time - lastPaint + 0.5 < minimumFrame) {
+    requestDraw(false)
+    return
+  }
+  needsDraw = false; lastPaint = time
+  // Ocean time follows real visible elapsed time; retain the existing UI delta cap.
+  const frameDelta = lastFrame ? Math.max(0, (time - lastFrame) / 1000) : 0
+  const delta = Math.min(0.064, frameDelta)
+  lastFrame = time
+  if (!reduced) { elapsed += delta; waterElapsed += frameDelta }
+  openAmount = reduced ? openTarget : openAmount + (openTarget - openAmount) * (1 - Math.exp(-delta * 7))
+  if (props.opened || openAmount > 0.001) { excitedTarget = 0; excitedAmount = 0 }
+  else excitedAmount = reduced ? 0 : excitedAmount + (excitedTarget - excitedAmount) * (1 - Math.exp(-delta * 12))
+  sceneLayout.agents = props.agents
+  sceneLayout.reducedMotion = reduced
+  sceneLayout.waterSeconds = reduced ? 0 : waterElapsed
+  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount, opened: props.opened }, sceneLayout)
+  updateLabels()
+  if (!motion?.matches) requestDraw(false)
+}
+function updateVisibility() {
+  if (!visible || document.hidden) { clearHoverAndShake(); hideLabels() }
+  if (frame) cancelAnimationFrame(frame)
+  frame = 0
+  lastFrame = 0; lastPaint = 0
+  if (visible && !document.hidden && rendererNeeded) startRenderer()
+  requestDraw()
+}
+function startRenderer() {
+  const canvas = canvasRef.value
+  if (!canvas || disposed || !visible || document.hidden || !rendererNeeded) return
+  rendererNeeded = false
+  clearHoverAndShake()
+  hideLabels()
+  renderer?.dispose()
+  const style = getComputedStyle(canvas)
+  const read = (token: string): [number, number, number] => {
+    const hex = style.getPropertyValue(token).trim().replace('#', '')
+    return [0, 2, 4].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255) as [number, number, number]
+  }
+  const palette: HologramPalette = {
+    coal: read('--bs-color-neutral-ink'), charcoal: read('--bs-color-neutral-charcoal'),
+    navy: read('--bs-color-brand-building-navy'), navyDeep: read('--bs-color-brand-deep-structure-navy'),
+    graphite: read('--bs-color-neutral-graphite'), steelGray: read('--bs-color-neutral-steel-gray'),
+    silver: read('--bs-color-brand-soft-silver'), pearl: read('--bs-color-brand-pearl-white'),
+    gold: read('--bs-color-brand-premium-gold'),
+  }
+  renderer = createHologramRenderer(canvas, palette)
+  unavailable.value = !renderer
+  requestDraw()
+}
+function onContextLost(event: Event) {
+  event.preventDefault()
+  clearHoverAndShake()
+  hideLabels()
+  if (frame) cancelAnimationFrame(frame)
+  frame = 0
+  renderer?.dispose(); renderer = null
+  rendererNeeded = false
+  unavailable.value = true
+}
+function onContextRestored() {
+  rendererNeeded = true
+  updateVisibility()
+}
+watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.camera.panX, props.camera.panY], () => {
+  clearHoverAndShake()
+  if (typeof window !== 'undefined') requestDraw()
+})
+watch(() => props.agents, () => { if (typeof window !== 'undefined') requestDraw() }, { deep: true })
+watch(() => props.resetVersion, () => {
+  elapsed = 0; lastFrame = 0; lastPaint = 0
+  openAmount = props.opened ? 1 : 0
+  clearHoverAndShake()
+  if (typeof window !== 'undefined') requestDraw()
+})
+watch(() => props.opened, () => {
+  clearHoverAndShake()
+  if (typeof window !== 'undefined') requestDraw()
+}, { flush: 'sync' })
+watch(() => props.officeLayerCount, count => {
+  sceneLayout.officeLayerCount = count
+  if (typeof window !== 'undefined') requestDraw()
+}, { flush: 'sync' })
+watch(() => props.departments, departments => {
+  clearHoverAndShake()
+  sceneLayout.departments = departments
+  noteNewDepartments()
+  if (typeof window !== 'undefined') requestDraw()
+}, { flush: 'sync' })
+watch(() => props.executiveLabel, () => {
+  if (typeof window !== 'undefined') requestDraw()
+}, { flush: 'post' })
+onMounted(() => {
+  if (import.meta.dev) sceneLayout.waterDebug = islandWaterDebug(new URLSearchParams(window.location.search).get('hqWaterDebug'))
+  noteNewDepartments()
+  motion = matchMedia('(prefers-reduced-motion: reduce)')
+  motion.addEventListener('change', updateVisibility)
+  document.addEventListener('visibilitychange', updateVisibility)
+  const canvas = canvasRef.value
+  if (!canvas) return
+  resizeObserver = new ResizeObserver(() => requestDraw())
+  resizeObserver.observe(canvas)
+  if (typeof IntersectionObserver === 'undefined') {
+    visible = true
+    updateVisibility()
+  } else {
+    intersectionObserver = new IntersectionObserver(entries => {
+      visible = entries.some(entry => entry.isIntersecting)
+      updateVisibility()
+    })
+    intersectionObserver.observe(canvas)
+  }
+})
+onBeforeUnmount(() => {
+  disposed = true
+  clearHoverAndShake()
+  if (frame) cancelAnimationFrame(frame)
+  renderer?.dispose()
+  renderer = null
+  hideLabels(); officeLabels.clear(); agentLabels.clear(); knownDepartments.clear()
+  resizeObserver?.disconnect()
+  intersectionObserver?.disconnect()
+  motion?.removeEventListener('change', updateVisibility)
+  document.removeEventListener('visibilitychange', updateVisibility)
+})
+</script>
+
+<template>
+  <div class="bs-hologram-scene">
+    <canvas ref="canvasRef" :aria-label="label" role="img" class="bs-hologram-scene__canvas" @webglcontextlost="onContextLost" @webglcontextrestored="onContextRestored" />
+    <div class="bs-hologram-scene__labels">
+      <button v-for="department in departments" :key="department.id" :ref="element => setOfficeLabel(department.id, element)" type="button" class="bs-hologram-scene__office-label" :aria-label="department.name" :aria-pressed="selectedWorkplaceId === department.id" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace(department.id)">{{ department.name }}</button>
+      <button v-if="executiveLabel" ref="executiveLabelRef" type="button" class="bs-hologram-scene__office-label bs-hologram-scene__executive-label" :aria-label="executiveLabel" :aria-pressed="selectedWorkplaceId === 'executive-workspace'" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace('executive-workspace')">{{ executiveLabel }}</button>
+    </div>
+    <div class="bs-hologram-scene__agent-labels">
+      <span v-for="agent in agents" :key="agent.id" :ref="element => setAgentLabel(agent.id, element)" class="bs-hologram-scene__agent-label" :data-activity="agent.activity" :data-cosmetic="agent.cosmeticIdle || undefined" :title="`${agent.name} · ${agent.id}`" hidden>
+        <strong>{{ agent.name }}</strong>
+        <small>{{ agent.roleLabel ?? agent.id }}<template v-if="!agent.cosmeticIdle && agent.activityLabel"> · {{ agent.activityLabel }}</template></small>
+        <small v-if="agent.cosmeticIdle && (agent.connectionLabel || agent.activityLabel)" class="bs-hologram-scene__agent-state">{{ agent.connectionLabel ?? agent.activityLabel }}</small>
+      </span>
+    </div>
+    <p v-if="unavailable" class="bs-hologram-scene__unavailable" role="status">{{ unavailableLabel }}</p>
+  </div>
+</template>
+
+<style scoped>
+.bs-hologram-scene { position: absolute; inset: 0; }
+.bs-hologram-scene__canvas { display: block; width: 100%; height: 100%; }
+.bs-hologram-scene__labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bs-hologram-scene__office-label { position: absolute; inset: 0 auto auto 0; width: max-content; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--bs-color-brand-soft-silver) 22%, var(--bs-color-brand-building-navy)); border-radius: 8px; background: var(--bs-component-hq-glass-control); color: var(--bs-color-brand-soft-silver); box-shadow: inset 0 1px color-mix(in srgb, var(--bs-color-brand-soft-silver) 7%, transparent), 0 3px 12px color-mix(in srgb, var(--bs-color-neutral-ink) 30%, transparent); font: inherit; font-size: 12px; line-height: 1.4; }
+.bs-hologram-scene__office-label[hidden] { display: none; }
+.bs-hologram-scene__office-label { pointer-events: auto; cursor: pointer; text-align: start; }
+.bs-hologram-scene__executive-label { border-color: var(--bs-color-brand-premium-gold); }
+.bs-hologram-scene__office-label[aria-pressed='true'] { border-color: var(--bs-color-brand-premium-gold); background: var(--bs-component-hq-glass-selected); }
+.bs-hologram-scene__office-label:focus-visible { outline: 2px solid var(--bs-color-brand-premium-gold); outline-offset: 3px; }
+@media (pointer: coarse) { .bs-hologram-scene__office-label { min-height: 44px; } }
+.bs-hologram-scene__agent-labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bs-hologram-scene__agent-label { position: absolute; inset: 0 auto auto 0; display: grid; gap: 1px; max-width: 190px; padding: 4px 8px; border: 1px solid color-mix(in srgb, var(--bs-color-brand-soft-silver) 25%, transparent); border-radius: 7px; background: var(--bs-component-hq-glass-control); color: var(--bs-color-brand-pearl-white); box-shadow: 0 2px 8px color-mix(in srgb, var(--bs-color-neutral-ink) 30%, transparent); text-align: center; white-space: nowrap; }
+.bs-hologram-scene__agent-label[hidden] { display: none; }
+.bs-hologram-scene__agent-label strong { overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; line-height: 1.3; }
+.bs-hologram-scene__agent-label small { overflow: hidden; text-overflow: ellipsis; font-size: 10px; line-height: 1.3; color: var(--bs-color-brand-soft-silver); }
+.bs-hologram-scene__agent-label .bs-hologram-scene__agent-state { white-space: normal; overflow-wrap: anywhere; }
+.bs-hologram-scene__agent-label[data-activity='working'] { border-color: var(--bs-color-brand-premium-gold); }
+.bs-hologram-scene__unavailable { position: absolute; inset: 50% 24px auto; margin: 0; text-align: center; color: var(--bs-color-brand-soft-silver); font-size: 14px; }
+</style>

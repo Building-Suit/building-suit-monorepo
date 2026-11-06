@@ -161,6 +161,8 @@ export { tabNavigationTarget } from './tabNavigation.ts'
 export { permissionSelection } from './permissionSelection.ts'
 
 export { useWorkspaceNavigation } from './composables/useWorkspaceNavigation.ts'
+export { useSpatialViewport, SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_MIN_PITCH, SPATIAL_VIEWPORT_TARGET_Y, SPATIAL_VIEWPORT_MIN_TARGET_Y } from './composables/useSpatialViewport.ts'
+export type { SpatialViewportCamera } from './composables/useSpatialViewport.ts'
 
 export { usePolling } from './composables/usePolling.ts'
 
@@ -272,3 +274,13 @@ export { readWebsiteImage } from './utils/readWebsiteImage.ts'
 
 export { scrollRegionKey } from './scrollRegion.ts'
 export { normalizeDecimalText } from './utils/decimalText.js'
+
+export { spatialViewportFrame, spatialViewportScreenRectangle, spatialViewportGroundFootprint, SPATIAL_VIEWPORT_VERTICAL_FOV } from './spatialViewportGeometry.ts'
+export type { SpatialViewportFrame, SpatialViewportPoint, SpatialViewportVector } from './spatialViewportGeometry.ts'
+export { useSpatialWorkspaceSelection } from './composables/useSpatialWorkspaceSelection.ts'
+export type { SpatialWorkspaceTarget, SpatialWorkspaceSelectionPolicy } from './composables/useSpatialWorkspaceSelection.ts'
+export { useHqOfficeInspection } from './composables/useHqOfficeInspection.ts'
+export type { HqOfficeSection } from './composables/useHqOfficeInspection.ts'
+export { useSpeechDictation } from './composables/useSpeechDictation.ts'
+export { useDisplayClock } from './composables/useDisplayClock.ts'
+export type { SpeechDictationError, SpeechDictationPhase } from './composables/useSpeechDictation.ts'

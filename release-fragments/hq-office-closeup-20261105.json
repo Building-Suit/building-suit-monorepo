@@ -1,0 +1,21 @@
+{
+  "id": "hq-office-closeup-20261105",
+  "task": "HQ-OFFICE-CLOSEUP-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Bring selected HQ workplaces closer by fitting their existing 6.2-by-5.2 furnished work area at its anchor rather than the entire curved floor share. Keep the full annular-sector click volumes and minimap footprints, work-area height/yaw, shared overlay/aspect/resize fitting and reversible camera restoration. Preserve the default overview, Brain focus, manual-zoom locks, controls, Orb, office layout/furniture, terrain, water and lighting. No new runtime/data/provider authority or public product activation. Source inspection only; no tests/checks/browser/API/runtime acceptance or tester/reviewer agents under the founder instruction. No merge, deployment or production action."
+}

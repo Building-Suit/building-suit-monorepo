@@ -1,0 +1,25 @@
+{
+  "id": "hq-hill-strong-waves-20261105",
+  "task": "HQ-HILL-STRONG-WAVES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hqIslandGeometry.ts",
+    "packages/ui/src/utils/naturalIslandGeometry.ts",
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-HILL-STRONG-WAVES-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder removes the beach: restore compact high-cliff coast, remove sand/descents/chairs/umbrellas/tables/pier and beach recreation geometry/destinations while keeping Gold hill contours off. Add four heavy choppy Gerstner wave trains with shared displacement/derivative normals, whitecaps/rock-impact foam and bounded 512×64 mesh. Preserve workplace support, offices/assigned desks, Orb, controls and reduced-motion. Source-only; tests/checks/runtime acceptance remain deferred under standing instruction. No merge/deployment."
+}

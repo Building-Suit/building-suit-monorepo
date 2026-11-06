@@ -1,0 +1,21 @@
+{
+  "id": "hq-spatial-import-resolution-20261104",
+  "task": "HQ-SPATIAL-IMPORT-RESOLUTION-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "release-changes/items.json"
+  ],
+  "reason": "Address the reported HQ HTTP 500 module-resolution failure by making the shared spatial camera helper TypeScript import/re-export paths explicit, with matching explicit paths for adjacent hologram effect/layout imports. Preserve camera/visual behavior and product data. Source correction only; no test/build/lint/typecheck/boundary/release/browser/API/runtime or reviewer checks were run under founder instruction. No provider calls, app Brain writes, database/Auth/plan changes, public activation, deployment or spending."
+}

@@ -1,0 +1,7 @@
+# HQ-STANDARD-CHARACTERS-20261105 — Standard characters restored
+
+The founder cancels the generated-character integration and says: “use the standard characters for now.” This supersedes the active dedicated Steve appearance and the immediately preceding request to integrate the hosted model. Future custom-character research is deferred to the founder.
+
+`hologramScene.ts` now uses the existing standard `createHqAgentCharacterGeometry` / `HQ_AGENT_RIG` for every role, including Steve. Remove the dedicated Steve import, geometry allocations, joint drawing and material shader interpolation. Keep the existing 1.28 scale, role colors, motion controller, pose modes, sitting, recreation, nameplates and all unrelated scene/runtime work. Standard seated-leg transforms are retained; Steve-specific proportions are removed. No model download or new rendering dependency is added. Authored Steve source/export tooling and local hosted-generation artifacts are retained as inactive references, not deleted or loaded by HQ.
+
+App guidance and the bilingual documentation catalogue reflect the current standard-character choice. Release provenance is internal. No tests/builds/lint/typechecks/release/boundary/browser/API/runtime/performance checks, commit, push, merge or deployment are performed, following the standing founder restriction. Administrative preflight was started; its network-backed report did not complete during this scoped change, so current GitHub state is unverified and nothing is published. Concurrent dirty work is preserved.

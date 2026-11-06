@@ -1,0 +1,32 @@
+{
+  "id": "hq-neon-reflections-20261104",
+  "task": "HQ-NEON-REFLECTIONS-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/work-packages/company-hq/HQ-NEON-REFLECTIONS-20261104.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "release-changes/items.json",
+    "packages/ui/src/utils/hologramEffects.ts",
+    "packages/ui/package.json"
+  ],
+  "reason": "Refine internal HQ visuals using the founder-approved mixed Coal/Building Navy/Premium Gold reference, superseding earlier all-coal/no-navy guidance. Preserve accepted camera/mouse/overview, office design, Auth and data behavior. Source uses a fixed-ground mirrored-geometry reflection pass with current animated poses, five-tap Fresnel/rough floor sampling, localized Gold spill/contact shadow, metallic Navy/Gold environment/specular response and hot neon cores. A GPU native-scene copy, luminance bright-pass, two nine-tap blur passes and alpha-correct bloom compose the light without CPU readback. Half-resolution reflection caps at 1536 and quarter-resolution bloom at 768; resize-only targets release on disable/disposal. Native 8m/DPR3 budgets, reduced-motion static state and 30/60 scheduling remain. These are WebGL raster effects, not a hardware RTX/ray-tracing or measured visual/performance claim. No provider calls, Brain writes, database/Auth/plan mutations, staff/office records, public activation, deployment or spending. Tests/build/lint/typecheck/boundary/release/browser/API/runtime/profiling and tester/reviewer checks are prohibited and unrun."
+}

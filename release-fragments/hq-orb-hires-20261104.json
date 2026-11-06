@@ -1,0 +1,21 @@
+{
+  "id": "hq-orb-hires-20261104",
+  "task": "HQ-SHIELD-ORB-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-SHIELD-ORB-20261104.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Respond to founder feedback that the refined orb is good but blurry/pixelated: replace aggressive opened/closed low-resolution caps with consistent native display density up to DPR3, 8 million backing pixels and a 4096/GPU renderbuffer dimension limit. Use high precision in fragment shaders where supported. Preserve lighter indexed geometry, cached matrices/DOM and idle paint limits; quality/performance are unmeasured and no tests, builds, browser/runtime checks or benchmarks ran. Original design backup remains. Internal HQ only; no provider, database, deployment or staff mutation."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "hq-standard-characters-20261105",
+  "task": "HQ-STANDARD-CHARACTERS-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/work-packages/company-hq/HQ-STANDARD-CHARACTERS-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder postpones custom characters and restores the existing standard HQ character mesh/rig for Steve as well as other agents, preserving scale, role colors, activity and motion. The dedicated Steve renderer/shader path is removed; generated assets remain inactive references."
+}

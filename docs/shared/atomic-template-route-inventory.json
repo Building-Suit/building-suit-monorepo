@@ -111,7 +111,8 @@
     "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
     "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
     "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
-    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+    "BsHqLayoutPage": "packages/ui/src/templates/BsHqLayoutPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -119,11 +120,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 172,
+    "suitVueFiles": 174,
     "localComponents": 0,
-    "routes": 149,
+    "routes": 150,
     "layouts": 16,
-    "roots": 7
+    "roots": 8
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -3459,6 +3460,39 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
       "purpose": "shop-commodity-pricing"
+    },
+    {
+      "source": "apps/company-hq/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented-unverified",
+      "domainAdapter": "apps/company-hq/app/app.vue",
+      "dependencies": [],
+      "verification": "HQ-WORKPLACE-SELECTION-20261105 adds whole-office/label and shared BsSelect picker selection for CEO/approved departments, selected-name/X, logical-start overlay and one reversible shared-UX camera session across Brain/room switches. Clear/close/Escape/Workspace restores the initial camera; Reset/Home clears then defaults, missing selection/Auth scope restores and viewport/floor changes refit. Zoom locks through panel leave. CEO reuses plans/Auth; departments show read-only four-station capacity, not agents. Rounded nearest-depth office picking excludes roads; labels/minimap expose selection. No API/Auth/Brain/data mutation; source/runtime acceptance is unrun. HQ-OFFICE-REFERENCE-20261104 source replaces empty rooms with 6.2×5.2 rounded open cutaways, a large CEO desk/board and four visual monitored department workstations around a reserved 1.45-unit center aisle. Roads are 0.95 wide with rounded turns/Gold edges; first ring radius8.5 has five slots including CEO, outward spacing10.2 and full-footprint floor/overview bounds. Shared geometry batches are reused; 2.4-second construction includes furniture. Approved records, camera/Auth/data and no-character/assignment boundaries stay unchanged. Rendered/performance acceptance is unrun. HQ-NEON-REFLECTIONS-20261104 source implements mixed Coal/Building Navy/Premium Gold, mirrored-geometry floor reflections with Fresnel/roughness and GPU scene-copy/bright-pass/blur/bloom composition. Metallic environment/specular detail, neon cores and localized Gold spill use canonical palette bindings. Bounded targets allocate on resize and release on disable/disposal; native pixel/DPR limits, reduced-motion static state and 30/60 scheduling remain. Camera/overview, office/Auth/data behavior are preserved. This is WebGL raster rendering, with no hardware RTX/ray-tracing or measured visual/performance acceptance claimed. Latest camera/minimap correction: left drag pans, middle drag rotates around the current panned world X/Z target, right is inactive and touch is unchanged. Farther radius/aspect-aware 100% overview and a larger full-floor circular minimap include approved offices/CEO, actual canvas-aspect viewport rectangle and separate floor-frustum footprint. Source acceptance is unrun; see HQ-CAMERA-OVERVIEW-20261104. 4 November 2026: source implementation adds founder signup-confirmation/login with server-only cookies and trusted one-time UID membership, complete CEO/HR-reviewed company-plan decisions, reserved CEO workspace and approved furnished open offices/roads on concentric rings with 2.4-second construction and finite-floor growth. The HQ legacy HR import preserves date-only historical approval and null original reviews; this is not the current company roster, and newer approved Brain records are not auto-synchronized. Service-only publisher is a foundation; live CEO/HR execution is disconnected. Standalone migration applied to staging dpruoncalmwicrqhqelu with success:true, metadata version 20261104194233; historical migration remains unapplied, production untouched. Schema/provider setup is not application acceptance. The founder reports GitHub unconnected; integration/Automatic branching dashboard state is unverified, with OFF policy only. Tests/build/lint/typecheck/boundary/release checks, browser/API/runtime verification and tester/reviewer agents are prohibited and unrun. Preserve prior 330-note index/one-note read as historical evidence. See company-hq/HQ-COMPANY-PLANS-20261104.md."
+    },
+    {
+      "source": "apps/company-hq/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsHqLayoutPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsHqLayoutPage"
+      ],
+      "destination": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "status": "implemented-unverified",
+      "domainAdapter": "apps/company-hq/app/pages/index.vue",
+      "dependencies": [
+        "@building-suit/ui/types/hqLayoutPresentation"
+      ],
+      "verification": "HQ-EQUAL-WORKPLACES-20261105 distributes each occupied workplace ring across the full circle by actual workplace count, including CEO: two180-degree sectors, three120-degree sectors, and no reserved gaps. Existing furniture-fit ring capacities and radii remain; adding/removing workplaces intentionally reflows the affected band. Half-concrete/half-glass radial dividers separate every neighbor including the wrap boundary; one workplace has no divider. All lightweight poses/picking sectors refresh while ID-keyed construction clocks remain. The floating shield/Brain/aura use shared HQ_ORB_SCALE1.15 for drawing, scatter, picking and closeup fit; base/emitter size stays unchanged. Natural terrain/water, palette, furniture, page/controls and business authority are preserved. Source/visual/runtime checks remain unrun under founder instruction. Earlier dated layouts follow as superseded historical records: HQ-NATURAL-ISLAND-20261105 changes only land geometry/materials: eroded upper coastline within the original envelope, weathered cliff layers, shallow coastal relief and matte volcanic rock/soil/sparse moss. New cached 1024-square data on sampler2 is isolated from unchanged structural sampler1. Protected support through the existing workplace floor plus0.12 remains exactly flat; a rocky shelf overlaps the unchanged water edge. Original footprint/camera sizing, water mesh/shader, offices/furniture/shared floor/partitions/roads, Orb, lights, controls and page layout are preserved. Gold coast colors/thicknesses remain. Source/visual/runtime checks and performance measurements are unrun at founder instruction. Prior dated records follow: HQ-CIRCULAR-WORKPLACES-20261105 replaces separate rooms/platforms/road spokes with adjacent annular workplace sectors on one shared circular floor around the Orb. The fixed first band fits CEO plus seven approved departments; overflow fills clockwise in wider bands. Only occupied-neighbor boundaries receive half-concrete/half-glass radial partitions, with opaque geometry before glass. Furniture, lamps and freestanding CEO plan board remain; 2.4-second construction animates furniture/lamp power, while shared floor/dividers update with the layout. Analytic whole-sector picking, minimap and full-sector focus use the same boundary contract. The matte island supports the complete floor with a 2.4-unit coast margin, surrounding water and no mirrored ground. Plan/Auth/Brain/private event contracts are unchanged. Source/visual/runtime acceptance and checks remain unrun under the founder instruction. The following dated records describe earlier superseded layouts/materials and their narrow setup evidence: HQ-WORKPLACE-SELECTION-20261105 adds whole-office/label and shared BsSelect picker selection for CEO/approved departments, selected-name/X, logical-start overlay and one reversible shared-UX camera session across Brain/room switches. Clear/close/Escape/Workspace restores the initial camera; Reset/Home clears then defaults, missing selection/Auth scope restores and viewport/floor changes refit. Zoom locks through panel leave. CEO reuses plans/Auth; departments show read-only four-station capacity, not agents. Rounded nearest-depth office picking excludes roads; labels/minimap expose selection. No API/Auth/Brain/data mutation; source/runtime acceptance is unrun. HQ-OFFICE-REFERENCE-20261104 source replaces empty rooms with 6.2×5.2 rounded open cutaways, a large CEO desk/board and four visual monitored department workstations around a reserved 1.45-unit center aisle. Roads are 0.95 wide with rounded turns/Gold edges; first ring radius8.5 has five slots including CEO, outward spacing10.2 and full-footprint floor/overview bounds. Shared geometry batches are reused; 2.4-second construction includes furniture. Approved records, camera/Auth/data and no-character/assignment boundaries stay unchanged. Rendered/performance acceptance is unrun. HQ-NEON-REFLECTIONS-20261104 source implements mixed Coal/Building Navy/Premium Gold, mirrored-geometry floor reflections with Fresnel/roughness and GPU scene-copy/bright-pass/blur/bloom composition. Metallic environment/specular detail, neon cores and localized Gold spill use canonical palette bindings. Bounded targets allocate on resize and release on disable/disposal; native pixel/DPR limits, reduced-motion static state and 30/60 scheduling remain. Camera/overview, office/Auth/data behavior are preserved. This is WebGL raster rendering, with no hardware RTX/ray-tracing or measured visual/performance acceptance claimed. Latest camera/minimap correction: left drag pans, middle drag rotates around the current panned world X/Z target, right is inactive and touch is unchanged. Farther radius/aspect-aware 100% overview and a larger full-floor circular minimap include approved offices/CEO, actual canvas-aspect viewport rectangle and separate floor-frustum footprint. Source acceptance is unrun; see HQ-CAMERA-OVERVIEW-20261104. 4 November 2026: source implementation adds founder signup-confirmation/login with server-only cookies and trusted one-time UID membership, complete CEO/HR-reviewed company-plan decisions, reserved CEO workspace and approved furnished open offices/roads on concentric rings with 2.4-second construction and finite-floor growth. The HQ legacy HR import preserves date-only historical approval and null original reviews; this is not the current company roster, and newer approved Brain records are not auto-synchronized. Service-only publisher is a foundation; live CEO/HR execution is disconnected. Standalone migration applied to staging dpruoncalmwicrqhqelu with success:true, metadata version 20261104194233; historical migration remains unapplied, production untouched. Schema/provider setup is not application acceptance. The founder reports GitHub unconnected; integration/Automatic branching dashboard state is unverified, with OFF policy only. Tests/build/lint/typecheck/boundary/release checks, browser/API/runtime verification and tester/reviewer agents are prohibited and unrun. Preserve prior 330-note index/one-note read as historical evidence. See company-hq/HQ-COMPANY-PLANS-20261104.md.",
+      "purpose": "hq-spatial-workspace"
     }
   ],
   "verifiedSharedHeads": [
@@ -3618,6 +3652,7 @@
     "BsSupplierOrdersPage",
     "BsSupplyPlanningPage",
     "BsWeighingSetupPage",
-    "BsCommodityPricingPage"
+    "BsCommodityPricingPage",
+    "BsHqLayoutPage"
   ]
 }

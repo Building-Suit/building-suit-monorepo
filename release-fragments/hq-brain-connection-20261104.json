@@ -1,0 +1,32 @@
+{
+  "id": "hq-brain-connection-20261104",
+  "task": "HQ-BRAIN-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/work-packages/company-hq/HQ-BRAIN-20261104.md",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Connect the HQ hologram read-only to a privately configured local Insync Brain mirror. Actual orb click/tap, Brain navigation and the Company Brain button open one shared dialog with title/path search, refresh, opaque-ID note selection and escaped raw Markdown. App GET routes own local filesystem reads with loopback/same-origin/custom-header guards, no symlinks, root containment and bounded scans; local timestamps do not prove cloud sync freshness. Preserve the orb/base/camera and postpone reverted department/road work. No characters, active agents, authentication, tasks, LLM calls, Brain writes, direct Drive OAuth, hosted activation or deployment are introduced. Implementation and local connection remain unverified under the founder's instruction to defer autonomous testing to future tester agents."
+}
