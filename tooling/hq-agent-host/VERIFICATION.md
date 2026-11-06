@@ -10,6 +10,30 @@ post-merge focused/gate results are recorded separately. No history was rebased,
 See `INTEGRATION.md` for the bounded runtime port from pilot
 `116477e5e63495efc6702e8d6a745d3e053310d4` and exact undeployed SQL hashes.
 
+## Authorized parent integration and draft review
+
+Parent PR #533 at `aadeaa79d7e829f78cf7d51bb01b859a97f651aa` was merged into
+this child with history-preserving merge
+`2b46edd7b6e878402e8a751e78efd2f5be77d25c`. The sole inventory conflict was
+resolved semantically: preserve the parent's updated parity item and both
+unchanged automation items. Parent UI/test files were retained exactly; the
+worker, all proposals and active/applied migration sources were unchanged.
+
+Post-merge checks passed: **94/94 host tests**, **45/45 Python tests**,
+`pnpm check` (including tokens/ownership), staging source parity, release
+classification against #533, and exact-merge-SHA package/build import validation.
+The package at the merge SHA had SHA256
+`a79d41188200ffd1b9add93939b61694e181a4516bb97dc60c0ff96fdd4361c8`.
+This documentation-only follow-up records those results; final package SHA and
+exact draft PR head/base/CI outcomes are reported in the delivery handoff.
+
+Draft automation PR publication is now explicitly authorized. The earlier
+source-only/no-PR boundary is superseded for this review step, while Oracle,
+personal/home-network, live SQL, credentials/security settings, service/timer
+activation and deployment remain excluded. A stacked aggregate `verify` or
+publication job being skipped is not full staging verification. Only actual
+checks observed for the final child head count as its CI evidence.
+
 ## Current follow-up results
 
 - **94/94 host tests passed**, with `node --test --test-concurrency=2
@@ -60,9 +84,9 @@ See `INTEGRATION.md` for the bounded runtime port from pilot
   after committing these source changes; delivery commit/hash are in the handoff.
 
 Source-only limits: no Oracle, personal computer/network, live worker/job, Brain,
-private credential cache, hosted DB, security setting, real release/tag, PR or
-service/timer was accessed or changed. External publication is only the explicitly
-allowed source branch push. Publication tests use an injected fake GitHub runner.
+private credential cache, hosted DB, security setting, real release/tag or
+service/timer was accessed or changed. External publication is limited to the
+authorized source branch and draft automation PR review. Publication tests use an injected fake GitHub runner.
 
 ## Earlier checks on unchanged app graph at 234592aa
 
@@ -82,7 +106,7 @@ isolated reruns (report 5,286ms; child lifecycle 6,542ms). The complete failed r
 was not relabeled green. Browser/e2e acceptance remains unrun.
 
 Before the parent merge, `pnpm check` reported nine inherited missing HQ UI
-exports. The integrated parent contains their fix; the post-merge gate is rerun. Prior full lint reported seven inherited
+exports. The integrated parent fixes them and the post-merge gate passed. Prior full lint reported seven inherited
 errors in unchanged HQ app files. Full repo CI is not claimed green.
 The legacy module-only updater is disabled and its shell syntax/fail-closed
 entrypoint were checked. systemd examples were syntax-checked on disposable
