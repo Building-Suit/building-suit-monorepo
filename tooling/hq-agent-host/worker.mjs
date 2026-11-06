@@ -2,11 +2,12 @@
 /** Private, sequential HQ queue consumer. No inbound listener or idle work polling. */
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
-import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises'
+import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, realpath } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { delimiter, isAbsolute, join, resolve } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createWorkforceRoster, managerForAgent, modelTierForAgent } from './workforceRoster.mjs'
 import { createBrainPublisher } from './brainPublisher.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
@@ -333,6 +334,54 @@ export function webAllowed(job) {
   return true
 }
 
+async function executablePath(command, pathValue, workingDirectory) {
+  const candidates = isAbsolute(command) ? [command] : command.includes('/') ? [resolve(workingDirectory, command)]
+    : (pathValue || '').split(delimiter).filter(Boolean).map(directory => join(directory, command))
+  for (const candidate of candidates) {
+    try {
+      const resolved = await realpath(candidate), info = await stat(resolved)
+      if (info.isFile() && (info.mode & 0o111)) return resolved
+    } catch { /* Continue through the host's explicit PATH. */ }
+  }
+  throw problem('provider-cli-unavailable')
+}
+
+async function fileSha256(path) {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(path)) hash.update(chunk)
+  return hash.digest('hex')
+}
+
+function probeCliVersion(executable, environment, signal) {
+  return new Promise((resolveVersion, rejectVersion) => {
+    let child, output = '', finished = false
+    const timer = setTimeout(() => finish(problem('provider-cli-version-unavailable')), 5000)
+    const abort = () => finish(problem('worker-interrupted'))
+    const finish = error => {
+      if (finished) return
+      finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort)
+      try { if (child?.pid) process.kill(-child.pid, 'SIGKILL') } catch { /* Already exited. */ }
+      if (error) rejectVersion(error)
+    }
+    signal.addEventListener('abort', abort, { once: true })
+    try { child = spawn(executable, ['--version'], { env: environment, detached: true, stdio: ['ignore', 'pipe', 'pipe'] }) }
+    catch { finish(problem('provider-cli-version-unavailable')); return }
+    const collect = chunk => {
+      if (output.length + chunk.length > 1024) { finish(problem('provider-cli-version-invalid')); return }
+      output += chunk.toString('utf8')
+    }
+    child.stdout.on('data', collect); child.stderr.on('data', collect)
+    child.once('error', () => finish(problem('provider-cli-version-unavailable')))
+    child.once('close', code => {
+      if (finished) return
+      const version = output.trim()
+      if (code !== 0 || !/^codex-cli [A-Za-z0-9.+-]{1,80}$/.test(version)) finish(problem('provider-cli-version-invalid'))
+      else { finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort); resolveVersion(version) }
+    })
+    if (signal.aborted) abort()
+  })
+}
+
 export function workerClaimInput(workerId) {
   requireValue(UUID.test(workerId || ''), 'stable-worker-id-required')
   return { p_worker_id: workerId, p_lease_seconds: LEASE_SECONDS, p_meeting_protocol: MEETING_PROTOCOL }
@@ -393,6 +442,7 @@ export function nativeToolReceipt(item, observedAt = new Date().toISOString()) {
 
 export async function invokeCodex(config, job, brain, signal) {
   const directory = await mkdtemp(join(tmpdir(), 'hq-agent-'))
+  const isTrialWorker = job.context.mode === 'worker-trial'
   const disabled = ['shell_tool', 'shell_snapshot', 'multi_agent', 'apps', 'hooks', 'memories', 'plugins',
     'view_image', 'skill_mcp_dependency_install', 'browser_use', 'browser_use_external', 'browser_use_full_cdp_access',
     'computer_use', 'skill_search', 'remote_plugin', 'image_generation', 'in_app_browser', 'daemon_auto_start']
@@ -406,6 +456,33 @@ export async function invokeCodex(config, job, brain, signal) {
   // Deliberate allowlist: neither worker/Drive secrets nor API/proxy overrides reach Codex.
   const environment = { HOME: homedir(), PATH: process.env.PATH || '/usr/local/bin:/usr/bin:/bin', LANG: 'C.UTF-8', TERM: 'dumb',
     CODEX_HOME: process.env.CODEX_HOME || join(homedir(), '.codex') }
+  let executable = config.bin, cliVersion = null, cliBinaryDigest = null, workerSourceDigest = null
+  if (isTrialWorker) {
+    const trial = record(job.context.supervisedTrial)
+    requireValue(trial?.scope === 'synthetic-internal-trial-v1' && trial.agentId === job.agent_id
+      && UUID.test(trial.id || '') && trial.taskId === job.context.task?.id, 'trial-authorization-required')
+    workerSourceDigest = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex')
+    try {
+      executable = await executablePath(config.bin, environment.PATH, directory)
+      cliBinaryDigest = await fileSha256(executable)
+      cliVersion = await probeCliVersion(executable, { ...environment, HOME: directory, CODEX_HOME: directory }, signal)
+    } catch (error) {
+      error.modelBindingEvidence = {
+        schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown',
+        agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
+        trialId: trial.id, taskId: trial.taskId, workerSourceDigest, nodeVersion: process.versions.node, cliVersion: null,
+        cliVersionSource: 'same-binary-version-probe', cliExecutable: executable,
+        cliBinaryDigest, configuredModel: job.context.agent.model, resolvedModel: null,
+        configuredEffort: job.context.agent.effort, resolvedEffort: null,
+        settingResolutionSource: 'not-resolved-cli-preflight-failed', invocationStatus: 'not-launched',
+        threadId: null, invocation: { executable, plannedArgv: [...args], environment,
+          stdinSha256: createHash('sha256').update('cli-preflight-not-run').digest('hex') },
+        turnsStarted: 0, turnsCompleted: 0, observedErrors: [codeOf(error)], observedReroutes: [],
+        observedEventCoverage: 'codex-exec-jsonl-events-only', outcome: 'failed', artifactDigest: null,
+      }
+      throw error
+    }
+  }
   const prompt = [
     'You are the named Building Suit employee in this trusted job context. Follow your current authorized role profile and skills, scoped by this host assignment.',
     stageInstructions(job),
@@ -424,13 +501,30 @@ export async function invokeCodex(config, job, brain, signal) {
   try {
     return await new Promise((resolveReply, rejectReply) => {
       let child, failure = null, total = 0, lineBuffer = '', answer = '', completed = 0, evidence = [], killTimer
+      let threadId = null, turnStarted = 0
+      const observedErrors = [], observedReroutes = []
+      const noteError = code => { if (isTrialWorker && !observedErrors.includes(code)) observedErrors.push(code) }
+      const trialEvidence = (outcome, reply = '') => isTrialWorker ? {
+        schemaVersion: 1, attestationLevel: 'host-resolved-invocation', providerServedModel: 'unknown',
+        agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
+        trialId: job.context.supervisedTrial.id, taskId: job.context.supervisedTrial.taskId,
+        workerSourceDigest, nodeVersion: process.versions.node, cliVersion, cliVersionSource: 'same-binary-version-probe',
+        cliExecutable: executable, cliBinaryDigest,
+        configuredModel: job.context.agent.model, resolvedModel: job.context.agent.model,
+        configuredEffort: job.context.agent.effort, resolvedEffort: job.context.agent.effort,
+        settingResolutionSource: 'explicit-host-generated-codex-exec-argv-and-locked-config', invocationStatus: 'launched',
+        threadId, invocation: { executable, argv: [...args], environment, stdinSha256: createHash('sha256').update(prompt).digest('hex') },
+        turnsStarted: turnStarted, turnsCompleted: completed,
+        observedErrors, observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,
+        artifactDigest: outcome === 'completed' ? createHash('sha256').update(reply).digest('hex') : null,
+      } : null
       const decoder = new StringDecoder('utf8')
       const kill = () => {
         if (!child?.pid) return
         try { process.kill(-child.pid, 'SIGTERM') } catch { /* Already reaped. */ }
         killTimer ||= setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL') } catch { /* Already reaped. */ } }, 1500)
       }
-      const fail = code => { failure ||= problem(code); kill() }
+      const fail = code => { noteError(code); failure ||= problem(code); kill() }
       const abort = () => fail(signal.reason instanceof WorkerProblem ? signal.reason.code : 'worker-interrupted')
       function line(value) {
         if (!value.trim() || failure) return
@@ -438,6 +532,18 @@ export async function invokeCodex(config, job, brain, signal) {
         try { event = JSON.parse(value) } catch { fail('provider-output-invalid'); return }
         if (!record(event) || typeof event.type !== 'string') { fail('provider-output-invalid'); return }
         if (event.type === 'error' || event.type === 'turn.failed') { fail(providerErrorCode(event)); return }
+        if (event.type === 'model/rerouted') {
+          const from = event.fromModel ?? event.from_model, to = event.toModel ?? event.to_model
+          if (typeof from !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(from)
+            || typeof to !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(to)) { fail('provider-output-invalid'); return }
+          observedReroutes.push({ from, to }); fail('provider-model-rerouted'); return
+        }
+        if (event.type === 'thread.started') {
+          const id = event.thread_id ?? event.threadId
+          if (typeof id === 'string' && UUID.test(id)) threadId = id
+          else if (isTrialWorker) { fail('provider-thread-id-unavailable'); return }
+        }
+        if (event.type === 'turn.started') turnStarted++
         if (event.type === 'turn.completed') completed++
         if (event.type.startsWith('item.')) {
           const item = record(event.item)
@@ -461,21 +567,33 @@ export async function invokeCodex(config, job, brain, signal) {
         while ((end = lineBuffer.indexOf('\n')) >= 0) { line(lineBuffer.slice(0, end)); lineBuffer = lineBuffer.slice(end + 1) }
       }
       signal.addEventListener('abort', abort, { once: true })
-      try { child = spawn(config.bin, args, { cwd: directory, env: environment, detached: true, stdio: ['pipe', 'pipe', 'pipe'] }) }
-      catch { signal.removeEventListener('abort', abort); rejectReply(problem('provider-unavailable')); return }
-      child.once('error', () => { failure ||= problem('provider-unavailable') })
+      try { child = spawn(executable, args, { cwd: directory, env: environment, detached: true, stdio: ['pipe', 'pipe', 'pipe'] }) }
+      catch {
+        signal.removeEventListener('abort', abort)
+        const error = problem('provider-unavailable'); noteError(error.code); error.modelBindingEvidence = trialEvidence('failed')
+        rejectReply(error); return
+      }
+      child.once('error', () => fail('provider-unavailable'))
       child.stdout.on('data', consume)
       child.stderr.on('data', chunk => { total += chunk.byteLength; if (total > MAX_PROCESS_BYTES) fail('provider-output-too-large') })
       child.stdin.on('error', () => { /* Close/error event supplies the bounded result. */ })
-      child.once('close', exitCode => {
+      child.once('close', async exitCode => {
         signal.removeEventListener('abort', abort); clearTimeout(killTimer)
         lineBuffer += decoder.end(); if (lineBuffer) line(lineBuffer)
         // Kill any descendants left behind after the direct CLI process closes.
         if (child.pid) { try { process.kill(-child.pid, 'SIGKILL') } catch { /* Group already gone. */ } }
-        if (failure) rejectReply(failure)
-        else if (exitCode !== 0 || completed !== 1 || !answer.trim()) rejectReply(problem('provider-output-invalid'))
-        else {
-          resolveReply({ reply: answer.trim(), evidence })
+        if (!failure && (exitCode !== 0 || completed !== 1 || !answer.trim())) fail('provider-output-invalid')
+        if (!failure && isTrialWorker && (turnStarted !== 1 || !threadId)) fail('provider-thread-id-unavailable')
+        if (isTrialWorker) {
+          try { if (await fileSha256(executable) !== cliBinaryDigest) fail('provider-cli-changed') }
+          catch { fail('provider-cli-changed') }
+        }
+        if (failure) {
+          failure.modelBindingEvidence = trialEvidence('failed')
+          rejectReply(failure)
+        } else {
+          const reply = answer.trim()
+          resolveReply({ reply, evidence, modelBindingEvidence: trialEvidence('completed', reply) })
         }
       })
       if (signal.aborted) abort()
@@ -533,10 +651,13 @@ async function start() {
   async function recover() {
     for (const id of await journal.pending()) {
       const entry = await journal.read(id)
-      requireValue(record(entry) && [1, 2].includes(entry.version) && entry.project === config.url && entry.worker_id === config.id && entry.job?.id === id
+      requireValue(record(entry) && [1, 2, 3].includes(entry.version) && entry.project === config.url && entry.worker_id === config.id && entry.job?.id === id
         && typeof entry.job.lease_token === 'string' && entry.job.lease_token.length >= 20
         && typeof entry.reply === 'string' && entry.reply.length <= 32_000
         && (entry.evidence === undefined || Array.isArray(entry.evidence) && Buffer.byteLength(JSON.stringify(entry.evidence)) <= 40_000)
+        && (entry.modelBindingEvidence === undefined || entry.modelBindingEvidence === null
+          || record(entry.modelBindingEvidence) && entry.modelBindingEvidence.schemaVersion === 1
+            && entry.modelBindingEvidence.workerJobId === id && Buffer.byteLength(JSON.stringify(entry.modelBindingEvidence)) <= 32_000)
         && (entry.error === null || typeof entry.error === 'string' && /^[a-z-]{1,80}$/.test(entry.error)), 'invalid-journal')
       if (entry.phase === 'delivered') continue
       requireValue(['started', 'finished'].includes(entry.phase), 'invalid-journal')
@@ -551,7 +672,7 @@ async function start() {
     validateJob(job)
     const previous = await journal.read(job.id)
     requireValue(!previous, 'job-already-attempted')
-    let entry = { version: 2, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [] }
+    let entry = { version: 3, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [], modelBindingEvidence: null }
     // Flush before any model invocation. A crash can block a job, never repeat inference silently.
     await journal.write(entry)
     const executionBlock = workerExecutionBlock(job)
@@ -587,8 +708,11 @@ async function start() {
       } catch { log('skill-observation-unavailable') }
       controller.signal.throwIfAborted()
       const output = await invokeCodex(config, job, documents, controller.signal)
-      entry.reply = output.reply; entry.evidence = output.evidence
-    } catch (error) { entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error) }
+      entry.reply = output.reply; entry.evidence = output.evidence; entry.modelBindingEvidence = output.modelBindingEvidence
+    } catch (error) {
+      entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error)
+      entry.modelBindingEvidence = error?.modelBindingEvidence || null
+    }
     finally { clearInterval(leaseTimer); clearTimeout(timeout); activeController = null }
     entry.phase = 'finished'; await journal.write(entry)
     const delivered = await deliver(entry)

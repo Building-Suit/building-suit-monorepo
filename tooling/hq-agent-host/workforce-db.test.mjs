@@ -138,7 +138,7 @@ test('canonical additional worker sync remains dynamic and unqualified without r
  }finally{await h.db.close()}
 })
 
-test('supervised trial stays internal, requires head and Iris review plus owner-verified model binding before receipt',async()=>{
+test('supervised trial stays internal and requires exact host invocation evidence plus head and Iris review',async()=>{
  const h=await setup(true,true);try{
   const skill='trial_skill_0001',requestKey=randomUUID()
   await h.db.exec('reset role')
@@ -190,15 +190,33 @@ test('supervised trial stays internal, requires head and Iris review plus owner-
   assert.equal(await h.claim(),null)
   await h.db.exec('reset role')
   assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-HR-002') ok`)).rows[0].ok,false)
+  const linked=(await h.db.query(`select t.artifact_id,a.job_id,a.digest,j.worker_id from hq_private.workforce_trials t
+    join public.hq_task_artifacts a on a.id=t.artifact_id join public.hq_agent_jobs j on j.id=a.job_id where t.id=$1`,[trial.trialId])).rows[0]
+  const hostEvidence={schemaVersion:1,attestationLevel:'host-resolved-invocation',providerServedModel:'unknown',agentId:'AG-HR-002',workerId:worker,
+    workerJobId:linked.job_id,trialId:trial.trialId,taskId:trial.taskId,workerSourceDigest:'a'.repeat(64),nodeVersion:process.versions.node,cliVersion:'codex-cli 0.101.0',
+    cliVersionSource:'same-binary-version-probe',cliExecutable:'/opt/codex/bin/codex',cliBinaryDigest:'b'.repeat(64),
+    configuredModel:'gpt-6.1-sol',resolvedModel:'gpt-6.1-sol',configuredEffort:'medium',resolvedEffort:'medium',
+    settingResolutionSource:'explicit-host-generated-codex-exec-argv-and-locked-config',invocationStatus:'launched',threadId:randomUUID(),turnsStarted:1,turnsCompleted:1,
+    invocation:{executable:'/opt/codex/bin/codex',argv:['exec','--json','--sandbox','read-only','--model','gpt-6.1-sol','-c','model_reasoning_effort="medium"','-'],
+      environment:{HOME:'/home/worker',PATH:'/usr/bin',LANG:'C.UTF-8',TERM:'dumb',CODEX_HOME:'/home/worker/.codex'},stdinSha256:'c'.repeat(64)},
+    observedErrors:[],observedReroutes:[],observedEventCoverage:'codex-exec-jsonl-events-only',outcome:'completed',artifactDigest:linked.digest}
   await h.as('founder')
-  await assert.rejects(()=>h.db.query(`select hq_private.record_verified_model_binding('AG-HR-002','gpt-6.1-sol','gpt-6.1-sol',$1,'audit-log:run-1234')`,['d'.repeat(64)]),/permission denied/)
+  await assert.rejects(()=>h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:'+linked.job_id]),/permission denied/)
   await h.db.exec('reset role')
-  await assert.rejects(()=>h.db.query(`select hq_private.record_verified_model_binding('AG-HR-002','gpt-6.1-sol','gpt-6-luna',$1,'audit-log:run-1234')`,['d'.repeat(64)]),/HQ_MODEL_BINDING_EVIDENCE_INVALID/)
-  await h.db.query(`select hq_private.record_verified_model_binding('AG-HR-002','gpt-6.1-sol','gpt-6.1-sol',$1,'audit-log:run-1234')`,['d'.repeat(64)])
+  const falseProviderClaim={...hostEvidence,providerServedModel:'gpt-6.1-sol'}
+  await assert.rejects(()=>h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(falseProviderClaim),'journal:'+linked.job_id]),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  const {rows:executionRows}=await h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5) id`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:'+linked.job_id])
+  const hostExecutionId=executionRows[0].id
+  const executionReplay=await h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5) id`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:'+linked.job_id])
+  assert.equal(executionReplay.rows[0].id,hostExecutionId)
+  await assert.rejects(()=>h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:other-job-reference']),/HQ_TRIAL_HOST_EXECUTION_CONFLICT/)
+  await assert.rejects(()=>h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,[randomUUID(),linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:'+linked.job_id]),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  await assert.rejects(()=>h.db.exec(`update hq_private.workforce_trial_host_execution_receipts set cli_version='codex-cli 0.0.0'`),/HQ_IMMUTABLE/)
   await h.as('founder');const receipt=await h.rpc('hq_issue_workforce_qualification',[trial.trialId])
   assert.equal(receipt.accepted,true);assert.equal(receipt.reviewerId,'AG-HR-003')
   const replay=await h.rpc('hq_issue_workforce_qualification',[trial.trialId]);assert.equal(replay.receiptId,receipt.receiptId)
   await h.db.exec('reset role')
+  assert.equal((await h.db.query(`select host_execution_id from hq_private.workforce_qualification_receipts where trial_id=$1`,[trial.trialId])).rows[0].host_execution_id,hostExecutionId)
   assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-HR-002') ok`)).rows[0].ok,false)
   const active=initial.map(x=>x.id==='AG-HR-002'?{...x,lifecycle:'Active'}:x)
   await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])

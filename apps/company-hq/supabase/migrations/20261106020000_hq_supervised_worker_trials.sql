@@ -41,6 +41,7 @@ create table hq_private.workforce_qualification_receipts (
   model_tier text not null check(model_tier='T1_WORKER'),
   manager_id text not null references hq_private.agent_roster(id),
   department_key text not null references public.hq_departments(department_key),
+  host_execution_id uuid not null,
   authorized_by uuid not null,
   qualified_at timestamptz not null default clock_timestamp()
 );
@@ -50,42 +51,180 @@ revoke all on hq_private.workforce_qualification_receipts from public,anon,authe
 create trigger workforce_qualification_receipt_immutable before update or delete on hq_private.workforce_qualification_receipts
   for each row execute function hq_private.immutable_record();
 
--- This receipt is an operational, DB-owner-reviewed attestation that the
--- worker host resolved the employee's declared model target. The application
--- and service role cannot create it. Without it, a successful draft trial is
--- still insufficient for qualification.
-create table hq_private.workforce_model_binding_receipts (
+-- This immutable record captures exactly what the trusted worker host invoked
+-- for a supervised trial. It attests to host-resolved command settings only;
+-- Codex CLI JSONL does not report the provider-served model for an ordinary
+-- completed turn, so that value is deliberately fixed to 'unknown'.
+create table hq_private.workforce_trial_host_execution_receipts (
   id uuid primary key default gen_random_uuid(),
+  trial_id uuid not null references hq_private.workforce_trials(id),
   agent_id text not null references hq_private.agent_roster(id),
-  model_target text not null check(model_target ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
-  observed_model text not null check(observed_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
+  worker_id uuid not null references hq_private.agent_workers(worker_id),
+  worker_job_id uuid not null unique references public.hq_agent_jobs(id),
+  artifact_id uuid references public.hq_task_artifacts(id),
+  artifact_digest text check(artifact_digest ~ '^[0-9a-f]{64}$'),
+  attestation_level text not null check(attestation_level in ('host-resolved-invocation','host-cli-preflight')),
+  worker_source_digest text not null check(worker_source_digest ~ '^[0-9a-f]{64}$'),
+  node_version text not null check(node_version ~ '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'),
+  cli_version text check(cli_version ~ '^codex-cli [A-Za-z0-9.+-]{1,80}$'),
+  cli_version_source text not null check(cli_version_source='same-binary-version-probe'),
+  cli_executable text not null check(octet_length(cli_executable) between 1 and 1024),
+  cli_binary_digest text check(cli_binary_digest ~ '^[0-9a-f]{64}$'),
+  configured_model text not null check(configured_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
+  resolved_model text check(resolved_model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'),
+  configured_effort text not null check(configured_effort in ('minimal','low','medium','high','xhigh')),
+  resolved_effort text check(resolved_effort in ('minimal','low','medium','high','xhigh')),
+  setting_resolution_source text not null check(setting_resolution_source in ('explicit-host-generated-codex-exec-argv-and-locked-config','not-resolved-cli-preflight-failed')),
+  invocation_status text not null check(invocation_status in ('launched','not-launched')),
+  thread_id text check(thread_id ~ '^[0-9a-fA-F-]{36}$'),
+  turns_started integer not null check(turns_started between 0 and 1),
+  turns_completed integer not null check(turns_completed between 0 and 1),
+  provider_served_model text not null check(provider_served_model='unknown'),
+  invocation jsonb not null check(jsonb_typeof(invocation)='object'),
+  observed_errors jsonb not null check(jsonb_typeof(observed_errors)='array' and jsonb_array_length(observed_errors)<=32),
+  observed_reroutes jsonb not null check(jsonb_typeof(observed_reroutes)='array' and jsonb_array_length(observed_reroutes)<=32),
+  observed_event_coverage text not null check(observed_event_coverage='codex-exec-jsonl-events-only'),
+  outcome text not null check(outcome in ('completed','failed')),
   evidence_digest text not null check(evidence_digest ~ '^[0-9a-f]{64}$'),
   evidence_reference text not null check(evidence_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$'),
-  verifier_role text not null,
-  verified_at timestamptz not null default clock_timestamp(),
-  unique(agent_id,model_target)
+  recorded_by text not null,
+  recorded_at timestamptz not null default clock_timestamp(),
+  check((attestation_level='host-resolved-invocation' and invocation_status='launched'
+      and configured_model=resolved_model and configured_effort=resolved_effort
+      and setting_resolution_source='explicit-host-generated-codex-exec-argv-and-locked-config')
+    or (attestation_level='host-cli-preflight' and invocation_status='not-launched'
+      and resolved_model is null and resolved_effort is null and setting_resolution_source='not-resolved-cli-preflight-failed')),
+  check((outcome='completed' and artifact_id is not null and artifact_digest is not null
+    and thread_id is not null and turns_started=1 and turns_completed=1
+    and attestation_level='host-resolved-invocation' and observed_errors='[]'::jsonb and observed_reroutes='[]'::jsonb)
+    or (outcome='failed' and artifact_id is null and artifact_digest is null
+      and (jsonb_array_length(observed_errors)>0 or jsonb_array_length(observed_reroutes)>0))),
+  unique(trial_id,worker_job_id)
 );
-alter table hq_private.workforce_model_binding_receipts enable row level security;
-revoke all on hq_private.workforce_model_binding_receipts from public,anon,authenticated,service_role;
-create trigger workforce_model_binding_receipt_immutable before update or delete on hq_private.workforce_model_binding_receipts
+alter table hq_private.workforce_trial_host_execution_receipts enable row level security;
+revoke all on hq_private.workforce_trial_host_execution_receipts from public,anon,authenticated,service_role;
+create trigger workforce_trial_host_execution_receipt_immutable before update or delete on hq_private.workforce_trial_host_execution_receipts
   for each row execute function hq_private.immutable_record();
+alter table hq_private.workforce_qualification_receipts add constraint workforce_qualification_host_execution_fk
+  foreign key(host_execution_id) references hq_private.workforce_trial_host_execution_receipts(id);
 
-create function hq_private.record_verified_model_binding(p_agent_id text,p_model_target text,p_observed_model text,p_evidence_digest text,p_evidence_reference text) returns uuid
+create function hq_private.record_trial_host_execution(p_trial_id uuid,p_worker_job_id uuid,p_artifact_id uuid,p_evidence jsonb,p_evidence_reference text) returns uuid
 language plpgsql security definer set search_path='' as $$
-declare v_id uuid;
+declare v_id uuid; v_trial hq_private.workforce_trials; v_job public.hq_agent_jobs; v_artifact public.hq_task_artifacts;
+  v_agent hq_private.agent_roster; v_worker hq_private.agent_workers; v_digest text; v_old hq_private.workforce_trial_host_execution_receipts;
+  v_level text; v_outcome text; v_argv jsonb;
 begin
-  if not exists(select 1 from hq_private.agent_roster r where r.id=p_agent_id and r.enabled
-    and r.model_tier='T1_WORKER' and r.model=p_model_target)
-    or p_observed_model is distinct from p_model_target
-    or p_evidence_digest !~ '^[0-9a-f]{64}$'
-    or p_evidence_reference !~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$' then raise exception 'HQ_MODEL_BINDING_EVIDENCE_INVALID' using errcode='22023'; end if;
-  insert into hq_private.workforce_model_binding_receipts(agent_id,model_target,observed_model,evidence_digest,evidence_reference,verifier_role)
-    values(p_agent_id,p_model_target,p_observed_model,p_evidence_digest,p_evidence_reference,current_user)
-    on conflict(agent_id,model_target) do nothing returning id into v_id;
-  if v_id is null then select id into v_id from hq_private.workforce_model_binding_receipts where agent_id=p_agent_id and model_target=p_model_target; end if;
+  select * into v_trial from hq_private.workforce_trials where id=p_trial_id;
+  select * into v_job from public.hq_agent_jobs where id=p_worker_job_id;
+  if p_artifact_id is not null then select * into v_artifact from public.hq_task_artifacts where id=p_artifact_id; end if;
+  select * into v_agent from hq_private.agent_roster where id=v_trial.agent_id and enabled;
+  select * into v_worker from hq_private.agent_workers where worker_id=v_job.worker_id;
+  v_level:=p_evidence->>'attestationLevel'; v_outcome:=p_evidence->>'outcome';
+  v_argv:=case when v_level='host-cli-preflight' then p_evidence->'invocation'->'plannedArgv' else p_evidence->'invocation'->'argv' end;
+  if jsonb_typeof(p_evidence) is distinct from 'object' or octet_length(p_evidence::text)>65536
+    or v_trial.id is null or v_job.id is null or v_agent.id is null or v_worker.worker_id is null
+    or v_trial.agent_id is distinct from v_agent.id or v_trial.task_id is distinct from v_job.task_id
+    or v_trial.binding_digest is distinct from hq_private.workforce_trial_binding_digest(v_agent.id)
+    or v_job.agent_id is distinct from v_agent.id or v_job.kind<>'task-work'
+    or v_job.worker_id is distinct from nullif(p_evidence->>'workerId','')::uuid
+    or p_evidence->>'schemaVersion' is distinct from '1'
+    or v_level not in ('host-resolved-invocation','host-cli-preflight')
+    or p_evidence->>'providerServedModel' is distinct from 'unknown'
+    or p_evidence->>'agentId' is distinct from v_agent.id
+    or p_evidence->>'workerJobId' is distinct from v_job.id::text
+    or p_evidence->>'trialId' is distinct from v_trial.id::text
+    or p_evidence->>'taskId' is distinct from v_trial.task_id::text
+    or p_evidence->>'configuredModel' is distinct from v_agent.model
+    or p_evidence->>'configuredEffort' is distinct from v_agent.effort
+    or jsonb_typeof(p_evidence->'observedErrors') is distinct from 'array'
+    or jsonb_typeof(p_evidence->'observedReroutes') is distinct from 'array'
+    or p_evidence->>'workerSourceDigest' !~ '^[0-9a-f]{64}$'
+    or p_evidence->>'nodeVersion' !~ '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
+    or p_evidence->>'cliVersionSource' is distinct from 'same-binary-version-probe'
+    or p_evidence->>'observedEventCoverage' is distinct from 'codex-exec-jsonl-events-only'
+    or jsonb_typeof(p_evidence->'invocation') is distinct from 'object'
+    or jsonb_typeof(p_evidence->'invocation'->'environment') is distinct from 'object'
+    or jsonb_typeof(v_argv) is distinct from 'array'
+    or jsonb_array_length(case when jsonb_typeof(v_argv)='array' then v_argv else '[]'::jsonb end)>120
+    or exists(select 1 from jsonb_array_elements(case when jsonb_typeof(v_argv)='array' then v_argv else '[]'::jsonb end) a(value)
+      where jsonb_typeof(a.value)<>'string' or octet_length(a.value#>>'{}')>4096)
+    or (select count(*) from jsonb_each(case when jsonb_typeof(p_evidence->'invocation'->'environment')='object' then p_evidence->'invocation'->'environment' else '{}'::jsonb end))>8
+    or exists(select 1 from jsonb_each(case when jsonb_typeof(p_evidence->'invocation'->'environment')='object' then p_evidence->'invocation'->'environment' else '{}'::jsonb end) e(key,value)
+      where e.key not in ('HOME','PATH','LANG','TERM','CODEX_HOME') or jsonb_typeof(e.value)<>'string' or octet_length(e.value#>>'{}')>2048)
+    or exists(select 1 from jsonb_array_elements(case when jsonb_typeof(p_evidence->'observedErrors')='array' then p_evidence->'observedErrors' else '[]'::jsonb end) e(value)
+      where jsonb_typeof(e.value)<>'string' or e.value#>>'{}' !~ '^[a-z-]{1,80}$')
+    or exists(select 1 from jsonb_array_elements(case when jsonb_typeof(p_evidence->'observedReroutes')='array' then p_evidence->'observedReroutes' else '[]'::jsonb end) e(value)
+      where jsonb_typeof(e.value)<>'object' or e.value->>'from' !~ '^gpt-[A-Za-z0-9.-]{1,70}$' or e.value->>'to' !~ '^gpt-[A-Za-z0-9.-]{1,70}$')
+    or (select count(*) from jsonb_each(p_evidence->'invocation'))<>4
+    or exists(select 1 from jsonb_each(p_evidence->'invocation') e(key,value)
+      where e.key not in ('executable','argv','plannedArgv','environment','stdinSha256'))
+    or p_evidence->'invocation'->>'stdinSha256' !~ '^[0-9a-f]{64}$'
+    or p_evidence->'invocation'->>'executable' is distinct from p_evidence->>'cliExecutable'
+    or not (v_argv @> jsonb_build_array('--model',v_agent.model))
+    or not (v_argv @> jsonb_build_array('-c','model_reasoning_effort="'||v_agent.effort||'"'))
+    or not (v_argv @> jsonb_build_array('--sandbox','read-only'))
+    or p_evidence_reference !~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$' then
+    raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+  end if;
+  if v_level='host-resolved-invocation' then
+    if p_evidence->>'invocationStatus' is distinct from 'launched'
+      or p_evidence->>'settingResolutionSource' is distinct from 'explicit-host-generated-codex-exec-argv-and-locked-config'
+      or p_evidence->>'resolvedModel' is distinct from v_agent.model
+      or p_evidence->>'resolvedEffort' is distinct from v_agent.effort
+      or p_evidence->>'cliBinaryDigest' !~ '^[0-9a-f]{64}$'
+      or p_evidence->>'cliVersion' !~ '^codex-cli [A-Za-z0-9.+-]{1,80}$' then
+      raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+    end if;
+    if v_outcome='completed' then
+      if p_artifact_id is null or v_artifact.id is null or v_job.status<>'completed'
+        or v_artifact.job_id is distinct from v_job.id or v_artifact.task_id is distinct from v_trial.task_id
+        or v_artifact.agent_id is distinct from v_agent.id or v_artifact.digest is distinct from p_evidence->>'artifactDigest'
+        or p_evidence->>'artifactDigest' is distinct from v_artifact.digest
+        or p_evidence->>'threadId' !~ '^[0-9a-fA-F-]{36}$'
+        or p_evidence->>'turnsStarted' is distinct from '1' or p_evidence->>'turnsCompleted' is distinct from '1'
+        or jsonb_array_length(p_evidence->'observedErrors')<>0 or jsonb_array_length(p_evidence->'observedReroutes')<>0 then
+        raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+      end if;
+    elsif v_outcome='failed' then
+      if p_artifact_id is not null or p_evidence->'artifactDigest'<>'null'::jsonb or v_job.status<>'blocked'
+        or (jsonb_array_length(p_evidence->'observedErrors')=0 and jsonb_array_length(p_evidence->'observedReroutes')=0) then
+        raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+      end if;
+    else raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023'; end if;
+  elsif v_level='host-cli-preflight' then
+    if v_outcome<>'failed' or p_evidence->>'invocationStatus' is distinct from 'not-launched'
+      or p_evidence->>'settingResolutionSource' is distinct from 'not-resolved-cli-preflight-failed'
+      or p_evidence->>'resolvedModel' is not null or p_evidence->>'resolvedEffort' is not null
+      or p_artifact_id is not null or v_job.status<>'blocked'
+      or p_evidence->'artifactDigest' is distinct from 'null'::jsonb
+      or jsonb_array_length(p_evidence->'observedErrors')=0 then
+      raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+    end if;
+  end if;
+  v_digest:=encode(extensions.digest(p_evidence::text,'sha256'),'hex');
+  select * into v_old from hq_private.workforce_trial_host_execution_receipts where worker_job_id=v_job.id;
+  if found then
+    if v_old.evidence_digest<>v_digest or v_old.evidence_reference<>p_evidence_reference then
+      raise exception 'HQ_TRIAL_HOST_EXECUTION_CONFLICT' using errcode='PT409';
+    end if;
+    return v_old.id;
+  end if;
+  insert into hq_private.workforce_trial_host_execution_receipts(
+    trial_id,agent_id,worker_id,worker_job_id,artifact_id,artifact_digest,attestation_level,worker_source_digest,node_version,
+    cli_version,cli_version_source,cli_executable,cli_binary_digest,configured_model,resolved_model,
+    configured_effort,resolved_effort,setting_resolution_source,invocation_status,thread_id,turns_started,turns_completed,
+    provider_served_model,invocation,observed_errors,observed_reroutes,observed_event_coverage,outcome,
+    evidence_digest,evidence_reference,recorded_by)
+  values(p_trial_id,v_agent.id,v_worker.worker_id,v_job.id,v_artifact.id,v_artifact.digest,p_evidence->>'attestationLevel',
+    p_evidence->>'workerSourceDigest',p_evidence->>'nodeVersion',p_evidence->>'cliVersion',p_evidence->>'cliVersionSource',p_evidence->>'cliExecutable',
+    p_evidence->>'cliBinaryDigest',p_evidence->>'configuredModel',p_evidence->>'resolvedModel',
+    p_evidence->>'configuredEffort',p_evidence->>'resolvedEffort',p_evidence->>'settingResolutionSource',p_evidence->>'invocationStatus',p_evidence->>'threadId',
+    (p_evidence->>'turnsStarted')::integer,(p_evidence->>'turnsCompleted')::integer,p_evidence->>'providerServedModel',
+    p_evidence->'invocation',p_evidence->'observedErrors',p_evidence->'observedReroutes',p_evidence->>'observedEventCoverage',
+    p_evidence->>'outcome',v_digest,p_evidence_reference,session_user) returning id into v_id;
   return v_id;
 end $$;
-revoke all on function hq_private.record_verified_model_binding(text,text,text,text,text) from public,anon,authenticated,service_role;
+revoke all on function hq_private.record_trial_host_execution(uuid,uuid,uuid,jsonb,text) from public,anon,authenticated,service_role;
 
 -- A supervised-trial binding intentionally excludes lifecycle and the whole
 -- registry-row digest: HR may advance pending staff to active after the trial.
@@ -139,6 +278,11 @@ language sql stable security definer set search_path='' as $$
     join hq_private.workforce_qualification_receipts q on q.agent_id=r.id
     join hq_private.workforce_trials t on t.id=q.trial_id and t.status='passed'
     join public.hq_task_artifacts a on a.id=q.evidence_artifact_id and a.id=t.artifact_id and a.task_id=t.task_id
+    join hq_private.workforce_trial_host_execution_receipts x on x.id=q.host_execution_id
+      and x.trial_id=t.id and x.agent_id=r.id and x.artifact_id=a.id and x.artifact_digest=a.digest
+      and x.worker_job_id=a.job_id and x.outcome='completed' and x.provider_served_model='unknown'
+      and x.configured_model=r.model and x.resolved_model=r.model
+      and x.configured_effort=r.effort and x.resolved_effort=r.effort
     join public.hq_agent_jobs review on review.id=q.review_job_id and review.id=t.review_job_id
     join hq_private.brain_files e on e.file_id=r.profile_file_id and e.in_scope and not e.trashed
     where r.id=p_agent_id and r.enabled and r.model_tier='T1_WORKER' and m.model_tier='T2_HEAD'
@@ -157,7 +301,8 @@ language sql stable security definer set search_path='' as $$
     'status','qualified','receiptId',q.receipt_id,'evidenceId',q.evidence_artifact_id::text,
     'profileFileId',q.profile_file_id,'skillFileIds',q.skill_file_ids,'bindingDigest',q.binding_digest,
     'scope',q.scope,'modelTier',q.model_tier,'managerId',q.manager_id,'departmentKey',q.department_key,
-    'reviewerId',q.reviewer_id,'reviewJobId',q.review_job_id,'trialId',q.trial_id)
+    'reviewerId',q.reviewer_id,'reviewJobId',q.review_job_id,'trialId',q.trial_id,
+    'hostExecutionId',q.host_execution_id,'providerServedModel','unknown')
     else null end
   from hq_private.agent_roster r left join lateral (
     select * from hq_private.workforce_qualification_receipts x where x.agent_id=r.id order by x.qualified_at desc,x.receipt_id desc limit 1
@@ -416,7 +561,8 @@ grant execute on function hq_private.begin_supervised_worker_trial(text,text,uui
 create function hq_private.issue_workforce_qualification(p_trial_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare v_uid uuid:=hq_private.founder_uid(); v_trial hq_private.workforce_trials; v_agent hq_private.agent_roster;
-  v_task public.hq_business_tasks; v_review public.hq_agent_jobs; v_artifact public.hq_task_artifacts; v_receipt hq_private.workforce_qualification_receipts; v_inserted boolean;
+  v_task public.hq_business_tasks; v_review public.hq_agent_jobs; v_artifact public.hq_task_artifacts;
+  v_execution hq_private.workforce_trial_host_execution_receipts; v_receipt hq_private.workforce_qualification_receipts; v_inserted boolean;
 begin
   if v_uid is null or p_trial_id is null then raise exception 'HQ_FOUNDER_REQUIRED' using errcode='42501'; end if;
   perform pg_advisory_xact_lock(hashtextextended('hq-agent-queue',0));
@@ -425,6 +571,11 @@ begin
   select * into v_task from public.hq_business_tasks where id=v_trial.task_id and founder_user_id=v_uid;
   select * into v_review from public.hq_agent_jobs where id=v_trial.review_job_id and task_id=v_trial.task_id;
   select * into v_artifact from public.hq_task_artifacts where id=v_trial.artifact_id and task_id=v_trial.task_id;
+  select * into v_execution from hq_private.workforce_trial_host_execution_receipts x
+    where x.trial_id=v_trial.id and x.agent_id=v_agent.id and x.artifact_id=v_artifact.id
+      and x.artifact_digest=v_artifact.digest and x.outcome='completed' and x.provider_served_model='unknown'
+      and x.configured_model=v_agent.model and x.resolved_model=v_agent.model
+      and x.configured_effort=v_agent.effort and x.resolved_effort=v_agent.effort;
   if v_trial.id is null or v_trial.status<>'passed' or v_trial.completed_at>v_trial.expires_at
     or v_task.status<>'completed' or not exists(select 1 from public.hq_agent_jobs r where r.task_id=v_task.id and r.kind='task-report' and r.status='completed')
     or not exists(select 1 from public.hq_agent_jobs l where l.task_id=v_task.id and l.kind='lesson-extract' and l.status='blocked' and l.error='trial-learning-disabled')
@@ -433,14 +584,12 @@ begin
     or v_artifact.id is null or v_artifact.agent_id<>v_agent.id
     or v_trial.binding_digest<>hq_private.workforce_trial_binding_digest(v_agent.id)
     or v_agent.lifecycle !~* '(configured|trial|pending)'
-    or v_agent.model_tier<>'T1_WORKER'
-    or not exists(select 1 from hq_private.workforce_model_binding_receipts m
-      where m.agent_id=v_agent.id and m.model_target=v_agent.model and m.observed_model=v_agent.model) then
+    or v_agent.model_tier<>'T1_WORKER' or v_execution.id is null then
     raise exception 'HQ_TRIAL_EVIDENCE_INCOMPLETE' using errcode='22023'; end if;
   insert into hq_private.workforce_qualification_receipts(agent_id,trial_id,scope,evidence_artifact_id,review_job_id,
-    reviewer_id,binding_digest,profile_file_id,skill_file_ids,model_tier,manager_id,department_key,authorized_by)
+    reviewer_id,binding_digest,profile_file_id,skill_file_ids,model_tier,manager_id,department_key,host_execution_id,authorized_by)
   values(v_agent.id,v_trial.id,'bounded-drafting-v1',v_artifact.id,v_review.id,'AG-HR-003',hq_private.workforce_agent_binding_digest(v_agent.id),
-    v_agent.profile_file_id,v_agent.skill_file_ids,v_agent.model_tier,v_agent.manager_id,v_agent.department_key,v_uid)
+    v_agent.profile_file_id,v_agent.skill_file_ids,v_agent.model_tier,v_agent.manager_id,v_agent.department_key,v_execution.id,v_uid)
   on conflict(trial_id) do nothing returning * into v_receipt;
   v_inserted:=found;
   if not v_inserted then
@@ -448,6 +597,7 @@ begin
     if v_receipt.binding_digest=hq_private.workforce_agent_binding_digest(v_receipt.agent_id)
       and v_receipt.profile_file_id=v_agent.profile_file_id and v_receipt.skill_file_ids=v_agent.skill_file_ids
       and v_receipt.model_tier=v_agent.model_tier and v_receipt.manager_id=v_agent.manager_id
+      and v_receipt.host_execution_id=v_execution.id
       and v_receipt.department_key=v_agent.department_key then
       return jsonb_build_object('accepted',true,'receiptId',v_receipt.receipt_id,'agentId',v_receipt.agent_id,'reviewerId',v_receipt.reviewer_id);
     end if;
