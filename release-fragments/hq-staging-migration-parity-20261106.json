@@ -1,0 +1,25 @@
+{
+  "id": "hq-staging-migration-parity-20261106",
+  "task": "HQ-STAGING-MIGRATION-PARITY-20261106",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "CLAUDE.md",
+    "apps/company-hq/supabase/migrations/20261103194908_hq_dedicated_workspace.sql",
+    "supabase/legacy/company-hq/migrations/20261103194908_hq_dedicated_workspace.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "release-fragments/hq-staging-migration-parity-20261106.json",
+    "release-changes/items.json"
+  ],
+  "reason": "Keep the never-applied HQ workspace migration outside the active chain without changing its bytes; pin the 17 independently matched staging migrations and guard the source inventory. Classify the inherited root CLAUDE redirect. This source check does not inspect or modify hosted staging."
+}
