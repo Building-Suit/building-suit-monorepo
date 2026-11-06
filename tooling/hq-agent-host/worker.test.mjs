@@ -44,7 +44,7 @@ if(args[0]==='app-server'){
  const send=x=>process.stdout.write(JSON.stringify(x)+'\\n');
  const validArgs=args.includes('--stdio')&&args.includes('--strict-config')&&args.includes('--disable')&&args.includes('shell_tool')&&args.includes('mcp_servers={}');
  if(!validArgs||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY)process.exit(77);
- lines.on('line',raw=>{const req=JSON.parse(raw);if(req.method==='initialize'){send({id:req.id,result:{userAgent:'codex-cli 0.159.2'}});return}if(req.method==='initialized')return;
+ lines.on('line',raw=>{const req=JSON.parse(raw);if(req.method==='initialize'){send({id:req.id,result:{userAgent:${JSON.stringify(cliVersion)}}});return}if(req.method==='initialized')return;
  if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||Object.keys(start.config?.mcp_servers??{}).length!==0||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-terra'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
  if(${JSON.stringify(appServer.missingSettings===true)}){send({id:req.id,result:{thread:{id:threadId,model:start.model,modelProvider:start.modelProvider}}});return}
  const t={id:threadId,model:start.model,modelProvider:start.modelProvider,reasoningEffort:start.config.model_reasoning_effort};
@@ -181,6 +181,14 @@ test('CLI preflight failure is not launched and unsupported CLI versions fail be
    assert.equal(error.message,'provider-cli-version-unsupported');assert.equal(error.modelBindingEvidence.attestationLevel,'host-cli-preflight')
    assert.equal(error.modelBindingEvidence.cliVersion,'codex-cli 0.159.3');return true
  }),{cliVersion:'codex-cli 0.159.3'})
+})
+test('trial App Server accepts the separately verified Codex CLI 0.160.0 binding',async()=>{
+ const trial=trialWorkerJob()
+ const output=await fake(successful,config=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+ assert.equal(output.modelBindingEvidence.cliVersion,'codex-cli 0.160.0')
+ assert.equal(output.modelBindingEvidence.attestationLevel,'host-returned-resolution')
+ assert.equal(output.modelBindingEvidence.providerServedModel,'unknown')
+ assert.equal(output.modelBindingEvidence.hostResolution.model,'gpt-6.1-terra')
 })
 test('disabled search/tool/error outputs and incomplete turns cannot masquerade as completion',async()=>{
  for(const [item,expected] of [[{type:'command_execution',command:'ignored'},/provider-tool-rejected/],[{type:'error',message:'untrusted raw provider text'},/provider-error/],[{type:'web_search'},/provider-tool-rejected/]]){

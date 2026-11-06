@@ -19,7 +19,7 @@ const MAX_HTTP_BYTES = 1_048_576, MAX_PROCESS_BYTES = 4_194_304
 const MAX_BRAIN_SOURCE_BYTES = 128_000, MAX_BRAIN_CONTEXT_BYTES = 250_000
 const JOB_MS = 600_000, LEASE_SECONDS = 300, LEASE_INTERVAL_MS = 60_000
 const MEETING_PROTOCOL = 1
-const TRIAL_CODEX_CLI_VERSION = 'codex-cli 0.159.2'
+const TRIAL_CODEX_CLI_VERSIONS = new Set(['codex-cli 0.159.2', 'codex-cli 0.160.0'])
 const TOPIC = 'realtime:hq-agent-jobs'
 class WorkerProblem extends Error { constructor(code) { super(code); this.code = code } }
 const problem = code => new WorkerProblem(code)
@@ -642,7 +642,7 @@ export async function invokeCodex(config, job, brain, signal) {
       executable = await executablePath(config.bin, environment.PATH, directory)
       cliBinaryDigest = await fileSha256(executable)
       cliVersion = await probeCliVersion(executable, { ...environment, HOME: directory, CODEX_HOME: directory }, signal)
-      requireValue(cliVersion === TRIAL_CODEX_CLI_VERSION,'provider-cli-version-unsupported')
+      requireValue(TRIAL_CODEX_CLI_VERSIONS.has(cliVersion),'provider-cli-version-unsupported')
     } catch (error) {
       error.modelBindingEvidence = {
         schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown', hostResolution: null,
