@@ -32,13 +32,16 @@ export function parseLiveRoster(value) {
   const rows = list(raw.participants, 32), seen = new Set()
   const result = rows.map(input => {
     const row = object(input), id = agentId(row.id)
-    if (seen.has(id) || typeof row.qualified !== 'boolean') throw new Error('invalid-live-meeting-roster')
+    if (seen.has(id) || typeof row.conversationAvailable !== 'boolean' || typeof row.workQualified !== 'boolean'
+      || (own(row, 'qualified') && row.qualified !== row.workQualified)) throw new Error('invalid-live-meeting-roster')
     seen.add(id)
     const reference = string(row.registryReference, 2000), allowedTools = strings(row.allowedTools ?? [], 16)
-    if (row.qualified && !allowedTools.includes('read-approved-sources')) throw new Error('invalid-live-meeting-roster-scope')
+    if (row.workQualified && !allowedTools.includes('read-approved-sources')) throw new Error('invalid-live-meeting-roster-scope')
     return { id, name: string(row.name, 200), role: string(row.role, 200), supervisorId: row.supervisorId == null ? null : agentId(row.supervisorId),
-      qualified: row.qualified, qualifiedForLiveMeeting: row.qualified, allowedTools: row.qualified ? allowedTools : [], registryReference: reference,
-      supervisorName: '', lifecycle: row.qualified ? 'qualified' : 'unqualified', operation: 'read-approved-sources-worker-job-600', source: { id: reference, version: observedAt } }
+      conversationAvailable: row.conversationAvailable, workQualified: row.workQualified,
+      qualified: row.workQualified, qualifiedForLiveMeeting: row.workQualified, allowedTools: row.workQualified ? allowedTools : [], registryReference: reference,
+      supervisorName: '', lifecycle: row.conversationAvailable ? 'configured' : 'unavailable',
+      operation: row.workQualified ? 'Context-only conversation; separately qualified read-only work' : row.conversationAvailable ? 'Context-only conversation; research and execution unavailable' : 'Conversation unavailable', source: { id: reference, version: observedAt } }
   })
   for (const row of result) {
     if (row.supervisorId) row.supervisorName = result.find(item => item.id === row.supervisorId)?.name ?? row.supervisorId
@@ -159,7 +162,7 @@ export function parseLiveMeetingSnapshot(value, roster) {
   if (raw.turn != null) {
     const candidate = object(raw.turn)
     const row = contributions.find(item => item.id === candidate.id && item.agent_id === candidate.agentId && item.generation === candidate.generation && item.generation === generation)
-    if (row && people.some(person => person.id === row.agent_id && person.qualified) && status === 'active' && meeting.connection === 'connected' && meeting.paused === false && meeting.floor === row.agent_id) {
+    if (row && people.some(person => person.id === row.agent_id && person.conversationAvailable) && status === 'active' && meeting.connection === 'connected' && meeting.paused === false && meeting.floor === row.agent_id) {
       if (row.status === 'thinking' && candidate.status === 'thinking') turn = { id: row.id, agentId: row.agent_id, generation, language, status: 'thinking', sourceEventId: `event:${row.source_event_id}`, reportTaskId: row.business_task_id ?? null }
       else if (row.status === 'speaking' && candidate.status === 'speaking' && correlatedOutput(row)) turn = { id: row.id, agentId: row.agent_id, generation, language, status: 'speaking', sourceEventId: `event:${row.source_event_id}`, reportTaskId: row.business_task_id ?? null, contributionEventId: `contribution:${row.id}` }
     }
@@ -167,8 +170,9 @@ export function parseLiveMeetingSnapshot(value, roster) {
   const participants = people.map(person => {
     const current = contributions.filter(row => row.agent_id === person.id && row.generation === generation).at(-1)
     const handRaised = tasks.some(task => task.agentId === person.id && task.liveHandRaised)
-    const activity = !person.qualified ? 'unavailable' : turn?.agentId === person.id ? turn.status : current && ['failed', 'blocked'].includes(current.status) ? 'failed' : handRaised ? 'hand-raised' : tasks.some(task => task.agentId === person.id && task.status === 'running') ? 'researching' : 'listening'
-    return { id: person.id, name: person.name, role: person.role, supervisorId: person.supervisorId, registryReference: person.registryReference, qualified: person.qualified,
+    const activity = !person.conversationAvailable ? 'unavailable' : turn?.agentId === person.id ? turn.status : current && ['failed', 'blocked'].includes(current.status) ? 'failed' : handRaised ? 'hand-raised' : tasks.some(task => task.agentId === person.id && task.status === 'running') ? 'researching' : 'listening'
+    return { id: person.id, name: person.name, role: person.role, supervisorId: person.supervisorId, registryReference: person.registryReference, qualified: person.workQualified,
+      conversationAvailable: person.conversationAvailable, workQualified: person.workQualified,
       allowedTools: person.allowedTools, status: activity, handRaised, voice: { agentId: person.id, provider: 'browser-local', voiceId: null, languages: [language], available: false, fallback: 'none' } }
   })
   const floor = meeting.floor === 'founder' || meeting.floor === founderId ? { kind: 'founder' } : participantIds.includes(meeting.floor) ? { kind: 'agent', agentId: meeting.floor } : { kind: 'unassigned' }
@@ -181,7 +185,7 @@ export function parseLiveMeetingSnapshot(value, roster) {
 
 function scopedTask(context, ownerId, objective, deliverable) {
   const owner = context.roster?.find(person => person.id === ownerId)
-  if (!owner?.qualified || !owner.supervisorId || !context.roster.some(person => person.id === owner.supervisorId && person.qualified) || !context.roster.some(person => person.id === 'AG-CEO-001' && person.qualified)) throw new Error('live-meeting-owner-unqualified')
+  if (!owner?.workQualified || !owner.supervisorId || !context.roster.some(person => person.id === owner.supervisorId && person.workQualified) || !context.roster.some(person => person.id === 'AG-CEO-001' && person.workQualified)) throw new Error('live-meeting-owner-unqualified')
   return { id: context.requestId, objective: string(objective, 2000), ownerId: owner.id, supervisorId: owner.supervisorId, deliverable: string(deliverable, 2000),
     inputs: [], dependencies: [], allowedActions: ['read-approved-sources'], budget: 0, acceptanceCriteria: [string(deliverable, 2000)], requiredReview: 'independent', blockers: [], priority: 3,
     environment: 'hq-existing-worker', timeLimitSeconds: 600, timeoutScope: 'worker-job' }
@@ -190,10 +194,10 @@ function scopedTask(context, ownerId, objective, deliverable) {
 /** Only supported, explicit semantic controls become live RPC commands. */
 export function buildLiveMeetingRequest(command, context) {
   const requestId = uuid(context.requestId)
-  if (['draft', 'newMeeting', 'microphone', 'mute', 'voice', 'refresh'].includes(command.type)) return null
+  if (['draft', 'newMeeting', 'microphone', 'mute', 'voice', 'refresh', 'recognitionMode', 'recheckMicrophone', 'prepareRecognition'].includes(command.type)) return null
   if (command.type === 'start') {
     const participantIds = strings(command.participantIds, 16).map(agentId)
-    if (!participantIds.includes('AG-CEO-001') || new Set(participantIds).size !== participantIds.length || participantIds.some(id => !context.roster?.some(person => person.id === id && person.qualified))) throw new Error('live-meeting-participant-unqualified')
+    if (!participantIds.includes('AG-CEO-001') || new Set(participantIds).size !== participantIds.length || participantIds.some(id => !context.roster?.some(person => person.id === id && person.conversationAvailable))) throw new Error('live-meeting-conversation-unavailable')
     return { type: 'create', requestId, title: string(command.title, 200), language: enumeration(command.language, ['ar', 'en']), participantIds }
   }
   const meetingId = uuid(context.meetingId ?? context.record?.id)

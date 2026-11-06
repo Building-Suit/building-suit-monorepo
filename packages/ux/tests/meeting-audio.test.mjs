@@ -61,7 +61,7 @@ function result(text, isFinal = true, confidence = 0.92) {
   item.isFinal = isFinal
   return { resultIndex: 0, results: [item] }
 }
-const consent = { userInitiated: true, recognitionDisclosureAccepted: true }
+const consent = { userInitiated: true, recognitionDisclosureAccepted: true, recognitionMode: 'browser-service' }
 
 test('construction is SSR safe and unsupported recognition retains text fallback', async () => {
   const controller = createMeetingAudio({ environment: {} })
@@ -92,7 +92,7 @@ test('recognition replaces interim drafts, marks uncertainty and never authorize
   const controller = createMeetingAudio({ environment: fixture.environment, onDraft: value => drafts.push(value) })
   await controller.startCapture(consent)
   const recognition = fixture.recognizers[0]
-  assert.equal(recognition.lang, 'ar')
+  assert.equal(recognition.lang, 'ar-EG')
   recognition.onresult(result('موافقة', false, 0.4))
   recognition.onresult(result('خطة تحتاج مراجعة', true, 0.75))
   assert.deepEqual(drafts.map(draft => [draft.text, draft.final, draft.uncertain]), [
@@ -289,12 +289,182 @@ test('local-only recognition requires installed language support and never falls
   const fixture = browser()
   fixture.environment.SpeechRecognition.prototype.processLocally = false
   fixture.environment.SpeechRecognition.available = async request => {
-    assert.deepEqual(request, { langs: ['ar'], processLocally: true })
+    assert.deepEqual(request, { langs: ['ar-EG'], processLocally: true })
     return 'available'
   }
   const controller = createMeetingAudio({ environment: fixture.environment })
   assert.equal(await controller.startCapture({ ...consent, recognitionMode: 'local-only' }), true)
   assert.equal(fixture.recognizers.at(-1).processLocally, true)
   assert.equal(controller.getState().recognitionMode, 'local-only')
+  controller.close()
+})
+
+
+test('local capability reports pack states without capturing, installing or switching service', async () => {
+  const fixture = browser(), probes = []
+  let installs = 0, availability = 'downloadable'
+  fixture.environment.SpeechRecognition.prototype.processLocally = false
+  fixture.environment.SpeechRecognition.available = async request => { probes.push(request); return availability }
+  fixture.environment.SpeechRecognition.install = () => { installs++; throw new Error('Forbidden automatic download') }
+  const controller = createMeetingAudio({ environment: fixture.environment })
+  for (const [value, status] of [['available', 'available'], ['downloadable', 'language-downloadable'],
+    ['downloading', 'language-downloading'], ['unavailable', 'language-unavailable']]) {
+    availability = value
+    assert.deepEqual(await controller.localRecognitionSupport(), { status, language: 'ar-EG', error: null })
+  }
+  assert.equal(fixture.requests.length, 0)
+  assert.equal(installs, 0)
+  controller.setLanguage('en')
+  availability = 'available'
+  assert.equal((await controller.localRecognitionSupport()).language, 'en-US')
+  assert.deepEqual(probes.at(-1), { langs: ['en-US'], processLocally: true })
+  assert.equal(controller.getState().language, 'en')
+  controller.close()
+})
+
+test('local unsupported, insecure and missing microphone API stay distinct from browser service capability', async () => {
+  const fixture = browser()
+  const controller = createMeetingAudio({ environment: fixture.environment })
+  assert.deepEqual(await controller.localRecognitionSupport(), { status: 'unsupported-browser', language: 'ar-EG', error: null })
+  assert.equal(controller.getState().recognitionAvailable, true)
+  controller.close()
+  const insecure = browser()
+  insecure.environment.isSecureContext = false
+  const second = createMeetingAudio({ environment: insecure.environment })
+  assert.equal(second.getState().recognitionAvailable, false)
+  assert.equal((await second.localRecognitionSupport()).status, 'insecure-context')
+  assert.equal(await second.startCapture(consent), false)
+  assert.equal(second.getState().error, 'insecure-context')
+  assert.equal(insecure.requests.length, 0)
+  second.close()
+  const missing = createMeetingAudio({ environment: { SpeechRecognition: fixture.environment.SpeechRecognition } })
+  assert.equal((await missing.localRecognitionSupport()).error, 'microphone-unavailable')
+  missing.close()
+})
+
+test('local policy denial and failed probes expose finite diagnostics without raw browser errors', async () => {
+  const fixture = browser()
+  fixture.environment.SpeechRecognition.prototype.processLocally = false
+  fixture.environment.SpeechRecognition.available = async () => { throw Object.assign(new Error('Private browser detail'), { name: 'NotAllowedError' }) }
+  const controller = createMeetingAudio({ environment: fixture.environment })
+  assert.deepEqual(await controller.localRecognitionSupport(), { status: 'unverified', language: 'ar-EG', error: 'recognition-policy-blocked' })
+  assert.equal(await controller.startCapture({ ...consent, recognitionMode: 'local-only' }), false)
+  assert.equal(controller.getState().error, 'local-recognition-policy-blocked')
+  fixture.environment.SpeechRecognition.available = async () => 'toString'
+  assert.equal((await controller.localRecognitionSupport()).error, 'recognition-probe-failed')
+  assert.equal(fixture.requests.length, 0)
+  controller.close()
+})
+
+test('default local mode never falls back and browser service needs explicit selected mode and disclosure', async () => {
+  const fixture = browser()
+  fixture.environment.SpeechRecognition.prototype.processLocally = false
+  fixture.environment.SpeechRecognition.available = async () => 'downloadable'
+  const controller = createMeetingAudio({ environment: fixture.environment })
+  assert.equal(await controller.startCapture({ userInitiated: true, recognitionDisclosureAccepted: true }), false)
+  assert.equal(controller.getState().error, 'local-recognition-downloadable')
+  assert.equal(fixture.requests.length, 0)
+  assert.equal(await controller.startCapture({ userInitiated: true, recognitionMode: 'browser-service' }), false)
+  assert.equal(controller.getState().error, 'consent-required')
+  assert.equal(fixture.requests.length, 0)
+  assert.equal(await controller.startCapture(consent), true)
+  assert.equal(fixture.requests.length, 1)
+  assert.equal(fixture.recognizers.at(-1).lang, 'ar-EG')
+  assert.equal(fixture.recognizers.at(-1).processLocally, false)
+  controller.close()
+})
+
+test('capture service, permission, device and language errors remain distinct and release microphone', async () => {
+  for (const [error, expected] of [['not-allowed', 'microphone-denied'], ['service-not-allowed', 'recognition-service-denied'],
+    ['audio-capture', 'microphone-device-unavailable'], ['language-not-supported', 'recognition-language-unavailable'], ['no-speech', 'recognition-no-speech'], ['constructor', 'recognition-failed']]) {
+    const fixture = browser(), controller = createMeetingAudio({ environment: fixture.environment })
+    await controller.startCapture(consent)
+    fixture.recognizers.at(-1).onerror({ error })
+    assert.equal(controller.getState().error, expected)
+    assert.equal(controller.getState().captureActive, false)
+    assert.equal(fixture.counts().stops, 1)
+    controller.close()
+  }
+})
+
+test('a language change fences a pending local support admission before microphone capture', async () => {
+  const fixture = browser()
+  fixture.environment.SpeechRecognition.prototype.processLocally = false
+  let resolveProbe
+  fixture.environment.SpeechRecognition.available = () => new Promise(resolve => { resolveProbe = resolve })
+  const controller = createMeetingAudio({ environment: fixture.environment })
+  const capture = controller.startCapture({ ...consent, recognitionMode: 'local-only' })
+  controller.setLanguage('en')
+  resolveProbe('available')
+  assert.equal(await capture, false)
+  assert.equal(controller.getState().language, 'en')
+  assert.equal(controller.getState().captureActive, false)
+  assert.equal(fixture.requests.length, 0)
+  controller.close()
+})
+
+test('prepared automatic engine shares the one explicit capture stream and never selects browser recognition', async () => {
+  const fixture = browser(), drafts = []
+  let prepared = false, sessions = 0, aborts = 0
+  const session = { start() { this.onstart?.() }, abort() { aborts++ } }
+  const engine = { support: () => ({ available: true, prepared }), async createSession(stream) { assert.equal(stream, fixture.stream); sessions++; return session } }
+  const controller = createMeetingAudio({ environment: fixture.environment, recognitionEngine: engine, onDraft: draft => drafts.push(draft) })
+  const explicit = { ...consent, recognitionMode: 'local-only' }
+  assert.equal(await controller.startCapture(explicit), false)
+  assert.equal(controller.getState().error, 'recognition-model-required')
+  assert.equal(fixture.requests.length, 0)
+  prepared = true
+  assert.equal(await controller.startCapture(explicit), true)
+  assert.equal(fixture.requests.length, 1)
+  assert.equal(fixture.recognizers.length, 0)
+  assert.equal(sessions, 1)
+  assert.equal(session.lang, 'auto')
+  session.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'راجع هذه المسودة', language: 'ar' }], { isFinal: true })] })
+  assert.equal(drafts[0].language, 'ar')
+  assert.equal(drafts[0].confidence, null)
+  assert.equal(drafts[0].uncertain, true)
+  controller.stopCapture()
+  assert.equal(aborts, 1)
+  assert.equal(fixture.counts().stops, 1)
+  controller.close()
+})
+
+test('closing during automatic engine session setup releases shared capture and aborts the late session', async () => {
+  const fixture = browser()
+  let resolve, aborts = 0, signal
+  const engine = { support: () => ({ available: true, prepared: true }), createSession: (_stream, options) => { signal = options.signal; return new Promise(done => { resolve = done }) } }
+  const controller = createMeetingAudio({ environment: fixture.environment, recognitionEngine: engine })
+  const started = controller.startCapture({ ...consent, recognitionMode: 'local-only' })
+  // Capability and getUserMedia both resolve asynchronously before session setup.
+  await new Promise(done => setImmediate(done))
+  controller.close()
+  assert.equal(signal.aborted, true)
+  resolve({ abort() { aborts++ } })
+  assert.equal(await started, false)
+  assert.equal(fixture.counts().stops, 1)
+  assert.equal(aborts, 1)
+})
+
+
+test('manual microphone stop releases tracks immediately but admits the pending final draft until end', async () => {
+  const fixture = browser(), drafts = []
+  let finishes = 0, aborts = 0
+  const session = { start() { this.onstart?.() }, stop() { finishes++ }, abort() { aborts++ } }
+  const engine = { support: () => ({ available: true, prepared: true }), async createSession() { return session } }
+  const controller = createMeetingAudio({ environment: fixture.environment, recognitionEngine: engine, onDraft: draft => drafts.push(draft) })
+  await controller.startCapture({ ...consent, recognitionMode: 'local-only' })
+  assert.equal(controller.finishCapture(), true)
+  assert.equal(controller.getState().capture, 'finishing')
+  assert.equal(controller.getState().captureActive, false)
+  assert.equal(fixture.counts().stops, 1)
+  assert.equal(finishes, 1)
+  assert.equal(aborts, 0)
+  assert.equal(await controller.startCapture({ ...consent, recognitionMode: 'local-only' }), false)
+  session.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'Final words retained after Stop.', language: 'en' }], { isFinal: true })] })
+  assert.equal(drafts[0].text, 'Final words retained after Stop.')
+  session.onend()
+  assert.equal(controller.getState().capture, 'idle')
+  assert.equal(drafts.length, 1)
+  assert.equal(fixture.counts().stops, 1)
   controller.close()
 })

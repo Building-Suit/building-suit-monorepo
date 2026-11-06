@@ -1,12 +1,13 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { createMeetingAudio } from '@building-suit/ux/meetingAudio'
-import type { MeetingAudioController, MeetingAudioState, MeetingVoiceProfile } from '@building-suit/ux/meetingAudio'
-import type { HqMeetingCommand, HqMeetingConnection, HqMeetingCopy, HqMeetingLanguage, HqMeetingPresentation, HqMeetingTaskState } from '@building-suit/ui/types/hqMeetingPresentation'
+import type { MeetingAudioController, MeetingAudioError, MeetingAudioState, MeetingVoiceProfile } from '@building-suit/ux/meetingAudio'
+import type { HqMeetingCommand, HqMeetingConnection, HqMeetingCopy, HqMeetingLabel, HqMeetingLanguage, HqMeetingPresentation, HqMeetingTaskState } from '@building-suit/ui/types/hqMeetingPresentation'
 import type { MeetingRecord } from '../../shared/meetings/domain.mjs'
 import type { MeetingRegistryParticipant } from '../../shared/meetings/registry.mjs'
 import { buildLiveMeetingRequest, buildLivePlanSubmission, parseLiveMeetingSnapshot, parseLiveRoster } from '#shared/meetings/livePresentation.mjs'
 import type { LiveMeetingCommandRequest, LiveMeetingRecord, LiveMeetingRegistryParticipant, LiveMeetingRequest } from '#shared/meetings/livePresentation.mjs'
-import ar from '../../i18n/locales/ar.json'
+import { createMultilingualMeetingRecognition } from '@building-suit/ux/meetingRecognition'
+import type { MultilingualMeetingRecognition, MultilingualMeetingRecognitionState, MultilingualMeetingRecognitionSupport } from '@building-suit/ux/meetingRecognition'
 import en from '../../i18n/locales/en.json'
 
 type TransportCommand = HqMeetingCommand | { type: 'reconnect' } | { type: 'playback-ended'; turnId: string; generation: number }
@@ -25,7 +26,7 @@ const defaultParticipants = new Set(['AG-CEO-001', 'AG-HR-001', 'AG-HR-002', 'AG
 export function useHqMeeting(accessStatus?: () => string, founder?: () => { displayName: string; avatarUrl?: string } | undefined) {
   const { rt } = useI18n()
   const liveEvents = useHqLiveEvents()
-  const language = ref<HqMeetingLanguage>('ar')
+  const language = ref<HqMeetingLanguage>('en')
   const record = shallowRef<MeetingRecord | null>(null)
   const registry = shallowRef<MeetingRegistryParticipant[]>([])
   const liveRoster = shallowRef<LiveMeetingRegistryParticipant[]>([])
@@ -39,14 +40,19 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
   const draftUncertain = ref(false)
   const playbackMuted = ref(false)
   const localRecognition = ref(false)
+  const recognitionState = shallowRef<MultilingualMeetingRecognitionState>({ phase: 'idle', progress: null, prepared: false, processing: false, error: null })
+  const recognitionSupport = shallowRef<MultilingualMeetingRecognitionSupport | null>(null)
+  const recognitionChecking = ref(false)
+  const captureError = ref<MeetingAudioError | null>(null)
   const audioState = shallowRef<MeetingAudioState | null>(null)
   const playbackFailureAgent = ref<string | null>(null)
   const voices = shallowRef<{ voiceURI: string; name: string; language: string; local: true }[]>([])
   const voiceAssignments = ref<Record<string, string>>({})
-  // Resolve Nuxt's compiled message AST through rt. Both finite dictionaries
-  // are present even when the scene's lazy locale has not loaded this language.
-  const copy = computed<HqMeetingCopy>(() => Object.fromEntries(Object.entries((language.value === 'ar' ? ar : en).hq.meeting).map(([group, values]) => [group, Object.fromEntries(Object.entries(values).map(([key, value]) => [key, rt(value, {}, { locale: language.value })]))])) as unknown as HqMeetingCopy)
+  // Meeting chrome stays English independently of detected speech or replies.
+  // Resolve Nuxt's compiled message AST through its supported runtime helper.
+  const copy = computed<HqMeetingCopy>(() => Object.fromEntries(Object.entries(en.hq.meeting).map(([group, values]) => [group, Object.fromEntries(Object.entries(values).map(([key, value]) => [key, rt(value, {}, { locale: 'en' })]))])) as unknown as HqMeetingCopy)
   let audio: MeetingAudioController | null = null
+  let recognitionEngine: MultilingualMeetingRecognition | null = null
   let opened = false
   let disposed = false
   let newMeetingIntent = false
@@ -66,6 +72,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
   let recognitionBaseUncertain = false
   let profileSignature = ''
   let refreshingVoices = false
+  let previousAudioError: MeetingAudioError | null = null
   const requests = new Set<AbortController>()
   const requestIds = new Map<string, string>()
   const liveRequests = new Map<string, LiveMeetingRequest>()
@@ -77,7 +84,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
   function voiceKey(agentId: string) { return `${language.value}:${agentId}` }
   function founderName() { return mode.value === 'live' ? founder?.()?.displayName || copy.value.labels.founder : copy.value.labels.syntheticFounder }
   function nameFor(id: string) { return id === record.value?.founderId ? founderName() : record.value?.participants.find(item => item.id === id)?.name ?? registry.value.find(item => item.id === id)?.name ?? id }
-  function failure() { message.value = copy.value.labels.unavailable }
+  function failure() { message.value = copy.value.labels.meetingSetupRequired }
   function clearPrivateLiveState(error: unknown) {
     if (mode.value !== 'live' || !(error instanceof Error) || !/^meeting-http-40[13]$/.test(error.message)) return
     invalidate('authority-lost', false)
@@ -126,7 +133,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
       const participants = record.value?.participants ?? registry.value
       const assigned = new Set<string>()
       const profiles: MeetingVoiceProfile[] = participants.flatMap(participant => {
-        if (mode.value === 'live' && !liveRoster.value.some(item => item.id === participant.id && item.qualified)) return []
+        if (mode.value === 'live' && !liveRoster.value.some(item => item.id === participant.id && item.conversationAvailable)) return []
         const uri = voiceAssignments.value[voiceKey(participant.id)]
         if (!uri || !available.has(uri) || assigned.has(uri)) return []
         assigned.add(uri)
@@ -138,11 +145,44 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
     finally { refreshingVoices = false }
   }
 
-  async function probeRecognition() {
-    const capturedEpoch = epoch, selectedLanguage = language.value
-    localRecognition.value = false
-    const availability = await audio?.localRecognitionAvailability().catch(() => 'unavailable')
-    if (!disposed && capturedEpoch === epoch && selectedLanguage === language.value) localRecognition.value = availability === 'available'
+  function probeRecognition() {
+    recognitionChecking.value = true
+    recognitionSupport.value = recognitionEngine?.support() ?? null
+    recognitionState.value = recognitionEngine?.getState() ?? recognitionState.value
+    localRecognition.value = recognitionSupport.value?.available === true && recognitionState.value.prepared
+    recognitionChecking.value = false
+  }
+
+  const captureErrors: Partial<Record<MeetingAudioError, HqMeetingLabel>> = {
+    'consent-required': 'microphoneConsentRequired', 'insecure-context': 'microphoneInsecure', 'recognition-unavailable': 'microphoneUnsupported',
+    'local-recognition-unavailable': 'microphoneLanguageUnavailable', 'local-recognition-downloadable': 'microphoneLanguageDownloadable',
+    'local-recognition-downloading': 'microphoneLanguageDownloading', 'local-recognition-unverified': 'microphoneSupportUnverified',
+    'local-recognition-policy-blocked': 'microphonePolicyBlocked', 'microphone-unavailable': 'microphoneCaptureUnavailable',
+    'microphone-denied': 'microphonePermissionDenied', 'microphone-device-unavailable': 'microphoneDeviceUnavailable',
+    'microphone-ended': 'microphoneInputEnded', 'recognition-service-denied': 'microphoneServiceBlocked',
+    'recognition-language-unavailable': 'microphoneLanguageError', 'recognition-no-speech': 'microphoneNoSpeech',
+    'recognition-network': 'microphoneNetworkFailed', 'recognition-failed': 'microphoneRecognitionFailed', 'recognition-limit': 'microphoneLimit',
+    'recognition-model-required': 'recognitionModelRequired', 'recognition-busy': 'microphoneRecognitionFailed',
+  }
+  function recognitionModelStatus(): string {
+    if (recognitionState.value.phase === 'downloading') return copy.value.labels.recognitionDownloading
+    if (recognitionState.value.phase === 'loading') return copy.value.labels.recognitionLoading
+    if (recognitionState.value.phase === 'failed') return copy.value.labels[recognitionState.value.error === 'model-consent-required' ? 'recognitionModelConsentRequired' : 'recognitionModelFailed']
+    if (recognitionState.value.processing) return copy.value.labels.recognitionTranscribing
+    if (recognitionSupport.value?.status === 'insecure-context') return copy.value.labels.microphoneInsecure
+    if (recognitionSupport.value?.status === 'unsupported-browser') return copy.value.labels.microphoneUnsupported
+    return copy.value.labels[recognitionState.value.prepared ? 'recognitionModelReady' : 'recognitionModelRequired']
+  }
+  function microphoneStatus(): string {
+    const state = audioState.value
+    if (state?.capture === 'finishing') return copy.value.labels.microphoneFinishing
+    if (state?.capture === 'requesting') return copy.value.labels.microphoneStarting
+    if (state?.captureActive) return copy.value.labels.microphoneListening
+    const errorLabel = captureError.value ? captureErrors[captureError.value] : undefined
+    if (errorLabel) return copy.value.labels[errorLabel]
+    if (recognitionChecking.value) return copy.value.labels.microphoneChecking
+    if (recognitionState.value.prepared && !recognitionState.value.processing) return copy.value.labels.microphoneReadyLocal
+    return recognitionModelStatus()
   }
 
   function completePlayback(item: Playback) {
@@ -155,7 +195,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
     const current = record.value
     const turn = current?.turn
     if (!current || !turn || current.status !== 'active' || turn.status !== 'speaking' || !usable()) return
-    if (mode.value === 'live' && !current.participants.some(person => person.id === turn.agentId && person.qualified)) return
+    if (mode.value === 'live' && !liveRoster.value.some(person => person.id === turn.agentId && person.conversationAvailable)) return
     const key = `${current.id}:${turn.id}:${turn.generation}`
     // A founder interruption must fence output before any asynchronous response.
     // Wait for that command's exact snapshot before admitting a fresh turn.
@@ -197,7 +237,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
         void probeRecognition()
       }
       const turn = record.value.turn
-      if (playback && (!turn || turn.id !== playback.turnId || turn.generation !== playback.generation || turn.status !== 'speaking' || record.value.status !== 'active' || mode.value === 'live' && !record.value.participants.some(person => person.id === playback?.agentId && person.qualified))) stopPlayback('superseded')
+      if (playback && (!turn || turn.id !== playback.turnId || turn.generation !== playback.generation || turn.status !== 'speaking' || record.value.status !== 'active' || mode.value === 'live' && !liveRoster.value.some(person => person.id === playback?.agentId && person.conversationAvailable))) stopPlayback('superseded')
       if (record.value.status === 'ended') stopCapture()
     }
     refreshVoices()
@@ -216,7 +256,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
       playbackFailureAgent.value = null
       liveRequests.clear(); liveSubmissions.clear(); uncertainProposals.clear(); requestIds.clear()
     }
-    if (mode.value === 'unavailable') message.value = copy.value.labels.unavailable
+    if (mode.value === 'unavailable') message.value = copy.value.labels.meetingSetupRequired
     return mode.value !== 'unavailable'
   }
 
@@ -399,17 +439,27 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
     if (value.type === 'draft') {
       // Typing takes ownership of the reviewable draft; a later interim speech
       // result must not replace that explicit edit or append it twice.
-      if (audioState.value?.captureActive) stopCapture()
+      if (audioState.value?.captureActive || ['requesting', 'finishing'].includes(audioState.value?.capture ?? '')) stopCapture()
       if (value.text.length > 12000) {
-        message.value = rt((language.value === 'ar' ? ar : en).hq.agents.dictation.limit, {}, { locale: language.value })
+        message.value = rt(en.hq.agents.dictation.limit, {}, { locale: 'en' })
         return
       }
       draftText.value = value.text; draftUncertain.value = false; recognitionBase = draftText.value
+      if (message.value === copy.value.labels.contributionTooLong && Array.from(value.text).length <= 4000) message.value = ''
       return
     }
     if (value.type === 'refresh') {
       if (!opened) { opened = true; connection.value = online() ? 'connecting' : 'offline'; void probeRecognition() }
       await refresh(); reconnectRecord(); return
+    }
+    if (value.type === 'recheckMicrophone') { captureError.value = null; probeRecognition(); return }
+    if (value.type === 'prepareMicrophone') {
+      if (!recognitionEngine || recognitionState.value.prepared || ['loading', 'downloading'].includes(recognitionState.value.phase)) return
+      if (!value.downloadConsent) { message.value = copy.value.labels.recognitionModelConsentRequired; return }
+      captureError.value = null
+      await recognitionEngine.prepare({ userInitiated: true, modelDownloadConsent: true })
+      if (!disposed) probeRecognition()
+      return
     }
     if (value.type === 'close') { invalidate('closed'); opened = false; connection.value = 'offline'; return }
     if (value.type === 'newMeeting') {
@@ -432,8 +482,9 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
       refreshVoices(); message.value = ''; return
     }
     if (value.type === 'microphone') {
-      if (!value.active) { stopCapture(); return }
-      if (!usable() || pending.value || record.value?.status !== 'active' || !value.disclosureAccepted || !localRecognition.value || !audio) return
+      if (!value.active) { audio?.finishCapture(); return }
+      if (!usable() || pending.value || record.value?.status !== 'active' || !value.disclosureAccepted || !localRecognition.value || !audio || ['requesting', 'finishing'].includes(audioState.value?.capture ?? '')) return
+      captureError.value = null
       recognitionBase = draftText.value.trim()
       recognitionBaseUncertain = draftUncertain.value
       await audio.startCapture({ userInitiated: true, recognitionDisclosureAccepted: true, recognitionMode: 'local-only' })
@@ -454,6 +505,8 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
     }
     if (value.type === 'interrupt') { stopPlayback('founder-interrupt'); const token = beginInterruption(); await enqueue(value, false, token); return }
     if (!usable() || mode.value === 'unavailable' || pending.value) return
+    if (value.type === 'text' && (audioState.value?.captureActive || ['requesting', 'finishing'].includes(audioState.value?.capture ?? ''))) return
+    if (value.type === 'text' && Array.from(value.text).length > 4000) { message.value = copy.value.labels.contributionTooLong; return }
     let textIntent: number | undefined
     if (value.type === 'text') { stopCapture(); stopPlayback('founder-text'); textIntent = beginInterruption() }
     if (value.type === 'end') { stopCapture(); stopPlayback('meeting-ended') }
@@ -468,11 +521,12 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
     const latestPlan = current?.plans.at(-1)
     const activeAudio = audioState.value
     const trustedFounder = mode.value === 'live' ? founder?.() : undefined
-    const status = activeAudio?.captureActive ? copy.value.labels.microphoneOn : !localRecognition.value || activeAudio?.capture === 'failed' ? copy.value.labels.microphoneUnavailable : copy.value.labels.microphoneOff
+    const status = microphoneStatus()
     const voiceFailed = playbackFailureAgent.value !== null && ['playback-failed', 'voice-unavailable'].includes(activeAudio?.error ?? '')
     const sourceFailed = Boolean(liveCurrent?.liveContributionErrors.length)
-    const visibleMessage = message.value || (voiceFailed ? copy.value.labels.voiceUnavailable : sourceFailed ? copy.value.labels.unavailable : '')
-    const qualifiedChair = mode.value !== 'live' || liveRoster.value.some(person => person.id === 'AG-CEO-001' && person.qualified)
+    const upgradeRequired = liveCurrent?.liveContributionErrors.some(item => item.error === 'meeting-protocol-required') === true
+    const visibleMessage = message.value || (voiceFailed ? copy.value.labels.voiceUnavailable : upgradeRequired ? copy.value.labels.workerUpgradeRequired : sourceFailed ? copy.value.labels.unavailable : '')
+    const qualifiedChair = mode.value !== 'live' || liveRoster.value.some(person => person.id === 'AG-CEO-001' && person.conversationAvailable)
     return {
       phase: mode.value === 'unavailable' ? 'unavailable' : current?.status === 'ended' ? 'ended' : current ? 'active' : 'setup',
       mode: mode.value, connection: connection.value,
@@ -483,13 +537,15 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
         const participant = current?.participants.find(item => item.id === person.id)
         const status = voiceFailed && playbackFailureAgent.value === person.id ? 'failed' : activeAudio?.speakingAgentId === person.id ? 'speaking' : participant?.status === 'speaking' ? 'listening' : participant?.status ?? 'listening'
         const source = registry.value.find(item => item.id === person.id)
-        const qualified = demonstration.value || liveRoster.value.some(item => item.id === person.id && item.qualified)
+        const qualified = demonstration.value || liveRoster.value.some(item => item.id === person.id && item.conversationAvailable)
         const supervisor = participant?.supervisorId ?? liveRoster.value.find(item => item.id === person.id)?.supervisorId
-        const qualifiedSupervisor = demonstration.value || liveRoster.value.some(item => item.id === supervisor && item.qualified)
-        return { id: person.id, name: person.name, role: person.role, ...(participant?.avatar ? { avatarUrl: participant.avatar } : {}), status: !qualified ? 'unavailable' : status, eligible: qualified, workEligible: Boolean(supervisor) && qualified && qualifiedSupervisor && qualifiedChair, selected: defaultParticipants.has(person.id), availability: source ? `${source.lifecycle} · ${source.operation}` : undefined, voiceId: voiceAssignments.value[voiceKey(person.id)] }
+        const qualifiedSupervisor = demonstration.value || liveRoster.value.some(item => item.id === supervisor && item.workQualified)
+        return { id: person.id, name: person.name, role: person.role, ...(participant?.avatar ? { avatarUrl: participant.avatar } : {}), status: !qualified ? 'unavailable' : status, eligible: qualified, workEligible: Boolean(supervisor) && (demonstration.value || liveRoster.value.some(item => item.id === person.id && item.workQualified)) && qualifiedSupervisor && (demonstration.value || liveRoster.value.some(item => item.id === 'AG-CEO-001' && item.workQualified)), selected: defaultParticipants.has(person.id), availability: source ? mode.value === 'live' ? source.lifecycle : `${source.lifecycle} · ${source.operation}` : undefined, voiceId: voiceAssignments.value[voiceKey(person.id)] }
       }),
       floor: current?.floor.kind === 'founder' ? current.founderId : current?.floor.kind === 'agent' ? current.floor.agentId : null,
-      microphone: { available: localRecognition.value, active: activeAudio?.captureActive ?? false, muted: playbackMuted.value, status },
+      microphone: { available: localRecognition.value, active: activeAudio?.captureActive ?? false, muted: playbackMuted.value, status,
+        support: recognitionChecking.value ? 'checking' : recognitionSupport.value?.status ?? 'unverified', checking: recognitionChecking.value, phase: activeAudio?.capture ?? 'idle',
+        model: { phase: recognitionState.value.phase, prepared: recognitionState.value.prepared, canPrepare: recognitionSupport.value?.available === true && !recognitionState.value.prepared && !['loading', 'downloading'].includes(recognitionState.value.phase), processing: recognitionState.value.processing, progress: recognitionState.value.progress, status: recognitionModelStatus() } },
       voiceAvailable: people.some(person => audio?.voiceAvailable(person.id)),
       voices: voices.value.map(item => ({ id: item.voiceURI, name: item.name, language: item.language })),
       draftText: draftText.value,
@@ -523,11 +579,21 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
       if (saved && typeof saved === 'object' && !Array.isArray(saved)) voiceAssignments.value = Object.fromEntries(Object.entries(saved).filter(([key, value]) => /^(ar|en):[A-Z0-9-]+$/.test(key) && typeof value === 'string' && value.length <= 500).slice(0, 64))
     }
     catch { /* Unavailable storage leaves text as the default. */ }
+    recognitionEngine = createMultilingualMeetingRecognition({ onState(state) {
+      recognitionState.value = state
+      if (recognitionEngine) { recognitionSupport.value = recognitionEngine.support(); localRecognition.value = recognitionSupport.value.available && state.prepared }
+    } })
+    probeRecognition()
     audio = createMeetingAudio({
-      language: language.value,
+      language: language.value, recognitionEngine,
       onState(state) {
         const previous = audioState.value?.speakingAgentId
         audioState.value = state
+        if (state.error !== previousAudioError) {
+          if (state.error && captureErrors[state.error]) captureError.value = state.error
+          else if (!state.error) captureError.value = null
+          previousAudioError = state.error
+        }
         if (playback && previous === playback.agentId && !state.speakingAgentId) { const item = playback; playback = null; completePlayback(item) }
       },
       onDraft(draft) {
@@ -535,7 +601,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
         const combined = [recognitionBase, draft.text].filter(Boolean).join(' ')
         if (combined.length > 12000) {
           stopCapture()
-          message.value = rt((language.value === 'ar' ? ar : en).hq.agents.dictation.limit, {}, { locale: language.value })
+          message.value = rt(en.hq.agents.dictation.limit, {}, { locale: 'en' })
           return
         }
         draftText.value = combined
@@ -588,6 +654,7 @@ export function useHqMeeting(accessStatus?: () => string, founder?: () => { disp
   onBeforeUnmount(() => {
     invalidate('disposed'); disposed = true; opened = false
     audio?.close(); audio = null
+    recognitionEngine?.dispose(); recognitionEngine = null
     document.removeEventListener('visibilitychange', visibilityChanged)
     window.removeEventListener('online', networkChanged)
     window.removeEventListener('offline', networkChanged)

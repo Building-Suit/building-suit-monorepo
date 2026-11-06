@@ -8,6 +8,7 @@ export function createMeetingAudio(options = {}) {
   const now = options.now ?? (() => scope.performance?.now?.() ?? Date.now())
   const synthesis = scope.speechSynthesis
   const Recognition = scope.SpeechRecognition ?? scope.webkitSpeechRecognition
+  const recognitionEngine = options.recognitionEngine
   const Utterance = scope.SpeechSynthesisUtterance
   const media = scope.navigator?.mediaDevices
   const requestFrame = scope.requestAnimationFrame?.bind(scope)
@@ -17,6 +18,7 @@ export function createMeetingAudio(options = {}) {
   let playbackEpoch = 0
   let closed = false
   let recognition = null
+  let recognitionSetup = null
   let stream = null
   let captureTracks = []
   let trackEnded = null
@@ -32,7 +34,7 @@ export function createMeetingAudio(options = {}) {
   const invalidated = new Set()
   const state = {
     capture: 'idle', captureActive: false, muted: true,
-    recognitionAvailable: Boolean(Recognition && media?.getUserMedia),
+    recognitionAvailable: Boolean(scope.isSecureContext !== false && (recognitionEngine?.support().available || !recognitionEngine && Recognition) && media?.getUserMedia),
     synthesisAvailable: Boolean(synthesis && Utterance),
     language, recognitionMode: null, speakingAgentId: null, error: null,
   }
@@ -93,6 +95,8 @@ export function createMeetingAudio(options = {}) {
 
   function stopCapture() {
     captureEpoch += 1
+    recognitionSetup?.abort()
+    recognitionSetup = null
     const previous = recognition
     recognition = null
     if (previous) {
@@ -109,21 +113,57 @@ export function createMeetingAudio(options = {}) {
     publish()
   }
 
+  /** Manual Stop releases the device now, then admits this session's final draft. */
+  function finishCapture() {
+    if (closed || state.capture === 'finishing') return false
+    if (!recognition || typeof recognition.stop !== 'function') { stopCapture(); return false }
+    releaseCapture()
+    state.capture = 'finishing'
+    publish()
+    try { recognition.stop(); return true }
+    catch { stopCapture(); return fail('recognition-failed') }
+  }
+
   function founderSpeech(reason) {
     interrupt(reason)
     options.onFounderSpeechStart?.({ reason })
   }
 
-  async function localRecognitionAvailability() {
-    if (!Recognition || typeof Recognition.available !== 'function') return 'unavailable'
+  /** Capability reads never request capture, install packs, or select a service. */
+  async function localRecognitionSupport() {
+    const selectedLanguage = recognitionEngine ? 'auto' : recognitionLanguage(language)
+    const result = (status, error = null) => ({ status, language: selectedLanguage, error })
+    if (scope.isSecureContext === false) return result('insecure-context')
+    if (recognitionEngine) {
+      const support = await recognitionEngine.support()
+      return support.prepared ? result('available') : support.available
+        ? result('language-downloadable', 'recognition-model-required')
+        : result('unsupported-browser', 'recognition-unavailable')
+    }
+    if (!Recognition) return result('unsupported-browser', 'recognition-unavailable')
+    if (!media?.getUserMedia) return result('unsupported-browser', 'microphone-unavailable')
+    if (typeof Recognition.available !== 'function') return result('unsupported-browser')
     try {
       const probe = new Recognition()
-      if (!('processLocally' in probe)) return 'unavailable'
-      const availability = await Recognition.available({ langs: [language], processLocally: true })
-      // Never install/download a language pack or fall back to a network service.
-      return availability === 'available' ? 'available' : 'unavailable'
+      if (!('processLocally' in probe)) return result('unsupported-browser')
+      const policy = scope.document?.permissionsPolicy ?? scope.document?.featurePolicy
+      if (policy?.allowsFeature?.('on-device-speech-recognition') === false) return result('unverified', 'recognition-policy-blocked')
+      const availability = await Recognition.available({ langs: [selectedLanguage], processLocally: true })
+      // Never install/download a pack or fall back to a network service here.
+      const statuses = { available: 'available', unavailable: 'language-unavailable',
+        downloadable: 'language-downloadable', downloading: 'language-downloading' }
+      return Object.hasOwn(statuses, availability) ? result(statuses[availability]) : result('unverified', 'recognition-probe-failed')
     }
-    catch { return 'unverified' }
+    catch (error) {
+      return result('unverified', ['NotAllowedError', 'SecurityError'].includes(error?.name)
+        ? 'recognition-policy-blocked' : 'recognition-probe-failed')
+    }
+  }
+
+  /** Compatibility projection; detailed UI should use localRecognitionSupport. */
+  async function localRecognitionAvailability() {
+    const support = await localRecognitionSupport()
+    return support.status === 'available' ? 'available' : support.status === 'unverified' ? 'unverified' : 'unavailable'
   }
 
   function startVad(epoch) {
@@ -159,10 +199,13 @@ export function createMeetingAudio(options = {}) {
   async function startCapture(consent) {
     if (closed) return false
     if (consent?.userInitiated !== true || consent?.recognitionDisclosureAccepted !== true) return fail('consent-required')
+    if (scope.isSecureContext === false) return fail('insecure-context')
+    if (!Recognition && !recognitionEngine) return fail('recognition-unavailable')
+    if (!media?.getUserMedia) return fail('microphone-unavailable')
     if (!state.recognitionAvailable) return fail('recognition-unavailable')
-    if (state.capture === 'requesting' || state.captureActive) return false
-    const mode = consent.recognitionMode ?? 'browser-service'
-    if (mode !== 'local-only' && mode !== 'browser-service') return fail('recognition-unavailable')
+    if (state.capture === 'requesting' || state.capture === 'finishing' || state.captureActive) return false
+    const mode = consent.recognitionMode ?? 'local-only'
+    if (mode !== 'local-only' && mode !== 'browser-service' || recognitionEngine && mode !== 'local-only') return fail('recognition-unavailable')
     const expected = ++captureEpoch
     state.capture = 'requesting'
     state.recognitionMode = mode
@@ -171,11 +214,15 @@ export function createMeetingAudio(options = {}) {
     let acquired
     try {
       if (mode === 'local-only') {
-        const availability = await localRecognitionAvailability()
+        const support = await localRecognitionSupport()
         if (closed || expected !== captureEpoch) return false
-        if (availability !== 'available') {
+        if (support.status !== 'available') {
           state.capture = 'failed'
-          return fail('local-recognition-unavailable')
+          if (support.error === 'recognition-model-required') return fail('recognition-model-required')
+          const reasons = { 'language-downloadable': 'local-recognition-downloadable',
+            'language-downloading': 'local-recognition-downloading', unverified: support.error === 'recognition-policy-blocked'
+              ? 'local-recognition-policy-blocked' : 'local-recognition-unverified' }
+          return fail(Object.hasOwn(reasons, support.status) ? reasons[support.status] : 'local-recognition-unavailable')
         }
       }
       acquired = await media.getUserMedia({ audio: {
@@ -188,6 +235,9 @@ export function createMeetingAudio(options = {}) {
       }
       stream = acquired
       captureTracks = acquired.getTracks()
+      // Capture ownership moves to releaseCapture; avoid stopping it twice after
+      // an aborted asynchronous engine setup.
+      acquired = null
       trackEnded = () => {
         if (closed || expected !== captureEpoch) return
         stopCapture()
@@ -197,16 +247,18 @@ export function createMeetingAudio(options = {}) {
       for (const track of captureTracks) track.addEventListener?.('ended', trackEnded, { once: true })
       state.captureActive = true
       state.muted = false
-      const current = new Recognition()
+      if (recognitionEngine) recognitionSetup = new AbortController()
+      const current = recognitionEngine ? await recognitionEngine.createSession(stream, { signal: recognitionSetup.signal }) : new Recognition()
+      if (closed || expected !== captureEpoch) { current.abort(); return false }
       recognition = current
       if (mode === 'local-only') current.processLocally = true
-      current.lang = language
+      current.lang = recognitionEngine ? 'auto' : recognitionLanguage(language)
       current.continuous = true
       current.interimResults = true
       current.maxAlternatives = 1
       const entries = new Map()
       const valid = () => !closed && expected === captureEpoch && recognition === current
-      current.onspeechstart = () => { if (valid()) founderSpeech('recognition-speech-start') }
+      current.onspeechstart = () => { if (valid() && state.captureActive) founderSpeech('recognition-speech-start') }
       current.onstart = () => { if (valid()) { state.capture = 'listening'; publish() } }
       current.onresult = event => {
         if (!valid()) return
@@ -217,6 +269,7 @@ export function createMeetingAudio(options = {}) {
           if (!alternative || typeof alternative.transcript !== 'string') continue
           if (alternative.transcript.length > 8_000) { stopCapture(); fail('recognition-limit'); return }
           entries.set(index, { text: alternative.transcript, final: result.isFinal === true,
+            language: recognitionEngine && ['ar', 'en'].includes(alternative.language) ? alternative.language : language,
             confidence: typeof alternative.confidence === 'number' && Number.isFinite(alternative.confidence)
               ? Math.max(0, Math.min(1, alternative.confidence)) : null })
         }
@@ -228,17 +281,22 @@ export function createMeetingAudio(options = {}) {
         const confidence = ordered.length && ordered.every(entry => entry.confidence !== null)
           ? Math.min(...ordered.map(entry => entry.confidence)) : null
         options.onDraft?.({ text, final: ordered.length > 0 && ordered.every(entry => entry.final),
-          uncertain: confidence === null || confidence < 0.86, confidence, language })
+          uncertain: confidence === null || confidence < 0.86, confidence, language: ordered.at(-1)?.language ?? language })
       }
       current.onerror = event => {
         if (!valid()) return
-        const denied = event.error === 'not-allowed' || event.error === 'service-not-allowed'
+        const reasons = { 'not-allowed': 'microphone-denied', 'service-not-allowed': 'recognition-service-denied',
+          'audio-capture': 'microphone-device-unavailable', 'language-not-supported': 'recognition-language-unavailable',
+          'no-speech': 'recognition-no-speech', network: 'recognition-network',
+          'recognition-no-speech': 'recognition-no-speech', 'recognition-busy': 'recognition-busy',
+          'model-not-ready': 'recognition-model-required', 'recognition-language-unsupported': 'recognition-language-unavailable',
+          'recognition-result-limit': 'recognition-limit', 'recognition-input-invalid': 'recognition-limit' }
         stopCapture()
         state.capture = 'failed'
-        fail(denied ? 'microphone-denied' : event.error === 'network' ? 'recognition-network' : 'recognition-failed')
+        fail(Object.hasOwn(reasons, event.error) ? reasons[event.error] : 'recognition-failed')
       }
       current.onend = () => { if (valid()) stopCapture() }
-      startVad(expected)
+      if (!recognitionEngine) startVad(expected)
       current.start()
       publish()
       return true
@@ -250,7 +308,8 @@ export function createMeetingAudio(options = {}) {
       }
       stopCapture()
       state.capture = 'failed'
-      return fail(error?.name === 'NotAllowedError' ? 'microphone-denied' : 'microphone-unavailable')
+      const engineReason = recognitionEngine && ['recognition-model-required', 'recognition-busy', 'recognition-unavailable'].includes(error?.message) ? error.message : null
+      return fail(engineReason ?? (error?.name === 'NotAllowedError' ? 'microphone-denied' : recognitionEngine ? 'recognition-failed' : 'microphone-unavailable'))
     }
   }
 
@@ -355,8 +414,8 @@ export function createMeetingAudio(options = {}) {
   publish()
   if (options.profiles) setProfiles(options.profiles)
   return {
-    getState: () => ({ ...state }), startCapture, stopCapture, interrupt, beginContribution, speakChunk,
-    setLanguage, setProfiles, voiceOptions, listVoices: voiceOptions, localRecognitionAvailability,
+    getState: () => ({ ...state }), startCapture, stopCapture, finishCapture, interrupt, beginContribution, speakChunk,
+    setLanguage, setProfiles, voiceOptions, listVoices: voiceOptions, localRecognitionAvailability, localRecognitionSupport,
     voiceAvailable: agentId => Boolean(resolveVoice(agentId) && state.synthesisAvailable),
     setMuted: value => { if (value) stopCapture(); return state.muted },
     close,
@@ -368,3 +427,7 @@ function normalizeLanguage(value) {
   const [base, region] = value.split('-')
   return `${base.toLowerCase()}${region ? `-${region.toUpperCase()}` : ''}`
 }
+
+// Recognition uses the app's configured BCP 47 locales; voice matching still
+// uses the selected language and never swaps to another recognition language.
+function recognitionLanguage(value) { return value === 'ar' ? 'ar-EG' : value === 'en' ? 'en-US' : value }

@@ -5,7 +5,7 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { randomUUID, generateKeyPairSync } from 'node:crypto'
-import { validateJob, stageInstructions, webAllowed, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
+import { validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
 import { registerHooks } from 'node:module'
 // Nuxt resolves these TypeScript source imports; plain Node tests need the same
 // extension resolution only inside this shared contract directory.
@@ -17,13 +17,14 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 } })
 const { parseHqAgentSnapshot } = await import('../../apps/company-hq/shared/types/agents.ts')
 const job = (id='AG-RES-001',mode='task-work') => ({id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}})
-async function fake(events,action){
+async function fake(events,action,{meeting=false}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
 import {readFile} from 'node:fs/promises';
 const args=process.argv.slice(2);let prompt='';for await(const c of process.stdin)prompt+=c;
 if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!args.includes('gpt-6.1-sol')||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
 if(!prompt.includes('profile_source_1')||!prompt.includes('untrusted data'))process.exit(1);
+if(${JSON.stringify(meeting)}&&(!args.includes('web_search="disabled"')||args[args.indexOf('--sandbox')+1]!=='read-only'||!args.includes('mcp_servers={}')||!args.includes('shell_tool')||!args.includes('browser_use')||!prompt.includes('actual named employee Noah (AG-HR-002)')||!prompt.includes('conversation from supplied context only')||prompt.includes('You are Steve, the CEO')))process.exit(1);
 const values=${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
 `,{mode:0o700})
  try{return await action({bin})}finally{await rm(directory,{recursive:true,force:true})}
@@ -90,6 +91,65 @@ test('CEO intake and actual task author report preserve role boundaries; chat me
  const snapshot={agents:[{id:'AG-CEO-001',name:'Steve',role:'CEO',departmentId:null,deskIndex:0,status:'offline',taskId:null,lastSeenAt:null}],messages:[{id:randomUUID(),role:'assistant',agentId:'AG-CEO-001',text:'A real handoff',createdAt:now,replyTo:messageId,kind:'handoff',taskId:randomUUID(),mentions:[{agentId:'AG-CEO-001',name:'Steve'}]}],jobs:[],runtime:{connected:false,lastSeenAt:null},conversationId}
  assert.ok(parseHqAgentSnapshot(snapshot));snapshot.messages[0].mentions[0].agentId='AG-FAKE-999';assert.equal(parseHqAgentSnapshot(snapshot),null)
  snapshot.messages[0].mentions=[];snapshot.messages[0].workerId=randomUUID();assert.equal(parseHqAgentSnapshot(snapshot),null)
+})
+
+const meetingJob=(id='AG-HR-002')=>{
+ const value=job(id,'conversation-intake')
+ value.context.agent.name=id==='AG-HR-002'?'Noah':id==='AG-RES-001'?'Nadia':'Actual employee'
+ value.context.meetingResponse={protocol:1,scope:'conversation-only',meetingId:randomUUID(),contributionId:randomUUID(),generation:2,agentId:id,bindingDigest:'a'.repeat(64)}
+ return value
+}
+
+test('versioned meeting intake uses the actual employee binding and never grants research tools',()=>{
+ for(const id of ['AG-HR-001','AG-HR-002','AG-RES-001','AG-EMAIL-001']){
+  const value=meetingJob(id),agent=structuredClone(value.context.agent)
+  assert.equal(validateJob(value).agent_id,id)
+  assert.deepEqual(value.context.agent,agent)
+  assert.equal(webAllowed(value),false)
+  assert.match(stageInstructions(value),new RegExp(id))
+  assert.match(stageInstructions(value),/"task":null/)
+  assert.match(stageInstructions(value),/Configuration does not establish research qualification/)
+  assert.doesNotMatch(stageInstructions(value),/You are Steve/)
+ }
+ assert.equal(validateJob(job('AG-CEO-001','conversation-intake')).agent_id,'AG-CEO-001')
+ assert.throws(()=>validateJob(job('AG-HR-002','conversation-intake')),/invalid-job-role/)
+ assert.equal(webAllowed(job('AG-HR-002','task-work')),true)
+ assert.equal(webAllowed(job('AG-RES-001','task-work')),true)
+ const id=randomUUID()
+ assert.deepEqual(workerClaimInput(id),{p_worker_id:id,p_lease_seconds:300,p_meeting_protocol:1})
+ assert.throws(()=>workerClaimInput('invalid-worker'),/stable-worker-id-required/)
+})
+
+test('malformed or mismatched meeting markers cannot widen actor, mode or tool authority',()=>{
+ const changes=[{protocol:0},{protocol:2},{scope:'research'},{generation:-1},{generation:1.1},{generation:'2'},{generation:Number.MAX_SAFE_INTEGER+1},
+  {meetingId:'not-a-uuid'},{contributionId:null},{agentId:'AG-CEO-001'},{bindingDigest:'A'.repeat(64)},{bindingDigest:null},{extra:true}]
+ for(const change of changes){
+  const value=meetingJob();Object.assign(value.context.meetingResponse,change)
+  assert.equal(webAllowed(value),false)
+  assert.throws(()=>validateJob(value),/invalid-meeting-response/)
+ }
+ for(const key of Object.keys(meetingJob().context.meetingResponse)){
+  const value=meetingJob();delete value.context.meetingResponse[key]
+  assert.throws(()=>validateJob(value),/invalid-meeting-response/)
+ }
+ const wrongMode=meetingJob();wrongMode.context.mode='task-work'
+ assert.equal(webAllowed(wrongMode),false)
+ assert.throws(()=>validateJob(wrongMode),/invalid-meeting-response/)
+ const nullMarker=meetingJob();nullMarker.context.meetingResponse=null
+ assert.equal(webAllowed(nullMarker),false)
+ assert.throws(()=>validateJob(nullMarker),/invalid-meeting-response/)
+ const mismatchedProfile=meetingJob();mismatchedProfile.context.agent.id='AG-HR-001'
+ assert.throws(()=>validateJob(mismatchedProfile),/invalid-job-role/)
+})
+
+test('meeting provider invocation stays context-only and rejects native web events',async()=>{
+ const answer=JSON.stringify({message:'[SYNTHETIC] Actual Noah conversation fixture',task:null})
+ const events=[{type:'thread.started'},{type:'turn.started'},{type:'item.completed',item:{type:'agent_message',text:answer}},{type:'turn.completed'}]
+ const value=validateJob(meetingJob())
+ const result=await fake(events,config=>invokeCodex(config,value,[{id:'profile_source_1',text:'Actual Noah role fixture'}],AbortSignal.timeout(5000)),{meeting:true})
+ assert.equal(result.reply,answer);assert.deepEqual(result.evidence,[])
+ const searched=[...events.slice(0,2),{type:'item.completed',item:{type:'web_search',action:{type:'search',queries:['must not run']}}},...events.slice(2)]
+ await fake(searched,config=>assert.rejects(()=>invokeCodex(config,value,[],AbortSignal.timeout(5000)),/provider-tool-rejected/),{meeting:true})
 })
 
 

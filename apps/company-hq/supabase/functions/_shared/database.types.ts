@@ -498,6 +498,322 @@ export type Database = {
         }
         Relationships: []
       }
+      hq_meeting_contributions: {
+        Row: {
+          agent_id: string
+          binding_digest: string
+          business_task_id: string | null
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          founder_message_id: string | null
+          generation: number
+          id: string
+          job_id: string | null
+          meeting_id: string
+          request_key: string
+          response_artifact_id: string | null
+          response_digest: string | null
+          response_message_id: string | null
+          response_text: string | null
+          source_event_id: number
+          source_kind: string
+          status: string
+        }
+        Insert: {
+          agent_id: string
+          binding_digest: string
+          business_task_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          founder_message_id?: string | null
+          generation: number
+          id?: string
+          job_id?: string | null
+          meeting_id: string
+          request_key: string
+          response_artifact_id?: string | null
+          response_digest?: string | null
+          response_message_id?: string | null
+          response_text?: string | null
+          source_event_id: number
+          source_kind: string
+          status: string
+        }
+        Update: {
+          agent_id?: string
+          binding_digest?: string
+          business_task_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          founder_message_id?: string | null
+          generation?: number
+          id?: string
+          job_id?: string | null
+          meeting_id?: string
+          request_key?: string
+          response_artifact_id?: string | null
+          response_digest?: string | null
+          response_message_id?: string | null
+          response_text?: string | null
+          source_event_id?: number
+          source_kind?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_meeting_contributions_business_task_id_fkey"
+            columns: ["business_task_id"]
+            isOneToOne: false
+            referencedRelation: "hq_business_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_founder_message_id_fkey"
+            columns: ["founder_message_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "hq_agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "hq_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_response_artifact_id_fkey"
+            columns: ["response_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "hq_task_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_response_message_id_fkey"
+            columns: ["response_message_id"]
+            isOneToOne: false
+            referencedRelation: "hq_agent_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_contributions_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "hq_meeting_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hq_meeting_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: number
+          kind: string
+          meeting_id: string
+          payload: Json
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: never
+          kind: string
+          meeting_id: string
+          payload: Json
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: never
+          kind?: string
+          meeting_id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_meeting_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "hq_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hq_meeting_plan_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_session: string | null
+          created_at: string
+          digest: string
+          document: Json
+          meeting_id: string
+          plan_id: string
+          start_policy: string | null
+          status: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_session?: string | null
+          created_at?: string
+          digest: string
+          document: Json
+          meeting_id: string
+          plan_id: string
+          start_policy?: string | null
+          status: string
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_session?: string | null
+          created_at?: string
+          digest?: string
+          document?: Json
+          meeting_id?: string
+          plan_id?: string
+          start_policy?: string | null
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_meeting_plan_versions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "hq_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hq_meeting_task_links: {
+        Row: {
+          business_task_id: string
+          created_at: string
+          instruction: Json
+          meeting_id: string
+          plan_id: string | null
+          plan_version: number | null
+          reported_at: string | null
+          request_key: string
+          task_key: string
+          task_kind: string
+        }
+        Insert: {
+          business_task_id: string
+          created_at?: string
+          instruction: Json
+          meeting_id: string
+          plan_id?: string | null
+          plan_version?: number | null
+          reported_at?: string | null
+          request_key: string
+          task_key: string
+          task_kind: string
+        }
+        Update: {
+          business_task_id?: string
+          created_at?: string
+          instruction?: Json
+          meeting_id?: string
+          plan_id?: string | null
+          plan_version?: number | null
+          reported_at?: string | null
+          request_key?: string
+          task_key?: string
+          task_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hq_meeting_task_links_business_task_id_fkey"
+            columns: ["business_task_id"]
+            isOneToOne: true
+            referencedRelation: "hq_business_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_task_links_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "hq_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hq_meeting_task_links_meeting_id_plan_id_plan_version_fkey"
+            columns: ["meeting_id", "plan_id", "plan_version"]
+            isOneToOne: false
+            referencedRelation: "hq_meeting_plan_versions"
+            referencedColumns: ["meeting_id", "plan_id", "version"]
+          },
+        ]
+      }
+      hq_meetings: {
+        Row: {
+          connection: string
+          created_at: string
+          disconnect_policy: string
+          ended_at: string | null
+          floor: string | null
+          founder_id: string
+          generation: number
+          id: string
+          language: string
+          participants: string[]
+          paused: boolean
+          projection_digest: string | null
+          revision: number
+          status: string
+          title: string
+        }
+        Insert: {
+          connection?: string
+          created_at?: string
+          disconnect_policy?: string
+          ended_at?: string | null
+          floor?: string | null
+          founder_id: string
+          generation?: number
+          id: string
+          language: string
+          participants: string[]
+          paused?: boolean
+          projection_digest?: string | null
+          revision?: number
+          status?: string
+          title: string
+        }
+        Update: {
+          connection?: string
+          created_at?: string
+          disconnect_policy?: string
+          ended_at?: string | null
+          floor?: string | null
+          founder_id?: string
+          generation?: number
+          id?: string
+          language?: string
+          participants?: string[]
+          paused?: boolean
+          projection_digest?: string | null
+          revision?: number
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       hq_plan_decisions: {
         Row: {
           actor_user_id: string
@@ -690,16 +1006,41 @@ export type Database = {
       }
       hq_founder_access: { Args: never; Returns: Json }
       hq_live_flush: { Args: { p_limit?: number }; Returns: number }
+      hq_meeting_command: {
+        Args: { p_command: Json; p_meeting_id: string; p_request_key: string }
+        Returns: Json
+      }
+      hq_meeting_create: {
+        Args: {
+          p_id: string
+          p_language: string
+          p_participants: string[]
+          p_request_key: string
+          p_title: string
+        }
+        Returns: Json
+      }
+      hq_meeting_roster: { Args: never; Returns: Json }
+      hq_meeting_snapshot: { Args: { p_meeting_id: string }; Returns: Json }
       hq_office_observations: { Args: never; Returns: Json }
       hq_publish_company_plan: { Args: { p_document: Json }; Returns: Json }
       hq_send_ceo_message: {
         Args: { p_prompt: string; p_request_key: string }
         Returns: Json
       }
-      hq_worker_claim: {
-        Args: { p_lease_seconds: number; p_worker_id: string }
-        Returns: Json
-      }
+      hq_worker_claim:
+        | {
+            Args: { p_lease_seconds: number; p_worker_id: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_lease_seconds: number
+              p_meeting_protocol: number
+              p_worker_id: string
+            }
+            Returns: Json
+          }
       hq_worker_finish: {
         Args: {
           p_error: string

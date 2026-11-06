@@ -1,12 +1,20 @@
-import type { MeetingRecord } from './domain.mjs'
+import type { MeetingParticipant, MeetingRecord } from './domain.mjs'
 import type { MeetingRegistryParticipant } from './registry.mjs'
 import type { HqMeetingCommand } from '@building-suit/ui/types/hqMeetingPresentation'
 
 export interface LiveMeetingRegistryParticipant extends MeetingRegistryParticipant {
+  /** Configured conversational binding; never an observation of worker readiness. */
+  conversationAvailable: boolean
+  workQualified: boolean
+  /** Compatibility alias of workQualified; does not control conversation. */
   qualified: boolean
   supervisorId: string | null
   allowedTools: string[]
   registryReference: string
+}
+export interface LiveMeetingParticipant extends MeetingParticipant {
+  conversationAvailable: boolean
+  workQualified: boolean
 }
 export interface LiveMeetingPlanTask {
   id: string
@@ -28,6 +36,7 @@ export interface LiveMeetingPlanTask {
 }
 export interface LiveMeetingPlanDocument { title: string; summary?: string; tasks: LiveMeetingPlanTask[] }
 export interface LiveMeetingRecord extends MeetingRecord {
+  participants: LiveMeetingParticipant[]
   /** Exact normalized source document retained for versioned revision requests. */
   livePlanDocuments: Record<string, LiveMeetingPlanDocument>
   /** Latest blocked version only; the neutral domain state is deferred. */

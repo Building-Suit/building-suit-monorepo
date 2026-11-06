@@ -1,6 +1,6 @@
 import { computed, onMounted, onScopeDispose, reactive, readonly, watch } from 'vue'
 
-export type SpeechDictationError = 'unsupported' | 'denied' | 'noSpeech' | 'audio' | 'network' | 'failed' | 'limit'
+export type SpeechDictationError = 'unsupported' | 'denied' | 'service' | 'noSpeech' | 'audio' | 'network' | 'failed' | 'limit'
 export type SpeechDictationPhase = 'idle' | 'starting' | 'listening' | 'stopping'
 export interface SpeechRecognitionSession {
   lang: string
@@ -84,7 +84,7 @@ export function createSpeechDictation(options: DictationOptions, state: Dictatio
       session.onerror = event => {
         if (current !== session) return
         const errors: Record<string, SpeechDictationError> = {
-          'not-allowed': 'denied', 'service-not-allowed': 'denied', 'no-speech': 'noSpeech', 'audio-capture': 'audio', network: 'network',
+          'not-allowed': 'denied', 'service-not-allowed': 'service', 'no-speech': 'noSpeech', 'audio-capture': 'audio', network: 'network',
         }
         state.error = event.error === 'aborted' ? null : errors[event.error] ?? 'failed'
         finish(session, true)

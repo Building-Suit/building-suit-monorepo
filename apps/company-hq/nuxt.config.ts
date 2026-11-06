@@ -29,7 +29,13 @@ export default defineNuxtConfig({
     hqAppOrigin: '',
     hqMeetingsDemo: false, hqMeetingsDemoDatabase: '', hqMeetingsLive: false,
   },
-  i18n: { locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }] },
+  // HQ chrome stays English; conversation and recognition languages are separate.
+  i18n: {
+    defaultLocale: 'en',
+    detectBrowserLanguage: false,
+    locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }],
+  },
+  vite: { worker: { format: 'es' } },
   nitro: { preset: process.env.VERCEL ? 'vercel' : 'node-server', externals: { inline: [/shared\/meetings\//] } },
   app: { head: { title: 'Building Suit HQ' } },
   routeRules: { '/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'no-store' } } },

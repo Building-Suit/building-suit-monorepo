@@ -6,9 +6,9 @@ const stamp = '2026-11-05T12:00:00.000Z'
 const uid = number => `10000000-0000-4000-8000-${String(number).padStart(12, '0')}`
 const hash = 'a'.repeat(64)
 const rosterPayload = { observedAt: stamp, participants: [
-  { id: 'AG-CEO-001', name: 'Steve', role: 'CEO', supervisorId: null, qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:ceo:v1' },
-  { id: 'AG-HR-001', name: 'Amaya', role: 'HR', supervisorId: 'AG-CEO-001', qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:hr:v1' },
-  { id: 'AG-HR-002', name: 'Noah', role: 'Recruiter', supervisorId: 'AG-HR-001', qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:recruiter:v1' },
+  { id: 'AG-CEO-001', name: 'Steve', role: 'CEO', supervisorId: null, conversationAvailable: true, workQualified: true, qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:ceo:v1' },
+  { id: 'AG-HR-001', name: 'Amaya', role: 'HR', supervisorId: 'AG-CEO-001', conversationAvailable: true, workQualified: true, qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:hr:v1' },
+  { id: 'AG-HR-002', name: 'Noah', role: 'Recruiter', supervisorId: 'AG-HR-001', conversationAvailable: true, workQualified: true, qualified: true, allowedTools: ['read-approved-sources'], registryReference: 'actual-source:recruiter:v1' },
 ] }
 const roster = parseLiveRoster(rosterPayload)
 const planTask = { id: 'task-key', objective: 'Inspect approved source evidence', ownerId: 'AG-HR-002', supervisorId: 'AG-HR-001', deliverable: 'A bounded evidence report', inputs: [], dependencies: [], allowedActions: ['read-approved-sources'], budget: 0, acceptanceCriteria: ['Cite actual source evidence'], requiredReview: 'independent', blockers: [], priority: 3, environment: 'hq-existing-worker', timeLimitSeconds: 600, timeoutScope: 'worker-job' }
@@ -28,11 +28,63 @@ function ready(value = snapshot()) {
 test('canonical roster qualification stays explicit; registry names do not imply readiness', () => {
   const input = structuredClone(rosterPayload)
   input.participants[2].qualified = false
+  input.participants[2].workQualified = false
   const result = parseLiveRoster(input)
   assert.equal(result[2].qualifiedForLiveMeeting, false)
   assert.equal(result[2].supervisorName, 'Amaya')
   assert.throws(() => parseLiveRoster({ ...input, participants: [input.participants[0], input.participants[0]] }), /roster/)
   assert.throws(() => parseLiveRoster({ ...input, participants: [{ ...input.participants[0], qualified: undefined }] }), /roster/)
+  assert.throws(() => parseLiveRoster({ ...input, participants: [{ ...input.participants[0], conversationAvailable: undefined }] }), /roster/)
+  assert.throws(() => parseLiveRoster({ ...input, participants: [{ ...input.participants[0], workQualified: undefined }] }), /roster/)
+  assert.throws(() => parseLiveRoster({ ...input, participants: [{ ...input.participants[0], workQualified: false, qualified: true }] }), /roster/)
+})
+
+test('configured conversations do not require or grant separately qualified work', () => {
+  const input = structuredClone(rosterPayload)
+  for (const person of input.participants) Object.assign(person, { workQualified: false, qualified: false, allowedTools: [] })
+  const conversationRoster = parseLiveRoster(input)
+  const context = { requestId: uid(30), meetingId: uid(1), roster: conversationRoster }
+  const start = buildLiveMeetingRequest({ type: 'start', title: 'Actual room', language: 'en', participantIds: conversationRoster.map(person => person.id) }, context)
+  assert.equal(start.type, 'create')
+  assert.equal(conversationRoster.every(person => person.conversationAvailable && !person.workQualified && !person.qualified), true)
+  assert.equal(conversationRoster.every(person => person.allowedTools.length === 0), true)
+  assert.throws(() => buildLiveMeetingRequest({ type: 'research', agentId: 'AG-HR-002', question: 'Inspect approved sources' }, context), /owner-unqualified/)
+  assert.throws(() => buildLiveMeetingRequest({ type: 'draftPlan', title: 'Scope', objective: 'Inspect', deliverable: 'Evidence', ownerId: 'AG-HR-002' }, context), /owner-unqualified/)
+  const current = parseLiveMeetingSnapshot(ready(), conversationRoster)
+  assert.equal(current.turn.status, 'speaking')
+  assert.equal(current.participants[0].conversationAvailable, true)
+  assert.equal(current.participants[0].workQualified, false)
+  assert.equal(current.participants[0].qualified, false)
+})
+
+test('a head reply uses its actual correlated conversation message without a business task', () => {
+  const input = structuredClone(rosterPayload)
+  for (const person of input.participants) Object.assign(person, { workQualified: false, qualified: false, allowedTools: [] })
+  const conversationRoster = parseLiveRoster(input)
+  const value = ready()
+  value.meeting.floor = 'AG-HR-001'
+  Object.assign(value.contributions[0], { agent_id: 'AG-HR-001', source_kind: 'head-chat', response_text: 'Actual persisted Amaya reply', business_task_id: null, response_artifact_id: null })
+  value.turn.agentId = 'AG-HR-001'
+  const result = parseLiveMeetingSnapshot(value, conversationRoster)
+  assert.equal(result.turn.agentId, 'AG-HR-001')
+  assert.equal(result.turn.reportTaskId, null)
+  assert.equal(result.participants.find(person => person.id === 'AG-HR-001').status, 'speaking')
+  assert.equal(result.participants.find(person => person.id === 'AG-HR-001').workQualified, false)
+  assert.equal(result.events.find(event => event.id === result.turn.contributionEventId).actorId, 'AG-HR-001')
+  assert.equal(result.events.find(event => event.id === result.turn.contributionEventId).data.text, 'Actual persisted Amaya reply')
+  assert.deepEqual(result.tasks, [])
+  value.contributions[0].response_message_id = null
+  assert.equal(parseLiveMeetingSnapshot(value, conversationRoster).turn, null)
+})
+
+test('an older host protocol remains an explicit blocked contribution without an invented reply', () => {
+  const value = snapshot()
+  Object.assign(value.contributions[0], { agent_id: 'AG-HR-001', source_kind: 'head-chat', status: 'blocked', error: 'meeting-protocol-required' })
+  value.turn = null
+  const result = parseLiveMeetingSnapshot(value, roster)
+  assert.deepEqual(result.liveContributionErrors, [{ agentId: 'AG-HR-001', error: 'meeting-protocol-required' }])
+  assert.equal(result.participants.find(person => person.id === 'AG-HR-001').status, 'failed')
+  assert.equal(result.events.some(event => event.type === 'agent-contribution'), false)
 })
 
 test('pending and failed actual queue outputs produce honest states without invented replies', () => {
@@ -75,10 +127,12 @@ test('stale, ended, disconnected and paused outputs cannot obtain audible floor'
   }
 })
 
-test('qualification revoked mid-turn removes audible admission while preserving actual historical text', () => {
+test('conversation availability revoked mid-turn removes audible admission while preserving actual historical text', () => {
   const value = ready()
   assert.equal(parseLiveMeetingSnapshot(value, roster).turn.status, 'speaking')
   const changedRoster = structuredClone(rosterPayload)
+  changedRoster.participants[0].conversationAvailable = false
+  changedRoster.participants[0].workQualified = false
   changedRoster.participants[0].qualified = false
   changedRoster.participants[0].allowedTools = []
   const revoked = parseLiveRoster(changedRoster)
@@ -117,11 +171,11 @@ test('business task completion needs actual independent review receipts to claim
   assert.equal(parseLiveMeetingSnapshot(value, roster).tasks[0].result, null)
 })
 
-test('request adapter requires qualified attendance and never turns ordinary text into approval', () => {
+test('request adapter requires conversational attendance and never turns ordinary text into approval', () => {
   const context = { requestId: uid(30), roster }
   assert.equal(buildLiveMeetingRequest({ type: 'start', title: 'Meeting', language: 'ar', participantIds: ['AG-CEO-001'] }, context).type, 'create')
-  assert.throws(() => buildLiveMeetingRequest({ type: 'start', title: 'Meeting', language: 'ar', participantIds: ['AG-HR-001'] }, context), /unqualified/)
-  assert.throws(() => buildLiveMeetingRequest({ type: 'start', title: 'Meeting', language: 'ar', participantIds: ['AG-CEO-001'] }, { ...context, roster: [{ ...roster[0], qualified: false }] }), /unqualified/)
+  assert.throws(() => buildLiveMeetingRequest({ type: 'start', title: 'Meeting', language: 'ar', participantIds: ['AG-HR-001'] }, context), /conversation-unavailable/)
+  assert.throws(() => buildLiveMeetingRequest({ type: 'start', title: 'Meeting', language: 'ar', participantIds: ['AG-CEO-001'] }, { ...context, roster: [{ ...roster[0], conversationAvailable: false }] }), /conversation-unavailable/)
   const request = buildLiveMeetingRequest({ type: 'text', text: 'Approve everything now', addressedTo: 'AG-HR-001' }, { ...context, meetingId: uid(1) })
   assert.deepEqual(request.command, { type: 'text', text: 'Approve everything now', addressedTo: 'AG-HR-001' })
   assert.equal(buildLiveMeetingRequest({ type: 'microphone', active: true }, context), null)

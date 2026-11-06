@@ -160,6 +160,7 @@ const chatContent = computed<HqAgentsContent>(() => ({
     stopping: c("Finishing transcription…", "جارٍ إنهاء التحويل…"),
     unsupported: c("Voice transcription is unavailable in this browser. You can still type your message.", "تحويل الصوت إلى نص غير متاح في هذا المتصفح. يمكنك كتابة الرسالة."),
     denied: c("Microphone access was denied. Allow it in the browser to use voice transcription.", "تم رفض إذن الميكروفون. اسمح باستخدامه من المتصفح لتحويل الصوت إلى نص."),
+    service: c("The browser blocked its speech-recognition service. Microphone permission alone does not enable that service. Your draft has been kept.", "حظر المتصفح خدمة التعرف على الكلام. إذن الميكروفون وحده لا يفعّل هذه الخدمة. تم الاحتفاظ بالمسودة."),
     noSpeech: c("No speech was detected. Try again or type your message.", "لم يتم رصد كلام. حاول مجددًا أو اكتب رسالتك."),
     audio: c("No microphone is available. Check your microphone and try again.", "لا يوجد ميكروفون متاح. تحقق منه وحاول مجددًا."),
     network: c("The browser speech service could not connect. Your draft has been kept.", "تعذر الاتصال بخدمة التعرف على الكلام في المتصفح. تم الاحتفاظ بالمسودة."),

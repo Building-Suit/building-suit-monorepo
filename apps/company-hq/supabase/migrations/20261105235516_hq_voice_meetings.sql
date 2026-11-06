@@ -127,8 +127,9 @@ create table public.hq_meeting_contributions (
   meeting_id uuid not null references public.hq_meetings(id),
   generation bigint not null,
   agent_id text not null references hq_private.agent_roster(id),
+  binding_digest text not null check(binding_digest ~ '^[0-9a-f]{64}$'),
   source_event_id bigint not null references public.hq_meeting_events(id),
-  source_kind text not null check(source_kind in ('ceo-chat','response-task','finding')),
+  source_kind text not null check(source_kind in ('ceo-chat','head-chat','finding')),
   request_key uuid not null unique,
   job_id uuid unique references public.hq_agent_jobs(id),
   business_task_id uuid references public.hq_business_tasks(id),
@@ -176,9 +177,19 @@ language sql stable set search_path='' as $$
     'lifecycle',r.lifecycle,'enabled',r.enabled,'sourceDigest',r.source_digest))
   from hq_private.agent_roster r where r.id=p_agent;
 $$;
+-- Conversation configuration is distinct from work qualification. This is
+-- eligibility to attempt a context-only reply, never observed provider readiness
+-- or permission to research/execute a task.
+create function hq_private.meeting_agent_conversation_available(p_agent text) returns boolean
+language sql stable set search_path='' as $$
+  select hq_private.workforce_agent_assignable(p_agent) and exists(select 1 from hq_private.agent_roster r where r.id=p_agent
+    and r.profile_file_id ~ '^[A-Za-z0-9_-]{8,200}$' and r.model ~ '^gpt-[A-Za-z0-9.-]{1,70}$'
+    and r.effort in ('minimal','low','medium','high','xhigh'));
+$$;
+
 create function hq_private.meeting_agent_qualified(p_agent text) returns boolean
 language sql stable set search_path='' as $$
-  select hq_private.workforce_agent_assignable(p_agent) and exists(
+  select hq_private.meeting_agent_conversation_available(p_agent) and exists(
     select 1 from hq_private.meeting_agent_qualifications q where q.agent_id=p_agent
       and q.qualification_scope='read-approved-sources-worker-job-600'
       and q.binding_digest=hq_private.meeting_agent_binding_digest(p_agent));
@@ -348,12 +359,12 @@ begin
     or (select pg_catalog.count(distinct a) from pg_catalog.unnest(p_participants) a) <> pg_catalog.cardinality(p_participants)
     or exists(select 1 from pg_catalog.unnest(p_participants) a where not exists(select 1 from hq_private.agent_roster b where b.id=a and b.enabled))
     then raise exception 'HQ_MEETING_INVALID_CREATE' using errcode='22023'; end if;
-  if exists(select 1 from pg_catalog.unnest(p_participants) a where not hq_private.meeting_agent_qualified(a))
-    then raise exception 'HQ_MEETING_AGENT_UNQUALIFIED' using errcode='55000'; end if;
+  if exists(select 1 from pg_catalog.unnest(p_participants) a where not hq_private.meeting_agent_conversation_available(a))
+    then raise exception 'HQ_MEETING_CONVERSATION_UNAVAILABLE' using errcode='55000'; end if;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_uid::text,9821));
   if hq_private.founder_uid() is distinct from v_uid then raise exception 'HQ_FOUNDER_REQUIRED' using errcode='42501'; end if;
-  if exists(select 1 from pg_catalog.unnest(p_participants) a where not hq_private.meeting_agent_qualified(a))
-    then raise exception 'HQ_MEETING_AGENT_UNQUALIFIED' using errcode='55000'; end if;
+  if exists(select 1 from pg_catalog.unnest(p_participants) a where not hq_private.meeting_agent_conversation_available(a))
+    then raise exception 'HQ_MEETING_CONVERSATION_UNAVAILABLE' using errcode='55000'; end if;
   v_command := pg_catalog.jsonb_build_object('type','create','id',p_id,'title',p_title,'language',p_language,'participants',p_participants);
   select * into v_previous from hq_private.meeting_requests where founder_id=v_uid and request_key=p_request_key;
   if found then
@@ -420,8 +431,7 @@ declare c public.hq_meeting_contributions; v_uid uuid:=hq_private.founder_uid();
 begin
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('hq-agent-queue',0));
   for c in select * from public.hq_meeting_contributions where meeting_id=p_id and status in ('thinking','speaking') for update loop
-    if c.source_kind='response-task' then perform hq_private.cancel_business_task(c.business_task_id);
-    elsif c.source_kind='ceo-chat' then
+    if c.source_kind in ('ceo-chat','head-chat') then
       update public.hq_agent_jobs set status='blocked',error='meeting-interrupted',completed_at=pg_catalog.clock_timestamp()
         where id=c.job_id and founder_user_id=v_uid and status in ('queued','working');
     end if;
@@ -503,42 +513,45 @@ end $$;
 
 create function hq_private.meeting_request_contribution(p_id uuid,p_event bigint,p_agent text,p_text text,p_request uuid) returns void
 language plpgsql set search_path='' as $$
-declare m public.hq_meetings; v_uid uuid:=hq_private.founder_uid(); v_key uuid; v_job public.hq_agent_jobs; v_task jsonb;
-  v_task_id uuid; v_supervisor text; v_prompt text; v_context jsonb;
+declare m public.hq_meetings; v_uid uuid:=hq_private.founder_uid(); v_key uuid; v_job public.hq_agent_jobs;
+  v_context jsonb; v_prompt text; v_conversation uuid; v_message uuid; v_binding text;
 begin
   select * into strict m from public.hq_meetings where id=p_id and founder_id=v_uid;
   if m.paused or m.connection<>'connected' or m.status<>'active' then return; end if;
-  if not (p_agent=any(m.participants)) or not hq_private.meeting_agent_qualified(p_agent)
-    then raise exception 'HQ_MEETING_AGENT_UNQUALIFIED' using errcode='55000'; end if;
+  if not (p_agent=any(m.participants)) or not hq_private.meeting_agent_conversation_available(p_agent)
+    then raise exception 'HQ_MEETING_CONVERSATION_UNAVAILABLE' using errcode='55000'; end if;
   if (select count(*) from public.hq_meeting_contributions where meeting_id=p_id)>=128
     then raise exception 'HQ_MEETING_CONTRIBUTION_CAPACITY' using errcode='54000'; end if;
   v_key:=pg_catalog.substr(hq_private.meeting_digest(pg_catalog.jsonb_build_array('hq-meeting-response-v1',p_id,p_request,p_agent,m.generation)),1,32)::uuid;
   v_context:=hq_private.meeting_contribution_context(p_id,p_event,p_agent,p_text);
+  v_prompt:=v_context::text;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('hq-agent-queue',0));
+  if hq_private.founder_uid() is distinct from v_uid then raise exception 'HQ_FOUNDER_REQUIRED' using errcode='42501'; end if;
+  if not hq_private.meeting_agent_conversation_available(p_agent) then raise exception 'HQ_MEETING_CONVERSATION_UNAVAILABLE' using errcode='55000'; end if;
+  v_binding:=hq_private.meeting_agent_binding_digest(p_agent);
   if p_agent='AG-CEO-001' then
-    v_prompt:=v_context::text;
     perform hq_private.send_ceo_message(v_prompt,v_key);
-    select * into strict v_job from public.hq_agent_jobs where founder_user_id=v_uid and request_key=v_key and agent_id=p_agent and kind='conversation-intake';
-    insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,source_event_id,source_kind,request_key,job_id,founder_message_id,status)
-      values(p_id,m.generation,p_agent,p_event,'ceo-chat',v_key,v_job.id,v_job.founder_message_id,'thinking');
   else
-    select manager_id into v_supervisor from hq_private.agent_roster where id=p_agent;
-    v_task:=pg_catalog.jsonb_build_object('id','response:'||v_key,'objective','Draft a concise response to the founder meeting utterance',
-      'ownerId',p_agent,'supervisorId',v_supervisor,'deliverable','A source-attributed meeting response in '||m.language||', at most 4000 characters. No business action or task assignment.',
-      'inputs',pg_catalog.jsonb_build_array(v_context::text),
-      'dependencies','[]'::jsonb,'allowedActions','["read-approved-sources"]'::jsonb,'budget',0,
-      'acceptanceCriteria',pg_catalog.jsonb_build_array('Respond only to the recorded founder utterance. Do not execute or delegate any business action.','Keep attribution and independent existing review; return at most 4000 characters.'),
-      'requiredReview','independent','blockers','[]'::jsonb,'priority',1,'environment','hq-existing-worker','timeoutScope','worker-job','timeLimitSeconds',600);
-    if not hq_private.meeting_dispatch_supported(pg_catalog.jsonb_build_object('tasks',pg_catalog.jsonb_build_array(v_task))) then
-      insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,source_event_id,source_kind,request_key,status,error,completed_at)
-        values(p_id,m.generation,p_agent,p_event,'response-task',v_key,'blocked','HQ_MEETING_SCOPE_UNSUPPORTED',pg_catalog.clock_timestamp());
-      update public.hq_meetings set floor=null where id=p_id;
-      return;
-    end if;
-    v_task_id:=hq_private.meeting_enqueue(p_id,null,null,v_task,v_key,'contribution');
-    select * into strict v_job from public.hq_agent_jobs where task_id=v_task_id and kind='task-route';
-    insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,source_event_id,source_kind,request_key,job_id,business_task_id,founder_message_id,status)
-      values(p_id,m.generation,p_agent,p_event,'response-task',v_key,v_job.id,v_task_id,v_job.founder_message_id,'thinking');
+    -- The same founder conversation/job queue and caps, under its existing
+    -- lock. The actual head remains the job/message actor; no CEO impersonation
+    -- or business task is created for ordinary conversation.
+    if (select count(*) from public.hq_agent_jobs where founder_user_id=v_uid and status='queued')>=40
+      or (select count(*) from public.hq_agent_jobs where founder_user_id=v_uid and agent_id=p_agent and kind='conversation-intake'
+        and created_at>pg_catalog.clock_timestamp()-interval '1 hour')>=60 then raise exception 'HQ_MESSAGE_QUEUE_LIMIT' using errcode='PT429'; end if;
+    insert into public.hq_agent_conversations(founder_user_id) values(v_uid) on conflict(founder_user_id)
+      do update set updated_at=pg_catalog.clock_timestamp() returning id into v_conversation;
+    if (select count(*) from public.hq_agent_messages where conversation_id=v_conversation)>=10000
+      or (select coalesce(sum(pg_catalog.octet_length(text)),0) from public.hq_agent_messages where conversation_id=v_conversation)>33522432
+      or (select coalesce(sum(pg_catalog.octet_length(result_text)),0) from public.hq_agent_jobs where founder_user_id=v_uid)>33522432
+      then raise exception 'HQ_HISTORY_CAPACITY' using errcode='PT409'; end if;
+    insert into public.hq_agent_messages(conversation_id,role,agent_id,text) values(v_conversation,'founder',p_agent,v_prompt) returning id into v_message;
+    insert into public.hq_agent_jobs(conversation_id,founder_message_id,founder_user_id,agent_id,request_key,kind)
+      values(v_conversation,v_message,v_uid,p_agent,v_key,'conversation-intake');
+    perform hq_private.workforce_wake();
   end if;
+  select * into strict v_job from public.hq_agent_jobs where founder_user_id=v_uid and request_key=v_key and agent_id=p_agent and kind='conversation-intake';
+  insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,binding_digest,source_event_id,source_kind,request_key,job_id,founder_message_id,status)
+    values(p_id,m.generation,p_agent,v_binding,p_event,case when p_agent='AG-CEO-001' then 'ceo-chat' else 'head-chat' end,v_key,v_job.id,v_job.founder_message_id,'thinking');
   update public.hq_meetings set floor=p_agent where id=p_id;
 end $$;
 
@@ -555,10 +568,10 @@ begin
       continue;
     end if;
     if c.status='speaking' then continue; end if;
-    if c.source_kind='ceo-chat' then
+    if c.source_kind in ('ceo-chat','head-chat') then
       select * into j from public.hq_agent_jobs where id=c.job_id and founder_user_id=m.founder_id;
       if j.status='blocked' then
-        update public.hq_meeting_contributions set status='failed',error=coalesce(j.error,'worker-unavailable'),completed_at=pg_catalog.clock_timestamp() where id=c.id;
+        update public.hq_meeting_contributions set status=case when j.error='meeting-protocol-required' then 'blocked' else 'failed' end,error=coalesce(j.error,'worker-unavailable'),completed_at=pg_catalog.clock_timestamp() where id=c.id;
         update public.hq_meetings set floor=null where id=p_id; v_changed:=true;
       elsif j.status='completed' then
         select * into v_message from public.hq_agent_messages x where x.job_id=c.job_id and x.reply_to=c.founder_message_id
@@ -609,6 +622,7 @@ begin
   if hq_private.founder_uid() is null then raise exception 'HQ_FOUNDER_REQUIRED' using errcode='42501'; end if;
   return pg_catalog.jsonb_build_object('participants',coalesce((select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
     'id',r.id,'name',pg_catalog.left(r.name,160),'role',pg_catalog.left(r.role,200),'supervisorId',r.manager_id,
+    'conversationAvailable',hq_private.meeting_agent_conversation_available(r.id),'workQualified',hq_private.meeting_agent_qualified(r.id),
     'qualified',hq_private.meeting_agent_qualified(r.id),'allowedTools',case when hq_private.meeting_agent_qualified(r.id) then '["read-approved-sources"]'::jsonb else '[]'::jsonb end,
     'registryReference','hq-agent-roster:'||hq_private.meeting_agent_binding_digest(r.id)) order by r.id)
     from (select * from hq_private.agent_roster where enabled order by id limit 32) r),'[]'::jsonb),'observedAt',pg_catalog.clock_timestamp());
@@ -715,7 +729,7 @@ begin
       and generation=v_meeting.generation and generation::text=p_command->>'generation' for update;
     if not found then raise exception 'HQ_MEETING_STALE_CONTRIBUTION' using errcode='PT409'; end if;
     update public.hq_meeting_contributions set status='completed',completed_at=pg_catalog.clock_timestamp() where id=v_contribution.id;
-    if v_contribution.source_kind in ('finding','response-task') then
+    if v_contribution.source_kind='finding' then
       update public.hq_meeting_task_links set reported_at=pg_catalog.clock_timestamp() where business_task_id=v_contribution.business_task_id and reported_at is null;
     end if;
     update public.hq_meetings set floor=null where id=p_id;
@@ -732,8 +746,8 @@ begin
     update public.hq_meetings set generation=generation+1,floor=v_text,paused=false where id=p_id;
     insert into public.hq_meeting_events(meeting_id,kind,actor_id,payload) values(p_id,'invite',v_uid::text,p_command) returning id into v_event;
     v_event_created:=true;
-    insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,source_event_id,source_kind,request_key,business_task_id,founder_message_id,status)
-      select p_id,m.generation,v_text,v_event,'finding',p_request_key,t.id,t.founder_message_id,'thinking'
+    insert into public.hq_meeting_contributions(meeting_id,generation,agent_id,binding_digest,source_event_id,source_kind,request_key,business_task_id,founder_message_id,status)
+      select p_id,m.generation,v_text,hq_private.meeting_agent_binding_digest(v_text),v_event,'finding',p_request_key,t.id,t.founder_message_id,'thinking'
       from public.hq_meetings m join public.hq_business_tasks t on t.id=v_task_id where m.id=p_id;
     perform hq_private.meeting_sync(p_id);
   elsif v_kind='proposePlan' then
@@ -837,7 +851,7 @@ begin
   if not found or j.worker_id is distinct from p_worker_id or j.lease_token is distinct from p_lease_token
     then raise exception 'HQ_LEASE_LOST' using errcode='42501'; end if;
   if p_error is null and j.kind='conversation-intake' and pg_catalog.octet_length(p_reply)<=32000
-    and exists(select 1 from public.hq_meeting_contributions c where c.job_id=j.id and c.source_kind='ceo-chat') then
+    and exists(select 1 from public.hq_meeting_contributions c where c.job_id=j.id and c.source_kind in ('ceo-chat','head-chat')) then
     begin v_body:=p_reply::jsonb; exception when invalid_text_representation then v_body:=null; end;
     if v_body ? 'task' and v_body->'task' is distinct from 'null'::jsonb then
       return hq_private.worker_finish_before_meetings(p_job_id,p_lease_token,p_worker_id,'','meeting-response-only');
@@ -888,20 +902,27 @@ grant execute on function hq_private.worker_finish_v2(uuid,uuid,uuid,text,text,j
 -- current claim implementation. Stale qualification becomes a terminal blocked
 -- record, allowing unrelated work to drain without an error/reconnect loop.
 alter function hq_private.worker_claim(uuid,integer) rename to worker_claim_before_meetings;
-create function hq_private.worker_claim(p_worker_id uuid,p_lease_seconds integer) returns jsonb
+create function hq_private.worker_claim(p_worker_id uuid,p_lease_seconds integer,p_meeting_protocol integer) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare v_count integer; v_result jsonb;
+declare v_count integer; v_result jsonb; v_contribution public.hq_meeting_contributions;
 begin
   if p_worker_id is null or hq_private.agent_worker_uid(p_worker_id) is null
     then raise exception 'HQ_WORKER_REQUIRED' using errcode='42501'; end if;
+  if p_meeting_protocol is null or p_meeting_protocol not in (0,1) then raise exception 'HQ_MEETING_PROTOCOL_UNSUPPORTED' using errcode='22023'; end if;
   if p_lease_seconds is distinct from 300 then raise exception 'HQ_INVALID_LEASE' using errcode='22023'; end if;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('hq-agent-queue',0));
   if hq_private.agent_worker_uid(p_worker_id) is null then raise exception 'HQ_WORKER_REQUIRED' using errcode='42501'; end if;
-  update public.hq_agent_jobs j set status='blocked',error='meeting-qualification-stale',completed_at=pg_catalog.clock_timestamp()
+  update public.hq_agent_jobs j set status='blocked',error='meeting-binding-stale',completed_at=pg_catalog.clock_timestamp()
     from public.hq_meeting_contributions c join public.hq_meetings m on m.id=c.meeting_id
-    where c.job_id=j.id and c.source_kind='ceo-chat' and j.status='queued'
+    where c.job_id=j.id and c.source_kind in ('ceo-chat','head-chat') and j.status='queued'
       and (j.agent_id is distinct from c.agent_id or j.request_key is distinct from c.request_key or j.founder_message_id is distinct from c.founder_message_id or j.founder_user_id is distinct from m.founder_id
-        or not hq_private.meeting_agent_qualified(c.agent_id) or c.generation<>m.generation or c.status<>'thinking' or m.status<>'active' or m.connection<>'connected' or m.paused);
+        or not hq_private.meeting_agent_conversation_available(c.agent_id) or c.binding_digest is distinct from hq_private.meeting_agent_binding_digest(c.agent_id) or c.generation<>m.generation or c.status<>'thinking' or m.status<>'active' or m.connection<>'connected' or m.paused);
+  -- Old hosts cannot accept an actual non-CEO intake actor. Record the
+  -- unsupported response without starving unrelated work or invoking a tool.
+  if p_meeting_protocol=0 then
+    update public.hq_agent_jobs j set status='blocked',error='meeting-protocol-required',completed_at=pg_catalog.clock_timestamp()
+      from public.hq_meeting_contributions c where c.job_id=j.id and c.source_kind='head-chat' and j.status='queued';
+  end if;
   with blocked as (
     update public.hq_agent_jobs j set status='blocked',error='meeting-qualification-stale',completed_at=pg_catalog.clock_timestamp()
     from public.hq_meeting_task_links l where j.task_id=l.business_task_id and j.status='queued' and (
@@ -928,20 +949,31 @@ begin
   if v_count>0 then perform hq_private.live_emit('agents'); end if;
   v_result:=hq_private.worker_claim_before_meetings(p_worker_id,p_lease_seconds);
   if exists(select 1 from public.hq_agent_jobs j where j.id=(v_result->'job'->>'id')::uuid and (
-    exists(select 1 from public.hq_meeting_contributions c where c.job_id=j.id and c.source_kind='ceo-chat')
+    exists(select 1 from public.hq_meeting_contributions c where c.job_id=j.id and c.source_kind in ('ceo-chat','head-chat'))
     or exists(select 1 from public.hq_meeting_task_links l where l.business_task_id=j.task_id and l.task_kind='contribution'))) then
     -- The scoped prompt/brief already contains exact meeting data. Global chat
     -- history must not inject another meeting's text or arbitrary link choices.
     v_result:=pg_catalog.jsonb_set(v_result,'{job,context,messages}','[]'::jsonb);
+    if p_meeting_protocol=1 then
+      select * into v_contribution from public.hq_meeting_contributions c where c.job_id=(v_result->'job'->>'id')::uuid and c.source_kind in ('ceo-chat','head-chat');
+      if found then v_result:=pg_catalog.jsonb_set(v_result,'{job,context,meetingResponse}',pg_catalog.jsonb_build_object(
+        'protocol',1,'scope','conversation-only','meetingId',v_contribution.meeting_id,'contributionId',v_contribution.id,
+        'generation',v_contribution.generation,'agentId',v_contribution.agent_id,'bindingDigest',v_contribution.binding_digest)); end if;
+    end if;
   end if;
   return v_result;
 end $$;
--- Recreate the invoker wrapper so cached/OID-bound callers resolve the gate.
+-- Explicit overloads preserve old hosts and negotiate the narrow new actor
+-- contract on every claim. A persistent readiness flag cannot fence an old host.
+create function hq_private.worker_claim(p_worker_id uuid,p_lease_seconds integer) returns jsonb
+language sql security invoker set search_path='' as $$ select hq_private.worker_claim(p_worker_id,p_lease_seconds,0); $$;
 create or replace function public.hq_worker_claim(p_worker_id uuid,p_lease_seconds integer) returns jsonb
-language sql security invoker set search_path='' as $$ select hq_private.worker_claim(p_worker_id,p_lease_seconds); $$;
-revoke all on function hq_private.worker_claim_before_meetings(uuid,integer),hq_private.worker_claim(uuid,integer),public.hq_worker_claim(uuid,integer)
-  from public,anon,authenticated,service_role;
-grant execute on function hq_private.worker_claim(uuid,integer),public.hq_worker_claim(uuid,integer) to authenticated;
+language sql security invoker set search_path='' as $$ select hq_private.worker_claim(p_worker_id,p_lease_seconds,0); $$;
+create function public.hq_worker_claim(p_worker_id uuid,p_lease_seconds integer,p_meeting_protocol integer) returns jsonb
+language sql security invoker set search_path='' as $$ select hq_private.worker_claim(p_worker_id,p_lease_seconds,p_meeting_protocol); $$;
+revoke all on function hq_private.worker_claim_before_meetings(uuid,integer),hq_private.worker_claim(uuid,integer),hq_private.worker_claim(uuid,integer,integer),
+  public.hq_worker_claim(uuid,integer),public.hq_worker_claim(uuid,integer,integer) from public,anon,authenticated,service_role;
+grant execute on function hq_private.worker_claim(uuid,integer),hq_private.worker_claim(uuid,integer,integer),public.hq_worker_claim(uuid,integer),public.hq_worker_claim(uuid,integer,integer) to authenticated;
 
 create function public.hq_meeting_create(p_id uuid,p_title text,p_language text,p_participants text[],p_request_key uuid) returns jsonb
 language sql security invoker set search_path='' as $$ select hq_private.meeting_create(p_id,p_title,p_language,p_participants,p_request_key); $$;
@@ -950,7 +982,7 @@ language sql security invoker set search_path='' as $$ select hq_private.meeting
 create function public.hq_meeting_command(p_meeting_id uuid,p_command jsonb,p_request_key uuid) returns jsonb
 language sql security invoker set search_path='' as $$ select hq_private.meeting_command(p_meeting_id,p_command,p_request_key); $$;
 revoke all on function hq_private.guard_meeting_plan_version(),hq_private.guard_meeting_task_link(),hq_private.guard_meeting_task_owner(),hq_private.meeting_digest(jsonb),
-  hq_private.meeting_agent_binding_digest(text),hq_private.meeting_agent_qualified(text),hq_private.meeting_review_body(text),hq_private.meeting_normalize_plan(jsonb),
+  hq_private.meeting_agent_binding_digest(text),hq_private.meeting_agent_conversation_available(text),hq_private.meeting_agent_qualified(text),hq_private.meeting_review_body(text),hq_private.meeting_normalize_plan(jsonb),
   hq_private.meeting_dispatch_supported(jsonb),hq_private.meeting_payload(uuid),hq_private.meeting_snapshot(uuid),
   hq_private.meeting_create(uuid,text,text,text[],uuid),hq_private.meeting_enqueue(uuid,uuid,integer,jsonb,uuid,text),
   hq_private.meeting_dispatch(uuid,uuid,integer),hq_private.meeting_roster(),hq_private.meeting_sync(uuid),

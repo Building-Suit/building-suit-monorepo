@@ -102,6 +102,7 @@ const agentsContent = computed<HqAgentsContent>(() => ({
     stopping: t('hq.agents.dictation.stopping'),
     unsupported: t('hq.agents.dictation.unsupported'),
     denied: t('hq.agents.dictation.denied'),
+    service: t('hq.agents.dictation.service'),
     noSpeech: t('hq.agents.dictation.noSpeech'),
     audio: t('hq.agents.dictation.audio'),
     network: t('hq.agents.dictation.network'),

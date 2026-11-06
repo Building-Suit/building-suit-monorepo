@@ -198,7 +198,7 @@ export interface HqAgentsContent {
   sendingLabel: string
   dictation: {
     start: string; stop: string; starting: string; listening: string; stopping: string
-    unsupported: string; denied: string; noSpeech: string; audio: string; network: string; failed: string; limit: string; notice: string
+    unsupported: string; denied: string; service: string; noSpeech: string; audio: string; network: string; failed: string; limit: string; notice: string
   }
   emptyLabel: string
   loadingLabel: string

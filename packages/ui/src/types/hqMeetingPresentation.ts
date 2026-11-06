@@ -4,6 +4,7 @@ export type HqMeetingParticipantStatus = 'listening' | 'thinking' | 'speaking' |
 export type HqMeetingPlanState = 'draft' | 'awaiting-approval' | 'approved' | 'dispatched' | 'revised' | 'deferred' | 'discarded' | 'blocked'
 export type HqMeetingConnection = 'connected' | 'connecting' | 'reconnecting' | 'offline' | 'failed'
 export type HqMeetingTaskState = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'review-required' | 'reviewed'
+export type HqMeetingSpeechSupport = 'checking' | 'ready' | 'model-required' | 'unsupported-browser' | 'insecure-context' | 'unverified'
 
 export interface HqMeetingParticipant {
   id: string
@@ -29,6 +30,15 @@ export type HqMeetingLabel =
   | 'revise' | 'defer' | 'discard' | 'approvalNotice' | 'approvalConfirmation' | 'cancel' | 'confirm' | 'scope' | 'acceptance' | 'review'
   | 'supervisor' | 'inputs' | 'dependencies' | 'priority' | 'environment'
   | 'liveScopeNotice' | 'liveSourceNotice' | 'approvedOnHold' | 'syntheticFounder'
+  | 'microphoneRecheck' | 'microphoneChecking' | 'microphoneReadyLocal' | 'microphoneStarting' | 'microphoneListening' | 'microphoneStopped'
+  | 'microphoneUnsupported' | 'microphoneInsecure' | 'microphoneCaptureUnavailable' | 'microphoneLocalUnsupported'
+  | 'microphoneLanguageUnavailable' | 'microphoneLanguageDownloadable' | 'microphoneLanguageDownloading' | 'microphoneSupportUnverified' | 'microphonePolicyBlocked'
+  | 'microphonePermissionDenied' | 'microphoneDeviceUnavailable' | 'microphoneInputEnded' | 'microphoneServiceBlocked' | 'microphoneRecognitionFailed'
+  | 'microphoneNetworkFailed' | 'microphoneNoSpeech' | 'microphoneLanguageError' | 'microphoneLimit' | 'microphoneConsentRequired'
+  | 'automaticRecognition' | 'automaticRecognitionNotice' | 'prepareRecognition' | 'recognitionDownloadConsent' | 'recognitionDownloadNotice'
+  | 'recognitionModelRequired' | 'recognitionDownloading' | 'recognitionLoading' | 'recognitionModelFailed' | 'recognitionModelConsentRequired' | 'workerUpgradeRequired' | 'meetingSetupRequired'
+  | 'recognitionTranscribing' | 'microphoneFinishing'
+  | 'contributionTooLong' | 'recognitionModelReady'
 
 export interface HqMeetingCopy {
   labels: Record<HqMeetingLabel, string>
@@ -49,7 +59,17 @@ export interface HqMeetingPresentation {
   founder: { id: string; name: string; avatarUrl?: string }
   participants: readonly HqMeetingParticipant[]
   floor?: string | null
-  microphone: { available: boolean; active: boolean; muted: boolean; status: string; device?: string }
+  microphone: {
+    available: boolean
+    active: boolean
+    muted: boolean
+    status: string
+    support?: HqMeetingSpeechSupport
+    checking?: boolean
+    phase?: 'idle' | 'requesting' | 'listening' | 'finishing' | 'failed'
+    model?: { phase: 'idle' | 'downloading' | 'loading' | 'ready' | 'failed'; prepared: boolean; canPrepare: boolean; processing: boolean; progress: number | null; status: string }
+    device?: string
+  }
   voiceAvailable: boolean
   /** Reviewable recognition draft; it never implies a finalized instruction. */
   draftText?: string
@@ -80,6 +100,8 @@ export type HqMeetingCommand =
   | { type: 'language'; language: HqMeetingLanguage }
   | { type: 'interrupt' }
   | { type: 'microphone'; active: boolean; disclosureAccepted?: boolean }
+  | { type: 'prepareMicrophone'; downloadConsent: boolean }
+  | { type: 'recheckMicrophone' }
   | { type: 'mute'; muted: boolean }
   | { type: 'voice'; agentId: string; voiceId: string }
   | { type: 'invite'; agentId: string }

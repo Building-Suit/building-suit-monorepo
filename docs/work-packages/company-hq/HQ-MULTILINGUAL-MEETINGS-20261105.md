@@ -1,5 +1,7 @@
 # HQ multilingual meetings — implementation checkpoint
 
+The founder's 6 November correction supersedes this checkpoint's Arabic-first UI and demonstration delivery: see [the English live room and automatic speech follow-up](HQ-LIVE-MEETING-ROOM-20261106.md). This document preserves the earlier source/synthetic evidence and its limits.
+
 Brief: 5 November 2026. Verification continued into 6 November, Africa/Cairo. **This is a source implementation with an isolated synthetic demonstration. The live multilingual meeting experience is not activated or verified.**
 
 ## Current source and scope

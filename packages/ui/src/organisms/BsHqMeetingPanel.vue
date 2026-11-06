@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import type { HqMeetingCommand, HqMeetingLanguage, HqMeetingLabel, HqMeetingPresentation } from '../types/hqMeetingPresentation'
+import type { HqMeetingCommand, HqMeetingLabel, HqMeetingPresentation } from '../types/hqMeetingPresentation'
 
 const props = defineProps<{ meeting: HqMeetingPresentation }>()
 const visible = defineModel<boolean>('visible', { default: false })
 const emit = defineEmits<{ command: [command: HqMeetingCommand] }>()
 const confirmation = useConfirmation()
 const title = ref(props.meeting.title)
-const language = ref<HqMeetingLanguage>(props.meeting.language || 'ar')
 const participantIds = ref<string[]>([])
 const disclosureAccepted = ref(false)
+const downloadAccepted = ref(false)
 const text = ref('')
 const chat = ref('')
 const addressedTo = ref('')
@@ -32,7 +32,11 @@ const eligible = computed(() => participants.value.filter(participant => partici
 const workEligible = computed(() => eligible.value.filter(participant => participant.workEligible !== false))
 const voiceOptions = computed(() => props.meeting.voices?.map(voice => ({ ...voice })) ?? [])
 const addressOptions = computed(() => [{ id: '', name: label('coordinator') }, ...participants.value.map(({ id, name }) => ({ id, name }))])
-const languageOptions = computed(() => [{ id: 'ar', name: label('arabic') }, { id: 'en', name: label('english') }])
+const captureStarting = computed(() => props.meeting.microphone.phase === 'requesting')
+const captureFinishing = computed(() => props.meeting.microphone.phase === 'finishing')
+const modelReady = computed(() => props.meeting.microphone.model?.prepared ?? false)
+const modelPreparing = computed(() => ['loading', 'downloading'].includes(props.meeting.microphone.model?.phase ?? ''))
+const textTooLong = computed(() => Array.from(text.value).length > 4000)
 const floorName = computed(() => props.meeting.floor === props.meeting.founder.id ? props.meeting.founder.name : participants.value.find(participant => participant.id === props.meeting.floor)?.name ?? label('unassigned'))
 const modeLabel = computed(() => label(props.meeting.mode === 'live' ? 'live' : props.meeting.mode === 'demonstration' ? 'demonstration' : 'unavailable'))
 const planDecidable = computed(() => active.value && !disabled.value && props.meeting.plan && (props.meeting.mode === 'live' ? props.meeting.plan.state === 'awaiting-approval' : ['draft', 'awaiting-approval', 'revised'].includes(props.meeting.plan.state)))
@@ -47,12 +51,13 @@ watch(() => props.meeting.participants, value => {
   if (!workers.has(researchAgentId.value)) researchAgentId.value = ''
   if (!workers.has(planOwnerId.value)) planOwnerId.value = ''
 }, { immediate: true })
-watch(() => props.meeting.language, value => { language.value = value })
+watch(() => props.meeting.language, () => { disclosureAccepted.value = false })
+watch(modelReady, (ready, previous) => { if (!ready || !previous) disclosureAccepted.value = false })
 watch(() => [props.meeting.phase, props.meeting.mode, props.meeting.founder.id] as const, ([phase, mode, founderId], [previousPhase, previousMode, previousFounder]) => {
   if ((['active', 'ended'].includes(previousPhase) && ['setup', 'unavailable'].includes(phase)) || (previousMode === 'live' && mode !== 'live') || (previousFounder !== founderId && previousPhase === 'active')) {
     title.value = props.meeting.title
     text.value = ''; chat.value = ''; question.value = ''; planTitle.value = ''; objective.value = ''; deliverable.value = ''
-    addressedTo.value = ''; researchAgentId.value = ''; planOwnerId.value = ''; disclosureAccepted.value = false
+    addressedTo.value = ''; researchAgentId.value = ''; planOwnerId.value = ''; disclosureAccepted.value = false; downloadAccepted.value = false
     submittedText = ''; submittedChat = ''
   }
 }, { flush: 'sync' })
@@ -70,27 +75,21 @@ watch(() => props.meeting.chat, value => {
   }
 })
 watch(visible, value => {
-  if (!value) { disclosureAccepted.value = false; emit('command', { type: 'close' }) }
+  if (!value) { disclosureAccepted.value = false; downloadAccepted.value = false; emit('command', { type: 'close' }) }
 })
 onBeforeUnmount(() => { disposed = true })
 
 function initials(name: string) { return name.trim().split(/\s+/u).slice(0, 2).map(part => Array.from(part)[0]).join('') }
-function setLanguage(value: unknown) {
-  if (value !== 'ar' && value !== 'en') return
-  language.value = value
-  disclosureAccepted.value = false
-  emit('command', { type: 'language', language: value })
-}
 function editDraft(value: string) { text.value = value; emit('command', { type: 'draft', text: value }) }
 function selectParticipant(id: string, checked: boolean) {
   participantIds.value = checked ? [...new Set([...participantIds.value, id])] : participantIds.value.filter(value => value !== id)
 }
 function start() {
   if (disabled.value || !props.meeting.canStart || !title.value.trim() || !participantIds.value.length) return
-  emit('command', { type: 'start', title: title.value.trim(), language: language.value, participantIds: participantIds.value.slice() })
+  emit('command', { type: 'start', title: title.value.trim(), language: 'en', participantIds: participantIds.value.slice() })
 }
 function sendText() {
-  if (!active.value || disabled.value || !text.value.trim() || props.meeting.microphone.active) return
+  if (!active.value || disabled.value || !text.value.trim() || textTooLong.value || props.meeting.microphone.active || captureStarting.value || captureFinishing.value) return
   submittedText = text.value.trim()
   emit('command', { type: 'text', text: submittedText, ...(addressedTo.value ? { addressedTo: addressedTo.value } : {}) })
 }
@@ -100,9 +99,14 @@ function sendChat() {
   emit('command', { type: 'chat', text: submittedChat })
 }
 function microphone() {
-  if (props.meeting.microphone.active) { emit('command', { type: 'microphone', active: false }); return }
-  if (!active.value || disabled.value || !props.meeting.microphone.available || !disclosureAccepted.value) return
+  if (props.meeting.microphone.active || captureStarting.value) { emit('command', { type: 'microphone', active: false }); return }
+  if (!active.value || disabled.value || !props.meeting.microphone.available || !disclosureAccepted.value || captureFinishing.value) return
   emit('command', { type: 'microphone', active: true, disclosureAccepted: true })
+}
+function prepareRecognition() {
+  if (!props.meeting.microphone.model?.canPrepare || !downloadAccepted.value || modelPreparing.value) return
+  disclosureAccepted.value = false
+  emit('command', { type: 'prepareMicrophone', downloadConsent: true })
 }
 function research() {
   if (disabled.value || !active.value || !researchAgentId.value || !question.value.trim()) return
@@ -134,7 +138,7 @@ function safeLink(value: string): string | undefined {
 
 <template>
   <BsDialog v-model:visible="visible" :title="label('title')" size="lg" :close-blocked="confirming">
-    <div class="bs-hq-meeting" :dir="language === 'ar' ? 'rtl' : 'ltr'" :lang="language" :aria-busy="meeting.pending">
+    <div class="bs-hq-meeting" dir="ltr" lang="en" :aria-busy="meeting.pending">
       <header class="bs-hq-meeting__header">
         <div><strong class="bs-hq-meeting__mode" :data-mode="meeting.mode">{{ modeLabel }}</strong><p role="status">{{ label('connection') }}: {{ copy.connectionStatus[meeting.connection] }}</p></div>
         <BsButton variant="secondary" :disabled="meeting.pending" @click="emit('command', { type: 'refresh' })">{{ label('refresh') }}</BsButton>
@@ -145,8 +149,7 @@ function safeLink(value: string): string | undefined {
       <p class="bs-hq-meeting__meta">{{ label('retention') }}</p>
 
       <form v-if="meeting.phase === 'setup' || meeting.phase === 'unavailable'" class="bs-hq-meeting__section" @submit.prevent="start">
-        <BsField v-slot="field" :label="label('meetingTitle')" required><BsInput :id="field.id" v-model="title" :aria-describedby="field.describedby" maxlength="160" required :disabled="meeting.pending" /></BsField>
-        <BsSelect :model-value="language" :options="languageOptions" option-label="name" option-value="id" :label="label('language')" :disabled="meeting.pending" @update:model-value="setLanguage" />
+        <BsField v-slot="field" :label="label('meetingTitle')" required><BsInput :id="field.id" v-model="title" dir="auto" :aria-describedby="field.describedby" maxlength="160" required :disabled="meeting.pending" /></BsField>
         <fieldset class="bs-hq-meeting__participants"><legend>{{ label('participants') }}</legend><p v-if="!participants.length" role="status">{{ label('unavailable') }}</p>
           <div v-for="participant in participants" :key="participant.id" class="bs-hq-meeting__selection">
             <BsCheckbox :checked="participantIds.includes(participant.id)" :label="`${participant.name} · ${participant.role}`" :description="participant.availability" :disabled="!participant.eligible || meeting.pending" @change="checked => selectParticipant(participant.id, checked)" />
@@ -159,12 +162,12 @@ function safeLink(value: string): string | undefined {
 
       <template v-else>
         <section class="bs-hq-meeting__section" :aria-label="label('participants')">
-          <div class="bs-hq-meeting__toolbar"><h3>{{ meeting.title }}</h3><BsSelect :model-value="language" :options="languageOptions" option-label="name" option-value="id" :label="label('language')" :disabled="disabled || !active" @update:model-value="setLanguage" /></div>
+          <div class="bs-hq-meeting__toolbar"><h3 dir="auto">{{ meeting.title }}</h3></div>
           <p class="bs-hq-meeting__meta">{{ label('floor') }}: <bdi>{{ floorName }}</bdi></p>
           <div class="bs-hq-meeting__tiles">
             <article class="bs-hq-meeting__tile" :data-speaking="meeting.floor === meeting.founder.id || undefined">
               <span class="bs-hq-meeting__avatar"><img v-if="meeting.founder.avatarUrl" :src="meeting.founder.avatarUrl" alt="" width="48" height="48"><span v-else>{{ initials(meeting.founder.name) }}</span></span>
-              <strong><bdi>{{ meeting.founder.name }}</bdi></strong><small>{{ label('founder') }}</small><span>{{ label(meeting.microphone.active ? 'microphoneOn' : 'microphoneOff') }}</span>
+              <strong><bdi>{{ meeting.founder.name }}</bdi></strong><small>{{ label('founder') }}</small><span>{{ label(meeting.microphone.active ? 'microphoneListening' : 'microphoneStopped') }}</span>
             </article>
             <article v-for="participant in participants" :key="participant.id" class="bs-hq-meeting__tile" :data-speaking="participant.status === 'speaking' || undefined" :data-status="participant.status">
               <span class="bs-hq-meeting__avatar"><img v-if="participant.avatarUrl" :src="participant.avatarUrl" alt="" width="48" height="48"><span v-else>{{ initials(participant.name) }}</span></span>
@@ -175,24 +178,30 @@ function safeLink(value: string): string | undefined {
         </section>
 
         <section v-if="active" class="bs-hq-meeting__audio" :aria-label="label('microphone')">
-          <BsCheckbox v-model="disclosureAccepted" :label="label('microphoneConsent')" :description="label('microphoneDisclosure')" :disabled="meeting.microphone.active" />
-          <div class="bs-hq-meeting__toolbar"><BsButton :variant="meeting.microphone.active ? 'danger' : 'secondary'" :aria-pressed="meeting.microphone.active" :disabled="!meeting.microphone.active && (disabled || !meeting.microphone.available || !disclosureAccepted)" @click="microphone">{{ label(meeting.microphone.active ? 'microphoneOff' : 'microphoneOn') }}</BsButton><BsButton variant="secondary" :aria-pressed="meeting.microphone.muted" :disabled="disabled" @click="emit('command', { type: 'mute', muted: !meeting.microphone.muted })">{{ label(meeting.microphone.muted ? 'unmute' : 'mute') }}</BsButton><BsButton variant="primary" @click="emit('command', { type: 'interrupt' })">{{ label('interrupt') }}</BsButton></div>
+          <strong>{{ label('automaticRecognition') }}</strong><p class="bs-hq-meeting__meta">{{ label('automaticRecognitionNotice') }}</p>
+          <div v-if="!modelReady" class="bs-hq-meeting__section">
+            <BsCheckbox v-model="downloadAccepted" :label="label('recognitionDownloadConsent')" :description="label('recognitionDownloadNotice')" :disabled="modelPreparing" />
+            <BsButton variant="secondary" :pending="modelPreparing" :disabled="!downloadAccepted || !meeting.microphone.model?.canPrepare || modelPreparing" @click="prepareRecognition">{{ label('prepareRecognition') }}</BsButton>
+          </div>
+          <p v-if="meeting.microphone.model" class="bs-hq-meeting__meta" role="status">{{ meeting.microphone.model.status }}<span v-if="modelPreparing && meeting.microphone.model.progress !== null"> {{ Math.round(meeting.microphone.model.progress) }}%</span></p>
+          <BsCheckbox v-if="modelReady" v-model="disclosureAccepted" :label="label('microphoneConsent')" :description="label('microphoneDisclosure')" :disabled="meeting.microphone.active || captureStarting || captureFinishing" />
+          <div class="bs-hq-meeting__toolbar"><BsButton :variant="meeting.microphone.active || captureStarting ? 'danger' : 'secondary'" :aria-pressed="meeting.microphone.active" :disabled="captureFinishing || (!meeting.microphone.active && !captureStarting && (disabled || !meeting.microphone.available || !disclosureAccepted))" @click="microphone">{{ label(captureStarting ? 'cancel' : meeting.microphone.active ? 'microphoneOff' : 'microphoneOn') }}</BsButton><BsButton variant="secondary" :aria-pressed="meeting.microphone.muted" :disabled="disabled" @click="emit('command', { type: 'mute', muted: !meeting.microphone.muted })">{{ label(meeting.microphone.muted ? 'unmute' : 'mute') }}</BsButton><BsButton variant="primary" @click="emit('command', { type: 'interrupt' })">{{ label('interrupt') }}</BsButton><BsButton variant="secondary" :disabled="meeting.microphone.active || captureStarting || captureFinishing || modelPreparing" @click="emit('command', { type: 'recheckMicrophone' })">{{ label('microphoneRecheck') }}</BsButton></div>
           <p class="bs-hq-meeting__meta" role="status">{{ meeting.microphone.status }} · {{ label(meeting.voiceAvailable ? 'voiceAvailable' : 'voiceUnavailable') }}</p>
         </section>
 
         <div class="bs-hq-meeting__columns">
           <div class="bs-hq-meeting__section">
             <section :aria-label="label('transcript')"><h3>{{ label('transcript') }}</h3><ol class="bs-hq-meeting__log" role="log" aria-live="polite" aria-relevant="additions"><li v-for="event in meeting.transcript" :key="event.id"><strong><bdi>{{ event.speakerName }}</bdi></strong><small v-if="event.uncertain">{{ label('uncertain') }}</small><p dir="auto">{{ event.text }}</p></li></ol><p v-if="!meeting.transcript.length" class="bs-hq-meeting__meta">{{ label('empty') }}</p></section>
-            <form v-if="active" class="bs-hq-meeting__section" @submit.prevent="sendText"><BsSelect v-model="addressedTo" :options="addressOptions" option-label="name" option-value="id" :label="label('address')" :disabled="disabled" /><BsField v-slot="field" :label="label('text')"><BsTextarea :id="field.id" :model-value="text" dir="auto" :aria-describedby="field.describedby" maxlength="4000" :rows="3" :disabled="disabled" @update:model-value="editDraft" /></BsField><p v-if="meeting.draftUncertain" role="status">{{ label('uncertain') }}</p><BsButton type="submit" variant="primary" :pending="meeting.pending" :disabled="disabled || !text.trim() || meeting.microphone.active">{{ label('send') }}</BsButton></form>
+            <form v-if="active" class="bs-hq-meeting__section" @submit.prevent="sendText"><BsSelect v-model="addressedTo" :options="addressOptions" option-label="name" option-value="id" :label="label('address')" :disabled="disabled" /><BsField v-slot="field" :label="label('text')"><BsTextarea :id="field.id" :model-value="text" dir="auto" :aria-describedby="field.describedby" maxlength="4000" :rows="3" :disabled="disabled" @update:model-value="editDraft" /></BsField><p v-if="meeting.draftUncertain" role="status">{{ label('uncertain') }}</p><p v-if="textTooLong" role="status">{{ label('contributionTooLong') }}</p><BsButton type="submit" variant="primary" :pending="meeting.pending" :disabled="disabled || !text.trim() || textTooLong || meeting.microphone.active || captureStarting || captureFinishing">{{ label('send') }}</BsButton></form>
             <section :aria-label="label('chat')"><h3>{{ label('chat') }}</h3><ol class="bs-hq-meeting__log" role="log" aria-live="polite" aria-relevant="additions"><li v-for="event in meeting.chat" :key="event.id"><strong><bdi>{{ event.speakerName }}</bdi></strong><p dir="auto">{{ event.text }}</p><template v-for="link in event.links ?? []" :key="link"><a v-if="safeLink(link)" :href="safeLink(link)" target="_blank" rel="noopener noreferrer" dir="ltr">{{ link }}</a></template></li></ol><p v-if="!meeting.chat.length" class="bs-hq-meeting__meta">{{ label('empty') }}</p></section>
             <form v-if="active" class="bs-hq-meeting__section" @submit.prevent="sendChat"><BsField v-slot="field" :label="label('share')"><BsTextarea :id="field.id" v-model="chat" dir="auto" :aria-describedby="field.describedby" maxlength="4000" :rows="2" :disabled="disabled" /></BsField><BsButton type="submit" variant="secondary" :disabled="disabled || !chat.trim()">{{ label('share') }}</BsButton></form>
           </div>
 
           <div class="bs-hq-meeting__section">
             <section class="bs-hq-meeting__section" :aria-label="label('tasks')"><h3>{{ label('tasks') }}</h3><p v-if="!meeting.tasks.length" class="bs-hq-meeting__meta">{{ label('empty') }}</p><article v-for="task in meeting.tasks" :key="task.id" class="bs-hq-meeting__task"><strong dir="auto">{{ task.title }}</strong><p><bdi>{{ task.ownerName }}</bdi> · {{ copy.taskStatus[task.status] }}</p><p v-if="task.result" dir="auto">{{ task.result }}</p><p v-if="task.error" role="status" dir="auto">{{ task.error }}</p><BsButton v-if="task.status === 'queued' || task.status === 'running'" variant="secondary" :disabled="disabled" :aria-label="`${label('cancelTask')}: ${task.title}`" @click="emit('command', { type: 'cancelTask', taskId: task.id })">{{ label('cancelTask') }}</BsButton></article></section>
-            <details v-if="active"><summary>{{ label('research') }}</summary><form class="bs-hq-meeting__section" @submit.prevent="research"><BsSelect v-model="researchAgentId" :options="workEligible" option-label="name" option-value="id" :label="label('owner')" :disabled="disabled" /><BsField v-slot="field" :label="label('question')" required><BsTextarea :id="field.id" v-model="question" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsButton type="submit" variant="secondary" :disabled="disabled || !researchAgentId || !question.trim()">{{ label('assignResearch') }}</BsButton></form></details>
+            <details v-if="active"><summary>{{ label('research') }}</summary><form class="bs-hq-meeting__section" @submit.prevent="research"><BsSelect v-model="researchAgentId" :options="workEligible" option-label="name" option-value="id" :label="label('owner')" :disabled="disabled" /><BsField v-slot="field" :label="label('question')" required><BsTextarea :id="field.id" v-model="question" dir="auto" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsButton type="submit" variant="secondary" :disabled="disabled || !researchAgentId || !question.trim()">{{ label('assignResearch') }}</BsButton></form></details>
             <section class="bs-hq-meeting__section" :aria-label="label('plan')"><h3>{{ label('plan') }}</h3><p v-if="!meeting.plan" class="bs-hq-meeting__meta">{{ label('empty') }}</p><article v-else class="bs-hq-meeting__plan"><strong dir="auto">{{ meeting.plan.title }}</strong><p class="bs-hq-meeting__meta">{{ label('version') }} {{ meeting.plan.version }} · {{ copy.planStatus[meeting.plan.state] }}</p><p dir="auto">{{ meeting.plan.summary }}</p><p v-if="meeting.plan.approvalTiming" dir="auto">{{ meeting.plan.approvalTiming }}</p><details><summary>{{ label('digest') }}</summary><code>{{ meeting.plan.digest }}</code></details><div v-for="task in meeting.plan.tasks" :key="task.id" class="bs-hq-meeting__task"><p dir="auto"><strong>{{ label('objective') }}:</strong> {{ task.objective }}</p><p><strong>{{ label('owner') }}:</strong> <bdi>{{ task.ownerName }}</bdi></p><p v-if="task.supervisorName"><strong>{{ label('supervisor') }}:</strong> <bdi>{{ task.supervisorName }}</bdi></p><p dir="auto"><strong>{{ label('deliverable') }}:</strong> {{ task.deliverable }}</p><p><strong>{{ label('budget') }}:</strong> <bdi>{{ task.budget }}</bdi></p><p v-if="task.blockers?.length" dir="auto"><strong>{{ label('blockers') }}:</strong> {{ task.blockers.join(' · ') }}</p><p v-if="task.inputs?.length" dir="auto"><strong>{{ label('inputs') }}:</strong> {{ task.inputs.join(' · ') }}</p><p v-if="task.dependencies?.length" dir="auto"><strong>{{ label('dependencies') }}:</strong> {{ task.dependencies.join(' · ') }}</p><p v-if="task.priority" dir="auto"><strong>{{ label('priority') }}:</strong> {{ task.priority }}</p><p v-if="task.environment" dir="auto"><strong>{{ label('environment') }}:</strong> {{ task.environment }}</p><p v-if="task.scope?.length" dir="auto"><strong>{{ label('scope') }}:</strong> {{ task.scope.join(' · ') }}</p><p v-if="task.acceptance?.length" dir="auto"><strong>{{ label('acceptance') }}:</strong> {{ task.acceptance.join(' · ') }}</p><p v-if="task.review" dir="auto"><strong>{{ label('review') }}:</strong> {{ task.review }}</p></div><p class="bs-hq-meeting__notice">{{ label('approvalNotice') }}</p><div v-if="active" class="bs-hq-meeting__toolbar"><BsButton variant="primary" :disabled="!planDecidable" @click="decide('approve')">{{ label('approve') }}</BsButton><BsButton variant="secondary" :disabled="!planDecidable" @click="decide('approve-now')">{{ label('approveNow') }}</BsButton><BsButton variant="secondary" :disabled="!planDecidable" @click="decide('approve-on-end')">{{ label('approveOnEnd') }}</BsButton><BsButton variant="text" :disabled="!planRevisable" @click="decide('revise')">{{ label('revise') }}</BsButton><BsButton variant="text" :disabled="!planRevisable" @click="decide('defer')">{{ label('defer') }}</BsButton><BsButton variant="danger" :disabled="!planRevisable" @click="decide('discard')">{{ label('discard') }}</BsButton></div></article></section>
-            <details v-if="active"><summary>{{ label('draftPlan') }}</summary><form class="bs-hq-meeting__section" @submit.prevent="draftPlan"><BsField v-slot="field" :label="label('meetingTitle')" required><BsInput :id="field.id" v-model="planTitle" :aria-describedby="field.describedby" maxlength="160" required :disabled="disabled" /></BsField><BsSelect v-model="planOwnerId" :options="workEligible" option-label="name" option-value="id" :label="label('owner')" :disabled="disabled" /><BsField v-slot="field" :label="label('objective')" required><BsTextarea :id="field.id" v-model="objective" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsField v-slot="field" :label="label('deliverable')" required><BsTextarea :id="field.id" v-model="deliverable" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsButton type="submit" variant="secondary" :disabled="disabled || !planOwnerId || !planTitle.trim() || !objective.trim() || !deliverable.trim()">{{ label('draftPlan') }}</BsButton></form></details>
+            <details v-if="active"><summary>{{ label('draftPlan') }}</summary><form class="bs-hq-meeting__section" @submit.prevent="draftPlan"><BsField v-slot="field" :label="label('meetingTitle')" required><BsInput :id="field.id" v-model="planTitle" dir="auto" :aria-describedby="field.describedby" maxlength="160" required :disabled="disabled" /></BsField><BsSelect v-model="planOwnerId" :options="workEligible" option-label="name" option-value="id" :label="label('owner')" :disabled="disabled" /><BsField v-slot="field" :label="label('objective')" required><BsTextarea :id="field.id" v-model="objective" dir="auto" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsField v-slot="field" :label="label('deliverable')" required><BsTextarea :id="field.id" v-model="deliverable" dir="auto" :aria-describedby="field.describedby" maxlength="2000" :rows="2" required :disabled="disabled" /></BsField><BsButton type="submit" variant="secondary" :disabled="disabled || !planOwnerId || !planTitle.trim() || !objective.trim() || !deliverable.trim()">{{ label('draftPlan') }}</BsButton></form></details>
           </div>
         </div>
         <footer class="bs-hq-meeting__section"><p class="bs-hq-meeting__meta">{{ label('closeNotice') }}</p><p class="bs-hq-meeting__meta">{{ label('disconnectPolicy') }}: {{ label('holdOnDisconnect') }}</p><BsButton v-if="active" variant="danger" :disabled="disabled" @click="emit('command', { type: 'end' })">{{ label('end') }}</BsButton><template v-else><p role="status">{{ label('ended') }}</p><BsButton variant="primary" :disabled="meeting.pending" @click="emit('command', { type: 'newMeeting' })">{{ label('start') }}</BsButton></template></footer>

@@ -52,7 +52,7 @@ All calls use the technical account's Supabase Auth access token and publishable
 Private Realtime topic: `hq-agent-jobs`, Phoenix JSON protocol `1.0.0`. A successful private channel join precedes the initial queue drain. Job broadcasts and successful reconnects trigger another serialized drain. [Supabase's protocol documentation](https://supabase.com/docs/guides/realtime/protocol) defines channel joins, token refresh and protocol heartbeats.
 
 ```ts
-hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300 })
+hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300, p_meeting_protocol: 1 })
   => {
     job: null | {
       id: uuid,
@@ -64,13 +64,19 @@ hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300 })
         brain_files: { id: string }[], // server-authorized Drive IDs, 1–18
         agent: { id: string, name: string, role: string, model: string, effort: string,
           profileFileId: string, skillFileIds: string[], lifecycle: string },
-        mode: 'conversation-hr' | 'conversation-ceo' | 'task-route' | 'task-work'
+        mode: 'conversation-hr' | 'conversation-ceo' | 'conversation-intake'
+          | 'task-route' | 'task-ack' | 'task-start' | 'task-work'
           | 'head-review' | 'ceo-review' | 'task-report' | 'lesson-extract' | 'lesson-review',
         task: null | {id:uuid,title:string,brief:string,acceptance:string,assigneeId:string|null,attempt:number},
         predecessor: null | {jobId:uuid,agentId:string,kind:string,text:string},
         artifact: null | {id:uuid,text:string,digest:string,agentId:string},
         lesson: null | {id:uuid,summary:string,body:string,sourceType:string,sourceId:uuid,digest:string},
         learned: {id:uuid,summary:string,body:string,sourceId:uuid,digest:string}[],
+        meetingResponse?: {
+          protocol: 1, scope: 'conversation-only', meetingId: uuid,
+          contributionId: uuid, generation: number, agentId: string,
+          bindingDigest: string // exact current binding checked by the database
+        },
         // bounded server-owned conversation context
       }
     },
@@ -90,6 +96,14 @@ hq_worker_finish({
   p_reply: string, p_error: string | null
 }) => true | { accepted: true }
 ```
+
+### Meeting conversation protocol 1 — prepared source
+
+The updated host sends `p_meeting_protocol: 1` on every claim. Apply the prepared meeting migration providing that three-argument RPC **before** starting the updated host. There is no automatic fallback if the new RPC is unavailable. An older two-argument host cannot execute a non-CEO meeting response: those jobs become visibly blocked with `meeting-protocol-required`, while unrelated work and compatible Steve intake retain their existing contracts.
+
+A trusted `meetingResponse` marker permits the actual configured employee to answer in the existing `conversation-intake` stage using that employee's bound profile, model and effort. The host validates the exact marker fields, actor, generation and identifiers; the database checks the current binding digest at claim. This is context-only conversation: native web search and every other tool remain disabled, the provider result must be response-only JSON with `task: null`, and a model-suggested task is a genuine blocked outcome. Conversation configuration does not establish research qualification or observed runtime availability. Research and execution keep their separate qualification and approval gates.
+
+Upgrade the existing service in place after inspecting its actual unit, `ExecStart`, OS user and runtime directory. The paths in the example unit above are examples, not observed deployment values. Preserve the same service identity, private environment file, authorized `.codex` cache and delivery journal; do not start a second worker or clear pending journal entries. This change replaces `worker.mjs` and retains its existing runtime imports (`workforceRoster.mjs` and `brainPublisher.mjs`); it needs no package installation. Back up the installed runtime module before replacement, use the existing service's restart path and retain the prior module for rollback. Installing this source does not itself apply the migration, restart a host or establish successful model/meeting acceptance.
 
 The applied queue foundation is `apps/company-hq/supabase/migrations/20261105035454_hq_agent_messages_worker_queue.sql`; the forward workforce migration is `20261105150500_hq_workforce_tasks_learning.sql`. It installs no Auth user or worker membership. After an authorized administrator provisions a separate, confirmed technical account through the supported Auth Admin API, bind its actual UID to the persistent host UUID using the private database-owner-only helper:
 

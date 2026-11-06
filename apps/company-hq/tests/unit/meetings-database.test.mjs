@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { after, before, test } from 'node:test'
 import { PGlite } from '@electric-sql/pglite'
+import { validateJob, webAllowed } from '../../../../tooling/hq-agent-host/worker.mjs'
 
 const migrations = new URL('../../supabase/migrations/', import.meta.url)
 const founder = '10000000-0000-4000-8000-000000000001'
@@ -71,17 +72,17 @@ before(async () => {
   for (const sql of [functionSource(workforce, 'workforce_agent_assignable'), functionSource(chat, 'create_business_task'), functionSource(workforce, 'cancel_business_task'),functionSource(queue,'agent_worker_uid'),functionSource(workforce,'workforce_block_claim'),functionSource(presence,'worker_presence'),functionSource(recovery,'worker_claim'),functionSource(workforce,'hq_create_task','public'),functionSource(workforce,'hq_cancel_task','public'),functionSource(chat,'chat_message'),functionSource(recovery,'workforce_enqueue'),functionSource(recovery,'worker_finish'),functionSource(native,'validate_tool_evidence'),functionSource(native,'worker_finish_v2'),functionSource(chat,'send_ceo_message'),functionSource(queue,'hq_send_ceo_message','public')]) await db.exec(sql)
   await db.exec(`revoke all on function hq_private.chat_message(public.hq_agent_jobs,text,text,text[]),hq_private.workforce_enqueue(public.hq_agent_jobs,text,text,uuid,uuid,integer),hq_private.workforce_agent_assignable(text),hq_private.create_business_task(text,text,text,text,uuid),hq_private.cancel_business_task(uuid) from public,anon,authenticated,service_role`)
   await db.exec('grant execute on function hq_private.create_business_task(text,text,text,text,uuid),hq_private.cancel_business_task(uuid),public.hq_create_task(text,text,text,text,uuid),public.hq_cancel_task(uuid),hq_private.send_ceo_message(text,uuid),public.hq_send_ceo_message(text,uuid) to authenticated')
-  await db.exec(await source('20261105210955_hq_voice_meetings.sql'))
+  await db.exec(await source('20261105235516_hq_voice_meetings.sql'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',now()),($2,'second@example.test',now())`, [founder, other])
   await db.query(`insert into auth.sessions values($1,$2,null),($3,$4,null)`, [sessions[founder],founder,sessions[other],other])
   await db.query("insert into auth.users values($1,'technical-worker@example.test',now())",[worker])
   await db.query('insert into auth.sessions values($1,$2,null)',[sessions[worker],worker])
   await db.query('insert into hq_private.agent_workers(worker_id,auth_user_id,enabled) values($1,$2,true)',[workerId,worker])
   await db.exec(`insert into hq_private.founder_invitations(email) values('second@example.test');
-    update hq_private.agent_roster set profile_file_id='fixture-profile',model='fixture-model',effort='low',lifecycle='active';
+    update hq_private.agent_roster set profile_file_id='fixture-profile',model='gpt-6.1-sol',effort='low',lifecycle='active';
     update hq_private.agent_roster set manager_id='AG-CEO-001' where id='AG-HR-001';
     insert into hq_private.agent_roster(id,name,role,department_key,manager_id,profile_file_id,model,effort,lifecycle) values
-      ('AG-HR-002','Noah','Researcher','hr-agent-development','AG-HR-001','fixture-profile','fixture-model','low','active');
+      ('AG-HR-002','Noah','Researcher','hr-agent-development','AG-HR-001','fixture-profile','gpt-6.1-sol','low','active');
     insert into hq_private.meeting_agent_qualifications(agent_id,binding_digest,qualification_scope,evidence_reference)
       select id,hq_private.meeting_agent_binding_digest(id),'read-approved-sources-worker-job-600','Disposable synthetic qualification fixture only' from hq_private.agent_roster;`)
   for (const user of [founder,other]) assert.equal((await asUser(user, 'select public.hq_founder_access() as data')).isFounder,true)
@@ -132,22 +133,38 @@ test('founder live-session boundary rejects cross-owner reads, commands and dire
   await command(meeting.id,{type:'end'})
 })
 
-test('missing or stale operator qualification cannot create meetings or authorize queued work',async () => {
+test('conversation configuration does not infer research qualification, while stale work evidence still blocks execution',async () => {
   await assert.rejects(db.exec("update hq_private.meeting_agent_qualifications set evidence_reference=null where agent_id='AG-HR-002'"),/not-null constraint/)
   await assert.rejects(db.exec("update hq_private.meeting_agent_qualifications set evidence_reference='' where agent_id='AG-HR-002'"),/check constraint/)
   await db.exec("delete from hq_private.meeting_agent_qualifications where agent_id='AG-HR-002'")
-  await assert.rejects(create(),/HQ_MEETING_AGENT_UNQUALIFIED/)
+  let {meeting}=await create()
+  let roster=await asUser(founder,'select public.hq_meeting_roster() as data')
+  const noah=roster.participants.find(r=>r.id==='AG-HR-002')
+  assert.equal(noah.conversationAvailable,true); assert.equal(noah.workQualified,false); assert.equal(noah.qualified,false)
+  const before=await countTasks()
+  let record=await command(meeting.id,{type:'text',text:'Noah, answer from this meeting context.',addressedTo:'AG-HR-002'})
+  assert.equal(record.turn.agentId,'AG-HR-002'); assert.equal(await countTasks(),before)
+  const conversational=await claim()
+  validateJob(conversational.job); assert.equal(webAllowed(conversational.job),false)
+  await finish(conversational.job,{message:'[FIXTURE] Conversation without a work qualification claim',task:null})
+  record=await snapshot(meeting.id)
+  assert.equal(record.contributions.at(-1).status,'speaking'); assert.equal(await countTasks(),before)
+  const plan=await proposed(meeting.id)
+  record=await approve(meeting.id,plan,'now')
+  assert.equal(record.plans.at(-1).status,'blocked'); assert.equal(record.tasks.length,0)
+  await command(meeting.id,{type:'end'})
   await db.exec("insert into hq_private.meeting_agent_qualifications(agent_id,binding_digest,qualification_scope,evidence_reference) values('AG-HR-002',hq_private.meeting_agent_binding_digest('AG-HR-002'),'read-approved-sources-worker-job-600','Disposable synthetic qualification fixture only')")
-  const {meeting}=await create(),plan=await proposed(meeting.id),before=await countTasks()
-  await approve(meeting.id,plan,'meeting-end')
+  ;({meeting}=await create())
+  const delayed=await proposed(meeting.id)
+  await approve(meeting.id,delayed,'meeting-end')
   await db.exec("update hq_private.agent_roster set effort='high' where id='AG-HR-002'")
   try {
-    await assert.rejects(create(),/HQ_MEETING_AGENT_UNQUALIFIED/)
-    const result=await command(meeting.id,{type:'end'})
-    assert.equal(result.plans.at(-1).status,'blocked')
-    assert.equal(result.tasks.length,0)
-    assert.equal(await countTasks(),before)
+    record=await command(meeting.id,{type:'end'})
+    assert.equal(record.plans.at(-1).status,'blocked'); assert.equal(await countTasks(),before)
   } finally { await db.exec("update hq_private.agent_roster set effort='low' where id='AG-HR-002'") }
+  await db.exec("update hq_private.agent_roster set model='unsupported-model' where id='AG-HR-002'")
+  try { await assert.rejects(create(),/HQ_MEETING_CONVERSATION_UNAVAILABLE/) }
+  finally { await db.exec("update hq_private.agent_roster set model='gpt-6.1-sol' where id='AG-HR-002'") }
 })
 
 test('exact approval/end atomically enqueue existing task-route once; disconnect holds',async () => {
@@ -362,7 +379,8 @@ test('current owner reports remain claimable while stale independent reviewers b
 })
 
 
-const claim = () => asUser(worker,'select public.hq_worker_claim($1,300) as data',[workerId])
+const claim = (protocol=1) => asUser(worker,'select public.hq_worker_claim($1,300,$2) as data',[workerId,protocol])
+const legacyClaim = () => asUser(worker,'select public.hq_worker_claim($1,300) as data',[workerId])
 const finish = (job,reply) => asUser(worker,"select public.hq_worker_finish_v2($1,$2,$3,$4,null,'[]'::jsonb) as data",[job.id,job.lease_token,workerId,JSON.stringify(reply)])
 const clearFixtureQueue = () => db.exec("update public.hq_agent_jobs set status='blocked',error='fixture-cleanup',completed_at=now() where status='queued'")
 async function persistedTaskFixture(taskId,text='[FIXTURE] Correlated inspected finding',attempt=0) {
@@ -378,7 +396,7 @@ async function persistedTaskFixture(taskId,text='[FIXTURE] Correlated inspected 
 test('source roster and latest recovery expose only founder-safe canonical fields',async () => {
   const roster=await asUser(founder,'select public.hq_meeting_roster() as data')
   assert.equal(roster.participants.length,3)
-  assert.ok(roster.participants.every(r=>r.qualified && r.name.length<=160 && r.role.length<=200))
+  assert.ok(roster.participants.every(r=>r.conversationAvailable && r.workQualified && r.qualified && r.name.length<=160 && r.role.length<=200))
   assert.ok(roster.participants.every(r=>!('model' in r) && !('evidence_reference' in r) && !('profile_file_id' in r)))
   const {meeting}=await create()
   const latest=await asUser(founder,'select public.hq_meeting_snapshot(null) as data')
@@ -440,7 +458,7 @@ test('meeting CEO intake cannot create model-suggested work; ordinary chat retai
   await asUser(founder,'select public.hq_cancel_task($1) as data',[ordinary])
 })
 
-test('stale CEO chat qualification blocks before invocation, while ordinary chat is untouched',async () => {
+test('stale CEO conversation binding blocks before invocation, while ordinary chat is untouched',async () => {
   await clearFixtureQueue()
   const {meeting}=await create()
   let record=await command(meeting.id,{type:'text',text:'Pending qualified response'})
@@ -450,7 +468,7 @@ test('stale CEO chat qualification blocks before invocation, while ordinary chat
   try {
     const claimed=await claim()
     assert.notEqual(claimed.job.id,linked)
-    assert.equal((await db.query('select error from public.hq_agent_jobs where id=$1',[linked])).rows[0].error,'meeting-qualification-stale')
+    assert.equal((await db.query('select error from public.hq_agent_jobs where id=$1',[linked])).rows[0].error,'meeting-binding-stale')
     await finish(claimed.job,{message:'[FIXTURE] Normal chat remains unchanged',task:null})
     record=await snapshot(meeting.id)
     assert.equal(record.contributions.at(-1).status,'failed')
@@ -479,16 +497,23 @@ test('interrupt rejects completed but unsynchronized output and preserves unrela
   await command(meeting.id,{type:'end'})
 })
 
-test('head response drafts and invited findings read only exact correlated persisted artifacts',async () => {
+test('actual head conversation is one tool-disabled intake receipt; research findings stay separate',async () => {
   await clearFixtureQueue()
-  const {meeting}=await create()
-  let record=await command(meeting.id,{type:'text',text:'Noah, give a bounded response draft.',addressedTo:'AG-HR-002'})
+  const {meeting}=await create(),before=await countTasks()
+  let record=await command(meeting.id,{type:'text',text:'Noah, answer this meeting question.',addressedTo:'AG-HR-002'})
   let c=record.contributions.at(-1)
-  assert.equal(c.source_kind,'response-task')
-  assert.equal(record.tasks.find(t=>t.id===c.business_task_id).kind,'contribution')
-  const artifact=await persistedTaskFixture(c.business_task_id,'[FIXTURE] Actual correlated response draft')
+  assert.equal(c.source_kind,'head-chat'); assert.equal(c.business_task_id,null)
+  assert.equal(record.tasks.length,0); assert.equal(await countTasks(),before)
+  const {job}=await claim()
+  assert.equal(job.agent_id,'AG-HR-002'); assert.equal(job.context.agent.id,'AG-HR-002')
+  assert.equal(job.context.agent.model,'gpt-6.1-sol'); assert.equal(job.context.mode,'conversation-intake')
+  assert.deepEqual(job.context.meetingResponse,{protocol:1,scope:'conversation-only',meetingId:meeting.id,contributionId:c.id,generation:c.generation,agentId:c.agent_id,bindingDigest:c.binding_digest})
+  validateJob(job); assert.equal(webAllowed(job),false)
+  await finish(job,{message:'[FIXTURE] Actual named-head response',task:null})
   record=await snapshot(meeting.id); c=record.contributions.at(-1)
-  assert.equal(c.status,'speaking'); assert.equal(c.response_artifact_id,artifact)
+  assert.equal(c.status,'speaking'); assert.ok(c.response_message_id)
+  assert.equal((await db.query('select agent_id from public.hq_agent_messages where id=$1',[c.response_message_id])).rows[0].agent_id,'AG-HR-002')
+  assert.equal(await countTasks(),before)
   await command(meeting.id,{type:'speechEnded',contributionId:c.id,generation:c.generation})
   record=await command(meeting.id,{type:'research',task:planTask({id:'invited-finding'})})
   const research=record.tasks.find(t=>t.task_key==='invited-finding')
@@ -504,7 +529,6 @@ test('head response drafts and invited findings read only exact correlated persi
   assert.ok(record.tasks.find(t=>t.id===research.id).reported_at)
   await command(meeting.id,{type:'end'})
 })
-
 
 async function persistedReviewFixture(taskId,inputId,accepted,attempt=0,kind='head-review') {
   const input=(await db.query('select digest from public.hq_task_artifacts where id=$1',[inputId])).rows[0]
@@ -578,10 +602,10 @@ test('live text routes canonical names and exact reversible controls without int
   const {meeting}=await create()
   let record=await command(meeting.id,{type:'text',text:'Noah, give a concise response.'})
   assert.equal(record.turn.agentId,'AG-HR-002')
-  const responseTask=record.contributions.at(-1).business_task_id
+  const responseJob=record.contributions.at(-1).job_id
   record=await command(meeting.id,{type:'text',text:'Stop!'})
   assert.equal(record.meeting.paused,true); assert.equal(record.turn,null)
-  assert.equal(record.tasks.find(t=>t.id===responseTask).business_status,'canceled')
+  assert.equal((await db.query('select status from public.hq_agent_jobs where id=$1',[responseJob])).rows[0].status,'blocked')
   record=await command(meeting.id,{type:'text',text:'Continue'})
   assert.equal(record.meeting.paused,false); assert.equal(record.turn.agentId,'AG-CEO-001')
   record=await command(meeting.id,{type:'text',text:'Noah, discuss this with Amaya.'})
@@ -590,5 +614,51 @@ test('live text routes canonical names and exact reversible controls without int
   assert.equal(JSON.parse(prompt).addressing.clarificationRequired,true)
   record=await command(meeting.id,{type:'text',text:'Pause',uncertain:true})
   assert.equal(record.meeting.paused,false); assert.equal(record.turn,null)
+  await command(meeting.id,{type:'end'})
+})
+
+
+test('legacy claims visibly block unsupported head intakes and still drain ordinary and Steve jobs',async () => {
+  await clearFixtureQueue()
+  const {meeting}=await create()
+  let record=await command(meeting.id,{type:'text',text:'Noah, this needs protocol one.',addressedTo:'AG-HR-002'})
+  const head=record.contributions.at(-1),ordinary=randomUUID()
+  await asUser(founder,'select public.hq_send_ceo_message($1,$2) as data',['Ordinary compatibility fixture',ordinary])
+  let claimed=await legacyClaim()
+  assert.notEqual(claimed.job.id,head.job_id); assert.equal(claimed.job.agent_id,'AG-CEO-001')
+  assert.equal('meetingResponse' in claimed.job.context,false)
+  validateJob(claimed.job)
+  await finish(claimed.job,{message:'[FIXTURE] Old host ordinary chat',task:null})
+  record=await snapshot(meeting.id)
+  assert.equal(record.contributions.at(-1).status,'blocked')
+  assert.equal(record.contributions.at(-1).error,'meeting-protocol-required')
+  await clearFixtureQueue()
+  record=await command(meeting.id,{type:'text',text:'Steve, continue the compatible conversation.'})
+  claimed=await legacyClaim()
+  assert.equal(claimed.job.id,record.contributions.at(-1).job_id)
+  assert.equal('meetingResponse' in claimed.job.context,false)
+  validateJob(claimed.job); assert.equal(webAllowed(claimed.job),false)
+  await finish(claimed.job,{message:'[FIXTURE] Compatible Steve meeting reply',task:null})
+  await command(meeting.id,{type:'end'})
+})
+
+test('protocol head intake rejects work creation and stale actual bindings before inference',async () => {
+  await clearFixtureQueue()
+  const {meeting}=await create(),before=await countTasks()
+  await command(meeting.id,{type:'text',text:'Noah, ordinary conversation only.',addressedTo:'AG-HR-002'})
+  let claimed=await claim()
+  await finish(claimed.job,{message:'Fixture rejected task',task:{title:'Unapproved',brief:'Not allowed',acceptance:'No execution',assigneeId:'AG-HR-002'}})
+  let record=await snapshot(meeting.id)
+  assert.equal(record.contributions.at(-1).error,'meeting-response-only')
+  assert.equal(await countTasks(),before)
+  record=await command(meeting.id,{type:'text',text:'Noah, new binding fence.',addressedTo:'AG-HR-002'})
+  const linked=record.contributions.at(-1).job_id
+  await db.exec("update hq_private.agent_roster set effort='high' where id='AG-HR-002'")
+  try {
+    claimed=await claim()
+    assert.equal(claimed.job,null)
+    assert.equal((await db.query('select error from public.hq_agent_jobs where id=$1',[linked])).rows[0].error,'meeting-binding-stale')
+  } finally { await db.exec("update hq_private.agent_roster set effort='low' where id='AG-HR-002'") }
+  await assert.rejects(claim(2),/HQ_MEETING_PROTOCOL_UNSUPPORTED/)
   await command(meeting.id,{type:'end'})
 })
