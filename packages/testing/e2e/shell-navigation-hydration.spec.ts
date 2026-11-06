@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test'
 
 for (const app of [
-  { name: 'Docs', port: 4322, path: '/components' },
+  { name: 'Docs', port: 4322, path: '/templates' },
   { name: 'Automation', port: 4324, path: '/' },
 ]) test(`${app.name} mobile navigation waits for its handler before accepting the first click`, async ({ page, context }) => {
   let releaseScripts!: () => void
   const scriptsReady = new Promise<void>(resolve => { releaseScripts = resolve })
-  let heldScripts = 0
+  const heldScripts = new Set<string>()
   let holding = true
   const denied: string[] = []
   await page.route('**/*', async route => {
@@ -16,7 +16,7 @@ for (const app of [
       return route.abort()
     }
     if (holding && route.request().resourceType() === 'script') {
-      heldScripts++
+      heldScripts.add(route.request().url())
       await scriptsReady
     }
     await route.continue()
@@ -28,7 +28,9 @@ for (const app of [
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`, { waitUntil: 'commit' })
     const navigation = page.getByRole('button', { name: 'Open navigation', exact: true }).first()
     await expect(navigation).toBeVisible()
-    await expect.poll(() => heldScripts).toBeGreaterThan(0)
+    const startupScripts = await page.locator('script[src], link[rel="modulepreload"][href]').evaluateAll(elements => [...new Set(elements.map(element => element instanceof HTMLScriptElement ? element.src : (element as HTMLLinkElement).href))])
+    expect(startupScripts.length).toBeGreaterThan(0)
+    await expect.poll(() => startupScripts.filter(url => heldScripts.has(url)).length).toBe(startupScripts.length)
     await expect(navigation).toBeDisabled()
     await expect(navigation).toHaveAttribute('aria-expanded', 'false')
     holding = false

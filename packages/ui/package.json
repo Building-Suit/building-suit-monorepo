@@ -455,7 +455,16 @@
     "./utils/hologramPresentationGeometry": "./src/utils/hologramPresentationGeometry.ts",
     "./organisms/BsHqOfficeOverview": "./src/organisms/BsHqOfficeOverview.vue",
     "./utils/hqOfficePresentation": "./src/utils/hqOfficePresentation.ts",
-    "./molecules/BsHqWorkActivity": "./src/molecules/BsHqWorkActivity.vue"
+    "./molecules/BsHqWorkActivity": "./src/molecules/BsHqWorkActivity.vue",
+    "./utils/hologramTerrainMaterial": "./src/utils/hologramTerrainMaterial.ts",
+    "./utils/hqAgentCharacters": "./src/utils/hqAgentCharacters.ts",
+    "./utils/hqIslandGeometry": "./src/utils/hqIslandGeometry.ts",
+    "./utils/hqSteveCharacter": "./src/utils/hqSteveCharacter.ts",
+    "./utils/islandShoreEffects": "./src/utils/islandShoreEffects.ts",
+    "./utils/islandShoreInteraction": "./src/utils/islandShoreInteraction.ts",
+    "./utils/islandShoreShaders": "./src/utils/islandShoreShaders.ts",
+    "./utils/islandWaterConfig": "./src/utils/islandWaterConfig.ts",
+    "./utils/islandWaterMaterial": "./src/utils/islandWaterMaterial.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

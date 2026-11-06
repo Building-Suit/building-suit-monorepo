@@ -2,12 +2,13 @@
 
 Source-only integration of department pilot
 `116477e5e63495efc6702e8d6a745d3e053310d4` into
-`codex/company-hq/worker-release`. No pilot branch merge, unrelated app/UI changes
+`codex/company-hq/worker-release`. No pilot branch merge, new unrelated app/UI work
 or active migration additions were performed. The reviewed 17 applied staging
 sources and archived never-applied migration remain byte-for-byte unchanged.
-Latest inspected migration-parity parent is
-`aadeaa79d7e829f78cf7d51bb01b859a97f651aa`; its UI-export/hydration changes remain
-separate. All prior automation commits and parent history are retained.
+Migration-parity parent
+`aadeaa79d7e829f78cf7d51bb01b859a97f651aa` is integrated by a history-preserving
+merge for the authorized automation PR. Its UI-export/hydration changes are
+preserved unchanged; no additional UI work was started. All prior automation commits and parent history are retained.
 
 The smallest runtime port consists of the pilot's worker policy/invocation
 functions, roster policy and `departmentWorkflow.mjs`. The worker prefix before

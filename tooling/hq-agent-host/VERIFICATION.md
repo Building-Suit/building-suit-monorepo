@@ -2,9 +2,11 @@
 
 Branch: `codex/company-hq/worker-release`; worktree: `/workspace/hq-release`.
 Applied migration baseline remains `d1a274fa9573e411c38b5d7f9ffba86739f7601d`.
-The latest inspected migration-parity parent is
-`aadeaa79d7e829f78cf7d51bb01b859a97f651aa`; its unrelated UI exports/hydration
-changes remain separate. No history was rebased, reset, overwritten or removed.
+Migration-parity parent
+`aadeaa79d7e829f78cf7d51bb01b859a97f651aa` is now integrated by the authorized
+history-preserving parent merge. Its UI-export/hydration changes are preserved
+without starting additional UI work. Results below initially describe 0dc4925b;
+post-merge focused/gate results are recorded separately. No history was rebased, reset, overwritten or removed.
 See `INTEGRATION.md` for the bounded runtime port from pilot
 `116477e5e63495efc6702e8d6a745d3e053310d4` and exact undeployed SQL hashes.
 
@@ -79,8 +81,8 @@ and two hit timing limits under concurrent load. Both timing tests passed
 isolated reruns (report 5,286ms; child lifecycle 6,542ms). The complete failed run
 was not relabeled green. Browser/e2e acceptance remains unrun.
 
-`pnpm check` still reports the nine inherited missing HQ UI exports on this
-branch; the unmerged parent fixes them. Prior full lint reported seven inherited
+Before the parent merge, `pnpm check` reported nine inherited missing HQ UI
+exports. The integrated parent contains their fix; the post-merge gate is rerun. Prior full lint reported seven inherited
 errors in unchanged HQ app files. Full repo CI is not claimed green.
 The legacy module-only updater is disabled and its shell syntax/fail-closed
 entrypoint were checked. systemd examples were syntax-checked on disposable
