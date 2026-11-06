@@ -4,13 +4,17 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
+import { workerExecutionBlock } from './departmentWorkflow.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
 const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
-const roster = ids.map((id,index)=>({id,name:'Employee '+index,departmentKey:index>0?'hr-agent-development':null,profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:'gpt-6.1-sol',effort:'medium',managerId:index>1?'AG-HR-001':index===1?'AG-CEO-001':null}))
+const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9].includes(index)?'T2_HEAD':'T1_WORKER']))
+const departments = new Map(ids.map((id,index)=>[id,index===0?null:index===4?'research-market-intelligence':index===5?'customer-acquisition-partnerships':index===6?'customer-success-onboarding':index===7?'social-community':index===8?'email-lifecycle':index===9?'development-maintenance':'hr-agent-development']))
+const managers = new Map(ids.map((id,index)=>[id,index===0?null:[2,3].includes(index)?'AG-HR-001':'AG-CEO-001']))
+const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
 async function setup(withEvidence = true, withChat = false, withPresence = true) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
@@ -35,6 +39,9 @@ async function setup(withEvidence = true, withChat = false, withPresence = true)
   }
   if (withChat) await db.exec(await readFile(new URL('20261105180148_hq_conversational_chat.sql',root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('20261105192548_hq_presence_without_snapshot_polling.sql',root),'utf8'))
+  if (withPresence) await db.exec(await readFile(new URL('20261105235516_hq_voice_meetings.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261106000000_hq_department_staffing_needs.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261106010000_hq_department_orchestration_contract.sql',root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
   await db.query(`select set_config('request.jwt.claims',$1,false)`,[JSON.stringify({sub:founder,role:'authenticated',session_id:session})])
@@ -82,6 +89,79 @@ test('founder task → actual employee artifact → reviews → report → accep
     j=await h.claim();await as('founder');await rpc('hq_cancel_task',[cancelId]);assert.equal((await h.finish(j,'Late result must not publish')).discarded,true)
     await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
   } finally {await db.close()}
+})
+
+test('staffing-required worker failure creates one durable HR-owned need and leaves the task blocked',async()=>{
+  const h=await setup();const {db,as,rpc}=h
+  try {
+    await db.exec('reset role')
+    await db.query(`update hq_private.agent_roster set department_key='social-community' where id='AG-SOC-001'`)
+    await as('founder')
+    const started=await rpc('hq_create_task',['Social draft','Prepare a bounded draft for the Social department.','Use the department brief and acceptance criteria.','AG-SOC-001',randomUUID()])
+    const task=started.tasks[0];assert.equal(task.assigneeId,'AG-SOC-001')
+    const job=await h.claim();assert.equal(job.agent_id,'AG-SOC-001');assert.equal(job.context.mode,'task-work')
+    await h.finish(job,'','staffing-required')
+    await h.finish(job,'','staffing-required')
+    await as('founder')
+    const snapshot=await rpc('hq_agent_snapshot')
+    assert.equal(snapshot.tasks.find(row=>row.id===task.id).status,'blocked')
+    assert.equal(snapshot.tasks.find(row=>row.id===task.id).error,'staffing-required')
+    await db.exec('reset role')
+    const needs=await db.query(`select department_key,department_head_id,hr_owner_id,reason_code,status,blocked_agent_id
+      from hq_private.department_staffing_needs where task_id=$1`,[task.id])
+    assert.deepEqual(needs.rows,[{department_key:'social-community',department_head_id:'AG-SOC-001',hr_owner_id:'AG-HR-001',reason_code:'no-eligible-worker',status:'open',blocked_agent_id:'AG-SOC-001'}])
+    const agents=await db.query(`select count(*)::int count from hq_private.agent_roster`)
+    assert.equal(agents.rows[0].count,10)
+    assert.equal(snapshot.messages.filter(message=>message.kind==='task-result').length,0)
+  } finally { await db.close() }
+})
+
+test('canonical additional worker sync, qualified head delegation and head review use current bound evidence',async()=>{
+ const h=await setup(true,true);try{
+  const profile='profile_rania_0001',skill='skill_social_0001',evidence='hr_evidence_0001'
+  await h.db.exec('reset role')
+  for(const id of [profile,skill,evidence]) await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope) values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','worker.md','text/markdown','1',false,true)`,[id])
+  const rania={id:'AG-SOC-002',name:'Rania',role:'Social Worker',departmentKey:'social-community',profileFileId:profile,skillFileIds:[skill],lifecycle:'Active',model:'gpt-6-luna',effort:'medium',managerId:'AG-SOC-001',modelTier:'T1_WORKER'}
+  await h.as('worker');const result=await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify([...roster,rania])]);assert.equal(result.count,11)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query(`select model_tier from hq_private.agent_roster where id='AG-SOC-002'`)).rows[0].model_tier,'T1_WORKER')
+  assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-SOC-002') ok`)).rows[0].ok,false)
+  const binding=(await h.db.query(`select hq_private.workforce_agent_binding_digest('AG-SOC-002') digest`)).rows[0].digest
+  await h.db.query(`insert into hq_private.workforce_qualifications(agent_id,scope,evidence_file_id,evidence_source_version,reviewer_id,binding_digest)
+    values('AG-SOC-002','bounded-drafting-v1',$1,'1','AG-HR-003',$2)`,[evidence,binding])
+  assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-SOC-002') ok`)).rows[0].ok,true)
+  await h.as('founder')
+  const started=await h.rpc('hq_create_task',['Social assignment','Prepare a short sourced social draft.','Use verified evidence and the assigned skill.',null,randomUUID()])
+  const task=started.tasks[0]
+  let job=await h.claim();assert.equal(job.context.mode,'task-route')
+  await h.finish(job,{assigneeId:'AG-SOC-001',reason:'Social owns this requested channel.',message:'@Employee 7 will scope and assign the social draft.'})
+  job=await h.claim();assert.equal(job.context.mode,'task-ack',JSON.stringify(job));assert.equal(job.agent_id,'AG-SOC-001')
+  assert.equal(job.context.agent.modelTier,'T2_HEAD')
+  assert.deepEqual(job.context.roster.map(row=>row.id),['AG-SOC-002'])
+  assert.equal(job.context.roster[0].qualification.status,'qualified')
+  await h.finish(job,{delegateId:'AG-SOC-002',message:'@Rania: draft the assigned social post and verify every claim against the supplied evidence.'})
+  job=await h.claim();assert.equal(job.context.mode,'task-start');assert.equal(job.agent_id,'AG-SOC-002')
+  assert.equal(workerExecutionBlock(job),null)
+  await h.finish(job,{message:'I understand the bounded social draft and will check it against the provided criteria.'})
+  job=await h.claim();assert.equal(job.context.mode,'task-work');assert.equal(job.agent_id,'AG-SOC-002')
+  assert.equal(job.context.agent.managerId,'AG-SOC-001');assert.equal(workerExecutionBlock(job),null)
+  await h.finish(job,'A sourced social draft with every claim tied to the supplied evidence.')
+  job=await h.claim();assert.equal(job.context.mode,'head-review');assert.equal(job.agent_id,'AG-SOC-001')
+  assert.equal(job.context.assignee.managerId,'AG-SOC-001');assert.equal(job.context.assignee.modelTier,'T1_WORKER')
+  await h.finish(job,{accepted:true,summary:'Reviewed the evidence and acceptance checks.',artifactDigest:job.context.artifact.digest})
+  job=await h.claim();assert.equal(job.context.mode,'ceo-review');assert.equal(job.agent_id,'AG-CEO-001')
+  await h.finish(job,{accepted:true,summary:'Independent executive review passed.',artifactDigest:job.context.artifact.digest})
+  job=await h.claim();assert.equal(job.context.mode,'task-report');await h.finish(job,'Social draft delivered and reviewed.')
+  await h.as('founder');const final=await h.rpc('hq_agent_snapshot')
+  assert.equal(final.tasks.find(row=>row.id===task.id).status,'completed')
+  await h.db.exec('reset role')
+  await h.db.query(`update hq_private.agent_roster set skill_file_ids='["skill_other_0001"]' where id='AG-SOC-002'`)
+  assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-SOC-002') ok`)).rows[0].ok,false)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(roster)])
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query(`select enabled from hq_private.agent_roster where id='AG-SOC-002'`)).rows[0].enabled,false)
+  assert.equal((await h.db.query(`select hq_private.workforce_agent_qualified('AG-SOC-002') ok`)).rows[0].ok,false)
+ }finally{await h.db.close()}
 })
 
 test('two repair rounds only; digest mismatch and expired leases never become accepted artifacts',async()=>{

@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { BRAIN_ROOT, createWorkforceRoster } from './workforceRoster.mjs'
+import { assessDepartmentCapacity, workerExecutionBlock } from './departmentWorkflow.mjs'
 
 const profiles = [
   ['AG-CEO-001', 'Steve', 'CEO/Agent Instructions.md'],
@@ -60,12 +61,79 @@ test('cloud registry binds all ten identities, current models, exact skills and 
   assert.equal(agents[1].model, 'gpt-6.1-sol')
   assert.equal(agents[2].model, 'gpt-6-luna')
   assert.equal(agents[2].effort, 'medium')
+  assert.equal(agents[1].modelTier, 'T2_HEAD')
+  assert.equal(agents[2].modelTier, 'T1_WORKER')
+  assert.equal(agents[4].modelTier, 'T2_HEAD')
   assert.equal(agents[4].departmentKey, 'research-market-intelligence')
   for (const agent of agents) {
     assert.equal(agent.lifecycle, 'Configured; trial pending')
     assert.equal(agent.skillFileIds.length, 1)
     assert.equal(agent.qualified, undefined)
   }
+})
+
+test('canonical pending T1 registry rows extend the roster only with explicit department, manager and model tier', async () => {
+  const { roster, calls } = fixture(({ add, documents, registry }) => {
+    const additions = [
+      ['AG-SOC-002','Rania','Social','Layla','AG-SOC-001','social'],
+      ['AG-RES-002','Karim','Research','Nadia','AG-RES-001','research'],
+      ['AG-SALES-002','Hadi','Customer Acquisition','Omar','AG-SALES-001','acquisition'],
+    ]
+    let registryText = documents.get(registry)
+    for (const [id,name,department,manager,managerId,skill] of additions) {
+      const profilePath = `Departments/${department}/${name} profile`
+      add(profilePath + '.md', `---\nemployee_id: ${id}\nreports_to: ${managerId}\n---\n# ${name} profile\n## 5. Exact assigned skill and original source\n- \`${profilePath.split('/').slice(0,2).join('/')}/Skills/${skill}/SKILL.md\``)
+      add(`${profilePath.split('/').slice(0,2).join('/')}/Skills/${skill}/SKILL.md`, `# ${skill}`)
+      registryText += `\n| ${id} | ${name} — ${skill} Worker / ${manager} ${managerId} (${department}) | [[${profilePath}|Canonical profile]] v1.0.0 | Configured; supervised trial pending | T1_WORKER policy only; runtime unverified | Evidence |`
+    }
+    documents.set(registry, registryText)
+  })
+  assert.deepEqual(await roster.sync('worker-id'), { count: 13 })
+  const agents = calls.at(-1).args.p_agents
+  for (const [id,managerId,departmentKey] of [
+    ['AG-SOC-002','AG-SOC-001','social-community'],
+    ['AG-RES-002','AG-RES-001','research-market-intelligence'],
+    ['AG-SALES-002','AG-SALES-001','customer-acquisition-partnerships'],
+  ]) {
+    const employee = agents.find(agent => agent.id === id)
+    assert.equal(employee.modelTier, 'T1_WORKER')
+    assert.equal(employee.managerId, managerId)
+    assert.equal(employee.departmentKey, departmentKey)
+    assert.equal(employee.lifecycle, 'Configured; supervised trial pending')
+    assert.equal(employee.qualified, undefined)
+    assert.equal(employee.qualification, undefined)
+  }
+})
+
+test('pilot heads cannot be mistaken for lower-tier department capacity', async () => {
+  const { roster, calls } = fixture()
+  await roster.sync('worker-id')
+  const agents = calls.at(-1).args.p_agents
+  for (const departmentKey of ['social-community','research-market-intelligence','customer-acquisition-partnerships','email-lifecycle']) {
+    const decision = assessDepartmentCapacity(departmentKey, agents)
+    assert.equal(decision.status, 'staffing-required')
+    assert.equal(decision.reason, 'no-qualified-lower-tier-worker')
+    assert.equal(decision.hrOwnerId, 'AG-HR-001')
+  }
+  assert.equal(workerExecutionBlock({ agent_id:'AG-SOC-001', context:{ mode:'task-work', agent:{ id:'AG-SOC-001' } } }), 'staffing-required')
+})
+
+test('lower-tier work needs a current HR qualification bound to exact assigned skills', async () => {
+  const { roster, calls } = fixture()
+  await roster.sync('worker-id')
+  const agents = calls.at(-1).args.p_agents
+  const worker = agents.find(agent => agent.id === 'AG-HR-002')
+  const manager = agents.find(agent => agent.id === 'AG-HR-001')
+  manager.lifecycle = 'Qualified'
+  worker.lifecycle = 'Qualified'
+  const qualification = { status:'qualified', scope:'bounded-drafting-v1', bindingDigest:'b'.repeat(64), evidenceId:'evidence_file_01', profileFileId:worker.profileFileId, skillFileIds:[...worker.skillFileIds], modelTier:'T1_WORKER', managerId:'AG-HR-001', departmentKey:'hr-agent-development' }
+  manager.departmentKey = 'hr-agent-development'
+  assert.deepEqual(assessDepartmentCapacity('hr-agent-development', [manager, worker], {'AG-HR-002':qualification}), {
+    status:'ready', departmentKey:'hr-agent-development', headId:'AG-HR-001', workerIds:['AG-HR-002'],
+  })
+  assert.equal(assessDepartmentCapacity('hr-agent-development', [manager, worker], {
+    'AG-HR-002':{...qualification, skillFileIds:['different-skill']},
+  }).status, 'staffing-required')
 })
 
 test('duplicate canonical employee fails before any roster write', async () => {

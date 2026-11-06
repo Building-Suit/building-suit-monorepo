@@ -17,6 +17,18 @@ const records = [
   ['AG-DEV-001', 'Departments/Development/Adam profile.md', 'development-maintenance', 'T2_HEAD'],
 ]
 
+/** Model tier is configuration evidence only; it does not qualify an agent to execute work. */
+export const modelTierForAgent = agentId => records.find(([id]) => id === agentId)?.[3] ?? null
+export const managerForAgent = agentId => agentId === 'AG-CEO-001' ? null
+  : ['AG-HR-002', 'AG-HR-003'].includes(agentId) ? 'AG-HR-001' : 'AG-CEO-001'
+
+export const pilotDepartments = Object.freeze({
+  'social-community': 'AG-SOC-001',
+  'research-market-intelligence': 'AG-RES-001',
+  'customer-acquisition-partnerships': 'AG-SALES-001',
+  'email-lifecycle': 'AG-EMAIL-001',
+})
+
 function cells(line) {
   // Wiki aliases contain a pipe which is not a table-column separator.
   return line.replace(/\[\[[^\]\n]+\]\]/g, link => link.replaceAll('|', '\u0001'))
@@ -67,12 +79,43 @@ function registryRows(text, index) {
     const row = cells(line)
     requireValue(row.length === 6 && !rows.has(row[0]), 'invalid-roster-registry')
     const profile = row[2].match(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/)?.[1]
-    const name = row[1].split(/\s+[—–]\s+/)[0].trim()
+    const [name, declaration = ''] = row[1].split(/\s+[—–]\s+/, 2).map(value => value.trim())
     requireValue(profile && /^[\p{L}\p{M}][\p{L}\p{M} .'-]{0,79}$/u.test(name)
       && row[3].length > 0 && row[3].length <= 240, 'invalid-roster-registry')
-    rows.set(row[0], { id: row[0], name, lifecycle: row[3], profileFileId: resolveFile(index, profile).id })
+    const managerId = declaration.match(/\/[^|]*\b(AG-[A-Z]+-\d{3})\b/)?.[1]
+    const workerTier = /\bT1_WORKER\b/.test(row[4]) ? 'T1_WORKER' : null
+    if (managerId || workerTier) {
+      rows.set(row[0], { id: row[0], name, lifecycle: row[3], role: declaration, profilePath: profile,
+        profileFileId: resolveFile(index, profile).id, modelTier: workerTier, departmentKey: null, managerId })
+    } else {
+      rows.set(row[0], { id: row[0], name, lifecycle: row[3], profilePath: profile, profileFileId: resolveFile(index, profile).id })
+    }
   }
-  requireValue(rows.size === records.length && records.every(([id]) => rows.has(id)), 'approved-roster-required')
+  requireValue(records.every(([id]) => rows.has(id)), 'approved-roster-required')
+  const known = new Map(records.map(([id, path, departmentKey, modelTier]) => [id, { path, departmentKey, modelTier, managerId: managerForAgent(id) }]))
+  for (const [id, row] of rows) {
+    if (known.has(id)) continue
+    const managerBinding = known.get(row.managerId)
+    requireValue(/^AG-[A-Z]+-\d{3}$/.test(id) && row.modelTier === 'T1_WORKER' && row.managerId
+      && managerBinding?.modelTier === 'T2_HEAD' && !id.startsWith('AG-HR-'), 'approved-worker-record-required')
+    row.departmentKey = managerBinding.departmentKey
+    const managerDepartmentPath = managerBinding.path.split('/').slice(0, 2).join('/') + '/'
+    requireValue(row.profilePath.startsWith(managerDepartmentPath), 'workforce-department-path-required')
+    known.set(id, { path: row.profilePath, departmentKey: row.departmentKey, modelTier: row.modelTier, managerId: row.managerId })
+  }
+  for (const [id, row] of rows) {
+    const binding = known.get(id)
+    requireValue(row.profileFileId === resolveFile(index, binding.path).id, 'canonical-profile-required')
+    row.modelTier = binding.modelTier
+    row.departmentKey = binding.departmentKey
+    row.managerId = binding.managerId
+    row.role ||= binding.modelTier === 'T3_EXEC' ? 'CEO' : binding.modelTier === 'T2_HEAD' ? 'Department Head' : 'Department Worker'
+    if (binding.modelTier !== 'T1_WORKER' || !binding.departmentKey) continue
+    const manager = rows.get(binding.managerId)
+    const managerBinding = known.get(binding.managerId)
+    requireValue(manager && managerBinding?.modelTier === 'T2_HEAD' && managerBinding.departmentKey === binding.departmentKey,
+      'workforce-manager-required')
+  }
   return rows
 }
 
@@ -122,24 +165,38 @@ export function createWorkforceRoster({ readBrain, rpc }) {
       const source = await rpc('hq_worker_roster_sources', { p_worker_id: workerId })
       const index = indexFiles(source)
       const registry = resolveFile(index, 'Company/Agent Registry'), policy = resolveFile(index, 'Company/Workforce Operating Rules')
-      const profiles = records.map(([, path]) => resolveFile(index, path))
-      const requested = [...new Map([registry, policy, ...profiles].map(file => [file.id, file])).values()]
+      const firstReads = await readBrain({ brain_files: [registry, policy].map(file => ({ id: file.id })) }, signal)
+      requireValue(Array.isArray(firstReads) && firstReads.length === 2, 'roster-read-incomplete')
+      const documents = new Map()
+      for (const file of firstReads) {
+        requireValue([registry, policy].some(expected => expected.id === file.id && expected.name === file.name)
+          && typeof file.text === 'string' && file.text.trim() && !documents.has(file.id), 'roster-read-incomplete')
+        documents.set(file.id, file.text)
+      }
+      const rows = registryRows(documents.get(registry.id), index), tiers = modelPolicy(documents.get(policy.id))
+      const profiles = [...rows.values()].map(row => resolveFile(index, row.profilePath))
+      const requested = [...new Map(profiles.map(file => [file.id, file])).values()]
       const reads = await readBrain({ brain_files: requested.map(file => ({ id: file.id })) }, signal)
       requireValue(Array.isArray(reads) && reads.length === requested.length, 'roster-read-incomplete')
-      const documents = new Map()
       for (const file of reads) {
         requireValue(requested.some(expected => expected.id === file.id && expected.name === file.name)
           && typeof file.text === 'string' && file.text.trim() && !documents.has(file.id), 'roster-read-incomplete')
         documents.set(file.id, file.text)
       }
-      const rows = registryRows(documents.get(registry.id), index), tiers = modelPolicy(documents.get(policy.id))
-      const agents = records.map(([id, path, departmentKey, tier]) => {
-        const row = rows.get(id), expected = resolveFile(index, path)
+      const agents = [...rows.values()].map(row => {
+        const { id, profilePath: path, departmentKey, modelTier: tier } = row
+        const expected = resolveFile(index, path)
         requireValue(row.profileFileId === expected.id, 'canonical-profile-required')
         const profile = documents.get(expected.id)
         requireValue(profile.includes(id), 'profile-identity-required')
+        if (!records.some(([knownId]) => knownId === id)) {
+          const frontmatter = profile.match(/^---\s*\n([\s\S]*?)\n---\s*$/m)?.[1] || ''
+          const employeeId = frontmatter.match(/^employee_id:\s*([A-Z0-9-]+)\s*$/m)?.[1]
+          const reportsTo = frontmatter.match(/^reports_to:\s*([A-Z0-9-]+)\s*$/m)?.[1]
+          requireValue(employeeId === id && reportsTo === row.managerId, 'canonical-workforce-identity-mismatch')
+        }
         return { ...row, departmentKey, ...tiers.get(tier), skillFileIds: assignedSkills(profile, path, index),
-          managerId: id === 'AG-CEO-001' ? null : ['AG-HR-002', 'AG-HR-003'].includes(id) ? 'AG-HR-001' : 'AG-CEO-001' }
+          managerId: row.managerId, modelTier: tier }
       })
       const result = await rpc('hq_worker_sync_roster', { p_worker_id: workerId, p_agents: agents })
       requireValue(result?.accepted === true && result.count === agents.length, 'roster-sync-unconfirmed')

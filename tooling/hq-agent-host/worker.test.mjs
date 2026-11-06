@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { randomUUID, generateKeyPairSync } from 'node:crypto'
 import { validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
+import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { registerHooks } from 'node:module'
 // Nuxt resolves these TypeScript source imports; plain Node tests need the same
 // extension resolution only inside this shared contract directory.
@@ -16,7 +17,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   return nextResolve(specifier, context)
 } })
 const { parseHqAgentSnapshot } = await import('../../apps/company-hq/shared/types/agents.ts')
-const job = (id='AG-RES-001',mode='task-work') => ({id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}})
+const job = (id='AG-RES-001',mode='task-work') => ({id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1',modelTier:id==='AG-HR-002'?'T1_WORKER':id==='AG-CEO-001'?'T3_EXEC':'T2_HEAD',managerId:id==='AG-HR-002'?'AG-HR-001':id==='AG-CEO-001'?null:'AG-CEO-001',managerModelTier:id==='AG-HR-002'?'T2_HEAD':id==='AG-CEO-001'?null:'T3_EXEC',departmentKey:id==='AG-HR-002'?'hr-agent-development':id==='AG-CEO-001'?null:'research-market-intelligence'},brain_files:[{id:'profile_source_1'}]}})
 async function fake(events,action,{meeting=false}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
@@ -36,6 +37,22 @@ test('fresh bound role/model instructions; invalid modes and CEO without actual 
  assert.throws(()=>validateJob(job('AG-RES-001','unknown-stage')),/invalid-job-role/)
  const invalid=job();invalid.context.agent.model='external-paid-provider';assert.throws(()=>validateJob(invalid),/invalid-job-role/)
  assert.match(stageInstructions(job('AG-CEO-001','ceo-review')),/artifactDigest/)
+})
+
+test('head roles never execute task work; T1 execution requires a current qualification bound to its profile and skills',()=>{
+ const head=job('AG-SOC-001');head.context.agent.lifecycle='Qualified';head.context.agent.skillFileIds=['skill_file_01']
+ assert.equal(workerExecutionBlock(head),'staffing-required')
+ const worker=job('AG-HR-002');worker.context.agent.lifecycle='Configured; trial pending';worker.context.agent.skillFileIds=['skill_file_02']
+ assert.equal(workerExecutionBlock(worker),'staffing-required')
+ worker.context.agent.lifecycle='Qualified'
+ worker.context.agent.qualification={status:'qualified',scope:'bounded-drafting-v1',bindingDigest:'a'.repeat(64),evidenceId:'evidence_file_02',profileFileId:worker.context.agent.profileFileId,skillFileIds:['skill_file_02'],modelTier:'T1_WORKER',managerId:'AG-HR-001',departmentKey:'hr-agent-development'}
+ assert.equal(workerExecutionBlock(worker),'staffing-required')
+ worker.context.agent.headAuthorization=true
+ assert.equal(workerExecutionBlock(worker),null)
+ worker.context.agent.qualification.skillFileIds=['other_skill']
+ assert.equal(workerExecutionBlock(worker),'staffing-required')
+ const managerStart=job('AG-RES-001','task-start')
+ assert.equal(workerExecutionBlock(managerStart),'staffing-required')
 })
 test('partial UTF8 JSONL preserves real final text and observed native search evidence',async()=>{
  const events=[...successful.slice(0,2),{type:'item.completed',item:{type:'web_search',action:{type:'open_page',url:'https://example.com/evidence'}}},...successful.slice(2)]
