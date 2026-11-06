@@ -39,7 +39,8 @@ function record(value: unknown, keys: readonly string[]): Record<string, unknown
 }
 
 function text(value: unknown, maximum: number): value is string {
-  return typeof value === 'string' && value.trim().length > 0 && value.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= maximum
+    && ![...value].some(character => character.charCodeAt(0) < 32 && ![9, 10, 13].includes(character.charCodeAt(0)))
 }
 
 function uuid(value: unknown): value is string { return typeof value === 'string' && HQ_PLAN_UUID.test(value) }

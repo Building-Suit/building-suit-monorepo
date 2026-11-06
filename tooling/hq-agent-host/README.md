@@ -1,8 +1,20 @@
 # Private HQ agent host
 
+For the source-only staging release automation, approved bootstrap requirements,
+safe maintenance protocol, systemd examples and rollback design, see [RELEASES.md](RELEASES.md).
+
+The automation package now reconciles the department pilot runtime at
+`116477e5e63495efc6702e8d6a745d3e053310d4` with safe maintenance. Read
+[INTEGRATION.md](INTEGRATION.md) for exact source/SQL boundaries and contract 2.
+Qualification and synthetic-trial evidence, head routing, bound models, truthful
+model receipts and bounded Terra-to-Luna fallback remain enforced. This source
+is not a verified replacement for the unknown installed worker; no SQL/host
+installation or qualification is established by packaging it.
+
+
 This dependency-free Node worker receives private Supabase queue events, claims one job at a time, reads its authorized Google Drive Brain files and invokes the host's existing Codex CLI. Messages and delivery remain in the dedicated HQ database when a viewing computer disconnects. It exposes no HTTP port. It does not replace the original Nuxt workspace, deploy another office scene or import the older local runner branches.
 
-The executor supports founder conversations and separately approved, bounded research, analysis, planning and drafting tasks. Ten existing canonical employees are synchronized from the Brain registry with current profile/skills, lifecycle and explicit model/effort bindings. Configuration does not establish qualification or online presence. Tasks produce immutable artifacts, optional HR-head review, Steve review, at most two repair rounds and a final founder report. Each founder message runs a real Amaya planning assessment first, then a separate Steve invocation uses that exact completed assessment for the founder reply. Both jobs read the current Brain independently. It cannot hire, approve a company plan, execute code, send emails or publish marketing. Accepted lessons alone may be appended to one owner-created private Brain output file through the separate reviewed-learning writer; source documents remain read-only. The journal retains up to40KB of recent managed entries while preserving human text; full immutable source artifacts and accepted lessons remain in Supabase. It obtains the provider-issued file ETag from Drive v2 metadata, binds it to stable v3 source versions and uses `If-Match` with v2 media PUT, then exact readback. v3 metadata does not expose this validator; no synthetic version-to-ETag fallback is allowed. Missing or weak validators fail closed. The [v2 file resource](https://developers.google.com/workspace/drive/api/reference/rest/v2/files) documents `etag`, and [files.update](https://developers.google.com/workspace/drive/api/reference/rest/v2/files/update) documents the PUT upload endpoint. The exact conditional rejection behavior needs a live stale-validator receipt; mocked conflict tests alone do not establish provider support. Those actions need separately implemented, authorized tools and review. Agent characters should show real job state; leisure motion does not establish agent execution.
+The executor supports founder conversations and separately approved, bounded research, analysis, planning and drafting tasks. Ten existing canonical employees are synchronized from the Brain registry with current profile/skills, lifecycle and explicit model/effort bindings. Configuration does not establish qualification or online presence. Tasks produce immutable artifacts, optional HR-head review, Steve review, at most two repair rounds and a final founder report. The reconciled runtime preserves CEO-first intake, department-head scoping, qualification-bound lower-tier work and independent review from the pilot; each actual invocation reads its scoped current Brain context. Queue/schema adoption remains a separately approved prerequisite. It cannot hire, approve a company plan, execute code, send emails or publish marketing. Accepted lessons alone may be appended to one owner-created private Brain output file through the separate reviewed-learning writer; source documents remain read-only. The journal retains up to40KB of recent managed entries while preserving human text; full immutable source artifacts and accepted lessons remain in Supabase. It obtains the provider-issued file ETag from Drive v2 metadata, binds it to stable v3 source versions and uses `If-Match` with v2 media PUT, then exact readback. v3 metadata does not expose this validator; no synthetic version-to-ETag fallback is allowed. Missing or weak validators fail closed. The [v2 file resource](https://developers.google.com/workspace/drive/api/reference/rest/v2/files) documents `etag`, and [files.update](https://developers.google.com/workspace/drive/api/reference/rest/v2/files/update) documents the PUT upload endpoint. The exact conditional rejection behavior needs a live stale-validator receipt; mocked conflict tests alone do not establish provider support. Those actions need separately implemented, authorized tools and review. Agent characters should show real job state; leisure motion does not establish agent execution.
 
 ## Activation status and authentication
 
@@ -43,7 +55,7 @@ After authorized setup, the foreground entry point is:
 node /opt/building-suit-hq-agent-host/worker.mjs
 ```
 
-The private environment must already be loaded by the trusted host. Do not paste credentials into the command. For managed operation, install an adapted copy of `company-hq-worker.service.example`; its paths are deployment examples rather than repository dependencies. Create the private state directory and the authorized CLI directory before starting the unit, because its filesystem restrictions require those paths to exist. Start one service instance and preserve its state directory. Stopping it terminates the active child process group and records an interruption for later delivery. Do not start another manual worker using the same host identity.
+The private environment must already be loaded by the trusted host. Do not paste credentials into the command. For managed operation, install an adapted copy of `company-hq-worker.service.example`; its paths are deployment examples rather than repository dependencies. Create the private state directory and the authorized CLI directory before starting the unit, because its filesystem restrictions require those paths to exist. Start one service instance and preserve its state directory. The updated worker pauses admission on SIGTERM and waits for in-flight work and delivery. The managed unit must use `KillMode=mixed` and no forced stop deadline so systemd does not terminate its inference child. Historical installed workers may still abort active inference; they require the separately reviewed bootstrap in the release runbook. Do not start another manual worker using the same host identity.
 
 ## Database contract
 
@@ -52,7 +64,7 @@ All calls use the technical account's Supabase Auth access token and publishable
 Private Realtime topic: `hq-agent-jobs`, Phoenix JSON protocol `1.0.0`. A successful private channel join precedes the initial queue drain. Job broadcasts and successful reconnects trigger another serialized drain. [Supabase's protocol documentation](https://supabase.com/docs/guides/realtime/protocol) defines channel joins, token refresh and protocol heartbeats.
 
 ```ts
-hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300 })
+hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300, p_meeting_protocol: 1 })
   => {
     job: null | {
       id: uuid,
@@ -64,13 +76,19 @@ hq_worker_claim({ p_worker_id: uuid, p_lease_seconds: 300 })
         brain_files: { id: string }[], // server-authorized Drive IDs, 1–18
         agent: { id: string, name: string, role: string, model: string, effort: string,
           profileFileId: string, skillFileIds: string[], lifecycle: string },
-        mode: 'conversation-hr' | 'conversation-ceo' | 'task-route' | 'task-work'
+        mode: 'conversation-hr' | 'conversation-ceo' | 'conversation-intake'
+          | 'task-route' | 'task-ack' | 'task-start' | 'task-work'
           | 'head-review' | 'ceo-review' | 'task-report' | 'lesson-extract' | 'lesson-review',
         task: null | {id:uuid,title:string,brief:string,acceptance:string,assigneeId:string|null,attempt:number},
         predecessor: null | {jobId:uuid,agentId:string,kind:string,text:string},
         artifact: null | {id:uuid,text:string,digest:string,agentId:string},
         lesson: null | {id:uuid,summary:string,body:string,sourceType:string,sourceId:uuid,digest:string},
         learned: {id:uuid,summary:string,body:string,sourceId:uuid,digest:string}[],
+        meetingResponse?: {
+          protocol: 1, scope: 'conversation-only', meetingId: uuid,
+          contributionId: uuid, generation: number, agentId: string,
+          bindingDigest: string // exact current binding checked by the database
+        },
         // bounded server-owned conversation context
       }
     },
@@ -90,6 +108,19 @@ hq_worker_finish({
   p_reply: string, p_error: string | null
 }) => true | { accepted: true }
 ```
+
+### Meeting conversation protocol 1 — prepared source
+
+The updated host sends `p_meeting_protocol: 1` on every claim. Apply the prepared meeting migration providing that three-argument RPC **before** starting the updated host. There is no automatic fallback if the new RPC is unavailable. An older two-argument host cannot execute a non-CEO meeting response: those jobs become visibly blocked with `meeting-protocol-required`, while unrelated work and compatible Steve intake retain their existing contracts.
+
+A trusted `meetingResponse` marker permits the actual configured employee to answer in the existing `conversation-intake` stage using that employee's bound profile, model and effort. The host validates the exact marker fields, actor, generation and identifiers; the database checks the current binding digest at claim. This is context-only conversation: native web search and every other tool remain disabled, the provider result must be response-only JSON with `task: null`, and a model-suggested task is a genuine blocked outcome. Conversation configuration does not establish research qualification or observed runtime availability. Research and execution keep their separate qualification and approval gates.
+
+The old module-only upgrade helper is now disabled because it cannot exclude an
+in-flight claim. Follow the separate approved bootstrap and release procedure in
+[RELEASES.md](RELEASES.md); the historical meeting installation discussion below
+does not authorize a legacy stop or establish safe quiescence.
+
+Upgrade the existing service in place after inspecting its actual unit, `ExecStart`, OS user and runtime directory. The paths in the example unit above are examples, not observed deployment values. Preserve the same service identity, private environment file, authorized `.codex` cache and delivery journal; do not start a second worker or clear pending journal entries. The current release replaces the complete five-module allowlist, not a single worker file. Preserve a complete manifest-verified contract-2 baseline and use the reviewed bootstrap/drain procedure; a saved module alone is not a safe rollback. Installing this source does not itself apply the migration, restart a host or establish successful model/meeting acceptance.
 
 The applied queue foundation is `apps/company-hq/supabase/migrations/20261105035454_hq_agent_messages_worker_queue.sql`; the forward workforce migration is `20261105150500_hq_workforce_tasks_learning.sql`. It installs no Auth user or worker membership. After an authorized administrator provisions a separate, confirmed technical account through the supported Auth Admin API, bind its actual UID to the persistent host UUID using the private database-owner-only helper:
 

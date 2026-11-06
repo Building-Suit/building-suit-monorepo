@@ -1,0 +1,85 @@
+{
+  "observedAt": "2026-11-06T00:23:26.078Z",
+  "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: locator('.bs-hq-meeting').locator('textarea[maxlength=\"4000\"][rows=\"3\"]')\nExpected pattern: /worth half an hour.*village/i\nReceived string:  \"It's worth half an hour to stroll about and drinking the lich.\"\nTimeout: 120000ms\n\nCall log:\n  - Expect \"to.have.value\" with timeout 120000ms\n  - waiting for locator('.bs-hq-meeting').locator('textarea[maxlength=\"4000\"][rows=\"3\"]')\n    29 × locator resolved to <textarea rows=\"3\" value=\"\" id=\"v-54\" dir=\"auto\" maxlength=\"4000\" data-v-cb6ee77f=\"\" class=\"ls-input ls-textarea\"></textarea>\n       - unexpected value \"\"\n    203 × locator resolved to <textarea rows=\"3\" id=\"v-54\" dir=\"auto\" maxlength=\"4000\" data-v-cb6ee77f=\"\" class=\"ls-input ls-textarea\" value=\"It's worth half an hour to stroll about and drinking the lich.\"></textarea>\n        - unexpected value \"It's worth half an hour to stroll about and drinking the lich.\"\n",
+  "assets": [
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/transformers.web-N4Oip9YM.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/ort-wasm-simd-threaded.asyncify.CxOG5pUO.wasm",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/ort-wasm-simd-threaded.asyncify.DXIbolS2.mjs",
+      "status": 200
+    }
+  ],
+  "assetErrors": [],
+  "modelFiles": [
+    "preprocessor_config.json",
+    "tokenizer_config.json",
+    "config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json"
+  ],
+  "externalRequests": [],
+  "pageErrors": [],
+  "probe": {
+    "syntheticCaptures": 1,
+    "hardwareCaptureCalls": 0,
+    "trackStops": 1,
+    "fixtureEnded": true,
+    "workers": [
+      "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js"
+    ],
+    "workerEvents": [
+      {
+        "type": "prepare",
+        "id": "prepare:1",
+        "at": 4178.0999999996275
+      },
+      {
+        "type": "prepared",
+        "id": "prepare:1",
+        "at": 14184
+      },
+      {
+        "type": "transcribe",
+        "id": "chunk:3",
+        "length": 70272,
+        "at": 19461.5
+      },
+      {
+        "type": "result",
+        "id": "chunk:3",
+        "at": 33502.800000000745
+      },
+      {
+        "type": "cancel",
+        "at": 33513.09999999963
+      }
+    ],
+    "current": {
+      "context": {},
+      "source": {},
+      "buffer": {},
+      "destination": {}
+    }
+  },
+  "body": "3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.\n\nBuilding Suit HQ\nWorkspace\nTasks\nCalendar\nBrain\nWorkplaces\nNo agents connected\nChat\nMeeting\nLogin\n\nLeft drag moves across the map. Middle drag rotates around the current view center. Scroll zooms with side panels closed. Right click is inactive.\nArrows rotate. Shift + arrows move. +/− zooms with side panels closed. Home resets.\n\n100%\nHQ meeting\nDemonstration\n\nConnection: Connected\n\nRefresh\n\nSynthetic demonstration: identities come from a dated registry snapshot; replies and tasks are synthetic. No live model or employee is connected.\n\nSent meeting text, replies and decisions are retained in the room database. HQ does not retain raw audio. Transcript deletion is not enabled.\n\nPRODUCTION-BUILD ASR integration fixture — no live Auth\n\nSpeaking floor: Synthetic founder session\n\nSf\nSynthetic founder session\nFounder\nMicrophone off.\nS\nSteve\nCEO\nListening\nA\nAmaya\nHR Lead\nListening\nN\nNoah\nRecruiter\nListening\nN\nNadia\nResearch Lead\nListening\nAutomatic Arabic / English\n\nArabic and English are detected automatically. Pause briefly when switching languages and review the transcript before sending.\n\nVoice recognition model is ready on this device.\n\nI allow microphone capture for on-device recognition.\nAudio is processed on this device. HQ does not retain raw audio. Recognized text is a draft: review it and press Send contribution yourself.\nStart microphone\nMute playback\nInterrupt / take the floor\nRecheck speech support\n\nVoice recognition is ready. Microphone off. · No verified voice available\n\nTranscript\n\nNothing recorded yet.\n\nSteve coordinates\nYour contribution\n\nUncertain recognition; review before sending.\n\nSend contribution\nMeeting chat and links\n\nNothing recorded yet.\n\nShare text or a link\nShare text or a link\nBackground tasks\n\nNothing recorded yet.\n\nAssign research\nMeeting plan\n\nNothing recorded yet.\n\nDraft a plan\n\nClosing this panel does not end or approve the meeting.\n\nDisconnect policy: Hold undispatched work until an explicit decision.\n\nEnd meeting intentionally"
+}

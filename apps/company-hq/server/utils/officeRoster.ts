@@ -34,7 +34,7 @@ export async function withOfficeRoster(snapshot: HqCompanySnapshot, config: Goog
       seen.add(id)
       if (/^(?:Candidate|Testing|Retired)\b/i.test(lifecycle)) continue
       const name = role.split(/\s+[—–]\s+/)[0]!.trim()
-      if (!name || name.length > 100 || /[<>\u0000-\u001f]/.test(name)) throw new Error('Invalid employee name')
+      if (!name || name.length > 100 || /[<>]/.test(name) || [...name].some(character => character.charCodeAt(0) < 32)) throw new Error('Invalid employee name')
       if (id === 'AG-CEO-001') continue // The existing executive desk belongs to Steve.
       const folder = /\[\[Departments\/([^/\]]+)\//.exec(profile)?.[1]
       const key = folder ? DEPARTMENT_KEYS[folder] : undefined

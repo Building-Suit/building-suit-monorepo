@@ -614,6 +614,7 @@ const invitationPreviewCopy={
     <BsMobileAccessPage :copy="{title:isArabic?'وصول التطبيق':'Mobile access',description:isArabic?'مثال عرض مشترك':'Shared presentation example',notice:isArabic?'مثال اصطناعي دون جلسة أو بيانات خاصة.':'Synthetic example with no session or private data.',retry:ui('retry')}" :view="{state:'empty',title:isArabic?'لم تسجل الدخول':'You are signed out',description:isArabic?'المحتوى المحمي غير متاح دون التحقق من الوصول.':'Protected content requires fresh access validation.',retry:false,context:null}" />
     <BsPasswordRecoveryPage v-model:email="nativeRecoveryDemo.email" v-model:password="nativeRecoveryDemo.password" v-model:confirmation="nativeRecoveryDemo.confirmation" v-model:code="nativeRecoveryDemo.code" mode="reset" valid :recovery-code="{label:isArabic?'رمز البريد':'Email code',emailLabel:isArabic?'البريد الإلكتروني':'Email',length:6}" :copy="{eyebrow:'',title:isArabic?'استعادة الحساب برمز':'Recovery with an entered code',description:isArabic?'مثال عرض فقط دون طلب أو جلسة.':'Presentation example only; no request or session.',submit:isArabic?'مثال حفظ':'Example save',pending:ui('saving'),success:isArabic?'مثال مكتمل':'Example complete',email:isArabic?'البريد الإلكتروني':'Email',password:isArabic?'كلمة المرور':'Password',confirmation:isArabic?'تأكيد كلمة المرور':'Confirm password',reveal:isArabic?'إظهار كلمة المرور':'Show password'}" />
     <HqLayoutCatalogue />
+    <HqMeetingCatalogue />
     <WorkflowPatternCatalogue />
 
     <BsToastHost />

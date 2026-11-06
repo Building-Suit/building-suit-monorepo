@@ -8,7 +8,7 @@ const hqBrainDevProxyHeader = 'x-hq-brain-dev-proxy'
 const hqBrainLoopbackPeers = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
 const attestHqDevelopmentRequest = (event: { node: { req: IncomingMessage } }) => {
   const request = event.node.req
-  delete request.headers[hqBrainDevProxyHeader]
+  delete request.headers['x-hq-brain-dev-proxy']
   if (!request.socket.remoteAddress || !hqBrainLoopbackPeers.has(request.socket.remoteAddress)) {
     throw Object.assign(new Error('HQ access unavailable'), { statusCode: 403, statusMessage: 'HQ access unavailable' })
   }
@@ -27,9 +27,16 @@ export default defineNuxtConfig({
     hqSupabaseUrl: '', hqSupabasePublishableKey: '', hqEnvironment: 'staging',
     hqFounderEmail: 'ceo@building-suit.com',
     hqAppOrigin: '',
+    hqMeetingsDemo: false, hqMeetingsDemoDatabase: '', hqMeetingsLive: false,
   },
-  i18n: { locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }] },
-  nitro: { preset: process.env.VERCEL ? 'vercel' : 'node-server' },
+  // HQ chrome stays English; conversation and recognition languages are separate.
+  i18n: {
+    defaultLocale: 'en',
+    detectBrowserLanguage: false,
+    locales: [{ code: 'en', language: 'en-US', file: 'en.json' }, { code: 'ar', language: 'ar-EG', dir: 'rtl', file: 'ar.json' }],
+  },
+  vite: { worker: { format: 'es' } },
+  nitro: { preset: process.env.VERCEL ? 'vercel' : 'node-server', externals: { inline: [/shared\/meetings\//] } },
   app: { head: { title: 'Building Suit HQ' } },
   routeRules: { '/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'no-store' } } },
 })

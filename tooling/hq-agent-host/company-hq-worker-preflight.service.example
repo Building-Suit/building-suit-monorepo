@@ -1,0 +1,21 @@
+[Unit]
+Description=Read-only HQ candidate schema and worker-auth preflight
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/building-suit-hq-agent-host/candidate
+EnvironmentFile=/home/ubuntu/.config/building-suit-hq/worker.env
+Environment=HQ_WORKER_STATE_DIR=/home/ubuntu/.local/state/building-suit-hq-worker
+Environment=HQ_RELEASE_MANAGED=1
+ExecStart=/home/ubuntu/.local/lib/node-v24.15.0-linux-x64/bin/node /opt/building-suit-hq-agent-host/candidate/worker.mjs --release-preflight
+TimeoutStartSec=90
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+StandardOutput=null
+StandardError=null

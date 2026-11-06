@@ -3,6 +3,7 @@ import type { HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice
 
 import type { HqAgentPresentation, HqAgentsContent, HqAgentsPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 
+defineOptions({ name: 'HqHomePage' })
 definePageMeta({ layout: false })
 const { t, te, locale } = useI18n()
 const { brain, refresh, selectNote } = useCompanyBrain()
@@ -48,6 +49,7 @@ const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
   signOutFailed: companyPlansCopy.value.signOutFailed,
   confirmationRequired: companyPlansCopy.value.confirmationRequired,
 }))
+const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status, () => access.value.user)
 const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
   unavailable: companyPlansCopy.value.unavailable,
   conflict: companyPlansCopy.value.conflict,
@@ -100,6 +102,7 @@ const agentsContent = computed<HqAgentsContent>(() => ({
     stopping: t('hq.agents.dictation.stopping'),
     unsupported: t('hq.agents.dictation.unsupported'),
     denied: t('hq.agents.dictation.denied'),
+    service: t('hq.agents.dictation.service'),
     noSpeech: t('hq.agents.dictation.noSpeech'),
     audio: t('hq.agents.dictation.audio'),
     network: t('hq.agents.dictation.network'),
@@ -296,4 +299,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :agents="labeledAgents" :departments="localizedDepartments" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>

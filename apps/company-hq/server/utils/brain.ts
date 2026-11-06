@@ -210,10 +210,9 @@ function noteSummary(file: DriveFile, folder: VerifiedFolder): BrainNoteSummary 
 async function scanBrain(config: GoogleBrainConfig, requestedId?: string): Promise<ScanResult> {
   const folders = new Map<string, VerifiedFolder>()
   const files: IndexedNote[] = []
-  let reader: DriveReader | null = null
   const unavailable = (reason: NonNullable<BrainIndex['reason']>): ScanResult => ({ index: unavailableIndex(reason), reader: null, folders: new Map(), files: [] })
   try {
-    reader = await createDriveReader(config)
+    const reader = await createDriveReader(config)
     if (!reader) return unavailable('not-configured')
     const activeReader = reader
     // Share repeated ancestor observations only within this index scan. Note

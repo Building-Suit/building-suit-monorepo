@@ -15,7 +15,7 @@ export interface HqOfficeObservations {
 export function parseHqOfficeObservations(value: unknown): HqOfficeObservations | null {
   const object = (v: unknown): v is Record<string, unknown> => Boolean(v && typeof v === 'object' && !Array.isArray(v))
   const count = (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0
-  const text = (v: unknown, max: number) => typeof v === 'string' && v.length > 0 && v.length <= max && !/[\x00-\x1f]/.test(v)
+  const text = (v: unknown, max: number) => typeof v === 'string' && v.length > 0 && v.length <= max && ![...v].some(character => character.charCodeAt(0) < 32)
   const date = (v: unknown) => typeof v === 'string' && v.length < 64 && Number.isFinite(Date.parse(v))
   if (!object(value) || !date(value.since) || !date(value.observedAt) || !Array.isArray(value.agents) || value.agents.length > 128
     || new TextEncoder().encode(JSON.stringify(value)).byteLength > 512 * 1024) return null

@@ -45,6 +45,17 @@ test('disabled/access changes, disposal and missing browser capability stop reco
   g.controller.setConstructor(undefined); g.controller.start(); assert.equal(g.state.supported,false)
   const h=fixture();h.controller.setConstructor(undefined);h.controller.start();assert.equal(h.state.error,'unsupported');h.controller.dispose()
 })
+test('speech service denial is separate from microphone permission and preserves the draft', () => {
+  const f=fixture('Keep this draft')
+  f.controller.start(); const service=f.sessions[0], late=service.onresult
+  service.onerror({error:'service-not-allowed'})
+  assert.equal(f.state.error,'service'); assert.equal(f.state.phase,'idle'); assert.equal(service.aborts,1)
+  late({results:[{0:{transcript:'stale service output'}}]})
+  assert.equal(f.draft(),'Keep this draft')
+  f.controller.start(); f.sessions[1].onerror({error:'not-allowed'})
+  assert.equal(f.state.error,'denied'); assert.equal(f.state.phase,'idle')
+  f.controller.dispose()
+})
 test('length limits preserve valid Unicode and a lost end event cannot keep the microphone running', context => {
   context.mock.timers.enable({ apis: ['setTimeout'] })
   const f=fixture('',4); f.controller.start(); const r=f.sessions[0]; r.result('abc😀')
