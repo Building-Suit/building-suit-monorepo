@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /** Private, sequential HQ queue consumer. No inbound listener or idle work polling. */
+import { createServer } from 'node:net'
+import { maintenanceGate, checkApiContract } from './maintenance.mjs'
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
 import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises'
@@ -451,15 +453,80 @@ export async function invokeCodex(config, job, brain, signal) {
   } finally { await rm(directory, { recursive: true, force: true }) }
 }
 
-async function start() {
+export async function start(adapters = {}) {
   const config = configuration()
   await privateDirectory(config.state)
-  const api = supabase(config), brain = brainReader(config), journal = journalStore(config)
+  const api = adapters.api || supabase(config), brain = adapters.brain || brainReader(config), journal = journalStore(config)
+  const invoke = adapters.invoke || invokeCodex
   const roster = createWorkforceRoster({ readBrain: brain, rpc: (name, body) => api.rpc(name, body) })
   const publisher = createBrainPublisher(config)
+  const managed = process.env.HQ_RELEASE_MANAGED === '1'
+  let release = null
+  if (managed) {
+    release = JSON.parse(await readFile(new URL('./manifest.json', import.meta.url), 'utf8')).sha
+    requireValue(/^[a-f0-9]{40}$/.test(release || ''), 'release-manifest-required')
+  }
+  const uncertainty = join(config.state, 'maintenance-uncertain')
+  const inFlight = join(config.state, 'maintenance-inflight')
+  async function syncState() {
+    const directory = await open(config.state, 'r')
+    try { await directory.sync() } finally { await directory.close() }
+  }
+  const exists = async path => { try { await stat(path); return true } catch (error) { if (error.code === 'ENOENT') return false; throw error } }
+  const gate = maintenanceGate({ paused: managed, uncertain: await exists(uncertainty) || await exists(inFlight), poison: async () => {
+    const file = await open(uncertainty, 'w', 0o600)
+    try { await file.writeFile('Operator must reconcile uncertain queue/journal outcome.\n'); await file.sync() } finally { await file.close() }
+    await syncState()
+  } })
+  async function compatible() {
+    const token = await api.access()
+    const spec = await jsonRequest(config.url + '/rest/v1/', { headers: { apikey: config.key, Authorization: 'Bearer ' + token, Accept: 'application/openapi+json' } })
+    checkApiContract(spec)
+    // Read-only RPC also verifies the current enabled worker identity/session.
+    const lessons = await api.rpc('hq_worker_pending_lessons', { p_worker_id: config.id })
+    requireValue(Array.isArray(lessons), 'schema-incompatible')
+    return 1
+  }
+  if (process.argv.includes('--release-preflight')) {
+    requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
+    try { await compatible(); process.stdout.write('{"contract":1}\n') } finally { api.stop() }
+    return
+  }
+  let control
+  if (managed) {
+    const socketPath = join(config.state, 'maintenance.sock')
+    // systemd guarantees a single worker; operator must never run a second one.
+    await rm(socketPath, { force: true })
+    control = createServer(client => {
+      client.setTimeout(5000, () => client.destroy())
+      let input = ''
+      client.on('error', () => {})
+      client.on('data', chunk => {
+        input += chunk
+        if (input.length > 1024) { client.destroy(); return }
+        if (!input.includes('\n')) return
+        client.pause()
+        void (async () => {
+          const command = JSON.parse(input)
+          if (command.action === 'drain') gate.pause()
+          let ready = false
+          if (['status', 'resume'].includes(command.action)) {
+            try { await compatible(); ready = connected && !stopping } catch { /* Fail closed; no diagnostic data on socket. */ }
+          }
+          if (command.action === 'resume') {
+            requireValue(ready, 'release-not-ready')
+            gate.resume(); requestDrain()
+          }
+          requireValue(['drain', 'status', 'resume'].includes(command.action), 'invalid-control')
+          client.end(JSON.stringify({ protocol: 1, pid: process.pid, release, ready, contract: ready ? 1 : null, ...gate.snapshot() }) + '\n')
+        })().catch(() => client.end('{"error":"maintenance-unavailable"}\n'))
+      })
+    })
+    await new Promise((done, fail) => { control.once('error', fail); control.listen(socketPath, done) })
+  }
   let rosterDirty = true, publicationBudget = 0
   let socket, connected = false, joinedChannel = false, replicationReady = false, stopping = false, connecting = false, drainRequested = false, draining = null
-  let sequence = 0, joinRef, pendingHeartbeat, connectionFailures = 0, activeController
+  let sequence = 0, joinRef, pendingHeartbeat, connectionFailures = 0
   let reconnectTimer, heartbeatTimer, presenceTimer, joinTimer, wakeTimer
   const send = (event, payload, topic = TOPIC, ref = String(++sequence)) => {
     if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ topic, event, payload, ref, ...(topic === TOPIC ? { join_ref: joinRef } : {}) }))
@@ -521,10 +588,10 @@ async function start() {
     let entry = { version: 2, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [] }
     // Flush before any model invocation. A crash can block a job, never repeat inference silently.
     await journal.write(entry)
-    const controller = new AbortController(); activeController = controller
+    const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(problem('provider-timeout')), JOB_MS)
-    let renewing = false
-    const leaseTimer = setInterval(async () => {
+    let renewing = false, leaseRenewal = Promise.resolve()
+    const renewLease = async () => {
       if (renewing || controller.signal.aborted) return
       renewing = true
       try {
@@ -532,7 +599,8 @@ async function start() {
         requireValue(accepted(result), 'lease-lost')
       } catch { controller.abort(problem('lease-lost')) }
       finally { renewing = false }
-    }, LEASE_INTERVAL_MS)
+    }
+    const leaseTimer = setInterval(() => { if (!renewing) leaseRenewal = renewLease() }, LEASE_INTERVAL_MS)
     log('job-started')
     try {
       const documents = await brain(job.context, controller.signal)
@@ -545,10 +613,10 @@ async function start() {
         await api.rpc('hq_worker_skill_context', { p_job_id: job.id, p_lease_token: job.lease_token, p_worker_id: config.id, p_skill_ids: loaded })
       } catch { log('skill-observation-unavailable') }
       controller.signal.throwIfAborted()
-      const output = await invokeCodex(config, job, documents, controller.signal)
+      const output = await invoke(config, job, documents, controller.signal)
       entry.reply = output.reply; entry.evidence = output.evidence
     } catch (error) { entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error) }
-    finally { clearInterval(leaseTimer); clearTimeout(timeout); activeController = null }
+    finally { clearInterval(leaseTimer); clearTimeout(timeout); await leaseRenewal }
     entry.phase = 'finished'; await journal.write(entry)
     const delivered = await deliver(entry)
     log(entry.error || delivered?.discarded ? 'job-blocked' : 'job-delivered')
@@ -568,35 +636,43 @@ async function start() {
   async function drain() {
     publicationBudget = 4
     await recover()
-    while (connected && !stopping && drainRequested) {
+    while (connected && !stopping && !gate.snapshot().paused && drainRequested) {
       drainRequested = false; clearTimeout(wakeTimer)
       if (rosterDirty) { rosterDirty = false; await roster.sync(config.id, AbortSignal.timeout(180_000)) }
-      try { await publishLessons() } catch (error) { log(codeOf(error)) }
-      while (connected && !stopping) {
+      if (!gate.snapshot().paused) await publishLessons()
+      while (connected && !stopping && !gate.snapshot().paused) {
         const result = await api.rpc('hq_worker_claim', workerClaimInput(config.id))
         requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
         if (!result.job) { wakeOnce(result.next_wake_at); break }
         await work(result.job)
-        try { await publishLessons() } catch (error) { log(codeOf(error)) }
+        if (!gate.snapshot().paused) await publishLessons()
       }
     }
   }
   function requestDrain() {
     drainRequested = true
-    if (!connected || stopping || draining) return
-    draining = drain().catch(error => { log(codeOf(error)); reconnect() }).finally(() => {
+    if (!connected || stopping || draining || gate.snapshot().paused || gate.snapshot().uncertain) return
+    draining = gate.run(async () => {
+      // Flush intent before any recovery/roster/claim/publication side effect.
+      // A process crash can lose a claim response even before a job journal exists.
+      const intent = await open(inFlight, 'wx', 0o600)
+      try { await intent.writeFile('Queue operation may be in flight.\n'); await intent.sync() } finally { await intent.close() }
+      await syncState()
+      await drain()
+      await rm(inFlight); await syncState()
+    }).catch(error => { log(codeOf(error)); reconnect() }).finally(() => {
       draining = null
-      if (connected && drainRequested && !stopping) requestDrain()
+      if (connected && drainRequested && !stopping && !gate.snapshot().paused) requestDrain()
     })
   }
   async function presence() {
     try { await api.rpc('hq_worker_presence', { p_worker_id: config.id }) }
-    catch (error) { log(codeOf(error)); reconnect() }
+    catch (error) { log(codeOf(error)); reconnect(); throw error }
   }
   function queueReady() {
     if (connected || !joinedChannel || !replicationReady || stopping) return
     clearTimeout(joinTimer); rosterDirty = true; connected = true; connectionFailures = 0; log('queue-connected')
-    void presence(); presenceTimer = setInterval(() => { if (connected) void presence() }, 60_000)
+    void gate.run(presence).catch(() => {}); presenceTimer = setInterval(() => { if (connected) void gate.run(presence).catch(() => {}) }, 60_000)
     requestDrain()
   }
   async function connect() {
@@ -646,13 +722,21 @@ async function start() {
   })
   async function stop() {
     if (stopping) return
-    stopping = true; connected = false; clearTimeout(reconnectTimer); clearTimeout(wakeTimer); clearTimeout(joinTimer)
-    clearInterval(heartbeatTimer); clearInterval(presenceTimer); api.stop(); activeController?.abort(problem('worker-interrupted'))
+    gate.pause(); stopping = true; connected = false; clearTimeout(reconnectTimer); clearTimeout(wakeTimer); clearTimeout(joinTimer)
+    clearInterval(heartbeatTimer); clearInterval(presenceTimer)
     try { socket?.close() } catch { /* No listener remains. */ }
-    await draining; log('worker-stopped')
+    await draining
+    while (gate.snapshot().busy) await wait(50)
+    api.stop(); control?.close(); log('worker-stopped')
   }
-  process.once('SIGTERM', () => { stop().then(() => process.exit(0)) })
-  process.once('SIGINT', () => { stop().then(() => process.exit(0)) })
+  let shutdownRequested = false
+  const shutdown = () => {
+    if (shutdownRequested) return
+    shutdownRequested = true
+    void stop().then(() => process.exit(0))
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
   await connect()
 }
 

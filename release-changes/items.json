@@ -5481,5 +5481,28 @@
       "hq-staging-migration-parity-20261106"
     ],
     "reason": "Archive only the never-applied workspace migration unchanged, preserve the 17 staging-matched SQL sources and guard the reviewed active migration set; cover the inherited CLAUDE inventory path."
+  },
+  {
+    "id": "company-hq-worker-release",
+    "task": "HQ-WORKER-RELEASE-20261106",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/ci.yml",
+      "tooling/hq-agent-host",
+      "release-changes/items.json"
+    ],
+    "reason": "Implement source-only exact-stg worker packages, signed provenance, safe drain, health-gated activation and rollback; no host access, database migration, production promotion or timer activation.",
+    "sources": [
+      "hq-worker-release-20261106"
+    ]
   }
 ]

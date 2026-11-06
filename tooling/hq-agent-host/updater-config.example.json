@@ -1,0 +1,12 @@
+{
+  "root": "/opt/building-suit-hq-agent-host",
+  "node": "/home/ubuntu/.local/lib/node-v24.15.0-linux-x64/bin/node",
+  "gh": "/usr/local/bin/gh",
+  "systemctl": "/usr/bin/systemctl",
+  "trustedRoot": "/etc/building-suit-hq/sigstore-trusted-root.json",
+  "socket": "/home/ubuntu/.local/state/building-suit-hq-worker/maintenance.sock",
+  "unit": "company-hq-worker.service",
+  "schemaContract": 1,
+  "drainSeconds": 900,
+  "healthSeconds": 90
+}

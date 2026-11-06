@@ -173,3 +173,52 @@ jobs:
           RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
           RELEASE_WAIT_FOR_DEPLOYMENT: '1'
         run: node tooling/releases/publisher.mjs
+  publish-hq-worker:
+    needs: [verify]
+    if: >-
+      !cancelled() && needs.verify.result == 'success' &&
+      github.repository == 'Building-Suit/building-suit-monorepo' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/stg'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    concurrency:
+      group: hq-worker-stg-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Test release and maintenance invariants
+        run: |
+          node --test tooling/hq-agent-host/maintenance.test.mjs tooling/hq-agent-host/lifecycle.test.mjs
+          python3 -m unittest discover -s tooling/hq-agent-host -p 'release_test.py' -v
+      - name: Build exact tested code-only source
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: python3 tooling/hq-agent-host/release.py build --sha "$RELEASE_SHA" --output worker.json
+      - name: Attest exact source and package digest
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: worker.json
+      - name: Publish once; never replace release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE_PATH" worker.sigstore.json
+          tag="hq-worker-stg-$RELEASE_SHA"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to replace it.'
+            exit 0
+          fi
+          gh release create "$tag" worker.json worker.sigstore.json --target "$RELEASE_SHA" --prerelease --latest=false --title "HQ staging worker $RELEASE_SHA" --notes 'Code-only staging worker; no configuration, credentials or schema deployment. Exact source and package digest are attested.'
