@@ -19,6 +19,7 @@ const MAX_HTTP_BYTES = 1_048_576, MAX_PROCESS_BYTES = 4_194_304
 const MAX_BRAIN_SOURCE_BYTES = 128_000, MAX_BRAIN_CONTEXT_BYTES = 250_000
 const JOB_MS = 600_000, LEASE_SECONDS = 300, LEASE_INTERVAL_MS = 60_000
 const MEETING_PROTOCOL = 1
+const TRIAL_CODEX_CLI_VERSION = 'codex-cli 0.159.2'
 const TOPIC = 'realtime:hq-agent-jobs'
 class WorkerProblem extends Error { constructor(code) { super(code); this.code = code } }
 const problem = code => new WorkerProblem(code)
@@ -440,12 +441,187 @@ export function nativeToolReceipt(item, observedAt = new Date().toISOString()) {
   return { version: 1, eventId, tool: 'web_search', action, queries, sources, observedAt, truncated }
 }
 
+function trialAppServerPlan(job,directory,disabled) {
+    const settings = ['approval_policy="never"','model_provider="openai"','forced_login_method="chatgpt"',
+      'web_search="disabled"',`model_reasoning_effort=${JSON.stringify(job.context.agent.effort)}`,'project_doc_max_bytes=0',
+      'developer_instructions=""','mcp_servers={}','agents.enabled=false','skills.bundled.enabled=false','skills.include_instructions=false']
+    const argv = ['app-server','--stdio','--strict-config']
+    for (const feature of disabled) argv.push('--disable',feature)
+    for (const setting of settings) argv.push('-c',setting)
+    const startParams = { model:job.context.agent.model,modelProvider:'openai',cwd:directory,approvalPolicy:'never',sandbox:'read-only',
+      ephemeral:true,developerInstructions:'',config:{model_reasoning_effort:job.context.agent.effort,web_search:'disabled',project_doc_max_bytes:0,
+        developer_instructions:'',mcp_servers:{},agents:{enabled:false},skills:{bundled:{enabled:false},include_instructions:false}} }
+    return {argv,params:startParams}
+}
+
+function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, workerSourceDigest, config, job, directory, environment, prompt, argv, startParams, signal }) {
+  return new Promise((resolveReply, rejectReply) => {
+    let child, failure = null, total = 0, buffer = '', threadId = null, turnId = null, turnStarted = 0, turnCompleted = 0
+    let answer = '', launchedTurnRequest = null, threadSettings = null, hostResolution = null, laterModelOverrideCount = 0, killTimer
+    const observedErrors = [], observedReroutes = []
+    const noteError = code => { if (!observedErrors.includes(code)) observedErrors.push(code) }
+    const threadSettingsValid = value => record(value) && value.model === job.context.agent.model
+      && value.modelProvider === 'openai' && value.reasoningEffort === job.context.agent.effort
+    const invocation = () => ({ executable, argv:[...argv], environment, stdinSha256:createHash('sha256').update(prompt).digest('hex'),
+      protocol:{ initialize:{method:'initialize',id:1},threadStart:{method:'thread/start',id:2,params:startParams},
+        turnStart:launchedTurnRequest } })
+    const trialEvidence = outcome => ({
+      schemaVersion:1,attestationLevel:hostResolution && laterModelOverrideCount===0 ? 'host-returned-resolution' : 'host-launch-settings',
+      providerServedModel:'unknown',hostResolution:hostResolution && laterModelOverrideCount===0
+        ? {...hostResolution,laterModelOverrideCount} : null,
+      agentId:job.agent_id,workerId:config.id,workerJobId:job.id,trialId:job.context.supervisedTrial.id,taskId:job.context.supervisedTrial.taskId,
+      workerSourceDigest,nodeVersion:process.versions.node,cliVersion,cliVersionSource:'same-binary-version-probe',
+      cliExecutable:executable,cliBinaryDigest,configuredModel:job.context.agent.model,launchModel:job.context.agent.model,
+      configuredEffort:job.context.agent.effort,launchEffort:job.context.agent.effort,
+      settingObservationSource:'explicit-codex-app-server-thread-start-and-locked-config',invocationStatus:'launched',threadId,
+      laterModelOverrideCount,invocation:invocation(),turnsStarted:turnStarted,turnsCompleted:turnCompleted,observedErrors,observedReroutes,
+      observedEventCoverage:'codex-app-server-jsonrpc-events-only',outcome,artifactDigest:outcome==='completed'?createHash('sha256').update(answer.trim()).digest('hex'):null,
+    })
+    const stop = () => {
+      if (!child) return
+      try { child.stdin.end() } catch { /* Process may already have closed stdin. */ }
+      killTimer ||= setTimeout(() => { try { process.kill(-child.pid,'SIGKILL') } catch { /* Already exited. */ } },1500)
+    }
+    const fail = code => { if (!failure) { noteError(code); failure=problem(code); stop() } }
+    const abort = () => fail(signal.reason instanceof WorkerProblem?signal.reason.code:'worker-interrupted')
+    const send = value => {
+      if (failure || !child?.stdin.writable) { fail('provider-app-server-protocol-invalid'); return }
+      try { child.stdin.write(JSON.stringify(value)+'\n') } catch { fail('provider-unavailable') }
+    }
+    const checkThread = params => {
+      if (!threadId || params?.threadId!==threadId) { fail('provider-thread-id-mismatch'); return false }
+      return true
+    }
+    const checkItem = event => {
+      const params=event.params, item=record(params?.item)
+      if (!checkThread(params) || !item || typeof params.turnId!=='string' || turnId && params.turnId!==turnId) {
+        fail('provider-app-server-protocol-invalid'); return
+      }
+      if (!['agentMessage','reasoning','userMessage'].includes(item.type)) { fail('provider-tool-rejected'); return }
+      if (event.method==='item/completed' && item.type==='agentMessage') {
+        if (typeof item.text!=='string' || Buffer.byteLength(item.text)>32_000) { fail('provider-output-invalid'); return }
+        answer=item.text
+      }
+    }
+    const line = raw => {
+      if (!raw.trim() || failure) return
+      let message
+      try { message=JSON.parse(raw) } catch { fail('provider-app-server-protocol-invalid'); return }
+      if (!record(message)) { fail('provider-app-server-protocol-invalid'); return }
+      if (message.error) { fail(providerErrorCode(message.error)); return }
+      if (Object.hasOwn(message,'id')) {
+        if (message.id===1) {
+          if (!record(message.result)) { fail('provider-app-server-initialize-failed'); return }
+          send({method:'initialized',params:{}})
+          send({id:2,method:'thread/start',params:startParams})
+          return
+        }
+        if (message.id===2) {
+          const thread=record(message.result?.thread)
+          if (!thread || typeof thread.id!=='string' || !UUID.test(thread.id)) { fail('provider-thread-id-unavailable'); return }
+          threadId=thread.id
+          threadSettings={model:thread.model,modelProvider:thread.modelProvider,reasoningEffort:thread.reasoningEffort}
+          if (!threadSettingsValid(threadSettings)) { fail('provider-model-resolution-invalid'); return }
+          hostResolution={source:'codex-app-server-thread-start',...threadSettings,threadId}
+          launchedTurnRequest={method:'turn/start',id:3,params:{threadId,inputSha256:createHash('sha256').update(prompt).digest('hex')}}
+          send({id:3,method:'turn/start',params:{threadId,input:[{type:'text',text:prompt}]}})
+          return
+        }
+        if (message.id===3) {
+          const turn=record(message.result?.turn)
+          if (!turn || typeof turn.id!=='string' || !turn.id) { fail('provider-turn-id-unavailable'); return }
+          turnId=turn.id
+          if (turn.status==='inProgress') turnStarted=1
+          if (turn.status==='completed') { turnStarted=1; turnCompleted=1; stop() }
+          else if (turn.status!=='inProgress') fail('provider-turn-failed')
+          return
+        }
+        fail('provider-app-server-protocol-invalid')
+        return
+      }
+      if (typeof message.method!=='string' || !record(message.params)) { fail('provider-app-server-protocol-invalid'); return }
+      const params=message.params
+      if (message.method==='thread/started') {
+        if (params.thread?.id!==threadId) fail('provider-thread-id-mismatch')
+      } else if (message.method==='thread/settings/updated') {
+        if (!checkThread(params)) return
+        if (!record(params.threadSettings)) { fail('provider-app-server-protocol-invalid'); return }
+        const latest={model:params.threadSettings.model,modelProvider:params.threadSettings.modelProvider,reasoningEffort:params.threadSettings.reasoningEffort}
+        if (threadSettings && (latest.model!==threadSettings.model || latest.modelProvider!==threadSettings.modelProvider || latest.reasoningEffort!==threadSettings.reasoningEffort)) {
+          laterModelOverrideCount++; fail('provider-model-overridden')
+        }
+      } else if (message.method==='model/rerouted') {
+        if (!checkThread(params) || typeof params.turnId!=='string' || turnId && params.turnId!==turnId
+          || typeof params.fromModel!=='string' || typeof params.toModel!=='string'
+          || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(params.fromModel) || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(params.toModel)) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        observedReroutes.push({from:params.fromModel,to:params.toModel}); fail('provider-model-rerouted')
+      } else if (message.method==='turn/started') {
+        if (!checkThread(params) || !record(params.turn) || typeof params.turn.id!=='string' || turnId && params.turn.id!==turnId) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        turnId=params.turn.id; turnStarted=1
+      } else if (message.method==='turn/completed') {
+        if (!checkThread(params) || !record(params.turn) || typeof params.turn.id!=='string' || params.turn.id!==turnId) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        const status=params.turn.status
+        if (status!=='completed') { fail(status==='interrupted'?'worker-interrupted':'provider-error'); return }
+        for (const item of Array.isArray(params.turn.items)?params.turn.items:[]) {
+          if (!['agentMessage','reasoning','userMessage'].includes(item?.type)) { fail('provider-tool-rejected'); return }
+          if (item.type==='agentMessage' && typeof item.text==='string') answer=item.text
+        }
+        turnCompleted++; stop()
+      } else if (message.method==='item/started' || message.method==='item/completed') checkItem(message)
+      else if (message.method.startsWith('item/')) {
+        if (!['item/agentMessage/delta','item/reasoning/summaryTextDelta','item/reasoning/textDelta'].includes(message.method)) fail('provider-tool-rejected')
+        else if (!checkThread(params) || typeof params.turnId!=='string' || turnId && params.turnId!==turnId) fail('provider-app-server-protocol-invalid')
+      }
+      else if (message.method.startsWith('serverRequest/')) fail('provider-tool-rejected')
+      // Other App Server notifications are telemetry. Item types and reroutes above remain fail-closed.
+    }
+    const decoder=new StringDecoder('utf8')
+    signal.addEventListener('abort',abort,{once:true})
+    try { child=spawn(executable,argv,{cwd:directory,env:environment,detached:true,stdio:['pipe','pipe','pipe']}) }
+    catch {
+      signal.removeEventListener('abort',abort)
+      const error=problem('provider-unavailable');noteError(error.code);error.modelBindingEvidence=trialEvidence('failed');rejectReply(error);return
+    }
+    const consume=chunk=>{
+      total+=chunk.byteLength
+      if (total>MAX_PROCESS_BYTES) { fail('provider-output-too-large'); return }
+      buffer+=decoder.write(chunk);let end
+      while ((end=buffer.indexOf('\n'))>=0) { line(buffer.slice(0,end));buffer=buffer.slice(end+1) }
+    }
+    child.stdout.on('data',consume)
+    child.stderr.on('data',chunk=>{total+=chunk.byteLength;if(total>MAX_PROCESS_BYTES)fail('provider-output-too-large')})
+    child.stdin.on('error',()=>{if(!failure && turnCompleted!==1)fail('provider-unavailable')})
+    child.once('error',()=>fail('provider-unavailable'))
+    child.once('close',async exitCode=>{
+      signal.removeEventListener('abort',abort);clearTimeout(killTimer)
+      buffer+=decoder.end();if(buffer)line(buffer)
+      if(child.pid) { try { process.kill(-child.pid,'SIGKILL') } catch { /* Process group is gone. */ } }
+      if(!failure && (exitCode!==0 || turnStarted!==1 || turnCompleted!==1 || !answer.trim() || !hostResolution)) fail('provider-output-invalid')
+      if(!failure) {
+        try { if(await fileSha256(executable)!==cliBinaryDigest) fail('provider-cli-changed') }
+        catch { fail('provider-cli-changed') }
+      }
+      if(failure) { failure.modelBindingEvidence=trialEvidence('failed');rejectReply(failure) }
+      else resolveReply({reply:answer.trim(),evidence:[],modelBindingEvidence:trialEvidence('completed')})
+    })
+    send({id:1,method:'initialize',params:{clientInfo:{name:'building_suit_hq_trial',title:'Building Suit HQ supervised trial',version:'1.0.0'}}})
+    if(signal.aborted) abort()
+  })
+}
+
 export async function invokeCodex(config, job, brain, signal) {
   const directory = await mkdtemp(join(tmpdir(), 'hq-agent-'))
   const isTrialWorker = job.context.mode === 'worker-trial'
   const disabled = ['shell_tool', 'shell_snapshot', 'multi_agent', 'apps', 'hooks', 'memories', 'plugins',
     'view_image', 'skill_mcp_dependency_install', 'browser_use', 'browser_use_external', 'browser_use_full_cdp_access',
     'computer_use', 'skill_search', 'remote_plugin', 'image_generation', 'in_app_browser', 'daemon_auto_start']
+  const trialPlan = isTrialWorker ? trialAppServerPlan(job,directory,disabled) : null
   const args = ['exec', '--json', '--ephemeral', '--ignore-user-config', '--ignore-rules', '--strict-config',
     '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', directory, '--color', 'never', '--model', job.context.agent.model]
   for (const feature of disabled) args.push('--disable', feature)
@@ -466,19 +642,21 @@ export async function invokeCodex(config, job, brain, signal) {
       executable = await executablePath(config.bin, environment.PATH, directory)
       cliBinaryDigest = await fileSha256(executable)
       cliVersion = await probeCliVersion(executable, { ...environment, HOME: directory, CODEX_HOME: directory }, signal)
+      requireValue(cliVersion === TRIAL_CODEX_CLI_VERSION,'provider-cli-version-unsupported')
     } catch (error) {
       error.modelBindingEvidence = {
         schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown', hostResolution: null,
         agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
-        trialId: trial.id, taskId: trial.taskId, workerSourceDigest, nodeVersion: process.versions.node, cliVersion: null,
+        trialId: trial.id, taskId: trial.taskId, workerSourceDigest, nodeVersion: process.versions.node, cliVersion,
         cliVersionSource: 'same-binary-version-probe', cliExecutable: executable,
         cliBinaryDigest, configuredModel: job.context.agent.model, launchModel: null,
         configuredEffort: job.context.agent.effort, launchEffort: null,
         settingObservationSource: 'not-resolved-cli-preflight-failed', invocationStatus: 'not-launched',
-        threadId: null, invocation: { executable, plannedArgv: [...args], environment,
+        threadId: null, laterModelOverrideCount:0, invocation: { executable, plannedArgv: [...trialPlan.argv], environment,
+          plannedProtocol:{threadStart:trialPlan.params},
           stdinSha256: createHash('sha256').update('cli-preflight-not-run').digest('hex') },
         turnsStarted: 0, turnsCompleted: 0, observedErrors: [codeOf(error)], observedReroutes: [],
-        observedEventCoverage: 'codex-exec-jsonl-events-only', outcome: 'failed', artifactDigest: null,
+        observedEventCoverage: 'codex-app-server-preflight-only', outcome: 'failed', artifactDigest: null,
       }
       throw error
     }
@@ -499,6 +677,8 @@ export async function invokeCodex(config, job, brain, signal) {
     JSON.stringify({ agent_id: job.agent_id, context: job.context, current_brain: brain, founder_message: job.prompt }),
   ].join('\n\n')
   try {
+    if (isTrialWorker) return await invokeTrialWithAppServer({executable,cliVersion,cliBinaryDigest,workerSourceDigest,
+      config,job,directory,environment,prompt,argv:trialPlan.argv,startParams:trialPlan.params,signal})
     return await new Promise((resolveReply, rejectReply) => {
       let child, failure = null, total = 0, lineBuffer = '', answer = '', completed = 0, evidence = [], killTimer
       let threadId = null, turnStarted = 0

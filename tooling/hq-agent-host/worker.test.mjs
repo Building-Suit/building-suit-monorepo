@@ -32,16 +32,40 @@ function qualifiedResearchJob(){
    profileFileId:agent.profileFileId,skillFileIds:[...agent.skillFileIds],modelTier:agent.modelTier,managerId:agent.managerId,departmentKey:agent.departmentKey}
  return value
 }
-async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.101.0'}={}){
+async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',appServer={}}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
 import {readFile} from 'node:fs/promises';
-const args=process.argv.slice(2);let prompt='';for await(const c of process.stdin)prompt+=c;
+import readline from 'node:readline';
+const args=process.argv.slice(2);
 if(args[0]==='--version'){process.stdout.write(${JSON.stringify(cliVersion)}+'\\n');process.exit(0)}
+if(args[0]==='app-server'){
+ const lines=readline.createInterface({input:process.stdin,crlfDelay:Infinity});let start=null,threadId='018f0000-0000-7000-8000-000000000001',turnId='018f0000-0000-7000-8000-000000000002',done=false;
+ const send=x=>process.stdout.write(JSON.stringify(x)+'\\n');
+ const validArgs=args.includes('--stdio')&&args.includes('--strict-config')&&args.includes('--disable')&&args.includes('shell_tool')&&args.includes('mcp_servers={}');
+ if(!validArgs||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY)process.exit(77);
+ lines.on('line',raw=>{const req=JSON.parse(raw);if(req.method==='initialize'){send({id:req.id,result:{userAgent:'codex-cli 0.159.2'}});return}if(req.method==='initialized')return;
+ if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||Object.keys(start.config?.mcp_servers??{}).length!==0||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-sol'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
+ if(${JSON.stringify(appServer.missingSettings===true)}){send({id:req.id,result:{thread:{id:threadId,model:start.model,modelProvider:start.modelProvider}}});return}
+ const t={id:threadId,model:start.model,modelProvider:start.modelProvider,reasoningEffort:start.config.model_reasoning_effort};
+ if(${JSON.stringify(appServer.modelMismatch===true)})t.model='gpt-6-luna';
+ send({id:req.id,result:{thread:t}});send({method:'thread/started',params:{thread:{id:threadId}}});
+ if(${JSON.stringify(appServer.override===true)})send({method:'thread/settings/updated',params:{threadId,threadSettings:{model:'gpt-6-luna',modelProvider:'openai',reasoningEffort:'medium'}}});
+ return}
+ if(req.method==='turn/start'){if(!start||req.params.threadId!==threadId||Object.keys(req.params).sort().join(',')!=='input,threadId'||!req.params.input?.[0]?.text?.includes('untrusted data'))process.exit(79);
+ send({id:req.id,result:{turn:{id:turnId,status:'inProgress',items:[]}}});send({method:'turn/started',params:{threadId,turn:{id:turnId,status:'inProgress',items:[]}}});
+ for(const event of ${JSON.stringify(appServer.events??[])})send({method:event.method,params:{threadId,turnId,...event.params}});
+ if(!${JSON.stringify(appServer.noAnswer===true)})send({method:'item/completed',params:{threadId,turnId,item:{type:'agentMessage',id:'item_1',text:'Synthetic trial result'}}});
+ send({method:'turn/completed',params:{threadId,turn:{id:turnId,status:${JSON.stringify(appServer.turnStatus??'completed')},items:${JSON.stringify(appServer.turnItems??[])}}}});done=true;lines.close();return}
+ process.exit(80)});
+ lines.on('close',()=>process.exit(done?0:0));
+} else {
+let prompt='';for await(const c of process.stdin)prompt+=c;
 if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!args.includes('gpt-6.1-sol')||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
 if(!prompt.includes('profile_source_1')||!prompt.includes('untrusted data'))process.exit(1);
 if(${JSON.stringify(meeting)}&&(!args.includes('web_search="disabled"')||args[args.indexOf('--sandbox')+1]!=='read-only'||!args.includes('mcp_servers={}')||!args.includes('shell_tool')||!args.includes('browser_use')||!prompt.includes('actual named employee Noah (AG-HR-002)')||!prompt.includes('conversation from supplied context only')||prompt.includes('You are Steve, the CEO')))process.exit(1);
 const values=${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
+}
 `,{mode:0o700})
  try{return await action({bin})}finally{await rm(directory,{recursive:true,force:true})}
 }
@@ -91,39 +115,59 @@ test('partial UTF8 JSONL preserves real final text and observed native search ev
  const reply=await fake(events,config=>invokeCodex(config,qualifiedResearchJob(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
  assert.match(reply.reply,/عمل حقيقي/);assert.doesNotMatch(reply.reply,/Observed web sources/);assert.equal(reply.evidence[0].sources[0].url,'https://example.com/evidence')
 })
-test('trial evidence candidate records launch settings only and labels host/provider resolution unknown',async()=>{
+test('trial evidence combines same-thread App Server resolution with explicit launch settings and labels provider serving unknown',async()=>{
  const trial=trialWorkerJob(),workerId=randomUUID()
  const output=await fake(successful,config=>invokeCodex({ ...config,id:workerId },trial,[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))
  const receipt=output.modelBindingEvidence
- assert.equal(receipt.attestationLevel,'host-launch-settings');assert.equal(receipt.hostResolution,null);assert.equal(receipt.providerServedModel,'unknown')
+ assert.equal(receipt.attestationLevel,'host-returned-resolution');assert.equal(receipt.providerServedModel,'unknown')
  assert.equal(receipt.agentId,trial.agent_id);assert.equal(receipt.workerId,workerId);assert.equal(receipt.workerJobId,trial.id)
  assert.equal(receipt.trialId,trial.context.supervisedTrial.id);assert.equal(receipt.taskId,trial.context.task.id)
- assert.equal(receipt.threadId,successful[0].thread_id);assert.equal(receipt.cliVersion,'codex-cli 0.101.0')
+ assert.match(receipt.threadId,/^[0-9a-f-]{36}$/i);assert.equal(receipt.cliVersion,'codex-cli 0.159.2')
  assert.match(receipt.cliBinaryDigest,/^[0-9a-f]{64}$/);assert.match(receipt.workerSourceDigest,/^[0-9a-f]{64}$/)
  assert.equal(receipt.configuredModel,trial.context.agent.model);assert.equal(receipt.launchModel,trial.context.agent.model)
  assert.equal(receipt.configuredEffort,trial.context.agent.effort);assert.equal(receipt.launchEffort,trial.context.agent.effort)
  assert.equal('resolvedModel' in receipt,false);assert.equal('resolvedEffort' in receipt,false)
- assert.ok(receipt.invocation.argv.includes('--model'));assert.ok(receipt.invocation.argv.includes('model_reasoning_effort="medium"'))
- assert.equal(receipt.observedErrors.length,0);assert.equal(receipt.observedReroutes.length,0);assert.equal(receipt.outcome,'completed')
+ assert.ok(receipt.invocation.argv.includes('app-server'));assert.ok(receipt.invocation.argv.includes('model_reasoning_effort="medium"'))
+ assert.equal(receipt.attestationLevel,'host-returned-resolution');assert.deepEqual(receipt.hostResolution,
+   {source:'codex-app-server-thread-start',model:'gpt-6.1-sol',modelProvider:'openai',reasoningEffort:'medium',threadId:receipt.threadId,laterModelOverrideCount:0})
+ assert.equal(receipt.laterModelOverrideCount,0);assert.equal(receipt.observedEventCoverage,'codex-app-server-jsonrpc-events-only')
+ assert.deepEqual(receipt.observedErrors,[]);assert.deepEqual(receipt.observedReroutes,[]);assert.equal(receipt.outcome,'completed')
+ assert.equal(receipt.invocation.protocol.turnStart.params.threadId,receipt.threadId)
+ assert.equal(receipt.invocation.protocol.turnStart.params.inputSha256,receipt.invocation.stdinSha256)
+ assert.equal('model' in receipt.invocation.protocol.turnStart.params,false)
+ assert.equal(receipt.invocation.protocol.threadStart.params.sandbox,'read-only')
  assert.equal(receipt.artifactDigest,createHash('sha256').update(output.reply).digest('hex'))
  assert.doesNotMatch(JSON.stringify(receipt),/Produce a public research draft|founder_message/)
 })
 test('trial reroutes and provider errors are captured as fixed failures and cannot attest a successful run',async()=>{
  const trial=trialWorkerJob()
- const route=[{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},
-   {type:'model/rerouted',fromModel:'gpt-6.1-sol',toModel:'gpt-6-luna'}]
- await fake(route,config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
+ const route=[{method:'model/rerouted',params:{fromModel:'gpt-6.1-sol',toModel:'gpt-6-luna',reason:'fallback'}}]
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
    assert.equal(error.message,'provider-model-rerouted');assert.equal(error.modelBindingEvidence.outcome,'failed')
    assert.equal(error.modelBindingEvidence.providerServedModel,'unknown')
    assert.deepEqual(error.modelBindingEvidence.observedReroutes,[{from:'gpt-6.1-sol',to:'gpt-6-luna'}]);return true
- }))
- const failed=[{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},{type:'turn.failed',error:{message:'private provider diagnostic'}}]
- await fake(failed,config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
+ }),{appServer:{events:route}})
+ const failed=[{method:'turn/completed',params:{turn:{status:'failed',id:'018f0000-0000-7000-8000-000000000002',items:[],error:{message:'private provider diagnostic'}}}}]
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
    assert.equal(error.message,'provider-error');assert.deepEqual(error.modelBindingEvidence.observedErrors,['provider-error'])
    assert.doesNotMatch(JSON.stringify(error.modelBindingEvidence),/private provider diagnostic/);return true
- }))
+ }),{appServer:{events:failed}})
 })
-test('CLI preflight failure is a not-launched observation with no resolved-model claim',async()=>{
+test('App Server resolution mismatch, missing settings, later overrides and tool events fail closed',async()=>{
+ const run=appServer=>fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.modelBindingEvidence.outcome,'failed');assert.equal(error.modelBindingEvidence.artifactDigest,null);return true
+ }),{appServer})
+ await run({modelMismatch:true})
+ await run({missingSettings:true})
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-model-overridden');assert.equal(error.modelBindingEvidence.laterModelOverrideCount,1)
+   assert.equal(error.modelBindingEvidence.attestationLevel,'host-launch-settings');return true
+ }),{appServer:{override:true}})
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-tool-rejected');return true
+ }),{appServer:{events:[{method:'item/completed',params:{item:{type:'commandExecution'}}}]}})
+})
+test('CLI preflight failure is not launched and unsupported CLI versions fail before App Server startup',async()=>{
  const trial=trialWorkerJob()
  await fake(successful,config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
    const evidence=error.modelBindingEvidence
@@ -133,6 +177,10 @@ test('CLI preflight failure is a not-launched observation with no resolved-model
    assert.deepEqual(evidence.observedErrors,['provider-cli-version-invalid']);assert.equal(evidence.threadId,null)
    assert.equal(evidence.outcome,'failed');assert.equal(evidence.artifactDigest,null);return true
  }),{cliVersion:'unrecognized CLI output'})
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-cli-version-unsupported');assert.equal(error.modelBindingEvidence.attestationLevel,'host-cli-preflight')
+   assert.equal(error.modelBindingEvidence.cliVersion,'codex-cli 0.159.3');return true
+ }),{cliVersion:'codex-cli 0.159.3'})
 })
 test('disabled search/tool/error outputs and incomplete turns cannot masquerade as completion',async()=>{
  for(const [item,expected] of [[{type:'command_execution',command:'ignored'},/provider-tool-rejected/],[{type:'error',message:'untrusted raw provider text'},/provider-error/],[{type:'web_search'},/provider-tool-rejected/]]){

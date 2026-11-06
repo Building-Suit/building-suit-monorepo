@@ -195,21 +195,30 @@ test('supervised trial stays internal and requires same-thread host-returned set
   const linked=(await h.db.query(`select t.artifact_id,a.job_id,a.digest,j.worker_id from hq_private.workforce_trials t
     join public.hq_task_artifacts a on a.id=t.artifact_id join public.hq_agent_jobs j on j.id=a.job_id where t.id=$1`,[trial.trialId])).rows[0]
   const hostEvidence={schemaVersion:1,attestationLevel:'host-returned-resolution',providerServedModel:'unknown',agentId:'AG-HR-002',workerId:worker,
-    workerJobId:linked.job_id,trialId:trial.trialId,taskId:trial.taskId,workerSourceDigest:'a'.repeat(64),nodeVersion:process.versions.node,cliVersion:'codex-cli 0.101.0',
+    workerJobId:linked.job_id,trialId:trial.trialId,taskId:trial.taskId,workerSourceDigest:'a'.repeat(64),nodeVersion:process.versions.node,cliVersion:'codex-cli 0.159.2',
     cliVersionSource:'same-binary-version-probe',cliExecutable:'/opt/codex/bin/codex',cliBinaryDigest:'b'.repeat(64),
     configuredModel:'gpt-6.1-sol',launchModel:'gpt-6.1-sol',configuredEffort:'medium',launchEffort:'medium',
-    settingObservationSource:'explicit-host-generated-codex-exec-argv-and-locked-config',invocationStatus:'launched',threadId:randomUUID(),turnsStarted:1,turnsCompleted:1,
+    settingObservationSource:'explicit-codex-app-server-thread-start-and-locked-config',invocationStatus:'launched',threadId:randomUUID(),laterModelOverrideCount:0,turnsStarted:1,turnsCompleted:1,
     hostResolution:{source:'codex-app-server-thread-start',model:'gpt-6.1-sol',modelProvider:'openai',reasoningEffort:'medium',threadId:'',laterModelOverrideCount:0},
-    invocation:{executable:'/opt/codex/bin/codex',argv:['exec','--json','--sandbox','read-only','--model','gpt-6.1-sol','-c','model_reasoning_effort="medium"','-'],
-      environment:{HOME:'/home/worker',PATH:'/usr/bin',LANG:'C.UTF-8',TERM:'dumb',CODEX_HOME:'/home/worker/.codex'},stdinSha256:'c'.repeat(64)},
-    observedErrors:[],observedReroutes:[],observedEventCoverage:'codex-exec-jsonl-events-only',outcome:'completed',artifactDigest:linked.digest}
+    invocation:{executable:'/opt/codex/bin/codex',argv:['app-server','--stdio','--strict-config','--disable','shell_tool','--disable','shell_snapshot',
+        '-c','approval_policy="never"','-c','model_provider="openai"','-c','web_search="disabled"','-c','model_reasoning_effort="medium"','-c','mcp_servers={}'],
+      environment:{HOME:'/home/worker',PATH:'/usr/bin',LANG:'C.UTF-8',TERM:'dumb',CODEX_HOME:'/home/worker/.codex'},stdinSha256:'c'.repeat(64),
+      protocol:{initialize:{method:'initialize',id:1},threadStart:{method:'thread/start',id:2,params:{model:'gpt-6.1-sol',modelProvider:'openai',cwd:'/tmp/hq-agent-test',
+        approvalPolicy:'never',sandbox:'read-only',ephemeral:true,developerInstructions:'',config:{model_reasoning_effort:'medium',web_search:'disabled',project_doc_max_bytes:0,
+          developer_instructions:'',mcp_servers:{},agents:{enabled:false},skills:{bundled:{enabled:false},include_instructions:false}}}},
+        turnStart:{method:'turn/start',id:3,params:{threadId:randomUUID(),inputSha256:'c'.repeat(64)}}}},
+    observedErrors:[],observedReroutes:[],observedEventCoverage:'codex-app-server-jsonrpc-events-only',outcome:'completed',artifactDigest:linked.digest}
   hostEvidence.hostResolution.threadId=hostEvidence.threadId
+  hostEvidence.invocation.protocol.turnStart.params.threadId=hostEvidence.threadId
   await h.as('founder')
   await assert.rejects(()=>h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,[trial.trialId,linked.job_id,linked.artifact_id,JSON.stringify(hostEvidence),'journal:'+linked.job_id]),/permission denied/)
   await h.db.exec('reset role')
   const earlier=(await h.db.query(`select a.id artifact_id,a.job_id,a.digest from public.hq_task_artifacts a where a.job_id=$1`,[firstTrialWorkerJobId])).rows[0]
   const launchOnlyEvidence={...hostEvidence,attestationLevel:'host-launch-settings',workerJobId:earlier.job_id,
-    hostResolution:null,threadId:randomUUID(),artifactDigest:earlier.digest}
+    hostResolution:null,threadId:randomUUID(),artifactDigest:earlier.digest,
+    invocation:{...hostEvidence.invocation,protocol:{...hostEvidence.invocation.protocol,
+      turnStart:{...hostEvidence.invocation.protocol.turnStart,params:{...hostEvidence.invocation.protocol.turnStart.params}}}}}
+  launchOnlyEvidence.invocation.protocol.turnStart.params.threadId=launchOnlyEvidence.threadId
   await h.db.query(`select hq_private.record_trial_host_execution($1,$2,$3,$4::jsonb,$5)`,
     [trial.trialId,earlier.job_id,earlier.artifact_id,JSON.stringify(launchOnlyEvidence),'journal:'+earlier.job_id])
   await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)

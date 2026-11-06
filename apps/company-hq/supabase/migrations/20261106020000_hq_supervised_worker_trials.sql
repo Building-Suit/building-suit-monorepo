@@ -79,8 +79,8 @@ create table hq_private.workforce_trial_host_execution_receipts (
   host_returned_effort text check(host_returned_effort in ('minimal','low','medium','high','xhigh')),
   host_returned_thread_id text check(host_returned_thread_id ~ '^[0-9a-fA-F-]{36}$'),
   host_resolution_source text check(host_resolution_source='codex-app-server-thread-start'),
-  later_model_override_count integer check(later_model_override_count=0),
-  setting_observation_source text not null check(setting_observation_source in ('explicit-host-generated-codex-exec-argv-and-locked-config','not-resolved-cli-preflight-failed')),
+  later_model_override_count integer not null check(later_model_override_count between 0 and 32),
+  setting_observation_source text not null check(setting_observation_source in ('explicit-codex-app-server-thread-start-and-locked-config','not-resolved-cli-preflight-failed')),
   invocation_status text not null check(invocation_status in ('launched','not-launched')),
   thread_id text check(thread_id ~ '^[0-9a-fA-F-]{36}$'),
   turns_started integer not null check(turns_started between 0 and 1),
@@ -89,7 +89,7 @@ create table hq_private.workforce_trial_host_execution_receipts (
   invocation jsonb not null check(jsonb_typeof(invocation)='object'),
   observed_errors jsonb not null check(jsonb_typeof(observed_errors)='array' and jsonb_array_length(observed_errors)<=32),
   observed_reroutes jsonb not null check(jsonb_typeof(observed_reroutes)='array' and jsonb_array_length(observed_reroutes)<=32),
-  observed_event_coverage text not null check(observed_event_coverage='codex-exec-jsonl-events-only'),
+  observed_event_coverage text not null check(observed_event_coverage in ('codex-app-server-jsonrpc-events-only','codex-app-server-preflight-only')),
   outcome text not null check(outcome in ('completed','failed')),
   evidence_digest text not null check(evidence_digest ~ '^[0-9a-f]{64}$'),
   evidence_reference text not null check(evidence_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$'),
@@ -97,7 +97,7 @@ create table hq_private.workforce_trial_host_execution_receipts (
   recorded_at timestamptz not null default clock_timestamp(),
   check((attestation_level in ('host-launch-settings','host-returned-resolution') and invocation_status='launched'
       and configured_model=launch_model and configured_effort=launch_effort
-      and setting_observation_source='explicit-host-generated-codex-exec-argv-and-locked-config')
+      and setting_observation_source='explicit-codex-app-server-thread-start-and-locked-config')
     or (attestation_level='host-cli-preflight' and invocation_status='not-launched'
       and launch_model is null and launch_effort is null
       and setting_observation_source='not-resolved-cli-preflight-failed')),
@@ -107,7 +107,7 @@ create table hq_private.workforce_trial_host_execution_receipts (
       and later_model_override_count=0)
     or (attestation_level<>'host-returned-resolution' and host_returned_model is null
       and host_returned_provider is null and host_returned_effort is null and host_returned_thread_id is null
-      and host_resolution_source is null and later_model_override_count is null)),
+      and host_resolution_source is null)),
   check((outcome='completed' and artifact_id is not null and artifact_digest is not null
     and thread_id is not null and turns_started=1 and turns_completed=1
     and attestation_level in ('host-launch-settings','host-returned-resolution') and observed_errors='[]'::jsonb and observed_reroutes='[]'::jsonb)
@@ -155,7 +155,7 @@ begin
     or p_evidence->>'workerSourceDigest' !~ '^[0-9a-f]{64}$'
     or p_evidence->>'nodeVersion' !~ '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
     or p_evidence->>'cliVersionSource' is distinct from 'same-binary-version-probe'
-    or p_evidence->>'observedEventCoverage' is distinct from 'codex-exec-jsonl-events-only'
+    or p_evidence->>'observedEventCoverage' not in ('codex-app-server-jsonrpc-events-only','codex-app-server-preflight-only')
     or jsonb_typeof(p_evidence->'invocation') is distinct from 'object'
     or jsonb_typeof(p_evidence->'invocation'->'environment') is distinct from 'object'
     or jsonb_typeof(v_argv) is distinct from 'array'
@@ -169,24 +169,48 @@ begin
       where jsonb_typeof(e.value)<>'string' or e.value#>>'{}' !~ '^[a-z-]{1,80}$')
     or exists(select 1 from jsonb_array_elements(case when jsonb_typeof(p_evidence->'observedReroutes')='array' then p_evidence->'observedReroutes' else '[]'::jsonb end) e(value)
       where jsonb_typeof(e.value)<>'object' or e.value->>'from' !~ '^gpt-[A-Za-z0-9.-]{1,70}$' or e.value->>'to' !~ '^gpt-[A-Za-z0-9.-]{1,70}$')
-    or (select count(*) from jsonb_each(p_evidence->'invocation'))<>4
+    or (select count(*) from jsonb_each(p_evidence->'invocation'))<>5
     or exists(select 1 from jsonb_each(p_evidence->'invocation') e(key,value)
-      where e.key not in ('executable','argv','plannedArgv','environment','stdinSha256'))
+      where e.key not in ('executable','argv','plannedArgv','environment','protocol','plannedProtocol','stdinSha256'))
     or p_evidence->'invocation'->>'stdinSha256' !~ '^[0-9a-f]{64}$'
     or p_evidence->'invocation'->>'executable' is distinct from p_evidence->>'cliExecutable'
-    or not (v_argv @> jsonb_build_array('--model',v_agent.model))
+    or not (v_argv @> jsonb_build_array('app-server')) or not (v_argv @> jsonb_build_array('--stdio'))
+    or not (v_argv @> jsonb_build_array('--strict-config'))
+    or not (v_argv @> jsonb_build_array('--disable','shell_tool'))
+    or not (v_argv @> jsonb_build_array('-c','mcp_servers={}'))
+    or not (v_argv @> jsonb_build_array('-c','web_search="disabled"'))
     or not (v_argv @> jsonb_build_array('-c','model_reasoning_effort="'||v_agent.effort||'"'))
-    or not (v_argv @> jsonb_build_array('--sandbox','read-only'))
+    or p_evidence->>'laterModelOverrideCount' !~ '^[0-9]{1,2}$'
+    or (p_evidence->>'laterModelOverrideCount')::integer>32
     or p_evidence_reference !~ '^[A-Za-z0-9][A-Za-z0-9._:/#-]{7,255}$' then
     raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
   end if;
   if v_level in ('host-launch-settings','host-returned-resolution') then
     if p_evidence->>'invocationStatus' is distinct from 'launched'
-      or p_evidence->>'settingObservationSource' is distinct from 'explicit-host-generated-codex-exec-argv-and-locked-config'
+      or p_evidence->>'settingObservationSource' is distinct from 'explicit-codex-app-server-thread-start-and-locked-config'
       or p_evidence->>'launchModel' is distinct from v_agent.model
       or p_evidence->>'launchEffort' is distinct from v_agent.effort
       or p_evidence->>'cliBinaryDigest' !~ '^[0-9a-f]{64}$'
       or p_evidence->>'cliVersion' !~ '^codex-cli [A-Za-z0-9.+-]{1,80}$' then
+      raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
+    end if;
+    if jsonb_typeof(p_evidence->'invocation'->'protocol') is distinct from 'object'
+      or (select count(*) from jsonb_each(p_evidence->'invocation'->'protocol'))<>3
+      or p_evidence->'invocation'->'protocol'->'initialize'->>'method' is distinct from 'initialize'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->>'method' is distinct from 'thread/start'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->>'model' is distinct from v_agent.model
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->>'modelProvider' is distinct from 'openai'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->>'approvalPolicy' is distinct from 'never'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->>'sandbox' is distinct from 'read-only'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->>'ephemeral' is distinct from 'true'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->'config'->>'model_reasoning_effort' is distinct from v_agent.effort
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->'config'->>'web_search' is distinct from 'disabled'
+      or p_evidence->'invocation'->'protocol'->'threadStart'->'params'->'config'->'mcp_servers' is distinct from '{}'::jsonb
+      or p_evidence->'invocation'->'protocol'->'turnStart'->>'method' is distinct from 'turn/start'
+      or p_evidence->'invocation'->'protocol'->'turnStart'->'params'->>'threadId' is distinct from p_evidence->>'threadId'
+      or p_evidence->'invocation'->'protocol'->'turnStart'->'params'->>'inputSha256' is distinct from p_evidence->'invocation'->>'stdinSha256'
+      or (select count(*) from jsonb_each(p_evidence->'invocation'->'protocol'->'turnStart'->'params'))<>2
+      or p_evidence->>'observedEventCoverage' is distinct from 'codex-app-server-jsonrpc-events-only' then
       raise exception 'HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID' using errcode='22023';
     end if;
     if (v_level='host-launch-settings' and p_evidence->'hostResolution' is distinct from 'null'::jsonb)
@@ -222,6 +246,7 @@ begin
   elsif v_level='host-cli-preflight' then
     if v_outcome<>'failed' or p_evidence->>'invocationStatus' is distinct from 'not-launched'
       or p_evidence->>'settingObservationSource' is distinct from 'not-resolved-cli-preflight-failed'
+      or p_evidence->>'observedEventCoverage' is distinct from 'codex-app-server-preflight-only'
       or p_evidence->>'launchModel' is not null or p_evidence->>'launchEffort' is not null
       or p_artifact_id is not null or v_job.status<>'blocked'
       or p_evidence->'artifactDigest' is distinct from 'null'::jsonb
@@ -253,7 +278,7 @@ begin
     case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'reasoningEffort' end,
     case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'threadId' end,
     case when v_level='host-returned-resolution' then p_evidence->'hostResolution'->>'source' end,
-    case when v_level='host-returned-resolution' then (p_evidence->'hostResolution'->>'laterModelOverrideCount')::integer end,
+    (p_evidence->>'laterModelOverrideCount')::integer,
     p_evidence->>'settingObservationSource',p_evidence->>'invocationStatus',p_evidence->>'threadId',
     (p_evidence->>'turnsStarted')::integer,(p_evidence->>'turnsCompleted')::integer,p_evidence->>'providerServedModel',
     p_evidence->'invocation',p_evidence->'observedErrors',p_evidence->'observedReroutes',p_evidence->>'observedEventCoverage',
