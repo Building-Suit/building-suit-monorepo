@@ -82,7 +82,7 @@ before(async () => {
     update hq_private.agent_roster set profile_file_id='fixture-profile',model='gpt-6.1-sol',effort='low',lifecycle='active';
     update hq_private.agent_roster set manager_id='AG-CEO-001' where id='AG-HR-001';
     insert into hq_private.agent_roster(id,name,role,department_key,manager_id,profile_file_id,model,effort,lifecycle) values
-      ('AG-HR-002','Noah','Researcher','hr-agent-development','AG-HR-001','fixture-profile','gpt-6.1-sol','low','active');
+      ('AG-HR-002','Noah','Researcher','hr-agent-development','AG-HR-001','fixture-profile','gpt-6.1-terra','low','active');
     insert into hq_private.meeting_agent_qualifications(agent_id,binding_digest,qualification_scope,evidence_reference)
       select id,hq_private.meeting_agent_binding_digest(id),'read-approved-sources-worker-job-600','Disposable synthetic qualification fixture only' from hq_private.agent_roster;`)
   for (const user of [founder,other]) assert.equal((await asUser(user, 'select public.hq_founder_access() as data')).isFounder,true)
@@ -164,7 +164,7 @@ test('conversation configuration does not infer research qualification, while st
   } finally { await db.exec("update hq_private.agent_roster set effort='low' where id='AG-HR-002'") }
   await db.exec("update hq_private.agent_roster set model='unsupported-model' where id='AG-HR-002'")
   try { await assert.rejects(create(),/HQ_MEETING_CONVERSATION_UNAVAILABLE/) }
-  finally { await db.exec("update hq_private.agent_roster set model='gpt-6.1-sol' where id='AG-HR-002'") }
+  finally { await db.exec("update hq_private.agent_roster set model='gpt-6.1-terra' where id='AG-HR-002'") }
 })
 
 test('exact approval/end atomically enqueue existing task-route once; disconnect holds',async () => {
@@ -506,7 +506,7 @@ test('actual head conversation is one tool-disabled intake receipt; research fin
   assert.equal(record.tasks.length,0); assert.equal(await countTasks(),before)
   const {job}=await claim()
   assert.equal(job.agent_id,'AG-HR-002'); assert.equal(job.context.agent.id,'AG-HR-002')
-  assert.equal(job.context.agent.model,'gpt-6.1-sol'); assert.equal(job.context.mode,'conversation-intake')
+  assert.equal(job.context.agent.model,'gpt-6.1-terra'); assert.equal(job.context.mode,'conversation-intake')
   assert.deepEqual(job.context.meetingResponse,{protocol:1,scope:'conversation-only',meetingId:meeting.id,contributionId:c.id,generation:c.generation,agentId:c.agent_id,bindingDigest:c.binding_digest})
   validateJob(job); assert.equal(webAllowed(job),false)
   await finish(job,{message:'[FIXTURE] Actual named-head response',task:null})

@@ -10,7 +10,7 @@ const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.u
 const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
-const roster = ids.map((id,index)=>({id,name:'Employee '+index,departmentKey:index>0?'hr-agent-development':null,profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:'gpt-6.1-sol',effort:'medium',managerId:index>1?'AG-HR-001':index===1?'AG-CEO-001':null}))
+const roster = ids.map((id,index)=>({id,name:'Employee '+index,departmentKey:index>0?'hr-agent-development':null,profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:index===0?'gpt-6-astra':[1,4,5,6,7,8,9].includes(index)?'gpt-6.1-sol':'gpt-6.1-terra',effort:'medium',managerId:index>1?'AG-HR-001':index===1?'AG-CEO-001':null}))
 async function setup(withEvidence = true, withChat = true, withPresence = true) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;

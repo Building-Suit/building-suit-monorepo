@@ -17,7 +17,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   return nextResolve(specifier, context)
 } })
 const { parseHqAgentSnapshot } = await import('../../apps/company-hq/shared/types/agents.ts')
-const job = (id='AG-RES-001',mode='task-work') => ({id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1',modelTier:id==='AG-HR-002'?'T1_WORKER':id==='AG-CEO-001'?'T3_EXEC':'T2_HEAD',managerId:id==='AG-HR-002'?'AG-HR-001':id==='AG-CEO-001'?null:'AG-CEO-001',managerModelTier:id==='AG-HR-002'?'T2_HEAD':id==='AG-CEO-001'?null:'T3_EXEC',departmentKey:id==='AG-HR-002'?'hr-agent-development':id==='AG-CEO-001'?null:'research-market-intelligence'},brain_files:[{id:'profile_source_1'}]}})
+const job = (id='AG-RES-001',mode='task-work') => {const modelTier=id==='AG-CEO-001'?'T3_EXEC':['AG-HR-001','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001'].includes(id)?'T2_HEAD':'T1_WORKER';return {id:randomUUID(),conversation_id:randomUUID(),agent_id:id,lease_token:randomUUID(),prompt:'Produce a public research draft.',context:{mode,agent:{id,name:'Test employee',model:modelTier==='T1_WORKER'?'gpt-6.1-terra':modelTier==='T3_EXEC'?'gpt-6-astra':'gpt-6.1-sol',effort:'medium',profileFileId:'profile_source_1',modelTier,managerId:id==='AG-CEO-001'?null:id==='AG-HR-001'?'AG-CEO-001':id.startsWith('AG-HR-')?'AG-HR-001':'AG-CEO-001',managerModelTier:id==='AG-CEO-001'?null:id==='AG-HR-001'?'T3_EXEC':id.startsWith('AG-HR-')?'T2_HEAD':'T3_EXEC',departmentKey:id.startsWith('AG-HR-')?'hr-agent-development':id==='AG-CEO-001'?null:'research-market-intelligence'},brain_files:[{id:'profile_source_1'}]}}}
 const trialWorkerJob=()=>{
  const value=job('AG-HR-002','worker-trial'),trialId=randomUUID(),taskId=randomUUID()
  value.context.task={id:taskId}
@@ -26,7 +26,7 @@ const trialWorkerJob=()=>{
 }
 function qualifiedResearchJob(){
  const value=job('AG-RES-002'),agent=value.context.agent
- Object.assign(agent,{modelTier:'T1_WORKER',managerId:'AG-RES-001',managerModelTier:'T2_HEAD',departmentKey:'research-market-intelligence',
+ Object.assign(agent,{model:'gpt-6.1-terra',modelTier:'T1_WORKER',managerId:'AG-RES-001',managerModelTier:'T2_HEAD',departmentKey:'research-market-intelligence',
    lifecycle:'Active',headAuthorization:true,skillFileIds:['research_skill_01']})
  agent.qualification={status:'qualified',scope:'bounded-drafting-v1',bindingDigest:'a'.repeat(64),evidenceId:'receipt_0001',
    profileFileId:agent.profileFileId,skillFileIds:[...agent.skillFileIds],modelTier:agent.modelTier,managerId:agent.managerId,departmentKey:agent.departmentKey}
@@ -45,7 +45,7 @@ if(args[0]==='app-server'){
  const validArgs=args.includes('--stdio')&&args.includes('--strict-config')&&args.includes('--disable')&&args.includes('shell_tool')&&args.includes('mcp_servers={}');
  if(!validArgs||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY)process.exit(77);
  lines.on('line',raw=>{const req=JSON.parse(raw);if(req.method==='initialize'){send({id:req.id,result:{userAgent:'codex-cli 0.159.2'}});return}if(req.method==='initialized')return;
- if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||Object.keys(start.config?.mcp_servers??{}).length!==0||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-sol'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
+ if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||Object.keys(start.config?.mcp_servers??{}).length!==0||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-terra'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
  if(${JSON.stringify(appServer.missingSettings===true)}){send({id:req.id,result:{thread:{id:threadId,model:start.model,modelProvider:start.modelProvider}}});return}
  const t={id:threadId,model:start.model,modelProvider:start.modelProvider,reasoningEffort:start.config.model_reasoning_effort};
  if(${JSON.stringify(appServer.modelMismatch===true)})t.model='gpt-6-luna';
@@ -61,7 +61,7 @@ if(args[0]==='app-server'){
  lines.on('close',()=>process.exit(done?0:0));
 } else {
 let prompt='';for await(const c of process.stdin)prompt+=c;
-if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!args.includes('gpt-6.1-sol')||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
+if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!['gpt-6.1-sol','gpt-6.1-terra','gpt-6-astra'].some(model=>args.includes(model))||args.includes('gpt-6-luna')||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
 if(!prompt.includes('profile_source_1')||!prompt.includes('untrusted data'))process.exit(1);
 if(${JSON.stringify(meeting)}&&(!args.includes('web_search="disabled"')||args[args.indexOf('--sandbox')+1]!=='read-only'||!args.includes('mcp_servers={}')||!args.includes('shell_tool')||!args.includes('browser_use')||!prompt.includes('actual named employee Noah (AG-HR-002)')||!prompt.includes('conversation from supplied context only')||prompt.includes('You are Steve, the CEO')))process.exit(1);
 const values=${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
@@ -129,7 +129,7 @@ test('trial evidence combines same-thread App Server resolution with explicit la
  assert.equal('resolvedModel' in receipt,false);assert.equal('resolvedEffort' in receipt,false)
  assert.ok(receipt.invocation.argv.includes('app-server'));assert.ok(receipt.invocation.argv.includes('model_reasoning_effort="medium"'))
  assert.equal(receipt.attestationLevel,'host-returned-resolution');assert.deepEqual(receipt.hostResolution,
-   {source:'codex-app-server-thread-start',model:'gpt-6.1-sol',modelProvider:'openai',reasoningEffort:'medium',threadId:receipt.threadId,laterModelOverrideCount:0})
+   {source:'codex-app-server-thread-start',model:'gpt-6.1-terra',modelProvider:'openai',reasoningEffort:'medium',threadId:receipt.threadId,laterModelOverrideCount:0})
  assert.equal(receipt.laterModelOverrideCount,0);assert.equal(receipt.observedEventCoverage,'codex-app-server-jsonrpc-events-only')
  assert.deepEqual(receipt.observedErrors,[]);assert.deepEqual(receipt.observedReroutes,[]);assert.equal(receipt.outcome,'completed')
  assert.equal(receipt.invocation.protocol.turnStart.params.threadId,receipt.threadId)
@@ -141,11 +141,11 @@ test('trial evidence combines same-thread App Server resolution with explicit la
 })
 test('trial reroutes and provider errors are captured as fixed failures and cannot attest a successful run',async()=>{
  const trial=trialWorkerJob()
- const route=[{method:'model/rerouted',params:{fromModel:'gpt-6.1-sol',toModel:'gpt-6-luna',reason:'fallback'}}]
+ const route=[{method:'model/rerouted',params:{fromModel:'gpt-6.1-terra',toModel:'gpt-6-luna',reason:'fallback'}}]
  await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{
    assert.equal(error.message,'provider-model-rerouted');assert.equal(error.modelBindingEvidence.outcome,'failed')
    assert.equal(error.modelBindingEvidence.providerServedModel,'unknown')
-   assert.deepEqual(error.modelBindingEvidence.observedReroutes,[{from:'gpt-6.1-sol',to:'gpt-6-luna'}]);return true
+   assert.deepEqual(error.modelBindingEvidence.observedReroutes,[{from:'gpt-6.1-terra',to:'gpt-6-luna'}]);return true
  }),{appServer:{events:route}})
  const failed=[{method:'turn/completed',params:{turn:{status:'failed',id:'018f0000-0000-7000-8000-000000000002',items:[],error:{message:'private provider diagnostic'}}}}]
  await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),error=>{

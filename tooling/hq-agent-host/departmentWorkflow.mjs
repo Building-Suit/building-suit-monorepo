@@ -1,4 +1,4 @@
-import { managerForAgent, modelTierForAgent, pilotDepartments } from './workforceRoster.mjs'
+import { managerForAgent, modelTierForAgent, pilotDepartments, T1_WORKER_MODEL } from './workforceRoster.mjs'
 
 const blockedLifecycle = /\b(?:configured|candidate|trial|pending|suspended|inactive|retired|terminated|archived|paused)\b/i
 const unavailableHeadLifecycle = /\b(?:suspended|inactive|retired|terminated|archived|paused)\b/i
@@ -43,11 +43,13 @@ export function assessDepartmentCapacity(departmentKey, roster, qualifications =
     || unavailableHeadLifecycle.test(head.lifecycle || '') || !head.profileFileId) {
     return { status: 'blocked', reason: 'department-head-evidence-required', departmentKey }
   }
-  const workers = roster.filter(agent => agent && tier(agent) === 'T1_WORKER'
+  const eligibleReports = roster.filter(agent => agent && tier(agent) === 'T1_WORKER'
     && agent.managerId === headId && agent.departmentKey === departmentKey
     && !blockedLifecycle.test(agent.lifecycle || '') && agent.profileFileId
     && hasCurrentQualification(agent, qualifications[agent.id]))
+  const workers = eligibleReports.filter(agent => agent.model === T1_WORKER_MODEL)
   if (workers.length === 0) {
+    if (eligibleReports.length > 0) return { status: 'blocked', reason: 'worker-model-policy-unavailable', departmentKey, headId }
     return {
       status: 'staffing-required', reason: 'no-qualified-lower-tier-worker',
       departmentKey, headId, hrOwnerId: 'AG-HR-001',
@@ -62,6 +64,7 @@ export function workerExecutionBlock(job) {
   const agent = job.context?.agent
   const tier = agent?.modelTier ?? modelTierForAgent(job.agent_id)
   if (job.context.mode === 'task-ack') return tier === 'T2_HEAD' ? null : 'staffing-required'
+  if (tier === 'T1_WORKER' && agent?.model !== T1_WORKER_MODEL) return 'worker-model-policy-unavailable'
   if (['worker-trial','trial-start'].includes(job.context.mode)) {
     if (tier !== 'T1_WORKER' || !agent || agent.id !== job.agent_id || !agent.profileFileId
       || agent.managerModelTier !== 'T2_HEAD' || agent.headAuthorization !== true

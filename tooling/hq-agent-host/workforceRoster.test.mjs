@@ -31,7 +31,7 @@ function fixture(change = () => {}) {
   const policy = add('Company/Workforce Operating Rules.md', [
     '| `T3_EXEC` | CEO | `gpt-6-astra`, effort `high` | alternative |',
     '| `T2_HEAD` | Heads | `gpt-6.1-sol`, effort `high` | alternative |',
-    '| `T1_WORKER` | Workers | `gpt-6-luna`, effort `medium` | alternative |',
+    '| `T1_WORKER` | Workers | `gpt-6.1-terra`, effort `medium` | alternative |',
   ].join('\n'))
   for (const [id, , path] of profiles) {
     const skill = path.startsWith('CEO/') ? 'CEO/Skills/Company Evidence' : path.split('/').slice(0, 2).join('/') + '/Skills/assigned/SKILL'
@@ -59,7 +59,7 @@ test('cloud registry binds all ten identities, current models, exact skills and 
   assert.equal(agents[3].managerId, 'AG-HR-001')
   assert.equal(agents[0].model, 'gpt-6-astra')
   assert.equal(agents[1].model, 'gpt-6.1-sol')
-  assert.equal(agents[2].model, 'gpt-6-luna')
+  assert.equal(agents[2].model, 'gpt-6.1-terra')
   assert.equal(agents[2].effort, 'medium')
   assert.equal(agents[1].modelTier, 'T2_HEAD')
   assert.equal(agents[2].modelTier, 'T1_WORKER')
@@ -128,6 +128,11 @@ test('lower-tier work needs a current HR qualification bound to exact assigned s
   worker.lifecycle = 'Qualified'
   const qualification = { status:'qualified', scope:'bounded-drafting-v1', bindingDigest:'b'.repeat(64), evidenceId:'evidence_file_01', profileFileId:worker.profileFileId, skillFileIds:[...worker.skillFileIds], modelTier:'T1_WORKER', managerId:'AG-HR-001', departmentKey:'hr-agent-development' }
   manager.departmentKey = 'hr-agent-development'
+  const savedModel = worker.model
+  worker.model = 'gpt-6-luna'
+  assert.equal(assessDepartmentCapacity('hr-agent-development', [manager, worker], {'AG-HR-002':qualification}).status, 'blocked')
+  assert.equal(workerExecutionBlock({agent_id:'AG-HR-002',context:{mode:'task-work',agent:worker}}), 'worker-model-policy-unavailable')
+  worker.model = savedModel
   assert.deepEqual(assessDepartmentCapacity('hr-agent-development', [manager, worker], {'AG-HR-002':qualification}), {
     status:'ready', departmentKey:'hr-agent-development', headId:'AG-HR-001', workerIds:['AG-HR-002'],
   })
@@ -154,6 +159,13 @@ test('another department skill cannot be smuggled through a profile', async () =
 test('current model policy is required rather than silently using a default', async () => {
   const { roster } = fixture(({ documents, policy }) => documents.set(policy, '# No model table'))
   await assert.rejects(roster.sync('worker-id'), /roster-model-policy-required/)
+})
+
+test('stale Luna worker policy blocks roster sync before any model execution', async () => {
+  const { roster, calls } = fixture(({ documents, policy }) => documents.set(policy,
+    documents.get(policy).replace('gpt-6.1-terra', 'gpt-6-luna')))
+  await assert.rejects(roster.sync('worker-id'), /worker-model-policy-unavailable/)
+  assert.equal(calls.length, 1)
 })
 
 test('metadata ancestry cannot escape the Brain or contain cycles', async () => {

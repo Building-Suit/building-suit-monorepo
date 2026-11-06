@@ -4,6 +4,7 @@ const FOLDER = 'application/vnd.google-apps.folder'
 const ID = /^[A-Za-z0-9_-]{8,200}$/
 const fail = code => { throw new Error(code) }
 const requireValue = (value, code) => { if (!value) fail(code) }
+export const T1_WORKER_MODEL = 'gpt-6.1-terra'
 const records = [
   ['AG-CEO-001', 'CEO/Agent Instructions.md', null, 'T3_EXEC'],
   ['AG-HR-001', 'Departments/HR/HR Lead.md', 'hr-agent-development', 'T2_HEAD'],
@@ -130,6 +131,7 @@ function modelPolicy(text) {
     tiers.set(tier, { model, effort })
   }
   requireValue(['T3_EXEC', 'T2_HEAD', 'T1_WORKER'].every(tier => tiers.has(tier)), 'roster-model-policy-required')
+  requireValue(tiers.get('T1_WORKER').model === T1_WORKER_MODEL, 'worker-model-policy-unavailable')
   return tiers
 }
 

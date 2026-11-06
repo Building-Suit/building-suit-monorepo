@@ -15,7 +15,7 @@ const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-S
 const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9].includes(index)?'T2_HEAD':'T1_WORKER']))
 const departments = new Map(ids.map((id,index)=>[id,index===0?null:index===4?'research-market-intelligence':index===5?'customer-acquisition-partnerships':index===6?'customer-success-onboarding':index===7?'social-community':index===8?'email-lifecycle':index===9?'development-maintenance':'hr-agent-development']))
 const managers = new Map(ids.map((id,index)=>[id,index===0?null:[2,3].includes(index)?'AG-HR-001':'AG-CEO-001']))
-const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
+const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:tiers.get(id)==='T1_WORKER'?'gpt-6.1-terra':tiers.get(id)==='T3_EXEC'?'gpt-6-astra':'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
 async function setup(withEvidence = true, withChat = false, withPresence = true) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
@@ -73,7 +73,7 @@ test('founder task → actual employee artifact → reviews → report → accep
     const task=snapshot.tasks[0];assert.equal(task.assigneeId,'AG-HR-002')
     assert.equal((await rpc('hq_create_task',args)).tasks[0].id,task.id)
     await assert.rejects(()=>rpc('hq_create_task',['Changed',...args.slice(1)]),/HQ_REQUEST_KEY_REUSED/)
-    let j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(j.agent_id,'AG-HR-002');assert.equal(j.context.agent.model,'gpt-6.1-sol')
+    let j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(j.agent_id,'AG-HR-002');assert.equal(j.context.agent.model,'gpt-6.1-terra')
     await h.finish(j,'Actual draft with source evidence.');await h.finish(j,'Actual draft with source evidence.')
     await assert.rejects(()=>h.finish(j,'Changed draft'),/HQ_RESULT_ALREADY_COMMITTED/)
     j=await h.claim();assert.equal(j.context.mode,'head-review');assert.equal(j.agent_id,'AG-HR-001');assert.equal(j.context.assignee.id,'AG-HR-002');assert.ok(j.context.brain_files.some(file=>file.id==='profile_source_2'))
@@ -124,7 +124,7 @@ test('canonical additional worker sync remains dynamic and unqualified without r
   const profile='profile_rania_0001',skill='skill_social_0001'
   await h.db.exec('reset role')
   for(const id of [profile,skill]) await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope) values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','worker.md','text/markdown','1',false,true)`,[id])
-  const rania={id:'AG-SOC-002',name:'Rania',role:'Social Worker',departmentKey:'social-community',profileFileId:profile,skillFileIds:[skill],lifecycle:'Active',model:'gpt-6-luna',effort:'medium',managerId:'AG-SOC-001',modelTier:'T1_WORKER'}
+  const rania={id:'AG-SOC-002',name:'Rania',role:'Social Worker',departmentKey:'social-community',profileFileId:profile,skillFileIds:[skill],lifecycle:'Active',model:'gpt-6.1-terra',effort:'medium',managerId:'AG-SOC-001',modelTier:'T1_WORKER'}
   await h.as('worker');const result=await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify([...roster,rania])]);assert.equal(result.count,11)
   await h.db.exec('reset role')
   assert.equal((await h.db.query(`select model_tier from hq_private.agent_roster where id='AG-SOC-002'`)).rows[0].model_tier,'T1_WORKER')
@@ -197,13 +197,13 @@ test('supervised trial stays internal and requires same-thread host-returned set
   const hostEvidence={schemaVersion:1,attestationLevel:'host-returned-resolution',providerServedModel:'unknown',agentId:'AG-HR-002',workerId:worker,
     workerJobId:linked.job_id,trialId:trial.trialId,taskId:trial.taskId,workerSourceDigest:'a'.repeat(64),nodeVersion:process.versions.node,cliVersion:'codex-cli 0.159.2',
     cliVersionSource:'same-binary-version-probe',cliExecutable:'/opt/codex/bin/codex',cliBinaryDigest:'b'.repeat(64),
-    configuredModel:'gpt-6.1-sol',launchModel:'gpt-6.1-sol',configuredEffort:'medium',launchEffort:'medium',
+    configuredModel:'gpt-6.1-terra',launchModel:'gpt-6.1-terra',configuredEffort:'medium',launchEffort:'medium',
     settingObservationSource:'explicit-codex-app-server-thread-start-and-locked-config',invocationStatus:'launched',threadId:randomUUID(),laterModelOverrideCount:0,turnsStarted:1,turnsCompleted:1,
-    hostResolution:{source:'codex-app-server-thread-start',model:'gpt-6.1-sol',modelProvider:'openai',reasoningEffort:'medium',threadId:'',laterModelOverrideCount:0},
+    hostResolution:{source:'codex-app-server-thread-start',model:'gpt-6.1-terra',modelProvider:'openai',reasoningEffort:'medium',threadId:'',laterModelOverrideCount:0},
     invocation:{executable:'/opt/codex/bin/codex',argv:['app-server','--stdio','--strict-config','--disable','shell_tool','--disable','shell_snapshot',
         '-c','approval_policy="never"','-c','model_provider="openai"','-c','web_search="disabled"','-c','model_reasoning_effort="medium"','-c','mcp_servers={}'],
       environment:{HOME:'/home/worker',PATH:'/usr/bin',LANG:'C.UTF-8',TERM:'dumb',CODEX_HOME:'/home/worker/.codex'},stdinSha256:'c'.repeat(64),
-      protocol:{initialize:{method:'initialize',id:1},threadStart:{method:'thread/start',id:2,params:{model:'gpt-6.1-sol',modelProvider:'openai',cwd:'/tmp/hq-agent-test',
+      protocol:{initialize:{method:'initialize',id:1},threadStart:{method:'thread/start',id:2,params:{model:'gpt-6.1-terra',modelProvider:'openai',cwd:'/tmp/hq-agent-test',
         approvalPolicy:'never',sandbox:'read-only',ephemeral:true,developerInstructions:'',config:{model_reasoning_effort:'medium',web_search:'disabled',project_doc_max_bytes:0,
           developer_instructions:'',mcp_servers:{},agents:{enabled:false},skills:{bundled:{enabled:false},include_instructions:false}}}},
         turnStart:{method:'turn/start',id:3,params:{threadId:randomUUID(),inputSha256:'c'.repeat(64)}}}},
