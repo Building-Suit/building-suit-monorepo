@@ -1,14 +1,18 @@
 #!/usr/bin/env node
+import { createServer } from 'node:net'
+import { maintenanceGate, checkApiContract } from './maintenance.mjs'
 /** Private, sequential HQ queue consumer. No inbound listener or idle work polling. */
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
-import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises'
+import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, realpath } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { delimiter, isAbsolute, join, resolve } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
-import { pathToFileURL } from 'node:url'
-import { createWorkforceRoster } from './workforceRoster.mjs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { createWorkforceRoster, managerForAgent, modelTierForAgent } from './workforceRoster.mjs'
 import { createBrainPublisher } from './brainPublisher.mjs'
+import { workerExecutionBlock } from './departmentWorkflow.mjs'
 
 process.umask(0o077)
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -17,6 +21,9 @@ const MAX_HTTP_BYTES = 1_048_576, MAX_PROCESS_BYTES = 4_194_304
 const MAX_BRAIN_SOURCE_BYTES = 128_000, MAX_BRAIN_CONTEXT_BYTES = 250_000
 const JOB_MS = 600_000, LEASE_SECONDS = 300, LEASE_INTERVAL_MS = 60_000
 const MEETING_PROTOCOL = 1
+const TRIAL_CODEX_CLI_VERSIONS = new Set(['codex-cli 0.159.2', 'codex-cli 0.160.0'])
+const TERRA_MODEL = 'gpt-6.1-terra', LUNA_FALLBACK_MODEL = 'gpt-6-luna'
+const FALLBACK_PROVIDER_ERRORS = new Set(['provider-model-unavailable', 'provider-capacity', 'provider-error'])
 const TOPIC = 'realtime:hq-agent-jobs'
 class WorkerProblem extends Error { constructor(code) { super(code); this.code = code } }
 const problem = code => new WorkerProblem(code)
@@ -33,6 +40,7 @@ export function providerErrorCode(value) {
   const fields = candidate => typeof candidate === 'string' ? [candidate] : record(candidate)
     ? ['code','type','message','status','status_code'].map(key => typeof candidate[key] === 'string' || typeof candidate[key] === 'number' ? String(candidate[key]) : '') : []
   const diagnostic = [...fields(value), ...fields(record(value)?.error)].join(' ').slice(0, 16000).toLowerCase()
+  if (/model_not_found|model not found|model unavailable|unsupported model|unknown model|invalid model/.test(diagnostic)) return 'provider-model-unavailable'
   if (/context_length_exceeded|context_window|context window|maximum context|input too long|prompt too long|too many input tokens/.test(diagnostic)) return 'provider-context'
   if (/insufficient_quota|usage_limit|usage limit|quota|weekly limit|monthly limit|daily limit|out of credits|credits exhausted|limit reached|limit has been reached/.test(diagnostic)) return 'provider-quota'
   if (/authentication|invalid_api_key|invalid auth|unauthori[sz]ed|not logged in|sign[ -]in required|login required|token expired|expired token|refresh token|\b40[13]\b/.test(diagnostic)) return 'provider-auth'
@@ -246,7 +254,7 @@ function meetingResponse(job) {
 }
 
 export function validateJob(job) {
-  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'task-work', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review']
+  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'trial-start', 'task-work', 'worker-trial', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review']
   requireValue(record(job) && UUID.test(job.id) && UUID.test(job.conversation_id)
     && /^AG-[A-Z]+-[0-9]{3}$/.test(job.agent_id) && UUID.test(job.lease_token)
     && typeof job.prompt === 'string' && job.prompt.trim() && Buffer.byteLength(job.prompt) <= 32_000
@@ -262,9 +270,16 @@ export function validateJob(job) {
   }
   const meeting = meetingResponse(job)
   if (job.context.mode === 'conversation-intake') requireValue(job.agent_id === 'AG-CEO-001' || meeting, 'invalid-job-role')
-  if (['task-route', 'ceo-review', 'lesson-review'].includes(job.context.mode)) requireValue(job.agent_id === 'AG-CEO-001', 'invalid-job-role')
+  if (['task-route', 'lesson-review'].includes(job.context.mode)) requireValue(job.agent_id === 'AG-CEO-001', 'invalid-job-role')
+  if (job.context.mode === 'ceo-review') requireValue(job.agent_id === 'AG-CEO-001'
+    || job.agent_id === 'AG-HR-003' && job.context.trialReview === true
+      && job.context.supervisedTrial?.scope === 'synthetic-internal-trial-v1', 'invalid-job-role')
   if (job.context.mode === 'task-report') requireValue(job.agent_id === 'AG-CEO-001' || job.agent_id === job.context.assignee?.id, 'invalid-job-role')
-  if (['conversation-hr', 'head-review', 'lesson-extract'].includes(job.context.mode)) requireValue(job.agent_id === 'AG-HR-001', 'invalid-job-role')
+  if (job.context.mode === 'conversation-hr' || job.context.mode === 'lesson-extract') requireValue(job.agent_id === 'AG-HR-001', 'invalid-job-role')
+  if (job.context.mode === 'head-review') requireValue((job.context.agent.modelTier || modelTierForAgent(job.agent_id)) === 'T2_HEAD'
+    && job.context.assignee?.id
+    && (job.context.assignee.managerId || managerForAgent(job.context.assignee.id)) === job.agent_id
+    && (job.context.assignee.modelTier || modelTierForAgent(job.context.assignee.id)) === 'T1_WORKER', 'invalid-job-role')
   if (['head-review', 'ceo-review', 'task-report', 'lesson-extract'].includes(job.context.mode)) {
     requireValue(UUID.test(job.context.artifact?.id || '') && /^[0-9a-f]{64}$/.test(job.context.artifact?.digest || '')
       && typeof job.context.artifact.text === 'string' && Buffer.byteLength(job.context.artifact.text) <= 32_000, 'artifact-required')
@@ -277,13 +292,28 @@ export function stageInstructions(job) {
     return `Respond to the founder as the actual named employee ${job.context.agent.name} (${job.agent_id}), using your supplied current role profile and this meeting context. This is conversation only, not research, task execution, delegation or approval. Return ONLY JSON {"message":"your concise actual reply","task":null}. Answer from supplied context, distinguish uncertainty and ask for clarification when the meeting context requires it. Do not inspect external sources, create work, impersonate another employee or claim unobserved actions. Configuration does not establish research qualification. Keep message at most 4000 characters in the founder language.`
   }
   const mode = job.context.mode
+  if (mode === 'task-ack' && job.context.supervisedTrial?.scope === 'synthetic-internal-trial-v1') {
+    return `You are the department head responsible for this supervised synthetic skill trial. Define the bounded exercise, supplied context, exact internal-only deliverable, acceptance checks and do/don't boundaries in your reply. If context.task.reviewSummary contains reviewer findings, issue a specific bounded correction against those exact findings without expanding scope. Assign only the exact authorized trial worker ${job.context.supervisedTrial.agentId} from context.roster. Do not perform the exercise. Return ONLY JSON {"message":"your scoped orchestration plan and handoff","delegateId":"${job.context.supervisedTrial.agentId}"} if the worker is listed; otherwise return delegateId:null. This trial cannot contact customers, use external systems, browse, publish, deploy, change accounts or produce company/customer work.`
+  }
+  if (mode === 'trial-start') {
+    return 'Acknowledge the exact synthetic, internal-only trial task and your plan. Return ONLY JSON {"message":"one concise acknowledgment"}. Do not start work in this stage, use tools, contact anyone, browse, access external systems, publish, deploy or change accounts.'
+  }
+  if (mode === 'worker-trial') {
+    return 'Complete only the synthetic skill evaluation in context.task using the supplied profile and exact assigned skill. Produce one bounded internal-only draft plus a short self-check against acceptance. Treat all details as fictional. Do not use tools, browse, contact customers or anyone else, send messages, access external systems, publish, deploy, change accounts, use customer/personal data or claim an external action. This artifact is evaluation evidence only and is not approved company work.'
+  }
+  if (mode === 'ceo-review' && job.context.trialReview === true) {
+    return 'As Iris, independently evaluate the exact supervised trial artifact against the synthetic task acceptance and its one assigned skill. Review evidence only; do not perform the work, use tools, contact anyone, publish, deploy or qualify the worker yourself. Accept only if the artifact demonstrates the assigned skill, meets every check, uses fictional details and stays within the internal-only boundary. Return ONLY JSON {"accepted":boolean,"summary":"specific evidence-based findings","artifactDigest":"the unchanged context.artifact.digest"}.'
+  }
+  if (mode === 'task-report' && job.context.trialReport === true) {
+    return 'Report only the completed internal supervised trial to the founder. Summarize its synthetic artifact and recorded head/Iris reviews. State clearly that this is trial evidence and does not itself issue qualification. Do not publish, contact customers or claim external work. Return the normal bounded report text.'
+  }
   const instructions = {
     'conversation-hr': 'Perform your own bounded HR planning assessment for Steve. Explain relevant responsibilities, prerequisites, risks and useful next steps using your current profile. Keep simple conversation assessments concise. Do not impersonate Steve.',
     'conversation-ceo': 'Answer the founder as Steve. Use the actual same-request HR assessment in context.predecessor; exercise your own judgment. Distinguish completed analysis from proposed external work.',
-    'conversation-intake': 'You are Steve, the CEO and the first responder to the founder. Review the request and reply briefly in the founder language. Return ONLY JSON {"message":"your actual reply","task":null} for ordinary conversation, or {"message":"your concise reviewed handoff mentioning @RecipientName","task":{"title":"at most 180 characters","brief":"at most 12000 characters","acceptance":"at most 6000 characters","assigneeId":"AG-..."}} when the founder asks for work. Create at most one coherent bounded drafting/research/analysis task from the actual request; choose only a matching non-CEO employee in context.roster. Preserve the actual requested scope and acceptance. Do not silently substitute a draft for requested external implementation: state the concrete execution boundary and useful deliverable honestly. You can delegate only current host-supported work, cannot grant new tools, hires, access, deployments or publication. Include the recipient exact @name in message, and explain your decision and intended result without claiming they have worked yet. Configured trial staff remain trial staff; assignment never certifies qualification. Other employees speak only in their own actual stages.',
-    'task-ack': 'You are the actual recipient of the assignment reviewed by Steve. Acknowledge what you understood and your concrete next actions in one short message in the founder language. Return ONLY JSON {"message":"your concise acknowledgment and plan","delegateId":null}. If a listed direct report in context.roster is a better match and this is permitted by the task/profile, you may return their exact id as delegateId and mention their exact @name in the same message with the work assigned. Only these current direct reports are eligible; do not invent teammates, imply unobserved work or create a fanout. Delegation transfers this one bounded task; tools and trial limits are unchanged.',
+    'conversation-intake': 'You are Steve, the CEO and the first responder to the founder. Review the request and reply briefly in the founder language. Return ONLY JSON {"message":"your actual reply","task":null} for ordinary conversation, or {"message":"your concise reviewed handoff mentioning @RecipientName","task":{"title":"at most 180 characters","brief":"at most 12000 characters","acceptance":"at most 6000 characters","assigneeId":"AG-..."}} when the founder asks for work. Create at most one coherent bounded drafting/research/analysis task from the actual request; route it to the matching department head (T2_HEAD) in context.roster so that head scopes and delegates to a qualified lower-tier direct report. Preserve the actual requested scope and acceptance. Do not silently substitute a draft for requested external implementation: state the concrete execution boundary and useful deliverable honestly. You can delegate only current host-supported work, cannot grant new tools, hires, access, deployments or publication. Include the recipient exact @name in message, and explain your decision and intended result without claiming they have worked yet. Configured trial staff remain trial staff; assignment never certifies qualification. Other employees speak only in their own actual stages.',
+    'task-ack': 'You are the actual department head assigned by Steve. Define the task scope, inputs/context, exact deliverable, acceptance checks, and do/don’t boundaries in your acknowledgment. Return ONLY JSON {"message":"your concise orchestration plan and bounded handoff","delegateId":null}. Assign the whole bounded task to one of the listed direct reports only when their explicit current HR qualification receipt is present in context.roster and their profile/skills match. Use that report’s exact id, mention their exact @name, and include concrete scope, context, acceptance checks and do/don’t instructions. Otherwise leave delegateId null; the host will stop and record a staffing need. You review the worker’s evidence afterward; never perform task execution yourself, invent capacity or create a fanout.',
     'task-start': 'You are the actual recipient of a supervisor handoff or repair direction. Return ONLY JSON {"message":"one concise acknowledgment of the task, concrete plan and any exact predecessor review fixes"}. Use the founder language. You will do this bounded task yourself. Do not claim completion, delegate again, invent tool access or repeat a generic warning; use actual context.task and context.predecessor.',
-    'task-route': 'Review and route this founder-approved drafting task as Steve to the best matching available employee in context.roster using their actual department and lifecycle. Honor context.task.requestedAssigneeId when set. Choose an employee other than AG-CEO-001 unless that is the founder requestedAssigneeId. Return ONLY JSON {"assigneeId":"AG-...","reason":"specific assignment reasoning","message":"brief actual handoff with exact @RecipientName, task understanding and intended delivery"}. Use the founder language. Do not invent employees, qualifications, tools or completed work.',
+    'task-route': 'Review and route this founder-approved drafting task as Steve to the matching department head (T2_HEAD) in context.roster. The head will scope and delegate to a qualified lower-tier direct report, then review the evidence. Honor context.task.requestedAssigneeId exactly when present; this queue cannot silently substitute a different employee. In the normal unassigned path, choose a matching head. If the requested employee is a T1 worker, state that the current route cannot satisfy the head-first workflow and do not imply execution. Choose an employee other than AG-CEO-001 unless the founder requested AG-CEO-001. Return ONLY JSON {"assigneeId":"AG-...","reason":"specific assignment reasoning","message":"brief actual handoff with exact @RecipientName, task understanding and intended delivery"}. Use the founder language. Do not invent employees, qualifications, tools or completed work.',
     'task-work': 'Complete the approved task in context.task as your named employee: produce a useful real research, analysis, plan or draft deliverable against every acceptance criterion. If context.task.reviewSummary or a predecessor review exists, repair the earlier artifact using that exact concrete supervisor feedback; an acknowledgment never replaces the review. State unsupported external actions as outstanding. You may draft code in your text response but cannot execute or write it. Include source links for external facts and distinguish uncertainty.',
     'head-review': 'Review the exact artifact against the approved task acceptance and your department rules, independently of its author. Return ONLY JSON {"accepted":boolean,"summary":"specific findings and needed repairs, summary at most 8000 UTF-8 bytes","artifactDigest":"the unchanged context.artifact.digest"}. Reject claims unsupported by actual evidence. If repairs are needed, address the actual assignee by @name with concrete corrections and a next action; you own finding a useful repair path within the approved scope. Never waive acceptance or fabricate success.',
     'ceo-review': 'Review the exact employee artifact against the founder brief and acceptance. Consider the actual department-head predecessor review when present. Return ONLY JSON {"accepted":boolean,"summary":"specific findings and needed repairs, summary at most 8000 UTF-8 bytes","artifactDigest":"the unchanged context.artifact.digest"}. Do not approve merely because the author claims success. When repairs are needed, give the actual assignee concrete corrections and a useful next action within the approved scope; you own the recovery path. Never waive acceptance or fabricate success.',
@@ -297,7 +327,65 @@ export function stageInstructions(job) {
 
 export function webAllowed(job) {
   if (Object.hasOwn(record(job?.context) || {}, 'meetingResponse')) return false
-  return job.context.mode === 'task-work' && ['AG-RES-001', 'AG-HR-002'].includes(job.agent_id)
+  const agent = record(job?.context?.agent), qualification = record(agent?.qualification)
+  if (job?.context?.mode !== 'task-work' || job.agent_id !== agent?.id
+    || agent?.modelTier !== 'T1_WORKER' || agent?.departmentKey !== 'research-market-intelligence'
+    || agent?.headAuthorization !== true || agent?.managerModelTier !== 'T2_HEAD'
+    || qualification?.status !== 'qualified' || qualification.scope !== 'bounded-drafting-v1'
+    || qualification.profileFileId !== agent.profileFileId || qualification.modelTier !== agent.modelTier
+    || qualification.managerId !== agent.managerId || qualification.departmentKey !== agent.departmentKey
+    || !Array.isArray(agent.skillFileIds) || !agent.skillFileIds.length
+    || !Array.isArray(qualification.skillFileIds)
+    || JSON.stringify([...qualification.skillFileIds].sort()) !== JSON.stringify([...agent.skillFileIds].sort())) return false
+  return true
+}
+
+async function executablePath(command, pathValue, workingDirectory) {
+  const candidates = isAbsolute(command) ? [command] : command.includes('/') ? [resolve(workingDirectory, command)]
+    : (pathValue || '').split(delimiter).filter(Boolean).map(directory => join(directory, command))
+  for (const candidate of candidates) {
+    try {
+      const resolved = await realpath(candidate), info = await stat(resolved)
+      if (info.isFile() && (info.mode & 0o111)) return resolved
+    } catch { /* Continue through the host's explicit PATH. */ }
+  }
+  throw problem('provider-cli-unavailable')
+}
+
+async function fileSha256(path) {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(path)) hash.update(chunk)
+  return hash.digest('hex')
+}
+
+function probeCliVersion(executable, environment, signal) {
+  return new Promise((resolveVersion, rejectVersion) => {
+    let child, output = '', finished = false
+    const timer = setTimeout(() => finish(problem('provider-cli-version-unavailable')), 5000)
+    const abort = () => finish(problem('worker-interrupted'))
+    const finish = error => {
+      if (finished) return
+      finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort)
+      try { if (child?.pid) process.kill(-child.pid, 'SIGKILL') } catch { /* Already exited. */ }
+      if (error) rejectVersion(error)
+    }
+    signal.addEventListener('abort', abort, { once: true })
+    try { child = spawn(executable, ['--version'], { env: environment, detached: true, stdio: ['ignore', 'pipe', 'pipe'] }) }
+    catch { finish(problem('provider-cli-version-unavailable')); return }
+    const collect = chunk => {
+      if (output.length + chunk.length > 1024) { finish(problem('provider-cli-version-invalid')); return }
+      output += chunk.toString('utf8')
+    }
+    child.stdout.on('data', collect); child.stderr.on('data', collect)
+    child.once('error', () => finish(problem('provider-cli-version-unavailable')))
+    child.once('close', code => {
+      if (finished) return
+      const version = output.trim()
+      if (code !== 0 || !/^codex-cli [A-Za-z0-9.+-]{1,80}$/.test(version)) finish(problem('provider-cli-version-invalid'))
+      else { finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort); resolveVersion(version) }
+    })
+    if (signal.aborted) abort()
+  })
 }
 
 export function workerClaimInput(workerId) {
@@ -358,13 +446,190 @@ export function nativeToolReceipt(item, observedAt = new Date().toISOString()) {
   return { version: 1, eventId, tool: 'web_search', action, queries, sources, observedAt, truncated }
 }
 
-export async function invokeCodex(config, job, brain, signal) {
+function trialAppServerPlan(job,directory,disabled) {
+    const settings = ['approval_policy="never"','model_provider="openai"','forced_login_method="chatgpt"',
+      'web_search="disabled"',`model_reasoning_effort=${JSON.stringify(job.context.agent.effort)}`,'project_doc_max_bytes=0',
+      'developer_instructions=""','mcp_servers={}','agents.enabled=false','skills.bundled.enabled=false','skills.include_instructions=false']
+    const argv = ['app-server','--stdio','--strict-config']
+    for (const feature of disabled) argv.push('--disable',feature)
+    for (const setting of settings) argv.push('-c',setting)
+    const startParams = { model:job.context.agent.model,modelProvider:'openai',cwd:directory,approvalPolicy:'never',sandbox:'read-only',
+      ephemeral:true,developerInstructions:'',config:{model_reasoning_effort:job.context.agent.effort,web_search:'disabled',project_doc_max_bytes:0,
+        developer_instructions:'',mcp_servers:{},agents:{enabled:false},skills:{bundled:{enabled:false},include_instructions:false}} }
+    return {argv,params:startParams}
+}
+
+function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, workerSourceDigest, config, job, directory, environment, prompt, argv, startParams, signal }) {
+  return new Promise((resolveReply, rejectReply) => {
+    let child, failure = null, total = 0, buffer = '', threadId = null, turnId = null, turnStarted = 0, turnCompleted = 0
+    let answer = '', launchedTurnRequest = null, threadSettings = null, hostResolution = null, laterModelOverrideCount = 0, killTimer
+    const observedErrors = [], observedReroutes = []
+    const noteError = code => { if (!observedErrors.includes(code)) observedErrors.push(code) }
+    const threadSettingsValid = value => record(value) && value.model === job.context.agent.model
+      && value.modelProvider === 'openai' && value.reasoningEffort === job.context.agent.effort
+    const invocation = () => ({ executable, argv:[...argv], environment, stdinSha256:createHash('sha256').update(prompt).digest('hex'),
+      protocol:{ initialize:{method:'initialize',id:1},threadStart:{method:'thread/start',id:2,params:startParams},
+        turnStart:launchedTurnRequest } })
+    const trialEvidence = outcome => ({
+      schemaVersion:1,attestationLevel:hostResolution && laterModelOverrideCount===0 ? 'host-returned-resolution' : 'host-launch-settings',
+      providerServedModel:'unknown',hostResolution:hostResolution && laterModelOverrideCount===0
+        ? {...hostResolution,laterModelOverrideCount} : null,
+      agentId:job.agent_id,workerId:config.id,workerJobId:job.id,trialId:job.context.supervisedTrial.id,taskId:job.context.supervisedTrial.taskId,
+      workerSourceDigest,nodeVersion:process.versions.node,cliVersion,cliVersionSource:'same-binary-version-probe',
+      cliExecutable:executable,cliBinaryDigest,configuredModel:job.context.agent.model,launchModel:job.context.agent.model,
+      configuredEffort:job.context.agent.effort,launchEffort:job.context.agent.effort,
+      settingObservationSource:'explicit-codex-app-server-thread-start-and-locked-config',invocationStatus:'launched',threadId,
+      laterModelOverrideCount,invocation:invocation(),turnsStarted:turnStarted,turnsCompleted:turnCompleted,observedErrors,observedReroutes,
+      observedEventCoverage:'codex-app-server-jsonrpc-events-only',outcome,artifactDigest:outcome==='completed'?createHash('sha256').update(answer.trim()).digest('hex'):null,
+    })
+    const stop = () => {
+      if (!child) return
+      try { child.stdin.end() } catch { /* Process may already have closed stdin. */ }
+      killTimer ||= setTimeout(() => { try { process.kill(-child.pid,'SIGKILL') } catch { /* Already exited. */ } },1500)
+    }
+    const fail = code => { if (!failure) { noteError(code); failure=problem(code); stop() } }
+    const abort = () => fail(signal.reason instanceof WorkerProblem?signal.reason.code:'worker-interrupted')
+    const send = value => {
+      if (failure || !child?.stdin.writable) { fail('provider-app-server-protocol-invalid'); return }
+      try { child.stdin.write(JSON.stringify(value)+'\n') } catch { fail('provider-unavailable') }
+    }
+    const checkThread = params => {
+      if (!threadId || params?.threadId!==threadId) { fail('provider-thread-id-mismatch'); return false }
+      return true
+    }
+    const checkItem = event => {
+      const params=event.params, item=record(params?.item)
+      if (!checkThread(params) || !item || typeof params.turnId!=='string' || turnId && params.turnId!==turnId) {
+        fail('provider-app-server-protocol-invalid'); return
+      }
+      if (!['agentMessage','reasoning','userMessage'].includes(item.type)) { fail('provider-tool-rejected'); return }
+      if (event.method==='item/completed' && item.type==='agentMessage') {
+        if (typeof item.text!=='string' || Buffer.byteLength(item.text)>32_000) { fail('provider-output-invalid'); return }
+        answer=item.text
+      }
+    }
+    const line = raw => {
+      if (!raw.trim() || failure) return
+      let message
+      try { message=JSON.parse(raw) } catch { fail('provider-app-server-protocol-invalid'); return }
+      if (!record(message)) { fail('provider-app-server-protocol-invalid'); return }
+      if (message.error) { fail(providerErrorCode(message.error)); return }
+      if (Object.hasOwn(message,'id')) {
+        if (message.id===1) {
+          if (!record(message.result)) { fail('provider-app-server-initialize-failed'); return }
+          send({method:'initialized',params:{}})
+          send({id:2,method:'thread/start',params:startParams})
+          return
+        }
+        if (message.id===2) {
+          const thread=record(message.result?.thread)
+          if (!thread || typeof thread.id!=='string' || !UUID.test(thread.id)) { fail('provider-thread-id-unavailable'); return }
+          threadId=thread.id
+          threadSettings={model:thread.model,modelProvider:thread.modelProvider,reasoningEffort:thread.reasoningEffort}
+          if (!threadSettingsValid(threadSettings)) { fail('provider-model-resolution-invalid'); return }
+          hostResolution={source:'codex-app-server-thread-start',...threadSettings,threadId}
+          launchedTurnRequest={method:'turn/start',id:3,params:{threadId,inputSha256:createHash('sha256').update(prompt).digest('hex')}}
+          send({id:3,method:'turn/start',params:{threadId,input:[{type:'text',text:prompt}]}})
+          return
+        }
+        if (message.id===3) {
+          const turn=record(message.result?.turn)
+          if (!turn || typeof turn.id!=='string' || !turn.id) { fail('provider-turn-id-unavailable'); return }
+          turnId=turn.id
+          if (turn.status==='inProgress') turnStarted=1
+          if (turn.status==='completed') { turnStarted=1; turnCompleted=1; stop() }
+          else if (turn.status!=='inProgress') fail('provider-turn-failed')
+          return
+        }
+        fail('provider-app-server-protocol-invalid')
+        return
+      }
+      if (typeof message.method!=='string' || !record(message.params)) { fail('provider-app-server-protocol-invalid'); return }
+      const params=message.params
+      if (message.method==='thread/started') {
+        if (params.thread?.id!==threadId) fail('provider-thread-id-mismatch')
+      } else if (message.method==='thread/settings/updated') {
+        if (!checkThread(params)) return
+        if (!record(params.threadSettings)) { fail('provider-app-server-protocol-invalid'); return }
+        const latest={model:params.threadSettings.model,modelProvider:params.threadSettings.modelProvider,reasoningEffort:params.threadSettings.reasoningEffort}
+        if (threadSettings && (latest.model!==threadSettings.model || latest.modelProvider!==threadSettings.modelProvider || latest.reasoningEffort!==threadSettings.reasoningEffort)) {
+          laterModelOverrideCount++; fail('provider-model-overridden')
+        }
+      } else if (message.method==='model/rerouted') {
+        if (!checkThread(params) || typeof params.turnId!=='string' || turnId && params.turnId!==turnId
+          || typeof params.fromModel!=='string' || typeof params.toModel!=='string'
+          || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(params.fromModel) || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(params.toModel)) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        observedReroutes.push({from:params.fromModel,to:params.toModel}); fail('provider-model-rerouted')
+      } else if (message.method==='turn/started') {
+        if (!checkThread(params) || !record(params.turn) || typeof params.turn.id!=='string' || turnId && params.turn.id!==turnId) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        turnId=params.turn.id; turnStarted=1
+      } else if (message.method==='turn/completed') {
+        if (!checkThread(params) || !record(params.turn) || typeof params.turn.id!=='string' || params.turn.id!==turnId) {
+          fail('provider-app-server-protocol-invalid'); return
+        }
+        const status=params.turn.status
+        if (status!=='completed') { fail(status==='interrupted'?'worker-interrupted':'provider-error'); return }
+        for (const item of Array.isArray(params.turn.items)?params.turn.items:[]) {
+          if (!['agentMessage','reasoning','userMessage'].includes(item?.type)) { fail('provider-tool-rejected'); return }
+          if (item.type==='agentMessage' && typeof item.text==='string') answer=item.text
+        }
+        turnCompleted++; stop()
+      } else if (message.method==='item/started' || message.method==='item/completed') checkItem(message)
+      else if (message.method.startsWith('item/')) {
+        if (!['item/agentMessage/delta','item/reasoning/summaryTextDelta','item/reasoning/textDelta'].includes(message.method)) fail('provider-tool-rejected')
+        else if (!checkThread(params) || typeof params.turnId!=='string' || turnId && params.turnId!==turnId) fail('provider-app-server-protocol-invalid')
+      }
+      else if (message.method.startsWith('serverRequest/')) fail('provider-tool-rejected')
+      // Other App Server notifications are telemetry. Item types and reroutes above remain fail-closed.
+    }
+    const decoder=new StringDecoder('utf8')
+    signal.addEventListener('abort',abort,{once:true})
+    try { child=spawn(executable,argv,{cwd:directory,env:environment,detached:true,stdio:['pipe','pipe','pipe']}) }
+    catch {
+      signal.removeEventListener('abort',abort)
+      const error=problem('provider-unavailable');noteError(error.code);error.modelBindingEvidence=trialEvidence('failed');rejectReply(error);return
+    }
+    const consume=chunk=>{
+      total+=chunk.byteLength
+      if (total>MAX_PROCESS_BYTES) { fail('provider-output-too-large'); return }
+      buffer+=decoder.write(chunk);let end
+      while ((end=buffer.indexOf('\n'))>=0) { line(buffer.slice(0,end));buffer=buffer.slice(end+1) }
+    }
+    child.stdout.on('data',consume)
+    child.stderr.on('data',chunk=>{total+=chunk.byteLength;if(total>MAX_PROCESS_BYTES)fail('provider-output-too-large')})
+    child.stdin.on('error',()=>{if(!failure && turnCompleted!==1)fail('provider-unavailable')})
+    child.once('error',()=>fail('provider-unavailable'))
+    child.once('close',async exitCode=>{
+      signal.removeEventListener('abort',abort);clearTimeout(killTimer)
+      buffer+=decoder.end();if(buffer)line(buffer)
+      if(child.pid) { try { process.kill(-child.pid,'SIGKILL') } catch { /* Process group is gone. */ } }
+      if(!failure && (exitCode!==0 || turnStarted!==1 || turnCompleted!==1 || !answer.trim() || !hostResolution)) fail('provider-output-invalid')
+      if(!failure) {
+        try { if(await fileSha256(executable)!==cliBinaryDigest) fail('provider-cli-changed') }
+        catch { fail('provider-cli-changed') }
+      }
+      if(failure) { failure.modelBindingEvidence=trialEvidence('failed');rejectReply(failure) }
+      else resolveReply({reply:answer.trim(),evidence:[],modelBindingEvidence:trialEvidence('completed')})
+    })
+    send({id:1,method:'initialize',params:{clientInfo:{name:'building_suit_hq_trial',title:'Building Suit HQ supervised trial',version:'1.0.0'}}})
+    if(signal.aborted) abort()
+  })
+}
+
+async function invokeCodexAttempt(config, job, brain, signal, executionModel = job.context.agent.model) {
+  if (executionModel !== job.context.agent.model) job = { ...job, context: { ...job.context, agent: { ...job.context.agent, model: executionModel } } }
   const directory = await mkdtemp(join(tmpdir(), 'hq-agent-'))
+  const isTrialWorker = job.context.mode === 'worker-trial'
   const disabled = ['shell_tool', 'shell_snapshot', 'multi_agent', 'apps', 'hooks', 'memories', 'plugins',
     'view_image', 'skill_mcp_dependency_install', 'browser_use', 'browser_use_external', 'browser_use_full_cdp_access',
     'computer_use', 'skill_search', 'remote_plugin', 'image_generation', 'in_app_browser', 'daemon_auto_start']
+  const trialPlan = isTrialWorker ? trialAppServerPlan(job,directory,disabled) : null
   const args = ['exec', '--json', '--ephemeral', '--ignore-user-config', '--ignore-rules', '--strict-config',
-    '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', directory, '--color', 'never', '--model', job.context.agent.model]
+    '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', directory, '--color', 'never', '--model', executionModel]
   for (const feature of disabled) args.push('--disable', feature)
   for (const setting of ['approval_policy="never"', 'model_provider="openai"', 'forced_login_method="chatgpt"',
     'web_search=' + JSON.stringify(webAllowed(job) ? 'live' : 'disabled'), 'model_reasoning_effort=' + JSON.stringify(job.context.agent.effort), 'project_doc_max_bytes=0', 'developer_instructions=""', 'mcp_servers={}',
@@ -373,6 +638,35 @@ export async function invokeCodex(config, job, brain, signal) {
   // Deliberate allowlist: neither worker/Drive secrets nor API/proxy overrides reach Codex.
   const environment = { HOME: homedir(), PATH: process.env.PATH || '/usr/local/bin:/usr/bin:/bin', LANG: 'C.UTF-8', TERM: 'dumb',
     CODEX_HOME: process.env.CODEX_HOME || join(homedir(), '.codex') }
+  let executable = config.bin, cliVersion = null, cliBinaryDigest = null, workerSourceDigest = null
+  if (isTrialWorker) {
+    const trial = record(job.context.supervisedTrial)
+    requireValue(trial?.scope === 'synthetic-internal-trial-v1' && trial.agentId === job.agent_id
+      && UUID.test(trial.id || '') && trial.taskId === job.context.task?.id, 'trial-authorization-required')
+    workerSourceDigest = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex')
+    try {
+      executable = await executablePath(config.bin, environment.PATH, directory)
+      cliBinaryDigest = await fileSha256(executable)
+      cliVersion = await probeCliVersion(executable, { ...environment, HOME: directory, CODEX_HOME: directory }, signal)
+      requireValue(TRIAL_CODEX_CLI_VERSIONS.has(cliVersion),'provider-cli-version-unsupported')
+    } catch (error) {
+      error.modelBindingEvidence = {
+        schemaVersion: 1, attestationLevel: 'host-cli-preflight', providerServedModel: 'unknown', hostResolution: null,
+        agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
+        trialId: trial.id, taskId: trial.taskId, workerSourceDigest, nodeVersion: process.versions.node, cliVersion,
+        cliVersionSource: 'same-binary-version-probe', cliExecutable: executable,
+        cliBinaryDigest, configuredModel: job.context.agent.model, launchModel: null,
+        configuredEffort: job.context.agent.effort, launchEffort: null,
+        settingObservationSource: 'not-resolved-cli-preflight-failed', invocationStatus: 'not-launched',
+        threadId: null, laterModelOverrideCount:0, invocation: { executable, plannedArgv: [...trialPlan.argv], environment,
+          plannedProtocol:{threadStart:trialPlan.params},
+          stdinSha256: createHash('sha256').update('cli-preflight-not-run').digest('hex') },
+        turnsStarted: 0, turnsCompleted: 0, observedErrors: [codeOf(error)], observedReroutes: [],
+        observedEventCoverage: 'codex-app-server-preflight-only', outcome: 'failed', artifactDigest: null,
+      }
+      throw error
+    }
+  }
   const prompt = [
     'You are the named Building Suit employee in this trusted job context. Follow your current authorized role profile and skills, scoped by this host assignment.',
     stageInstructions(job),
@@ -389,15 +683,38 @@ export async function invokeCodex(config, job, brain, signal) {
     JSON.stringify({ agent_id: job.agent_id, context: job.context, current_brain: brain, founder_message: job.prompt }),
   ].join('\n\n')
   try {
+    if (isTrialWorker) return await invokeTrialWithAppServer({executable,cliVersion,cliBinaryDigest,workerSourceDigest,
+      config,job,directory,environment,prompt,argv:trialPlan.argv,startParams:trialPlan.params,signal})
     return await new Promise((resolveReply, rejectReply) => {
       let child, failure = null, total = 0, lineBuffer = '', answer = '', completed = 0, evidence = [], killTimer
+      let threadId = null, turnStarted = 0, toolEventCount = 0, rerouteCount = 0
+      const toolItems = new Set()
+      const observedErrors = [], observedReroutes = []
+      const noteError = code => { if (isTrialWorker && !observedErrors.includes(code)) observedErrors.push(code) }
+      const trialEvidence = (outcome, reply = '') => isTrialWorker ? {
+        schemaVersion: 1, attestationLevel: 'host-launch-settings', providerServedModel: 'unknown', hostResolution: null,
+        agentId: job.agent_id, workerId: config.id, workerJobId: job.id,
+        trialId: job.context.supervisedTrial.id, taskId: job.context.supervisedTrial.taskId,
+        workerSourceDigest, nodeVersion: process.versions.node, cliVersion, cliVersionSource: 'same-binary-version-probe',
+        cliExecutable: executable, cliBinaryDigest,
+        configuredModel: job.context.agent.model, launchModel: job.context.agent.model,
+        configuredEffort: job.context.agent.effort, launchEffort: job.context.agent.effort,
+        settingObservationSource: 'explicit-host-generated-codex-exec-argv-and-locked-config', invocationStatus: 'launched',
+        threadId, invocation: { executable, argv: [...args], environment, stdinSha256: createHash('sha256').update(prompt).digest('hex') },
+        turnsStarted: turnStarted, turnsCompleted: completed,
+        observedErrors, observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,
+        artifactDigest: outcome === 'completed' ? createHash('sha256').update(reply).digest('hex') : null,
+      } : null
+      const modelAttemptEvidence = (outcome, errorCode = null) => ({
+        model: executionModel, outcome, errorCode, toolEventCount, rerouteCount, turnsStarted: turnStarted, turnsCompleted: completed,
+      })
       const decoder = new StringDecoder('utf8')
       const kill = () => {
         if (!child?.pid) return
         try { process.kill(-child.pid, 'SIGTERM') } catch { /* Already reaped. */ }
         killTimer ||= setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL') } catch { /* Already reaped. */ } }, 1500)
       }
-      const fail = code => { failure ||= problem(code); kill() }
+      const fail = code => { noteError(code); failure ||= problem(code); kill() }
       const abort = () => fail(signal.reason instanceof WorkerProblem ? signal.reason.code : 'worker-interrupted')
       function line(value) {
         if (!value.trim() || failure) return
@@ -405,10 +722,26 @@ export async function invokeCodex(config, job, brain, signal) {
         try { event = JSON.parse(value) } catch { fail('provider-output-invalid'); return }
         if (!record(event) || typeof event.type !== 'string') { fail('provider-output-invalid'); return }
         if (event.type === 'error' || event.type === 'turn.failed') { fail(providerErrorCode(event)); return }
+        if (event.type === 'model/rerouted') {
+          const from = event.fromModel ?? event.from_model, to = event.toModel ?? event.to_model
+          if (typeof from !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(from)
+            || typeof to !== 'string' || !/^gpt-[A-Za-z0-9.-]{1,70}$/.test(to)) { fail('provider-output-invalid'); return }
+          observedReroutes.push({ from, to }); rerouteCount++; fail('provider-model-rerouted'); return
+        }
+        if (event.type === 'thread.started') {
+          const id = event.thread_id ?? event.threadId
+          if (typeof id === 'string' && UUID.test(id)) threadId = id
+          else if (isTrialWorker) { fail('provider-thread-id-unavailable'); return }
+        }
+        if (event.type === 'turn.started') turnStarted++
         if (event.type === 'turn.completed') completed++
         if (event.type.startsWith('item.')) {
           const item = record(event.item)
           if (!item || !['agent_message', 'reasoning', ...(webAllowed(job) ? ['web_search', 'web_search_call'] : [])].includes(item.type)) { fail(item?.type === 'error' ? providerErrorCode(item) : 'provider-tool-rejected'); return }
+          if (!['agent_message', 'reasoning'].includes(item.type)) {
+            const itemId = typeof item.id === 'string' ? item.id : `${event.type}:${item.type}`
+            if (!toolItems.has(itemId)) { toolItems.add(itemId); toolEventCount++ }
+          }
           if (event.type === 'item.completed' && ['web_search', 'web_search_call'].includes(item.type)) {
             const receipt = nativeToolReceipt(item)
             if (evidence.length < 24 && Buffer.byteLength(JSON.stringify([...evidence, receipt])) <= 36_000) evidence.push(receipt)
@@ -428,21 +761,36 @@ export async function invokeCodex(config, job, brain, signal) {
         while ((end = lineBuffer.indexOf('\n')) >= 0) { line(lineBuffer.slice(0, end)); lineBuffer = lineBuffer.slice(end + 1) }
       }
       signal.addEventListener('abort', abort, { once: true })
-      try { child = spawn(config.bin, args, { cwd: directory, env: environment, detached: true, stdio: ['pipe', 'pipe', 'pipe'] }) }
-      catch { signal.removeEventListener('abort', abort); rejectReply(problem('provider-unavailable')); return }
-      child.once('error', () => { failure ||= problem('provider-unavailable') })
+      try { child = spawn(executable, args, { cwd: directory, env: environment, detached: true, stdio: ['pipe', 'pipe', 'pipe'] }) }
+      catch {
+        signal.removeEventListener('abort', abort)
+        const error = problem('provider-unavailable'); noteError(error.code); error.modelBindingEvidence = trialEvidence('failed')
+        rejectReply(error); return
+      }
+      child.once('error', () => fail('provider-unavailable'))
       child.stdout.on('data', consume)
       child.stderr.on('data', chunk => { total += chunk.byteLength; if (total > MAX_PROCESS_BYTES) fail('provider-output-too-large') })
       child.stdin.on('error', () => { /* Close/error event supplies the bounded result. */ })
-      child.once('close', exitCode => {
+      child.once('close', async exitCode => {
         signal.removeEventListener('abort', abort); clearTimeout(killTimer)
         lineBuffer += decoder.end(); if (lineBuffer) line(lineBuffer)
         // Kill any descendants left behind after the direct CLI process closes.
         if (child.pid) { try { process.kill(-child.pid, 'SIGKILL') } catch { /* Group already gone. */ } }
-        if (failure) rejectReply(failure)
-        else if (exitCode !== 0 || completed !== 1 || !answer.trim()) rejectReply(problem('provider-output-invalid'))
-        else {
-          resolveReply({ reply: answer.trim(), evidence })
+        if (!failure && (exitCode !== 0 || completed !== 1 || !answer.trim())) fail('provider-output-invalid')
+        if (!failure && isTrialWorker && (turnStarted !== 1 || !threadId)) fail('provider-thread-id-unavailable')
+        if (isTrialWorker) {
+          try { if (await fileSha256(executable) !== cliBinaryDigest) fail('provider-cli-changed') }
+          catch { fail('provider-cli-changed') }
+        }
+        if (failure) {
+          failure.modelAttemptEvidence = modelAttemptEvidence('failed', failure.code)
+          failure.modelFallbackEligible = !isTrialWorker && FALLBACK_PROVIDER_ERRORS.has(failure.code)
+            && toolEventCount === 0 && rerouteCount === 0
+          failure.modelBindingEvidence = trialEvidence('failed')
+          rejectReply(failure)
+        } else {
+          const reply = answer.trim()
+          resolveReply({ reply, evidence, modelBindingEvidence: trialEvidence('completed', reply), modelAttemptEvidence: modelAttemptEvidence('completed') })
         }
       })
       if (signal.aborted) abort()
@@ -451,15 +799,126 @@ export async function invokeCodex(config, job, brain, signal) {
   } finally { await rm(directory, { recursive: true, force: true }) }
 }
 
-async function start() {
+function modelExecutionReceipt(job, workerId, attempts, selectedModel) {
+  const configuredModel = job.context.agent.model
+  return {
+    schemaVersion: 1, workerJobId: job.id, workerId, agentId: job.agent_id,
+    policy: job.context.agent.modelTier === 'T1_WORKER' && configuredModel === TERRA_MODEL
+      ? 'terra-primary-luna-fallback-v1' : 'canonical-model-only-v1',
+    configuredModel, selectedModel, providerServedModel: 'unknown',
+    fallbackUsed: attempts.length === 2, outcome: selectedModel ? 'completed' : 'failed', attempts,
+  }
+}
+
+/** Retry only a provider model failure before any tool event; trials stay pinned to Terra for qualification. */
+export async function invokeCodex(config, job, brain, signal) {
+  // Only task-work produces a reviewed artifact eligible for a durable receipt.
+  // Other stages, especially conversations and manager review, remain single-attempt.
+  if (job.context.mode !== 'task-work') return invokeCodexAttempt(config, job, brain, signal)
+  const configuredModel = job.context.agent.model
+  const canUseFallback = job.context.agent.modelTier === 'T1_WORKER'
+    && configuredModel === TERRA_MODEL
+  try {
+    const output = await invokeCodexAttempt(config, job, brain, signal, configuredModel)
+    output.modelExecutionEvidence = modelExecutionReceipt(job, config.id, [output.modelAttemptEvidence], configuredModel)
+    return output
+  } catch (error) {
+    const primaryAttempt = error?.modelAttemptEvidence
+    if (!primaryAttempt) throw error
+    if (!canUseFallback || !error.modelFallbackEligible) {
+      error.modelExecutionEvidence = modelExecutionReceipt(job, config.id, [primaryAttempt], null)
+      throw error
+    }
+    try {
+      const fallback = await invokeCodexAttempt(config, job, brain, signal, LUNA_FALLBACK_MODEL)
+      const attempts = [primaryAttempt, fallback.modelAttemptEvidence]
+      fallback.modelExecutionEvidence = modelExecutionReceipt(job, config.id, attempts, LUNA_FALLBACK_MODEL)
+      return fallback
+    } catch (fallbackError) {
+      const attempts = [primaryAttempt, fallbackError?.modelAttemptEvidence || {
+        model: LUNA_FALLBACK_MODEL, outcome: 'failed', errorCode: codeOf(fallbackError),
+        toolEventCount: 0, rerouteCount: 0, turnsStarted: 0, turnsCompleted: 0,
+      }]
+      fallbackError.modelExecutionEvidence = modelExecutionReceipt(job, config.id, attempts, null)
+      throw fallbackError
+    }
+  }
+}
+
+export async function start(adapters = {}) {
   const config = configuration()
   await privateDirectory(config.state)
-  const api = supabase(config), brain = brainReader(config), journal = journalStore(config)
-  const roster = createWorkforceRoster({ readBrain: brain, rpc: (name, body) => api.rpc(name, body) })
+  const api = adapters.api || supabase(config), brain = adapters.brain || brainReader(config), journal = journalStore(config)
+  const invoke = adapters.invoke || invokeCodex
+  const roster = adapters.roster || createWorkforceRoster({ readBrain: brain, rpc: (name, body) => api.rpc(name, body) })
   const publisher = createBrainPublisher(config)
+  const managed = process.env.HQ_RELEASE_MANAGED === '1'
+  let release = null
+  if (managed) {
+    release = JSON.parse(await readFile(new URL('./manifest.json', import.meta.url), 'utf8')).sha
+    requireValue(/^[a-f0-9]{40}$/.test(release || ''), 'release-manifest-required')
+  }
+  const uncertainty = join(config.state, 'maintenance-uncertain')
+  const inFlight = join(config.state, 'maintenance-inflight')
+  async function syncState() {
+    const directory = await open(config.state, 'r')
+    try { await directory.sync() } finally { await directory.close() }
+  }
+  const exists = async path => { try { await stat(path); return true } catch (error) { if (error.code === 'ENOENT') return false; throw error } }
+  const gate = maintenanceGate({ paused: managed, uncertain: await exists(uncertainty) || await exists(inFlight), poison: async () => {
+    const file = await open(uncertainty, 'w', 0o600)
+    try { await file.writeFile('Operator must reconcile uncertain queue/journal outcome.\n'); await file.sync() } finally { await file.close() }
+    await syncState()
+  } })
+  async function compatible() {
+    const token = await api.access()
+    const spec = await jsonRequest(config.url + '/rest/v1/', { headers: { apikey: config.key, Authorization: 'Bearer ' + token, Accept: 'application/openapi+json' } })
+    checkApiContract(spec)
+    // Read-only RPC also verifies the current enabled worker identity/session.
+    const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
+    requireValue(status?.contract === 2 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
+    return status
+  }
+  if (process.argv.includes('--release-preflight')) {
+    requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
+    try { await compatible(); process.stdout.write('{"contract":2}\n') } finally { api.stop() }
+    return
+  }
+  let control
+  if (managed) {
+    const socketPath = join(config.state, 'maintenance.sock')
+    // systemd guarantees a single worker; operator must never run a second one.
+    await rm(socketPath, { force: true })
+    control = createServer(client => {
+      client.setTimeout(5000, () => client.destroy())
+      let input = ''
+      client.on('error', () => {})
+      client.on('data', chunk => {
+        input += chunk
+        if (input.length > 1024) { client.destroy(); return }
+        if (!input.includes('\n')) return
+        client.pause()
+        void (async () => {
+          const command = JSON.parse(input)
+          if (command.action === 'drain') gate.pause()
+          let ready = false, activeJobs = null
+          if (['status', 'resume'].includes(command.action)) {
+            try { const schema = await compatible(); activeJobs = schema.activeJobs; ready = connected && !stopping } catch { /* Fail closed; no diagnostic data on socket. */ }
+          }
+          if (command.action === 'resume') {
+            requireValue(ready && activeJobs === 0, 'release-not-ready')
+            gate.resume(); requestDrain()
+          }
+          requireValue(['drain', 'status', 'resume'].includes(command.action), 'invalid-control')
+          client.end(JSON.stringify({ protocol: 1, pid: process.pid, release, ready, activeJobs, contract: ready ? 2 : null, ...gate.snapshot() }) + '\n')
+        })().catch(() => client.end('{"error":"maintenance-unavailable"}\n'))
+      })
+    })
+    await new Promise((done, fail) => { control.once('error', fail); control.listen(socketPath, done) })
+  }
   let rosterDirty = true, publicationBudget = 0
   let socket, connected = false, joinedChannel = false, replicationReady = false, stopping = false, connecting = false, drainRequested = false, draining = null
-  let sequence = 0, joinRef, pendingHeartbeat, connectionFailures = 0, activeController
+  let sequence = 0, joinRef, pendingHeartbeat, connectionFailures = 0
   let reconnectTimer, heartbeatTimer, presenceTimer, joinTimer, wakeTimer
   const send = (event, payload, topic = TOPIC, ref = String(++sequence)) => {
     if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ topic, event, payload, ref, ...(topic === TOPIC ? { join_ref: joinRef } : {}) }))
@@ -484,10 +943,11 @@ async function start() {
   }
   async function deliver(entry) {
     const input = { p_job_id: entry.job.id, p_lease_token: entry.job.lease_token, p_worker_id: config.id,
-      p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [] }
+      p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [],
+      p_model_evidence: entry.modelExecutionEvidence || null }
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const result = await api.rpc('hq_worker_finish_v2', input)
+        const result = await api.rpc('hq_worker_finish_v3', input)
         requireValue(accepted(result), 'delivery-rejected')
         await journal.write({ ...entry, phase: 'delivered', reply: '', error: null, evidence: [] })
         return result
@@ -500,10 +960,16 @@ async function start() {
   async function recover() {
     for (const id of await journal.pending()) {
       const entry = await journal.read(id)
-      requireValue(record(entry) && [1, 2].includes(entry.version) && entry.project === config.url && entry.worker_id === config.id && entry.job?.id === id
+      requireValue(record(entry) && [1, 2, 3].includes(entry.version) && entry.project === config.url && entry.worker_id === config.id && entry.job?.id === id
         && typeof entry.job.lease_token === 'string' && entry.job.lease_token.length >= 20
         && typeof entry.reply === 'string' && entry.reply.length <= 32_000
         && (entry.evidence === undefined || Array.isArray(entry.evidence) && Buffer.byteLength(JSON.stringify(entry.evidence)) <= 40_000)
+        && (entry.modelBindingEvidence === undefined || entry.modelBindingEvidence === null
+          || record(entry.modelBindingEvidence) && entry.modelBindingEvidence.schemaVersion === 1
+            && entry.modelBindingEvidence.workerJobId === id && Buffer.byteLength(JSON.stringify(entry.modelBindingEvidence)) <= 32_000)
+        && (entry.modelExecutionEvidence === undefined || entry.modelExecutionEvidence === null
+          || record(entry.modelExecutionEvidence) && entry.modelExecutionEvidence.schemaVersion === 1
+            && entry.modelExecutionEvidence.workerJobId === id && Buffer.byteLength(JSON.stringify(entry.modelExecutionEvidence)) <= 16_000)
         && (entry.error === null || typeof entry.error === 'string' && /^[a-z-]{1,80}$/.test(entry.error)), 'invalid-journal')
       if (entry.phase === 'delivered') continue
       requireValue(['started', 'finished'].includes(entry.phase), 'invalid-journal')
@@ -518,13 +984,21 @@ async function start() {
     validateJob(job)
     const previous = await journal.read(job.id)
     requireValue(!previous, 'job-already-attempted')
-    let entry = { version: 2, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [] }
+    let entry = { version: 3, project: config.url, worker_id: config.id, job: { id: job.id, lease_token: job.lease_token }, phase: 'started', reply: '', error: null, evidence: [], modelBindingEvidence: null, modelExecutionEvidence: null }
     // Flush before any model invocation. A crash can block a job, never repeat inference silently.
     await journal.write(entry)
-    const controller = new AbortController(); activeController = controller
+    const executionBlock = workerExecutionBlock(job)
+    if (executionBlock) {
+      // Persist a bounded staffing prerequisite without loading Brain or invoking a model.
+      entry.error = executionBlock; entry.phase = 'finished'; await journal.write(entry)
+      await deliver(entry)
+      log('job-blocked')
+      return
+    }
+    const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(problem('provider-timeout')), JOB_MS)
-    let renewing = false
-    const leaseTimer = setInterval(async () => {
+    let renewing = false, leaseRenewal = Promise.resolve()
+    const renewLease = async () => {
       if (renewing || controller.signal.aborted) return
       renewing = true
       try {
@@ -532,7 +1006,8 @@ async function start() {
         requireValue(accepted(result), 'lease-lost')
       } catch { controller.abort(problem('lease-lost')) }
       finally { renewing = false }
-    }, LEASE_INTERVAL_MS)
+    }
+    const leaseTimer = setInterval(() => { if (!renewing) leaseRenewal = renewLease() }, LEASE_INTERVAL_MS)
     log('job-started')
     try {
       const documents = await brain(job.context, controller.signal)
@@ -545,10 +1020,15 @@ async function start() {
         await api.rpc('hq_worker_skill_context', { p_job_id: job.id, p_lease_token: job.lease_token, p_worker_id: config.id, p_skill_ids: loaded })
       } catch { log('skill-observation-unavailable') }
       controller.signal.throwIfAborted()
-      const output = await invokeCodex(config, job, documents, controller.signal)
-      entry.reply = output.reply; entry.evidence = output.evidence
-    } catch (error) { entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error) }
-    finally { clearInterval(leaseTimer); clearTimeout(timeout); activeController = null }
+      const output = await invoke(config, job, documents, controller.signal)
+      entry.reply = output.reply; entry.evidence = output.evidence; entry.modelBindingEvidence = output.modelBindingEvidence
+      entry.modelExecutionEvidence = output.modelExecutionEvidence
+    } catch (error) {
+      entry.reply = ''; entry.evidence = []; entry.error = codeOf(controller.signal.aborted ? controller.signal.reason : error)
+      entry.modelBindingEvidence = error?.modelBindingEvidence || null
+      entry.modelExecutionEvidence = error?.modelExecutionEvidence || null
+    }
+    finally { clearInterval(leaseTimer); clearTimeout(timeout); await leaseRenewal }
     entry.phase = 'finished'; await journal.write(entry)
     const delivered = await deliver(entry)
     log(entry.error || delivered?.discarded ? 'job-blocked' : 'job-delivered')
@@ -558,6 +1038,7 @@ async function start() {
     const pending = await api.rpc('hq_worker_pending_lessons', { p_worker_id: config.id })
     requireValue(Array.isArray(pending) && pending.length <= 8, 'invalid-lessons')
     for (const lesson of pending.slice(0, publicationBudget)) {
+      if (gate.snapshot().paused) break
       publicationBudget--
       const receipt = await publisher.publishLesson(lesson, AbortSignal.timeout(90_000))
       requireValue(record(receipt) && typeof receipt.reference === 'string' && /^[0-9a-f]{64}$/.test(receipt.digest), 'invalid-lesson-receipt')
@@ -568,35 +1049,43 @@ async function start() {
   async function drain() {
     publicationBudget = 4
     await recover()
-    while (connected && !stopping && drainRequested) {
+    while (connected && !stopping && !gate.snapshot().paused && drainRequested) {
       drainRequested = false; clearTimeout(wakeTimer)
       if (rosterDirty) { rosterDirty = false; await roster.sync(config.id, AbortSignal.timeout(180_000)) }
-      try { await publishLessons() } catch (error) { log(codeOf(error)) }
-      while (connected && !stopping) {
+      if (!gate.snapshot().paused) await publishLessons()
+      while (connected && !stopping && !gate.snapshot().paused) {
         const result = await api.rpc('hq_worker_claim', workerClaimInput(config.id))
         requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
         if (!result.job) { wakeOnce(result.next_wake_at); break }
         await work(result.job)
-        try { await publishLessons() } catch (error) { log(codeOf(error)) }
+        if (!gate.snapshot().paused) await publishLessons()
       }
     }
   }
   function requestDrain() {
     drainRequested = true
-    if (!connected || stopping || draining) return
-    draining = drain().catch(error => { log(codeOf(error)); reconnect() }).finally(() => {
+    if (!connected || stopping || draining || gate.snapshot().paused || gate.snapshot().uncertain) return
+    draining = gate.run(async () => {
+      // Flush intent before any recovery/roster/claim/publication side effect.
+      // A process crash can lose a claim response even before a job journal exists.
+      const intent = await open(inFlight, 'wx', 0o600)
+      try { await intent.writeFile('Queue operation may be in flight.\n'); await intent.sync() } finally { await intent.close() }
+      await syncState()
+      await drain()
+      await rm(inFlight); await syncState()
+    }).catch(error => { log(codeOf(error)); reconnect() }).finally(() => {
       draining = null
-      if (connected && drainRequested && !stopping) requestDrain()
+      if (connected && drainRequested && !stopping && !gate.snapshot().paused) requestDrain()
     })
   }
   async function presence() {
     try { await api.rpc('hq_worker_presence', { p_worker_id: config.id }) }
-    catch (error) { log(codeOf(error)); reconnect() }
+    catch (error) { log(codeOf(error)); reconnect(); throw error }
   }
   function queueReady() {
     if (connected || !joinedChannel || !replicationReady || stopping) return
     clearTimeout(joinTimer); rosterDirty = true; connected = true; connectionFailures = 0; log('queue-connected')
-    void presence(); presenceTimer = setInterval(() => { if (connected) void presence() }, 60_000)
+    void gate.run(presence).catch(() => {}); presenceTimer = setInterval(() => { if (connected) void gate.run(presence).catch(() => {}) }, 60_000)
     requestDrain()
   }
   async function connect() {
@@ -646,13 +1135,21 @@ async function start() {
   })
   async function stop() {
     if (stopping) return
-    stopping = true; connected = false; clearTimeout(reconnectTimer); clearTimeout(wakeTimer); clearTimeout(joinTimer)
-    clearInterval(heartbeatTimer); clearInterval(presenceTimer); api.stop(); activeController?.abort(problem('worker-interrupted'))
+    gate.pause(); stopping = true; connected = false; clearTimeout(reconnectTimer); clearTimeout(wakeTimer); clearTimeout(joinTimer)
+    clearInterval(heartbeatTimer); clearInterval(presenceTimer)
     try { socket?.close() } catch { /* No listener remains. */ }
-    await draining; log('worker-stopped')
+    await draining
+    while (gate.snapshot().busy) await wait(50)
+    api.stop(); control?.close(); log('worker-stopped')
   }
-  process.once('SIGTERM', () => { stop().then(() => process.exit(0)) })
-  process.once('SIGINT', () => { stop().then(() => process.exit(0)) })
+  let shutdownRequested = false
+  const shutdown = () => {
+    if (shutdownRequested) return
+    shutdownRequested = true
+    void stop().then(() => process.exit(0))
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
   await connect()
 }
 
