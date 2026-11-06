@@ -52,13 +52,13 @@ begin
     where jsonb_typeof(x.value)<>'object'
       or (select count(*) from jsonb_each(x.value))<>7
       or exists(select 1 from jsonb_each(x.value) e(key,value) where e.key not in ('model','outcome','errorCode','toolEventCount','rerouteCount','turnsStarted','turnsCompleted'))
-      or x.value->>'model' !~ '^gpt-[A-Za-z0-9.-]{1,70}$'
-      or x.value->>'outcome' not in ('completed','failed')
+      or x.value->>'model' is null or x.value->>'model' !~ '^gpt-[A-Za-z0-9.-]{1,70}$'
+      or x.value->>'outcome' is null or x.value->>'outcome' not in ('completed','failed')
       or (x.value->>'errorCode' is not null and x.value->>'errorCode' !~ '^[a-z-]{1,80}$')
-      or x.value->>'toolEventCount' !~ '^[0-9]{1,3}$' or (x.value->>'toolEventCount')::integer>256
-      or x.value->>'rerouteCount' !~ '^[0-9]{1,2}$' or (x.value->>'rerouteCount')::integer>32
-      or x.value->>'turnsStarted' !~ '^[0-9]{1,2}$' or (x.value->>'turnsStarted')::integer>32
-      or x.value->>'turnsCompleted' !~ '^[0-9]{1,2}$' or (x.value->>'turnsCompleted')::integer>32
+      or x.value->>'toolEventCount' is null or x.value->>'toolEventCount' !~ '^[0-9]{1,3}$' or (x.value->>'toolEventCount')::integer>256
+      or x.value->>'rerouteCount' is null or x.value->>'rerouteCount' !~ '^[0-9]{1,2}$' or (x.value->>'rerouteCount')::integer>32
+      or x.value->>'turnsStarted' is null or x.value->>'turnsStarted' !~ '^[0-9]{1,2}$' or (x.value->>'turnsStarted')::integer>32
+      or x.value->>'turnsCompleted' is null or x.value->>'turnsCompleted' !~ '^[0-9]{1,2}$' or (x.value->>'turnsCompleted')::integer>32
       or (x.value->>'outcome'='completed' and x.value->>'errorCode' is not null)
       or (x.value->>'outcome'='failed' and x.value->>'errorCode' is null)) then
     raise exception 'HQ_MODEL_EXECUTION_ATTEMPT_INVALID' using errcode='22023';
@@ -71,8 +71,7 @@ begin
       or p_evidence->>'policy' is distinct from 'terra-primary-luna-fallback-v1' then
       raise exception 'HQ_MODEL_EXECUTION_FALLBACK_INVALID' using errcode='22023';
     end if;
-  elsif r.model_tier='T1_WORKER' and r.model='gpt-6.1-terra' and v_attempts->0->>'model' is distinct from 'gpt-6.1-terra'
-    or r.model_tier<>'T1_WORKER' and v_attempts->0->>'model' is distinct from r.model then
+  elsif v_attempts->0->>'model' is distinct from r.model then
     raise exception 'HQ_MODEL_EXECUTION_PRIMARY_INVALID' using errcode='22023';
   end if;
   v_model:=case when v_outcome='completed' then v_attempts->(v_count-1)->>'model' end;

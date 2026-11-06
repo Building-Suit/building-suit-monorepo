@@ -118,6 +118,33 @@ test('model execution receipt is immutable, artifact-bound and records fallback 
  } finally {await db.close()}
 })
 
+test('model receipt validation rejects null counters and models outside the current roster binding atomically',async()=>{
+ for(const mode of ['null-counter','wrong-model']){
+  const h=await setup();const {db,as,rpc}=h
+  try{
+   await as('founder')
+   await rpc('hq_create_task',['Receipt gate '+mode,'Create one internal draft.','Return one draft and no external action.','AG-HR-002',randomUUID()])
+   const job=await h.claim()
+   const evidence={schemaVersion:1,workerJobId:job.id,workerId:worker,agentId:job.agent_id,
+    policy:mode==='wrong-model'?'canonical-model-only-v1':'terra-primary-luna-fallback-v1',
+    configuredModel:mode==='wrong-model'?'gpt-6-luna':'gpt-6.1-terra',selectedModel:mode==='wrong-model'?'gpt-6.1-terra':'gpt-6-luna',
+    providerServedModel:'unknown',fallbackUsed:mode!=='wrong-model',outcome:'completed',attempts:mode==='wrong-model'?
+     [{model:'gpt-6.1-terra',outcome:'completed',errorCode:null,toolEventCount:0,rerouteCount:0,turnsStarted:1,turnsCompleted:1}]:[
+      {model:'gpt-6.1-terra',outcome:'failed',errorCode:'provider-model-unavailable',toolEventCount:0,rerouteCount:0,turnsStarted:1,turnsCompleted:1},
+      {model:'gpt-6-luna',outcome:'completed',errorCode:null,toolEventCount:0,rerouteCount:0,turnsStarted:1,turnsCompleted:1},
+     ]}
+   if(mode==='null-counter') evidence.attempts[0].turnsStarted=null
+   else {await db.exec('reset role');await db.query(`update hq_private.agent_roster set model='gpt-6-luna' where id=$1`,[job.agent_id])}
+   await as('worker')
+   const expected=mode==='null-counter'?/HQ_MODEL_EXECUTION_ATTEMPT_INVALID/:/HQ_MODEL_EXECUTION_PRIMARY_INVALID/
+   await assert.rejects(()=>rpc('hq_worker_finish_v3',[job.id,job.lease_token,worker,'Draft.',null,'[]',JSON.stringify(evidence)]),expected)
+   await db.exec('reset role')
+   const state=await db.query(`select status,result_digest from public.hq_agent_jobs where id=$1`,[job.id])
+   assert.deepEqual(state.rows[0],{status:'working',result_digest:null})
+  }finally{await db.close()}
+ }
+})
+
 test('staffing-required worker failure creates one durable HR-owned need and leaves the task blocked',async()=>{
   const h=await setup();const {db,as,rpc}=h
   try {
