@@ -19,15 +19,15 @@ Passing checks completed before the source checkpoint:
   read-only health, claim-in-flight drain, repeated SIGTERM, lease renewal during
   active mocked inference, exact-once journal/delivery, unknown claim poison,
   durable intent after process loss, and incompatible schema refusal.
-- Python updater/builder: **16/16**. Tests use disposable directories/fake
+- Python updater/builder: **19/19**. Tests use disposable directories/fake
   services; verify package validation, deterministic committed-source builder,
   tamper/path/duplicate rejection, complete baseline, lock exclusion, startup
   health criteria, schema rejection before drain/stop, busy drain timeout,
   success/no-op, failure rollback, interruption at stop/start/health, and durable
   accepted-state recovery that cannot terminate newly admitted work.
-- Existing host suite before the final lifecycle additions: **54/54**, including
-  worker/Brain/roster and disposable PGlite database tests. Final full host run is
-  recorded below after the source checkpoint.
+- Full host suite: **59/59**, including worker/Brain/roster, the 10 maintenance/
+  lifecycle checks and disposable PGlite database tests. The later bounded lesson-
+  publication pause refinement was rechecked by the maintenance/lifecycle suite.
 - ESLint for the four changed/new `.mjs` files passed. A wider host-directory
   lint also exposed six inherited errors in unchanged `brainPublisher.mjs`,
   `workforceRoster.mjs`, `intake-recovery-db.test.mjs`.
@@ -60,8 +60,18 @@ Repository-wide results so far:
   child startup timeout. The last two are unrelated timing failures in unchanged
   source under concurrent executor load; their pre-existence as failures has not
   been established. This is not a green full-repository test result.
-- Full typecheck, release classification and final source-build verification
-  remain in progress at this checkpoint; final results will be appended.
+- Release classification passed against the migration-parity parent and the full
+  main-to-head candidate. The exact source checkpoint `9dbb82c300118d8f03175148533d951a76128b70`
+  built a 101,825-byte code-only package (SHA256 `765a4a96b44146267b23ad0f1bb28ba967f7c63df5b0c8ec75b46b96f1f0a8a8`).
+  A later final commit build will be recorded below.
+- Initial full typecheck stopped on missing generated Docs JSON because root setup
+  had not yet been run. `pnpm run setup` then passed; typecheck is being rerun.
+  This initial executor setup failure is not evidence of an inherited type error.
+- systemd example syntax was checked with `systemd-analyze verify --man=no` using
+  disposable copied unit files. It reported only the expected absence of the
+  historical Oracle Node executable in this executor. No live unit was installed
+  or started. YAML parsed successfully.
+- Full build and the post-setup typecheck remain in progress; final results follow.
 
 Network verification limit: fetching a public CLI-release attestation bundle
 from `tmaproduction.blob.core.windows.net` was denied by the executor proxy

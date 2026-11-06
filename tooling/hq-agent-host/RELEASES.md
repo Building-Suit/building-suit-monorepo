@@ -9,6 +9,7 @@ Production is excluded. The private release catalog remains separate.
 
 `ci.yml` builds only after the existing `verify` job succeeds on a `push` to
 `refs/heads/stg`. That job already depends on `review` and branch policy admission.
+Review also runs the full disposable host/PGlite and Python release suites.
 The release job checks out **exact `github.sha`**, runs maintenance and updater
 regressions, then builds committed source using `git show SHA:path`. It publishes
 `hq-worker-stg-SHA` once and never replaces assets. It needs no workflow on
@@ -20,7 +21,8 @@ settings are not changed by this implementation.
 `worker.json` is a bounded JSON envelope, not a tarball. Its exact allowlist is
 `worker.mjs`, `workforceRoster.mjs`, `brainPublisher.mjs`, `maintenance.mjs` and a
 manifest containing their byte counts/hashes, exact SHA and contract versions.
-The decoder rejects duplicate keys, unknown fields, extra/path-like file names,
+Downloads and redirects are restricted to HTTPS on the fixed GitHub/API and
+GitHub release-asset domains. The decoder rejects duplicate keys, unknown fields, extra/path-like file names,
 wrong SHA/ref/contract and modified bytes. It never interprets commands from the
 manifest. Extraction writes fixed names into a fresh staging directory, flushes
 files/directories and renames into an immutable SHA directory. No symlinks,

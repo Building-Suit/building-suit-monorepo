@@ -626,6 +626,7 @@ export async function start(adapters = {}) {
     const pending = await api.rpc('hq_worker_pending_lessons', { p_worker_id: config.id })
     requireValue(Array.isArray(pending) && pending.length <= 8, 'invalid-lessons')
     for (const lesson of pending.slice(0, publicationBudget)) {
+      if (gate.snapshot().paused) break
       publicationBudget--
       const receipt = await publisher.publishLesson(lesson, AbortSignal.timeout(90_000))
       requireValue(record(receipt) && typeof receipt.reference === 'string' && /^[0-9a-f]{64}$/.test(receipt.digest), 'invalid-lesson-receipt')

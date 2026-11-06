@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 import time
 import urllib.request
+from urllib.parse import urlsplit
 
 REPO = 'Building-Suit/building-suit-monorepo'
 REPO_ID = '1376504404'
@@ -174,7 +175,7 @@ class Host:
         for name in ('node', 'gh', 'systemctl', 'trustedRoot', 'socket'):
             require(Path(config[name]).is_absolute(), 'absolute-path-required')
         require(config['unit'] == 'company-hq-worker.service', 'unexpected-service')
-        require(config['schemaContract'] == 1, 'operator-schema-contract-required')
+        require(type(config['schemaContract']) is int and config['schemaContract'] == 1, 'operator-schema-contract-required')
 
     def command(self, argv, timeout=60, env=None):
         return subprocess.check_output(argv, timeout=timeout, env=env, stderr=subprocess.DEVNULL, text=True)
@@ -358,14 +359,20 @@ def install(host, package, sha):
         return 'installed'
 
 
+def allowed_url(url):
+    parsed = urlsplit(url)
+    require(parsed.scheme == 'https' and parsed.hostname in {'api.github.com', 'github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'}
+            and not parsed.username and not parsed.password and parsed.port in (None, 443), 'https-github-required')
+
+
 class HttpsOnly(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        require(newurl.startswith('https://'), 'https-required')
+        allowed_url(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch(url):
-    require(url.startswith('https://'), 'https-required')
+    allowed_url(url)
     with urllib.request.build_opener(HttpsOnly()).open(urllib.request.Request(url, headers={'User-Agent': 'company-hq-updater/1'}), timeout=30) as response:
         data = response.read(MAX_BYTES + 1)
         require(len(data) <= MAX_BYTES, 'download-too-large')

@@ -64,6 +64,10 @@ jobs:
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Verify HQ worker, durable maintenance and release invariants
+        run: |
+          node --test tooling/hq-agent-host/*.test.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p 'release_test.py' -v
       - name: Retain receipt reference comparisons
         if: always()
         uses: actions/upload-artifact@v4
@@ -198,7 +202,7 @@ jobs:
           node-version-file: .node-version
       - name: Test release and maintenance invariants
         run: |
-          node --test tooling/hq-agent-host/maintenance.test.mjs tooling/hq-agent-host/lifecycle.test.mjs
+          node --test tooling/hq-agent-host/maintenance.test.mjs tooling/hq-agent-host/lifecycle.test.mjs tooling/hq-agent-host/worker.test.mjs tooling/hq-agent-host/workforceRoster.test.mjs tooling/hq-agent-host/brainPublisher.test.mjs
           python3 -m unittest discover -s tooling/hq-agent-host -p 'release_test.py' -v
       - name: Build exact tested code-only source
         env:

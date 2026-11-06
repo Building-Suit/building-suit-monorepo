@@ -97,6 +97,14 @@ class Releases(unittest.TestCase):
         r.activate(self.root, A)
         self.host = FakeHost(self.root)
 
+    def test_download_redirect_policy_rejects_other_hosts_and_non_https(self):
+        for url in ['http://github.com/file', 'https://127.0.0.1/file', 'https://example.invalid/file',
+                    'https://github.com:8443/file', 'https://user:password@github.com/file']:
+            with self.assertRaises(RuntimeError):
+                r.allowed_url(url)
+        for host in ['github.com', 'api.github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com']:
+            r.allowed_url('https://' + host + '/public-file')
+
     def test_integrity_paths_tamper_and_unknown_manifest(self):
         for mutate in [lambda p: p['files'].__setitem__('../worker.env', ''),
                        lambda p: p['files'].__setitem__('/worker.mjs', ''),
@@ -189,7 +197,7 @@ class Releases(unittest.TestCase):
         self.assertEqual(self.host.calls, ['status'])
         self.assertEqual(r.current_sha(self.root), B)
 
-    def test_lock_exclusive_and_released_after_owner_exits(self):
+    def test_lock_exclusive_and_released_after_context(self):
         with r.exclusive(self.root):
             with self.assertRaises(BlockingIOError):
                 r.install(self.host, package(B), B)
@@ -227,6 +235,43 @@ class Releases(unittest.TestCase):
         self.host.busy = 1
         self.assertTrue(r.recover(self.host))
         self.assertEqual(self.host.calls, ['status'])
+
+    def test_resume_response_loss_after_admission_cannot_trigger_rollback(self):
+        original = self.host.control
+        def control(action):
+            result = original(action)
+            if action == 'resume':
+                raise RuntimeError('response-lost')
+            return result
+        self.host.control = control
+        with self.assertRaisesRegex(RuntimeError, 'response-lost'):
+            r.install(self.host, package(B), B)
+        self.assertEqual(r.current_sha(self.root), B)
+        self.assertEqual(self.host.busy, 1)
+        self.assertEqual(r.decode((self.root / 'transaction.json').read_bytes())['phase'], 'accepted')
+        self.host.control = original
+        self.assertTrue(r.recover(self.host))
+        self.assertEqual(self.host.calls.count('stop'), 1)
+
+    def test_process_crash_releases_kernel_lock(self):
+        child = subprocess.Popen(['python3', '-c',
+            'import fcntl,sys; f=open(sys.argv[1], "a"); fcntl.flock(f,fcntl.LOCK_EX); print("ready",flush=True); sys.stdin.read()',
+            str(self.root / 'updater.lock')], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        try:
+            self.assertEqual(child.stdout.readline().strip(), 'ready')
+            with self.assertRaises(BlockingIOError):
+                with r.exclusive(self.root):
+                    pass
+            child.kill()
+            child.wait(timeout=5)
+            with r.exclusive(self.root):
+                pass
+        finally:
+            if child.poll() is None:
+                child.kill()
+            child.wait(timeout=5)
+            child.stdin.close()
+            child.stdout.close()
 
     def test_provenance_flags_no_credential_and_repository_identity(self):
         config = {'root': str(self.root), 'node': '/fixed/node', 'gh': '/fixed/gh', 'systemctl': '/usr/bin/systemctl',
