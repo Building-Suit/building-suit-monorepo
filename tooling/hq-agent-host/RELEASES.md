@@ -305,6 +305,15 @@ Nonzero exit, malformed/oversized stdout, stderr-only versions, unsupported
 versions, timeout and cancellation still fail closed before App Server launch.
 The same executable digest and resolved model/effort evidence remain required.
 
+Task acknowledgments explicitly request one JSON object, an at-most-8,000-byte
+UTF-8 message and the exact recipient mention when delegation is non-null.
+The worker checks this structure against the server-issued roster before
+journaling a result; the database remains the final authorization boundary.
+Invalid output blocks once without another inference attempt or truncation.
+Delivered journals retain only an allowlisted `outputDiagnostic` code while
+clearing reply/error/evidence as before. Older journals without that field stay
+compatible; a historical generic error cannot identify a deleted reply's clause.
+
 ## First installation bridge proposals
 
 Supervised trial context uses `trialAssignment` version 1. A forward migration

@@ -3,7 +3,7 @@ import { fake } from './test-cli.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, randomUUID, generateKeyPairSync } from 'node:crypto'
-import { deliverWorkerEntry, validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
+import { deliverWorkerEntry, validateTaskAckOutput, validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { registerHooks } from 'node:module'
 // Nuxt resolves these TypeScript source imports; plain Node tests need the same
@@ -22,6 +22,66 @@ const trialWorkerJob=()=>{
  value.context.supervisedTrial={id:trialId,taskId,agentId:value.agent_id,scope:'synthetic-internal-trial-v1'}
  return value
 }
+const ackJob=()=>{
+ const value=job('AG-HR-001','task-ack')
+ value.context.roster=[{id:'AG-HR-002',name:'Synthetic Recipient',managerId:value.agent_id}]
+ return value
+}
+test('task-ack byte boundaries and exact mention match the bounded database contract without truncation',()=>{
+ const value=ackJob(),mention='@Synthetic Recipient '
+ const valid=[{message:'x'.repeat(8000),delegateId:null},{message:'é'.repeat(4000),delegateId:null},
+  {message:mention+'x'.repeat(8000-Buffer.byteLength(mention)),delegateId:'AG-HR-002'},
+  {message:mention+'\t\n\r',delegateId:'AG-HR-002'},
+  {message:'No delegation.',delegateId:null,extra:'database permits extra fields'},
+  {message:'\t\n',delegateId:null}]
+ for(const body of valid){const text=JSON.stringify(body);assert.doesNotThrow(()=>validateTaskAckOutput(value,text));assert.equal(text,JSON.stringify(body))}
+ for(const message of ['x'.repeat(8001),'é'.repeat(4000)+'x','é'.repeat(4001)]){
+  assert.throws(()=>validateTaskAckOutput(value,JSON.stringify({message,delegateId:null})),/task-ack-message-too-large/)
+ }
+})
+test('task-ack structural failures have fixed distinct codes and never include generated output',()=>{
+ const value=ackJob(),message='Generated fixture body'
+ const cases=[['{','task-ack-json-invalid'],['```json\n{}\n```','task-ack-json-invalid'],
+  ...['null','[]','"text"','1'].map(text=>[text,'task-ack-object-required']),
+  [JSON.stringify({delegateId:null}),'task-ack-message-required'],
+  [JSON.stringify({message:1,delegateId:null}),'task-ack-message-required'],
+  ...['','   '].map(message=>[JSON.stringify({message,delegateId:null}),'task-ack-message-empty']),
+  ...['\u0000','\u0001','\u000b'].map(message=>[JSON.stringify({message,delegateId:null}),'task-ack-message-control']),
+  [JSON.stringify({message:'\ud800',delegateId:null}),'task-ack-message-invalid-unicode'],
+  [JSON.stringify({message}),'task-ack-delegate-required'],
+  ...['AG-HR-999',1,{},false].map(delegateId=>[JSON.stringify({message,delegateId}),'task-ack-delegate-invalid']),
+  [JSON.stringify({message,delegateId:'AG-HR-002'}),'task-ack-mention-required'],
+  [JSON.stringify({message:'@Synthetic recipient',delegateId:'AG-HR-002'}),'task-ack-mention-required']]
+ for(const [text,code] of cases)assert.throws(()=>validateTaskAckOutput(value,text),error=>{
+  assert.equal(codeOf(error),code);assert.equal(error.message,code);assert.doesNotMatch(error.message,/Generated fixture body/);return true
+ })
+ value.context.roster[0].managerId='AG-CEO-001'
+ assert.throws(()=>validateTaskAckOutput(value,JSON.stringify({message:'@Synthetic Recipient',delegateId:'AG-HR-002'})),/task-ack-delegate-invalid/)
+ assert.doesNotThrow(()=>validateTaskAckOutput(job(),'{'),'other stages keep their existing contract')
+})
+test('task-ack prompts state exact mention and UTF8 byte limits without changing the full trial assignment',()=>{
+ const value=ackJob();value.context.supervisedTrial={scope:'synthetic-internal-trial-v1',agentId:'AG-HR-002'}
+ const packet={version:1,headAssignments:[{message:'Full generated assignment'}]};value.context.trialAssignment=packet
+ const text=stageInstructions(value)
+ assert.match(text,/8,000 UTF-8 bytes/);assert.match(text,/"@Synthetic Recipient"/)
+ assert.match(text,/without copying whole source documents/);assert.match(text,/otherwise return delegateId:null/)
+ assert.equal(value.context.trialAssignment,packet)
+ const ordinary=ackJob();assert.match(stageInstructions(ordinary),/8,000 UTF-8 bytes/)
+ assert.doesNotMatch(stageInstructions(job()),/8,000 UTF-8 bytes|copying whole source documents/)
+})
+test('delivered journal retains only allowlisted structural diagnostic codes after reply cleanup',async()=>{
+ const code='task-ack-mention-required';let saved,calls=0
+ const entry={version:3,job:{id:randomUUID(),lease_token:randomUUID()},phase:'finished',reply:'Generated body that must be cleared',error:code,evidence:[]}
+ await deliverWorkerEntry({workerId:randomUUID(),rpc:async()=>{calls++;return {accepted:true}},write:async value=>{saved=value}},entry)
+ assert.equal(calls,1);assert.equal(saved.phase,'delivered');assert.equal(saved.outputDiagnostic,code)
+ assert.equal(saved.reply,'');assert.equal(saved.error,null);assert.deepEqual(saved.evidence,[])
+ assert.doesNotMatch(JSON.stringify(saved),/Generated body/)
+ await deliverWorkerEntry({workerId:randomUUID(),rpc:async()=>({accepted:true}),write:async value=>{saved=value}},saved)
+ assert.equal(saved.outputDiagnostic,code,'durable delivery replay preserves the fixed code')
+ await deliverWorkerEntry({workerId:randomUUID(),rpc:async()=>({accepted:true}),write:async value=>{saved=value}},
+  {...entry,error:'stage-output-invalid',outputDiagnostic:'Generated private diagnostic'})
+ assert.equal(saved.outputDiagnostic,null,'unknown diagnostics are not retained or inferred retrospectively')
+})
 function qualifiedResearchJob(){
  const value=job('AG-RES-002'),agent=value.context.agent
  Object.assign(agent,{model:'gpt-6.1-terra',modelTier:'T1_WORKER',managerId:'AG-RES-001',managerModelTier:'T2_HEAD',departmentKey:'research-market-intelligence',

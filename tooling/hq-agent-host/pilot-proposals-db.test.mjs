@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 import { maintenanceGate, checkApiContract, REQUIRED_RPCS } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { fake } from './test-cli.mjs'
-import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, webAllowed } from './worker.mjs'
+import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, validateTaskAckOutput, webAllowed } from './worker.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
@@ -696,6 +696,45 @@ async function claimTrialWork(h,skill) {
  j=await h.claim();assert.equal(j.context.mode,'worker-trial');assert.deepEqual(j.context.agent.skillFileIds,[skill])
  return {j,trial}
 }
+test('local task-ack structure agrees with the actual finish validator including UTF8 bounds and null delegates',async()=>{
+ const {h}=await trialSetup(['synthetic_ack_contract']);try{
+  await h.as('founder');await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002','synthetic_ack_contract',randomUUID()])
+  let j=await h.claim();await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head scopes one internal trial.',message:'@Employee 1 supervise.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-ack')
+  const recipient=j.context.roster.find(a=>a.id==='AG-HR-002'),mention='@'+recipient.name+' '
+  const cases=[
+   ['{',false],['null',false],['[]',false],['"text"',false],
+   [{message:'x'.repeat(8000),delegateId:null},true],
+   [{message:'x'.repeat(8001),delegateId:null},false],
+   [{message:'é'.repeat(4000),delegateId:null},true],
+   [{message:'é'.repeat(4000)+'x',delegateId:null},false],
+   [{message:mention+'x'.repeat(8000-Buffer.byteLength(mention)),delegateId:recipient.id},true],
+   [{message:'No delegation.',delegateId:null},true],
+   [{message:'\t\n',delegateId:null},true],
+   [{message:'   ',delegateId:null},false],
+   [{message:'\u0000',delegateId:null},false],
+   [{message:'\u0001',delegateId:null},false],
+   [{message:'\ud800',delegateId:null},false],
+   [{message:'No delegate field.'},false],
+   [{message:'Unknown target.',delegateId:'AG-HR-999'},false],
+   [{message:'Missing mention.',delegateId:recipient.id},false],
+   [{message:mention,delegateId:recipient.id},true],
+  ]
+  for(const [body,expected] of cases){
+   const reply=typeof body==='string'?body:JSON.stringify(body)
+   let local=true;try{validateTaskAckOutput(j,reply)}catch{local=false}
+   assert.equal(local,expected)
+   await h.db.exec('begin')
+   try{
+    await h.finish(j,reply)
+    await h.db.exec('reset role')
+    const result=(await h.db.query('select status,error from public.hq_agent_jobs where id=$1',[j.id])).rows[0]
+    assert.equal(result.status==='completed',local,'local structure matches the existing server contract')
+    assert.equal(result.error,expected?null:'stage-output-invalid')
+   }finally{await h.db.exec('rollback')}
+  }
+ }finally{await h.db.close()}
+})
 test('one full bounded trial assignment survives acknowledgments, both review paths and two corrections',async()=>{
  const skill='synthetic_packet_skill',otherSkill='synthetic_other_skill'
  const {h}=await trialSetup([skill,otherSkill],false);try{

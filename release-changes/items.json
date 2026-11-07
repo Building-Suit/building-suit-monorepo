@@ -5977,5 +5977,28 @@
       "release-changes/items.json"
     ],
     "reason": "Keep one bounded supervised-trial assignment with current selected hire sources, full head scoping and rejected review findings across acknowledgments, work, independent review and corrections; preserve failed evidence, restrictions, repair bounds and ordinary workflows."
+  },
+  {
+    "id": "hq-task-ack-output-contract-20261107",
+    "task": "HQ-TASK-ACK-OUTPUT-CONTRACT-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/worker.mjs",
+      "tooling/hq-agent-host/worker.test.mjs",
+      "tooling/hq-agent-host/lifecycle.test.mjs",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Align task-ack generation/local structural checks with existing message/delegation constraints and retain allowlisted diagnostic codes after durable cleanup without payloads, retries, larger limits or changed trial context."
   }
 ]

@@ -25,7 +25,7 @@ async function fixture(t, extra = {}) {
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
 const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}
-let activeJobs = 0
+let activeJobs = 0, taskAckDelivered = false
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
 globalThis.fetch = async (url, options = {}) => {
@@ -36,12 +36,13 @@ globalThis.fetch = async (url, options = {}) => {
   } else if (url.endsWith('/hq_worker_release_status')) { body = {api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
   else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
-  else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence)); await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
+  else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(process.env.FIXTURE_TASK_ACK){if(receipt.p_reply!==''||receipt.p_error!=='task-ack-mention-required')throw Error('task-ack-failure-missing');await appendFile(root+'/ack-receipt.json',JSON.stringify(receipt));taskAckDelivered=true}else{if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence))} await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
   else if (url.endsWith('/hq_worker_claim')) {
     await appendFile(root + '/events', 'claim\\n')
     if (process.env.FIXTURE_CLAIM_ERROR) { status = 503; body = {} }
-    else if (process.env.FIXTURE_ACTIVE_JOB) { activeJobs = 1; body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-CEO-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'conversation-intake',agent:{id:'AG-CEO-001',name:'Fixture',model:'gpt-6-astra',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}} }
+    else if (process.env.FIXTURE_TASK_ACK && taskAckDelivered) body = {job:null}
+    else if (process.env.FIXTURE_ACTIVE_JOB || process.env.FIXTURE_TASK_ACK) { activeJobs = 1; body = {job:{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',agent_id:'AG-CEO-001',lease_token:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',prompt:'Fixture draft only',context:{mode:'conversation-intake',agent:{id:'AG-CEO-001',name:'Fixture',model:'gpt-6-astra',effort:'medium',profileFileId:'profile_source_1'},brain_files:[{id:'profile_source_1'}]}}}; if(process.env.FIXTURE_TASK_ACK){body.job.agent_id='AG-HR-001';Object.assign(body.job.context,{mode:'task-ack',agent:{id:'AG-HR-001',name:'Fixture head',model:'gpt-6.1-sol',effort:'medium',modelTier:'T2_HEAD',managerId:'AG-CEO-001',managerModelTier:'T3_EXEC',departmentKey:'hr-agent-development',profileFileId:'profile_source_1'},roster:[{id:'AG-HR-002',name:'Synthetic Recipient',managerId:'AG-HR-001'}]})} }
     else { while (!await exists(root + '/settle')) await wait(10); body = {job:null} }
   } else if (url.endsWith('/hq_worker_presence')) await appendFile(root + '/events', 'presence\\n')
   else throw Error('unexpected-remote-request')
@@ -68,12 +69,13 @@ import { appendFile, access } from 'node:fs/promises'
 import { start } from './worker.mjs'
 const root = ${JSON.stringify(root)}
 const adapters = {roster:{sync:async()=>{}}}
-if (process.env.FIXTURE_ACTIVE_JOB) {
+if (process.env.FIXTURE_ACTIVE_JOB || process.env.FIXTURE_TASK_ACK) {
   const originalInterval = globalThis.setInterval
   globalThis.setInterval = (fn, ms, ...args) => originalInterval(fn, ms === 60_000 ? 30 : ms, ...args)
   adapters.brain = async () => []
   adapters.invoke = async (_config, _job, _documents, signal) => {
     await appendFile(root + '/events', 'inference-started\\n')
+    if(process.env.FIXTURE_TASK_ACK)return {reply:JSON.stringify({message:'Generated body without the required mention',delegateId:'AG-HR-002'}),evidence:[]}
     signal.addEventListener('abort', () => { void appendFile(root + '/events', 'inference-aborted\\n') })
     for (;;) {
       try { await access(root + '/settle-inference'); break } catch { await new Promise(done => setTimeout(done, 10)) }
@@ -174,6 +176,21 @@ test('active inference keeps renewing while drained and SIGTERM waits for durabl
   const receipt = JSON.parse(await readFile(join(f.root, 'receipt.json'), 'utf8'))
   assert.equal(receipt.workerJobId, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
   assert.deepEqual(receipt, journal.modelExecutionEvidence)
+})
+test('invalid task-ack is delivered once without inference retry and retains only the fixed diagnostic',async t=>{
+ const f=await fixture(t,{FIXTURE_TASK_ACK:'1'})
+ await f.control('resume')
+ await until(async()=>(await f.events()).includes('delivery'))
+ await f.control('drain');await pause(100)
+ const events=await f.events()
+ assert.equal(events.match(/inference-started/g)?.length,1)
+ assert.equal(events.match(/delivery/g)?.length,1)
+ const receipt=JSON.parse(await readFile(join(f.root,'ack-receipt.json'),'utf8'))
+ assert.equal(receipt.p_reply,'');assert.equal(receipt.p_error,'task-ack-mention-required')
+ const journal=JSON.parse(await readFile(join(f.state,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb.json'),'utf8'))
+ assert.equal(journal.phase,'delivered');assert.equal(journal.error,null);assert.equal(journal.reply,'')
+ assert.equal(journal.outputDiagnostic,'task-ack-mention-required')
+ assert.doesNotMatch(JSON.stringify(journal),/Generated body|Synthetic Recipient/)
 })
 
 
