@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
-const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
+const founder = randomUUID(), workerUser = randomUUID(), worker = '3ead9a59-d84b-4e95-9871-abba0b129404', session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
 const roster = ids.map((id,index)=>({id,name:'Employee '+index,departmentKey:index>0?'hr-agent-development':null,profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:'gpt-6.1-sol',effort:'medium',managerId:index>1?'AG-HR-001':index===1?'AG-CEO-001':null}))
@@ -307,4 +307,31 @@ test('idle worker and leased heartbeats carry liveness without invalidating snap
   before=after;await h.finish(j,{message:'Hello, I am Steve.',task:null});after=await counts();assert.ok(after.agents>before.agents);assert.equal(after.company,before.company)
   await h.as('founder');await assert.rejects(()=>h.rpc('hq_worker_presence',[worker]),/HQ_WORKER_REQUIRED/)
  }finally{await h.db.close()}
+})
+
+
+test('canonical phase-1 migration pauses only the verified legacy worker and preserves active completion',async()=>{
+ const h=await setup();const {db,as,rpc}=h
+ try {
+  await db.exec('reset role')
+  await db.exec(await readFile(new URL('20261105235516_hq_voice_meetings.sql',root),'utf8'))
+  await as('founder');await rpc('hq_create_task',['Phase-one fixture','One internal draft','One draft','AG-HR-002',randomUUID()])
+  const job=await h.claim()
+  await db.exec('reset role')
+  const before=(await db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers')).rows
+  await db.exec(await readFile(new URL('20261107022638_hq_worker_admission_fence.sql',root),'utf8'))
+  assert.deepEqual((await db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers')).rows,before)
+  assert.equal((await db.query("select to_regprocedure('public.hq_worker_finish_v3(uuid,uuid,uuid,text,text,jsonb,jsonb)') is null absent")).rows[0].absent,true)
+  assert.equal((await db.query("select to_regclass('hq_private.workforce_trials') is null absent")).rows[0].absent,true)
+  assert.equal((await db.query("select to_regprocedure('public.hq_worker_release_status(uuid)') is null absent")).rows[0].absent,true)
+  await as('worker')
+  assert.deepEqual(await rpc('hq_worker_admission_status',[worker]),{paused:true,generation:1,activeJobs:1})
+  for(const args of [[worker,300],[worker,300,1]]) assert.equal((await rpc('hq_worker_claim',args)).admissionPaused,true)
+  assert.equal((await rpc('hq_worker_heartbeat',[job.id,job.lease_token,worker,'working'])).accepted,true)
+  assert.equal((await rpc('hq_worker_sync_roster',[worker,JSON.stringify(roster)])).accepted,true)
+  assert.ok(Array.isArray(await rpc('hq_worker_pending_lessons',[worker])))
+  assert.equal((await rpc('hq_worker_presence',[worker])).accepted,true)
+  assert.equal((await h.finish(job,'Actual completion under the admission hold.')).accepted,true)
+  assert.deepEqual(await rpc('hq_worker_admission_status',[worker]),{paused:true,generation:1,activeJobs:0})
+ }finally{await db.close()}
 })
