@@ -48,18 +48,16 @@ test('candidate boot stays paused until explicit acceptance', async () => {
   assert.equal(ran, true)
 })
 
-test('schema shape fails closed on missing RPCs, arguments or references', () => {
-  const spec = { paths: {}, definitions: {} }
-  for (const [name, args] of Object.entries(REQUIRED_RPCS)) {
-    spec.paths['/rpc/' + name] = { post: { parameters: [{ in: 'body', schema: { $ref: '#/definitions/' + name } }] } }
-    spec.definitions[name] = { properties: Object.fromEntries(args.map(key => [key, { type: 'string' }])) }
+test('authenticated status proof fails closed on missing signatures, grants or semantic capabilities', () => {
+  const valid = {contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0,
+    api:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}}
+  assert.equal(checkApiContract(valid),2)
+  for (const mutate of [s=>delete s.api, s=>s.api.version=0, s=>s.api.role='service_role',
+    s=>s.api.schemaUsage=false, s=>s.api.execute=false, s=>delete s.api.rpcs.hq_worker_finish_v4,
+    s=>s.api.rpcs.hq_worker_claim.pop(), s=>s.api.rpcs.hq_worker_claim[0]='wrong',
+    s=>s.trialDelivery=0, s=>s.trialSkills=0, s=>s.trialFailureSettlement=0, s=>s.contract=1,
+    s=>s.activeJobs=-1, s=>s.activeJobs=null]) {
+    const bad=structuredClone(valid);mutate(bad);assert.throws(()=>checkApiContract(bad),/schema-incompatible/)
   }
-  assert.equal(checkApiContract(spec), 2)
-  const evidence = spec.definitions.hq_worker_finish_v3.properties.p_model_evidence
-  delete spec.definitions.hq_worker_finish_v3.properties.p_model_evidence
-  assert.throws(() => checkApiContract(spec), /schema-incompatible/)
-  spec.definitions.hq_worker_finish_v3.properties.p_model_evidence = evidence
-  delete spec.definitions.hq_worker_claim.properties.p_meeting_protocol
-  assert.throws(() => checkApiContract(spec), /schema-incompatible/)
-  assert.throws(() => checkApiContract({}), /schema-incompatible/)
+  assert.throws(()=>checkApiContract({}),/schema-incompatible/)
 })

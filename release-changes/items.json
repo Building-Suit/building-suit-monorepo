@@ -5693,35 +5693,6 @@
     "reason": "Complete the unmerged supervised-trial source path with lease-bound atomic host evidence delivery and authenticated founder controls. Preserve independent qualification review, canonical lifecycle and restricted tools; no live trial, admission resume or deployment."
   },
   {
-    "id": "company-hq-admission-resume-preparation",
-    "task": "HQ-ADMISSION-RESUME-PREPARATION-20261107",
-    "suits": [
-      "automation-suit",
-      "doctor-suit",
-      "inventory-suit",
-      "ledger-suit",
-      "shop-suit",
-      "super-admin-suit"
-    ],
-    "classification": "internal",
-    "disposition": "internal",
-    "paths": [
-      "apps/company-hq/supabase/migrations/20261107041557_hq_worker_admission_resume.sql",
-      "apps/company-hq/supabase/staging-migration-parity.json",
-      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
-      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
-      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
-      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
-      "release-changes/items.json",
-      "tooling/hq-agent-host/bootstrap/superseded/20261107030606_hq_worker_admission_resume.sql",
-      "tooling/hq-agent-host/bootstrap/superseded/20261107040102_hq_worker_admission_resume.sql"
-    ],
-    "reason": "Prepare a separate draft/unmerged exact-worker generation-1 compare-and-resume forward migration for the GitHub-only DB path; require contract prerequisites, settled work and external managed-host health/activation acceptance before merge. No live action or timer change.",
-    "sources": [
-      "hq-admission-resume-preparation-20261107"
-    ]
-  },
-  {
     "id": "hq-public-runtime-permissions-20261107",
     "task": "HQ-PUBLIC-RUNTIME-PERMISSIONS-20261107",
     "suits": [
@@ -5768,5 +5739,107 @@
       "release-changes/items.json"
     ],
     "reason": "Preserve real Node main dispatch through atomic release symlinks in both fixed units; verify actual preflight, paused startup, import isolation and selected-release source binding without changing the signed worker artifact. Activation remains held."
+  },
+  {
+    "id": "hq-authenticated-worker-compatibility-20261107",
+    "task": "HQ-AUTHENTICATED-WORKER-COMPATIBILITY-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/worker.mjs",
+      "tooling/hq-agent-host/maintenance.mjs",
+      "tooling/hq-agent-host/maintenance.test.mjs",
+      "tooling/hq-agent-host/lifecycle.test.mjs",
+      "tooling/hq-agent-host/symlink-entry.test.mjs",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
+      "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Verify runtime compatibility through the existing read-only authenticated worker-status contract without privileged OpenAPI discovery or new credentials. Preserve authorization and admission hold; test exact catalog signatures, privileges and real managed/preflight refusal."
+  },
+  {
+    "id": "hq-worker-catalog-dispatch-20261107",
+    "task": "HQ-WORKER-CATALOG-DISPATCH-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Fail closed on same-name PostgREST overloads matching worker JSON arguments and missing fixed private entry signatures/execute grants, preserving unrelated overloads and all existing permissions."
+  },
+  {
+    "id": "hq-worker-input-argument-alignment-20261107",
+    "task": "HQ-WORKER-INPUT-ARGUMENT-ALIGNMENT-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Align all-argument names/types/modes before retaining IN/INOUT/VARIADIC inputs; count only inputs for required/default matching. Cover OUT-before-IN ambiguity, optional input and unrelated output-bearing overloads without changing grants or admission."
+  },
+  {
+    "id": "company-hq-admission-resume-preparation",
+    "task": "HQ-ADMISSION-RESUME-PREPARATION-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/supabase/migrations/20261107041557_hq_worker_admission_resume.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
+      "release-changes/items.json",
+      "tooling/hq-agent-host/bootstrap/superseded/20261107030606_hq_worker_admission_resume.sql",
+      "tooling/hq-agent-host/bootstrap/superseded/20261107040102_hq_worker_admission_resume.sql"
+    ],
+    "reason": "Prepare a separate draft/unmerged exact-worker generation-1 compare-and-resume forward migration for the GitHub-only DB path; require contract prerequisites, settled work and external managed-host health/activation acceptance before merge. No live action or timer change.",
+    "sources": [
+      "hq-admission-resume-preparation-20261107"
+    ]
   }
 ]

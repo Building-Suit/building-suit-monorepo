@@ -73,3 +73,6 @@ the false zero exit, require actual authenticated-fixture contract validation,
 reject missing RPC/module dependencies, exercise atomic release switching and
 check PID/release/paused readiness plus the trial source digest. No live
 credentials, model or hosted system are used. Admission and timer remain held.
+
+
+Compatibility prerequisite #538 is merged into stg at 7fa45303abc4fc60130432fa05c2483fdebe209f. Preserve its authenticated read-only proof and root controls. This child remains unmerged and must follow the newer compatibility migration in forward order.

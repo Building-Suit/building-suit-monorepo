@@ -308,3 +308,26 @@ The worker and candidate preflight unit examples both require Node's
 execution through release links and can falsely return zero for preflight.
 Retain the fixed flag when installing units; verify actual contract output and
 observed paused managed health before acceptance. See bootstrap/ACTIVATION.md.
+
+
+## Authenticated compatibility proof
+
+Publishable-key workers must not depend on privileged OpenAPI discovery. The
+existing authenticated read-only `hq_worker_release_status` now provides `api`
+version 1: exact required RPC argument lists, authenticated role, schema usage
+and execute checks. The server pins full input types, JSONB returns and ordinary
+non-set function shape; existing enabled-worker/non-founder/live-session and
+semantic contract checks remain. The worker validates the entire proof and
+capability versions before preflight success, readiness or managed acceptance.
+Missing RPC/argument/grant/capability fails closed without claiming jobs.
+The additive forward migration never changes admission or authorization. A new
+signed worker is required; root-control code/trust/configuration are unchanged
+by this compatibility change. Real bootstrap/rollback acceptance is still held.
+
+The catalog proof also checks the fixed public invoker wrappers' corresponding
+private entry signatures/EXECUTE grants, without granting anything or walking an
+arbitrary call graph. Competing public overloads are rejected only when their
+required/default input names accept the actual worker JSON key set. Different
+names, extra required arguments and unnamed JSON fallbacks do not compete with
+the intended named match. This follows PostgREST's named-parameter dispatch:
+[planner source](https://github.com/PostgREST/postgrest/blob/v14.11/src/PostgREST/Plan.hs#L219-L268).
