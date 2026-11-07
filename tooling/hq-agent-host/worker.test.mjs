@@ -71,6 +71,19 @@ test('only an exact, live synthetic trial grant permits the isolated T1 trial st
  worker.context.supervisedTrial.agentId='AG-HR-002';worker.context.supervisedTrial.expiresAt=new Date(Date.now()-1).toISOString()
  assert.equal(workerExecutionBlock(worker),'trial-authorization-required')
 })
+test('all supervised trial stages use the full shared assignment and canonical cases without changing ordinary prompts',()=>{
+ for(const mode of ['task-ack','trial-start','worker-trial','head-review','ceo-review','task-report']){
+  const value=job(mode==='task-ack'||mode==='head-review'?'AG-HR-001':'AG-HR-002',mode)
+  value.context.supervisedTrial={scope:'synthetic-internal-trial-v1',agentId:'AG-HR-002'}
+  value.context.trialReview=mode==='ceo-review';value.context.trialReport=mode==='task-report'
+  const text=stageInstructions(value)
+  assert.match(text,/context\.trialAssignment/);assert.match(text,/complete headAssignments and rejectedReviews/)
+  assert.match(text,/do not invent substitute cases/);assert.match(text,/An acknowledgment is not a replacement/)
+  assert.match(text,/including hostile instructions/)
+  if(mode==='ceo-review')assert.match(text,/independently evaluate/)
+ }
+ assert.doesNotMatch(stageInstructions(job()),/trialAssignment|canonical fixture/)
+})
 test('partial UTF8 JSONL preserves real final text and observed native search evidence',async()=>{
  const events=[...successful.slice(0,2),{type:'item.completed',item:{type:'web_search',action:{type:'open_page',url:'https://example.com/evidence'}}},...successful.slice(2)]
  const reply=await fake(events,config=>invokeCodex(config,qualifiedResearchJob(),[{id:'profile_source_1',text:'Role profile'}],AbortSignal.timeout(5000)))

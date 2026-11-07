@@ -307,6 +307,24 @@ The same executable digest and resolved model/effort evidence remain required.
 
 ## First installation bridge proposals
 
+Supervised trial context uses `trialAssignment` version 1. A forward migration
+adds the exact hire profile and selected skill to scoping and review claims,
+alongside the actor's own authorized role sources. The packet keeps the original
+task, full completed head assignments and rejected review findings across
+acknowledgments and both correction paths. It carries indexed source revisions
+and the existing complete binding digest; stale/out-of-scope sources fail the
+claim transaction. No historical result or qualification is rewritten.
+
+At most three assignments and three rejected reviews fit in a 96 KiB packet;
+the existing 18-file, 240 KiB context and host document/context bounds remain.
+Capacity failure is explicit, never a truncated fixture. Fixed cases remain
+authored in canonical profile/skill sources; the worker must not substitute
+invented cases or use an acknowledgment in place of the full assignment.
+Independent review, the two-repair limit and blocked trial learning are unchanged.
+Deploy SQL through the native staging GitHub route and verify the corresponding
+signed runtime before any affected trial retry. This source patch neither
+clarifies canonical case content nor authorizes a retry or lifecycle change.
+
 See [bootstrap/README.md](bootstrap/README.md) for the worker-specific admission fence, separate maintenance/reconciliation boundary, reviewed migration order, root-owned control preparation and action-time approval wording. `bootstrap.py` prepares controls and audits trust paths; it deliberately cannot stop legacy, activate a release, deploy SQL or enable the timer. The current legacy runtime is not a contract-2 rollback baseline. Root updater Node/gh binaries must use the root-owned control directory, never the historical ubuntu-writable home executable.
 
 The worker and candidate preflight unit examples both require Node's

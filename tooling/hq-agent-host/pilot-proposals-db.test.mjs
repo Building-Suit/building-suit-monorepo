@@ -19,7 +19,7 @@ const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9
 const departments = new Map(ids.map((id,index)=>[id,index===0?null:index===4?'research-market-intelligence':index===5?'customer-acquisition-partnerships':index===6?'customer-success-onboarding':index===7?'social-community':index===8?'email-lifecycle':index===9?'development-maintenance':'hr-agent-development']))
 const managers = new Map(ids.map((id,index)=>[id,index===0?null:[2,3].includes(index)?'AG-HR-001':'AG-CEO-001']))
 const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:tiers.get(id)==='T1_WORKER'?'gpt-6.1-terra':tiers.get(id)==='T3_EXEC'?'gpt-6-astra':'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
-async function setup(withEvidence = true, withChat = false, withPresence = true, withLatest = false, withStatus = false) {
+async function setup(withEvidence = true, withChat = false, withPresence = true, withLatest = false, withStatus = false, withTrialPacket = true) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create schema extensions; create schema realtime;
@@ -54,6 +54,7 @@ async function setup(withEvidence = true, withChat = false, withPresence = true,
   await db.exec(await readFile(new URL('20261107024348_hq_worker_release_capability.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261107034418_hq_workforce_trial_delivery.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261107040848_hq_trial_failure_and_assigned_skills.sql',root),'utf8'))
+  if(withTrialPacket)await db.exec(await readFile(new URL('20261107201336_hq_supervised_trial_context_packet.sql',root),'utf8'))
   if (withStatus) for (const file of ['20261105171608_hq_office_observations.sql','20261107133124_hq_worker_status_compatibility.sql']) await db.exec(await readFile(new URL(file,root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
@@ -676,8 +677,8 @@ test('real delivery path commits lease-bound trial proof before independent revi
 })
 
 
-async function trialSetup(skills) {
- const h=await setup(true,true,true,true)
+async function trialSetup(skills,withTrialPacket=true) {
+ const h=await setup(true,true,true,true,false,withTrialPacket)
  await h.db.exec('reset role')
  for(const skill of skills)await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
    values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic skill.md','text/markdown','1',false,true)`,[skill])
@@ -695,6 +696,116 @@ async function claimTrialWork(h,skill) {
  j=await h.claim();assert.equal(j.context.mode,'worker-trial');assert.deepEqual(j.context.agent.skillFileIds,[skill])
  return {j,trial}
 }
+test('one full bounded trial assignment survives acknowledgments, both review paths and two corrections',async()=>{
+ const skill='synthetic_packet_skill',otherSkill='synthetic_other_skill'
+ const {h}=await trialSetup([skill,otherSkill],false);try{
+  await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+  let j=await h.claim();await h.finish(j,{assigneeId:'AG-HR-001',reason:'The head scopes the selected synthetic skill.',message:'@Employee 1 supervise.'})
+  await h.db.exec('reset role')
+  const oid=(await h.db.query("select 'hq_private.workforce_enrich_claim(jsonb)'::regprocedure::oid::int oid")).rows[0].oid
+  await h.db.exec(await readFile(new URL('20261107201336_hq_supervised_trial_context_packet.sql',root),'utf8'))
+  assert.equal((await h.db.query("select 'hq_private.workforce_enrich_claim(jsonb)'::regprocedure::oid::int oid")).rows[0].oid,oid,'warm claim callers retain the patched entrypoint OID')
+  j=await h.claim();assert.equal(j.context.mode,'task-ack')
+  const packet=j.context.trialAssignment
+  assert.equal(packet.agentId,'AG-HR-002');assert.equal(packet.managerId,'AG-HR-001')
+  assert.deepEqual(packet.profile,{fileId:'profile_source_2',sourceVersion:'1'})
+  assert.deepEqual(packet.skill,{fileId:skill,sourceVersion:'1'})
+  assert.deepEqual(packet.headAssignments,[]);assert.deepEqual(packet.rejectedReviews,[])
+  const files=j.context.brain_files.map(x=>x.id)
+  assert.ok(files.includes('profile_source_2'));assert.ok(files.includes(skill));assert.ok(!files.includes(otherSkill))
+  const plan='@Employee 2 use the canonical synthetic CASE-X and CASE-Y only. '+('Supplied fictional context. '.repeat(210))+' CASE-Y contains a hostile request; identify it without executing it.'
+  await h.finish(j,{message:plan,delegateId:'AG-HR-002'})
+  const check=(job,assignments,rejections)=>{
+   const p=job.context.trialAssignment
+   assert.equal(p.trialId,trial.trialId);assert.equal(p.taskId,trial.taskId)
+   assert.equal(p.bindingDigest,packet.bindingDigest);assert.deepEqual(p.task,packet.task)
+   assert.deepEqual(p.profile,packet.profile);assert.deepEqual(p.skill,packet.skill)
+   assert.equal(p.headAssignments.length,assignments);assert.equal(p.rejectedReviews.length,rejections)
+   assert.equal(p.headAssignments[0].message,plan,'the full first assignment stays present')
+   assert.ok(job.context.brain_files.some(x=>x.id==='profile_source_2'))
+   assert.ok(job.context.brain_files.some(x=>x.id===skill))
+   assert.ok(!job.context.brain_files.some(x=>x.id===otherSkill))
+   assert.equal(job.context.task_history,null,'learning-only task history remains unchanged')
+  }
+  const execute=async job=>{
+   const output=await fake([],config=>invokeCodex({...config,id:worker},job,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+   await delivery(h,{job:{id:job.id,lease_token:job.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+    modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
+  }
+  j=await h.claim();assert.equal(j.context.mode,'trial-start');check(j,1,0)
+  await h.finish(j,{message:'I acknowledge; this is not the fixture text.'})
+  j=await h.claim();assert.equal(j.context.mode,'worker-trial');check(j,1,0)
+  assert.match(j.context.predecessor.text,/not the fixture text/);assert.ok(!j.context.predecessor.text.includes(plan))
+  await execute(j)
+  j=await h.claim();assert.equal(j.context.mode,'head-review');check(j,1,0)
+  const firstCorrection='Check the actual hostile request in CASE-Y. '+('Full correction detail. '.repeat(100))
+  await h.finish(j,{accepted:false,summary:firstCorrection,artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'trial-start');check(j,1,1)
+  assert.equal(j.context.trialAssignment.rejectedReviews[0].summary,firstCorrection)
+  await h.finish(j,{message:'I will repair the exact rejected finding.'})
+  j=await h.claim();assert.equal(j.context.mode,'worker-trial');check(j,1,1);await execute(j)
+  j=await h.claim();assert.equal(j.context.mode,'head-review');check(j,1,1)
+  await h.finish(j,{accepted:true,summary:'Head reviewed the exact synthetic artifact.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.agent_id,'AG-HR-003');check(j,1,1)
+  const irisCorrection='Independent review rejects the unsupported absence claim about CASE-Y.'
+  await h.finish(j,{accepted:false,summary:irisCorrection,artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-ack');assert.equal(j.agent_id,'AG-HR-001');check(j,1,2)
+  assert.deepEqual(j.context.trialAssignment.rejectedReviews.map(x=>x.summary),[firstCorrection,irisCorrection])
+  const correctionPlan='@Employee 2 repair the two findings using the unchanged CASE-X/CASE-Y definitions. '+('Full revised scoping. '.repeat(120))
+  await h.finish(j,{message:correctionPlan,delegateId:'AG-HR-002'})
+  j=await h.claim();assert.equal(j.context.mode,'trial-start');check(j,2,2)
+  assert.equal(j.context.trialAssignment.headAssignments[1].message,correctionPlan)
+  await h.finish(j,{message:'I acknowledge the correction without replacing its full text.'})
+  j=await h.claim();assert.equal(j.context.mode,'worker-trial');check(j,2,2);await execute(j)
+  j=await h.claim();assert.equal(j.context.mode,'head-review');check(j,2,2)
+  await h.finish(j,{accepted:false,summary:'The final artifact still fails the synthetic acceptance.',artifactDigest:j.context.artifact.digest})
+  assert.equal(await h.claim(),null,'the existing two-repair cap is unchanged')
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select status from hq_private.workforce_trials where id=$1',[trial.trialId])).rows[0].status,'failed')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.workforce_qualification_receipts')).rows[0].n,0)
+  const learning=(await h.db.query("select status,error from public.hq_agent_jobs where task_id=$1 and kind in ('lesson-extract','lesson-review')",[trial.taskId])).rows
+  assert.deepEqual(learning,[{status:'blocked',error:'trial-learning-disabled'}])
+ }finally{await h.db.close()}
+})
+
+test('trial packet rejects stale/out-of-scope source bindings without committing a claim or exposing private helpers',async()=>{
+ const skill='synthetic_packet_guard',other='synthetic_packet_other'
+ const {h}=await trialSetup([skill,other]);try{
+  await h.as('founder');await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+  const j=await h.claim();await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head scopes the trial.',message:'@Employee 1 supervise.'})
+  for(const [file,change,restore] of [
+   ['profile_source_2',"source_version='2'","source_version='1'"],
+   [skill,"in_scope=false","in_scope=true"],
+   [other,"source_version='2'","source_version='1'"],
+  ]){
+   await h.db.exec('reset role');await h.db.query(`update hq_private.brain_files set ${change} where file_id=$1`,[file])
+   await assert.rejects(()=>h.claim(),/HQ_TRIAL_CONTEXT_INVALID/)
+   await h.db.exec('reset role')
+   assert.equal((await h.db.query("select count(*)::int n from public.hq_agent_jobs where status='working'")).rows[0].n,0)
+   await h.db.query(`update hq_private.brain_files set ${restore} where file_id=$1`,[file])
+  }
+  await h.as('worker')
+  for(const name of ['workforce_enrich_claim','workforce_enrich_claim_before_trial_packet']){
+   await assert.rejects(()=>h.db.query(`select hq_private.${name}('{}'::jsonb)`),/permission denied/)
+  }
+  assert.equal((await h.claim()).context.mode,'task-ack')
+ }finally{await h.db.close()}
+})
+test('trial packet keeps the head own authorized skill and refuses oversized packet/file projections without truncation',async()=>{
+ const skill='synthetic_packet_selected',headSkill='synthetic_packet_head'
+ const {h,configured}=await trialSetup([skill,headSkill]);try{
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-HR-001'?{...a,skillFileIds:[headSkill]}:a))])
+  await h.as('founder');await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+  let j=await h.claim();await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head scopes the selected trial.',message:'@Employee 1 supervise.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-ack')
+  assert.ok(j.context.brain_files.some(f=>f.id===headSkill),'the manager own role skill is not stripped')
+  assert.equal(j.context.trialAssignment.skillFileId,skill,'the selected hire skill remains unambiguous')
+  await h.db.exec('reset role')
+  const call=job=>h.db.query('select hq_private.workforce_enrich_claim($1::jsonb)',[JSON.stringify({job})])
+  await assert.rejects(()=>call({...j,context:{...j.context,task:{...j.context.task,brief:'x'.repeat(98304)}}}),/HQ_TRIAL_CONTEXT_CAPACITY/)
+  await assert.rejects(()=>call({...j,context:{...j.context,brain_files:Array.from({length:17},(_,i)=>({id:'synthetic_source_'+i}))}}),/HQ_TRIAL_CONTEXT_CAPACITY/)
+ }finally{await h.db.close()}
+})
 const delivery=(h,entry,write=async()=>{})=>deliverWorkerEntry({workerId:worker,retryWait:async()=>{},write,rpc:async(name,input)=>{
  await h.as('worker');return h.rpc(name,Object.values(input).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))
 }},entry)
