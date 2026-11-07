@@ -143,6 +143,43 @@ test('CLI preflight failure is not launched and unsupported CLI versions fail be
    assert.equal(error.modelBindingEvidence.cliVersion,'codex-cli 0.159.3');return true
  }),{cliVersion:'codex-cli 0.159.3'})
 })
+test('CLI version is read from bounded stdout independently of incidental stderr',async()=>{
+ for(const stderr of ['Warning: synthetic startup diagnostic\n','x'.repeat(1006)]){
+ const output=await fake([],config=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(5000)),{
+   cliVersion:'codex-cli 0.160.0',versionProbe:{stderr},
+ })
+ assert.equal(output.modelBindingEvidence.cliVersion,'codex-cli 0.160.0')
+ assert.equal(output.modelBindingEvidence.attestationLevel,'host-returned-resolution')
+ assert.doesNotMatch(JSON.stringify(output),/synthetic startup diagnostic/)
+ }
+})
+test('CLI version rejects nonzero exit, malformed or oversized stdout and stderr-only versions before launch',async()=>{
+ for(const versionProbe of [
+   {exitCode:1},
+   {stdout:'codex-cli 0.160.0\nextra stdout\n'},
+   {stdout:'x'.repeat(1025)},
+   {stderr:'x'.repeat(1025)},
+   {stderr:'x'.repeat(1007)},
+   {stdout:'é'.repeat(513)},
+   {stdout:'',stderr:'codex-cli 0.160.0\n'},
+   {stdout:'unrecognized output\n',stderr:'codex-cli 0.160.0\n'},
+ ])await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(5000)),error=>{
+   assert.equal(error.message,'provider-cli-version-invalid')
+   assert.equal(error.modelBindingEvidence.invocationStatus,'not-launched')
+   assert.equal(error.modelBindingEvidence.turnsStarted,0)
+   assert.equal(error.modelBindingEvidence.artifactDigest,null)
+   return true
+ }),{cliVersion:'codex-cli 0.160.0',versionProbe})
+})
+test('CLI version cancellation settles before App Server launch with failed bound evidence',async()=>{
+ await fake([],config=>assert.rejects(()=>invokeCodex({...config,id:randomUUID()},trialWorkerJob(),[],AbortSignal.timeout(100)),error=>{
+   assert.equal(error.message,'worker-interrupted')
+   assert.equal(error.modelBindingEvidence.invocationStatus,'not-launched')
+   assert.equal(error.modelBindingEvidence.turnsStarted,0)
+   assert.equal(error.modelBindingEvidence.outcome,'failed')
+   return true
+ }),{cliVersion:'codex-cli 0.160.0',versionProbe:{delayMs:5000}})
+})
 test('trial App Server accepts the separately verified Codex CLI 0.160.0 binding',async()=>{
  const trial=trialWorkerJob()
  const output=await fake(successful,config=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
