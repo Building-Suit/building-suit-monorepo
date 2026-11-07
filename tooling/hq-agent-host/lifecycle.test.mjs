@@ -35,10 +35,10 @@ globalThis.fetch = async (url, options = {}) => {
   else if (url.endsWith('/rest/v1/')) {
     body = spec
     if (process.env.FIXTURE_SCHEMA_BAD) delete body.paths['/rpc/hq_worker_claim']
-  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:2,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
+  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:2,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
   else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
-  else if (url.endsWith('/hq_worker_finish_v3')) { const receipt = JSON.parse(options.body); if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence)); await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
+  else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence)); await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
   else if (url.endsWith('/hq_worker_claim')) {
     await appendFile(root + '/events', 'claim\\n')
@@ -202,6 +202,14 @@ test('server-side working lease prevents admission even when the local worker is
   const status = await f.control('status')
   assert.equal(status.busy, 0)
   assert.equal(status.activeJobs, 1)
+  assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
+  assert.equal(await f.events(), '')
+})
+
+
+test('candidate without atomic trial delivery capability stays paused before any side effect', async t => {
+  const f = await fixture(t, { FIXTURE_TRIAL_SCHEMA_BAD: '1' })
+  assert.equal((await f.control('status')).ready, false)
   assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
   assert.equal(await f.events(), '')
 })

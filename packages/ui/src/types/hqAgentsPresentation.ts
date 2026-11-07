@@ -1,3 +1,15 @@
+export interface HqTrialPresentation {
+  agentId: string
+  skillFileId: string | null
+  eligible: boolean
+  qualified: boolean
+  trialId: string | null
+  status: 'active' | 'passed' | 'failed' | 'canceled' | null
+  receiptIssued: boolean
+  reviewComplete: boolean
+}
+export type HqTrialCommand = { action: 'start'; agentId: string; skillFileId: string } | { action: 'qualify'; trialId: string }
+
 /** Product-owned agent/runtime observations projected into shared HQ UI. */
 export interface HqAgentPresentation {
   id: string
@@ -49,6 +61,9 @@ export interface HqRequestProgress {
 }
 
 export interface HqAgentsPresentation {
+  trials?: readonly HqTrialPresentation[]
+  trialPending?: boolean
+  trialMessage?: string
   status: 'loading' | 'connected' | 'unavailable' | 'error'
   /** Initial load or a business write; background reads use refreshing. */
   pending: boolean

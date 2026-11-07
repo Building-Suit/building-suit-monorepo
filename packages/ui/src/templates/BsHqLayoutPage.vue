@@ -3,7 +3,7 @@ import designTokens from '@building-suit/design-tokens'
 import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
-import type { HqAgentPresentation, HqAgentsPresentation, HqTaskRequest } from '../types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqTaskRequest, HqTrialCommand } from '../types/hqAgentsPresentation'
 import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
 import BsHqMeetingPanel from '../organisms/BsHqMeetingPanel.vue'
 import BsHqOfficeOverview from '../organisms/BsHqOfficeOverview.vue'
@@ -16,8 +16,28 @@ import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
 import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from '../utils/hologramPresentationGeometry.ts'
 
+const confirmation = useConfirmation()
+const trialConfirming = ref(false)
+let trialDisposed = false
+onScopeDispose(() => { trialDisposed = true })
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgentId.value))
+async function trialAction(command: HqTrialCommand) {
+  if (trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
+  const agentId = selectedAgentId.value
+  trialConfirming.value = true
+  try {
+    const accepted = await confirmation.ask({ title: command.action === 'start' ? 'Start supervised trial' : 'Approve qualification',
+      message: command.action === 'start' ? 'Queue one synthetic internal skill trial, with head and independent HR review? No external actions are permitted.' : 'Record qualification from the completed independently reviewed trial? Canonical Active lifecycle is still required before ordinary execution.',
+      confirmLabel: command.action === 'start' ? 'Start trial' : 'Approve qualification', cancelLabel: 'Cancel' })
+    const current = selectedTrial.value
+    const valid = command.action === 'start' ? current?.eligible && current.skillFileId === command.skillFileId && !current.receiptIssued
+      : current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
+    if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgentId.value === agentId && !props.agents?.trialPending) emit('trialCommand', command)
+  } finally { trialConfirming.value = false }
+}
+
 const meetingVisible = ref(false)
 function openMeeting() { closeConversation(false); meetingVisible.value = true; emit('meetingCommand', { type: 'refresh' }) }
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
@@ -423,6 +443,12 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       <aside v-if="selectedAgent && officeCopy" :id="agentPanelId" class="bs-hq-layout__brain-panel bs-hq-layout__agent-panel" :class="{ 'bs-hq-layout__panel--covered': chatVisible || conversationDetail }" :inert="chatVisible || conversationDetail ? true : undefined" :aria-labelledby="agentTitleId" @wheel.stop @keydown.esc.stop.prevent="closeAgentPanel">
         <header class="bs-hq-layout__brain-heading"><div><h2 :id="agentTitleId" ref="agentTitleRef" tabindex="-1" dir="auto">{{ selectedAgent.name }}</h2><p class="bs-hq-layout__workplace-description">{{ selectedAgent.roleLabel }} · <bdi>{{ selectedAgent.id }}</bdi></p></div><BsButton variant="icon" :aria-label="officeCopy.close" @click="closeAgentPanel"><BsIcon name="close" :size="20" /></BsButton></header>
         <BsHqOfficeOverview :agents="[selectedAgent]" :observations="agentsState.observations" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" detail />
+        <template v-if="founderAccess.status === 'founder' && selectedTrial">
+          <p role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
+          <BsButton v-if="selectedTrial.eligible && selectedTrial.skillFileId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'start', agentId: selectedAgent.id, skillFileId: selectedTrial.skillFileId })">Start supervised trial</BsButton>
+          <BsButton v-if="selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
+          <p v-if="agentsState.trialMessage" role="status">{{ agentsState.trialMessage }}</p>
+        </template>
       </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide">

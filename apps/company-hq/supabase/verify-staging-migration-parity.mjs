@@ -16,6 +16,8 @@ const failures = []
 // Phase 2 is an explicitly unmerged source-preparation stack. This inventory
 // never asserts a hosted migration or authorizes deployment/merge.
 const phase1 = pending.filter(row => row.phase === 'admission-fence')
+const trialDelivery = pending.filter(row => row.phase === 'trial-delivery-review-only')
+if (trialDelivery.length > 1 || trialDelivery.some(row => row.file !== '20261107034418_hq_workforce_trial_delivery.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown trial delivery source')
 const phase2 = pending.filter(row => row.phase === 'contract2-review-only')
 const contract2Sources = [
   {
@@ -44,7 +46,7 @@ const contract2Sources = [
   }
 ]
 if (phase1.length !== 1 || phase1.some(row => row.status !== 'approved-source-not-deployed' || !/^\d{14}_hq_worker_admission_fence\.sql$/.test(row.file))) failures.push('approved phase-1 fence inventory changed')
-if (pending.length !== phase1.length + phase2.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (pending.length !== phase1.length + phase2.length + trialDelivery.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
 for (const [index,row] of phase2.entries()) {
   if (row.status !== 'source-only-live-approval-required' || row.file !== contract2Sources[index].file || row.proposal !== contract2Sources[index].proposal) failures.push('contract-2 source/order differs from reviewed proposals')
 }
@@ -63,7 +65,7 @@ for (const expected of [...manifest.appliedMigrations, ...pending]) {
 for (const expected of pending) {
   const proposal = readFileSync(path.join(root, expected.proposal))
   const canonical = readFileSync(path.join(migrationsDir, expected.file))
-  if (expected.phase === 'contract2-review-only') {
+  if (['contract2-review-only', 'trial-delivery-review-only'].includes(expected.phase)) {
     if (!canonical.equals(proposal)) failures.push('contract-2 canonical SQL differs from tested proposal')
     continue
   }

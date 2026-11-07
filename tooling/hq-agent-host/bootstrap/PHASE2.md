@@ -54,3 +54,5 @@ build/browser checks were not repeated for these exact SQL copies. Hosted
 migration/adoption/qualification and host acceptance remain unverified and
 unapproved. Normal PR CI is required; skipped stacked aggregate jobs are not
 counted as passed.
+
+The functional prerequisite adds a seventh forward source after these six unchanged proposals: `20261107034418_hq_workforce_trial_delivery.sql`. See [TRIAL-DELIVERY.md](TRIAL-DELIVERY.md) for the authenticated founder controls, atomic host proof delivery, manager correction route and remaining canonical Active lifecycle requirement. Keep this PR and admission resume unmerged until review and live acceptance.

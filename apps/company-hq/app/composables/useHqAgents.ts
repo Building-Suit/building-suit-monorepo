@@ -1,4 +1,4 @@
-import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskRequest } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskRequest, HqTrialCommand, HqTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot } from '#shared/types/agents'
 import { hqCosmeticIdle, hqObservationFresh, hqObservedActivity } from '../utils/hqAgentPresence'
@@ -42,6 +42,42 @@ function timestampRemainder(value: string): string {
 /** Founder-scoped event-driven message state. Runtime presence never invents employee work. */
 export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messages?: () => HqAgentMessages) {
   const live = useHqLiveEvents()
+  const trials = shallowRef<readonly HqTrialPresentation[]>([])
+  const trialPending = ref(false), trialMessage = ref('')
+  const trialAttempts = new Map<string, string>()
+  async function refreshTrials() {
+    if (getAccess().status !== 'founder') { trials.value = []; return }
+    const identity = accessIdentity(getAccess()), trialEpoch = epoch
+    try {
+      const result = await $fetch<unknown>('/api/hq/trials', { headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' } })
+      if (getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
+      if (!Array.isArray(result) || result.length > 50 || result.some(row => !row || typeof row.agentId !== 'string'
+        || typeof row.eligible !== 'boolean' || typeof row.qualified !== 'boolean' || typeof row.receiptIssued !== 'boolean'
+        || typeof row.reviewComplete !== 'boolean' || !(row.skillFileId === null || typeof row.skillFileId === 'string')
+        || !(row.trialId === null || typeof row.trialId === 'string') || ![null, 'active', 'passed', 'failed', 'canceled'].includes(row.status))) {
+        trials.value = []; return
+      }
+      trials.value = result as HqTrialPresentation[]
+    } catch { trials.value = [] }
+  }
+  async function trialCommand(command: HqTrialCommand) {
+    if (getAccess().status !== 'founder' || trialPending.value) return
+    const identity = accessIdentity(getAccess()), trialEpoch = epoch
+    trialPending.value = true; trialMessage.value = ''
+    const key = command.action === 'start' ? command.agentId + ':' + command.skillFileId : command.trialId
+    if (!trialAttempts.has(key)) trialAttempts.set(key, crypto.randomUUID())
+    try {
+      const result = await $fetch<{ accepted?: boolean }>('/api/hq/trials', { method: 'POST', headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' },
+        body: command.action === 'start' ? { agentId: command.agentId, skillFileId: command.skillFileId, requestKey: trialAttempts.get(key) } : { trialId: command.trialId } })
+      if (getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
+      if (result?.accepted !== true) throw Error('trial-unconfirmed')
+      trialAttempts.delete(key)
+      trialMessage.value = command.action === 'start' ? 'Supervised internal trial queued.' : 'Qualification recorded. Execution still requires the canonical Active lifecycle.'
+      await Promise.all([refresh(), refreshTrials()])
+    } catch {
+      if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trialMessage.value = 'Trial action unconfirmed. Refresh and retry the same action; eligibility and evidence are checked by HQ.'
+    } finally { trialPending.value = false }
+  }
   const snapshot = shallowRef<HqAgentSnapshot | null>(null)
   const status = ref<HqAgentsPresentation['status']>('unavailable')
   const pending = ref(false), refreshing = ref(false), sending = ref(false), submittingTask = ref(false), clock = ref(0)
@@ -104,6 +140,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     const reason = messageReason.value
     const error = reason && copy ? copy[reason] ?? (reason === 'unavailable' ? copy.unavailable : copy.sendFailed) : undefined
     return {
+      trials: trials.value, trialPending: trialPending.value, trialMessage: trialMessage.value,
       status: status.value, pending: pending.value, refreshing: refreshing.value, sending: sending.value, submittingTask: submittingTask.value,
       workActivity: state ? hqWorkActivity(state, runtimeOnline.value, clock.value) : [],
       observations: state?.observations,
@@ -172,6 +209,8 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   function invalidate(clearAttempts: boolean, reason: MessageReason | null = null) {
     epoch += 1; controller?.abort(); controller = null; inFlight = null
     refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; submittingTask.value = false; snapshot.value = null
+    trials.value = []; trialMessage.value = ''
+    if (clearAttempts) trialAttempts.clear()
     status.value = 'unavailable'; messageReason.value = reason
     if (freshnessTimer !== null) clearTimeout(freshnessTimer)
     freshnessTimer = null
@@ -313,7 +352,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     clock.value = now; scheduleFreshness()
   })
 
-  live.subscribe('agents', refresh, reason => invalidate(false, reason === 'offline' ? 'unavailable' : null))
+  live.subscribe('agents', () => { void refresh(); void refreshTrials() }, reason => invalidate(false, reason === 'offline' ? 'unavailable' : null))
   watch(() => {
     const access = getAccess()
     return `${access.status}\u0000${accessIdentity(access) ?? ''}`
@@ -322,6 +361,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     if (access.status !== 'founder' || !access.user?.displayName) {
       const ended = access.status === 'anonymous' || access.status === 'denied'
       invalidate(ended)
+      trials.value = []; trialMessage.value = ''; trialAttempts.clear()
       if (ended) scopeIdentity = null
       return
     }
@@ -329,8 +369,8 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     if (scopeIdentity !== identity) { invalidate(true); scopeIdentity = identity }
   }, { immediate: true, flush: 'sync' })
   // The authenticated stream's ready event owns the initial/reconnect read.
-  onMounted(() => { mounted = true })
+  onMounted(() => { mounted = true; void refreshTrials() })
   onScopeDispose(() => { disposed = true; invalidate(true); scopeIdentity = null })
 
-  return { agents, send, createTask, refresh }
+  return { agents, send, createTask, refresh: async () => { await Promise.all([refresh(), refreshTrials()]) }, trialCommand }
 }

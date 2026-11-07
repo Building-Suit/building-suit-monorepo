@@ -56,6 +56,15 @@
       "sha256": "f20004a4899b81f6381508e532c19fbf1a13c6db8929c69fb29f51a43538cba1",
       "status": "source-only-live-approval-required",
       "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107034418_hq_workforce_trial_delivery.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107034418_hq_workforce_trial_delivery.sql",
+      "bytes": 10143,
+      "md5": "f02d945916cc782761e531243d70d511",
+      "sha256": "d3ec08d9fce2f4e0444b5254a66d620ba1f80af850454b6d1c1fecea986769b3",
+      "status": "source-only-live-approval-required",
+      "phase": "trial-delivery-review-only"
     }
   ]
 }

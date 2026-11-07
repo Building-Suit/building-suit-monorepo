@@ -21,6 +21,7 @@ export function maintenanceGate({ paused = false, uncertain = false, poison = as
 export const REQUIRED_RPCS = {
   hq_worker_release_status: ['p_worker_id'],
   hq_worker_claim: ['p_worker_id', 'p_lease_seconds', 'p_meeting_protocol'],
+  hq_worker_finish_v4: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence', 'p_model_evidence', 'p_trial_evidence'],
   hq_worker_finish_v3: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence', 'p_model_evidence'],
   hq_worker_heartbeat: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_status'],
   hq_worker_presence: ['p_worker_id'], hq_worker_skill_context: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_skill_ids'],
