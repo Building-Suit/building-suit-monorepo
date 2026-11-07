@@ -123,6 +123,60 @@
       "status": "approved-source-not-deployed",
       "phase": "admission-fence",
       "proposal": "tooling/hq-agent-host/bootstrap/admission-pause.sql"
+    },
+    {
+      "file": "20261107024306_hq_department_staffing_needs.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106000000_hq_department_staffing_needs.sql",
+      "bytes": 3180,
+      "md5": "9438762c2d1e2c4b590d4cd8f3275b90",
+      "sha256": "91013167455996c81482f37b1e562636deb9c6c85d331e52a5841ad6e0c39a1e",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024314_hq_department_orchestration_contract.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106010000_hq_department_orchestration_contract.sql",
+      "bytes": 18800,
+      "md5": "48b1e45e9b935512d21666112e71ae26",
+      "sha256": "447c6959bba6078d99b331c26b32169c2bf1761346af70d2eebfbfb432577de8",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024322_hq_supervised_worker_trials.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106020000_hq_supervised_worker_trials.sql",
+      "bytes": 53294,
+      "md5": "b59ec9335b91d1e14a5a6bbd400df830",
+      "sha256": "090054b023fb424dcd3d866cedbe50fb67f80c51ba469ee0c61eaff1d4fd040c",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024331_hq_qualified_research_web_search.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106030000_hq_qualified_research_web_search.sql",
+      "bytes": 4666,
+      "md5": "d82f2d8b1c8027ea18e61151d47744d1",
+      "sha256": "473d5c25a31a568ab083e3cc0e360ca902173ae7b7fdd76f3796064d0c4e5b9d",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024338_hq_worker_model_execution_receipts.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106114053_hq_worker_model_execution_receipts.sql",
+      "bytes": 14351,
+      "md5": "e7192d8ebab75245a0c627cdaf67d3b6",
+      "sha256": "9f433ed56aab324d3f58aa9f82bd80cdca5fcf1e9cbc429e0d08958ba9575a5b",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024348_hq_worker_release_capability.sql",
+      "proposal": "tooling/hq-agent-host/database-release-contract.sql",
+      "bytes": 3183,
+      "md5": "5254fc36cb8927508e2b8d2cc29ff7ae",
+      "sha256": "f20004a4899b81f6381508e532c19fbf1a13c6db8929c69fb29f51a43538cba1",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
     }
   ]
 }
