@@ -360,7 +360,7 @@ async function fileSha256(path) {
 
 function probeCliVersion(executable, environment, signal) {
   return new Promise((resolveVersion, rejectVersion) => {
-    let child, output = '', finished = false
+    let child, stdout = '', outputBytes = 0, finished = false
     const timer = setTimeout(() => finish(problem('provider-cli-version-unavailable')), 5000)
     const abort = () => finish(problem('worker-interrupted'))
     const finish = error => {
@@ -372,15 +372,18 @@ function probeCliVersion(executable, environment, signal) {
     signal.addEventListener('abort', abort, { once: true })
     try { child = spawn(executable, ['--version'], { env: environment, detached: true, stdio: ['ignore', 'pipe', 'pipe'] }) }
     catch { finish(problem('provider-cli-version-unavailable')); return }
-    const collect = chunk => {
-      if (output.length + chunk.length > 1024) { finish(problem('provider-cli-version-invalid')); return }
-      output += chunk.toString('utf8')
+    const collect = (chunk, versionOutput) => {
+      if (finished) return
+      outputBytes += chunk.byteLength
+      if (outputBytes > 1024) { finish(problem('provider-cli-version-invalid')); return }
+      if (versionOutput) stdout += chunk.toString('utf8')
     }
-    child.stdout.on('data', collect); child.stderr.on('data', collect)
+    child.stdout.on('data', chunk => collect(chunk, true))
+    child.stderr.on('data', chunk => collect(chunk, false))
     child.once('error', () => finish(problem('provider-cli-version-unavailable')))
     child.once('close', code => {
       if (finished) return
-      const version = output.trim()
+      const version = stdout.trim()
       if (code !== 0 || !/^codex-cli [A-Za-z0-9.+-]{1,80}$/.test(version)) finish(problem('provider-cli-version-invalid'))
       else { finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort); resolveVersion(version) }
     })

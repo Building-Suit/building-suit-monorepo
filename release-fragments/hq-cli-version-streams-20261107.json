@@ -1,0 +1,22 @@
+{
+  "id": "hq-cli-version-streams-20261107",
+  "task": "HQ-CLI-VERSION-STREAMS-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/worker.mjs",
+    "tooling/hq-agent-host/worker.test.mjs",
+    "tooling/hq-agent-host/test-cli.mjs",
+    "tooling/hq-agent-host/RELEASES.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Parse the supported CLI version only from stdout while bounding both output streams together, retaining exit, cancellation, timeout and same-binary trial evidence safeguards."
+}

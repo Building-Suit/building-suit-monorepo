@@ -299,6 +299,12 @@ actual results/limits from this task. Installing or testing on the live host,
 enabling the timer, applying DB changes and reviewing real paid-work behavior
 remain separate operator actions requiring approval.
 
+Trial CLI preflight reads the version only from stdout. Incidental stderr is
+discarded, while both streams share the unchanged 1,024-byte total limit.
+Nonzero exit, malformed/oversized stdout, stderr-only versions, unsupported
+versions, timeout and cancellation still fail closed before App Server launch.
+The same executable digest and resolved model/effort evidence remain required.
+
 ## First installation bridge proposals
 
 See [bootstrap/README.md](bootstrap/README.md) for the worker-specific admission fence, separate maintenance/reconciliation boundary, reviewed migration order, root-owned control preparation and action-time approval wording. `bootstrap.py` prepares controls and audits trust paths; it deliberately cannot stop legacy, activate a release, deploy SQL or enable the timer. The current legacy runtime is not a contract-2 rollback baseline. Root updater Node/gh binaries must use the root-owned control directory, never the historical ubuntu-writable home executable.

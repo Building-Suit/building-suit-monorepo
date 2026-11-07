@@ -2,13 +2,13 @@
 import { mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-export async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',appServer={},eventsByModel={}}={}){
+export async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',versionProbe={},appServer={},eventsByModel={}}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
 import {readFile} from 'node:fs/promises';
 import readline from 'node:readline';
 const args=process.argv.slice(2);
-if(args[0]==='--version'){process.stdout.write(${JSON.stringify(cliVersion)}+'\\n');process.exit(0)}
+if(args[0]==='--version'){await new Promise(done=>setTimeout(done,${JSON.stringify(versionProbe.delayMs??0)}));process.stdout.write(${JSON.stringify(versionProbe.stdout??cliVersion+'\n')});process.stderr.write(${JSON.stringify(versionProbe.stderr??'')});process.exitCode=${JSON.stringify(versionProbe.exitCode??0)};await new Promise(done=>setImmediate(done));process.exit()}
 if(args[0]==='app-server'){
  const lines=readline.createInterface({input:process.stdin,crlfDelay:Infinity});let start=null,threadId='018f0000-0000-7000-8000-000000000001',turnId='018f0000-0000-7000-8000-000000000002',done=false;
  const send=x=>process.stdout.write(JSON.stringify(x)+'\\n');
