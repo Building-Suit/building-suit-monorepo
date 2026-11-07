@@ -1,0 +1,21 @@
+{
+  "id": "hq-canonical-skill-declarations-20261107",
+  "task": "HQ-CANONICAL-SKILL-DECLARATIONS-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/workforceRoster.mjs",
+    "tooling/hq-agent-host/workforceRoster.test.mjs",
+    "tooling/hq-agent-host/RELEASES.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Separate explicit non-assignment governance paragraphs and resolve generic Drive references only in numbered SK declarations through the validated in-department canonical index, retaining complete bounded assignments and strict identity/skill-count guards."
+}
