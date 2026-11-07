@@ -331,3 +331,16 @@ required/default input names accept the actual worker JSON key set. Different
 names, extra required arguments and unnamed JSON fallbacks do not compete with
 the intended named match. This follows PostgREST's named-parameter dispatch:
 [planner source](https://github.com/PostgREST/postgrest/blob/v14.11/src/PostgREST/Plan.hs#L219-L268).
+
+
+## Complete roster profile reads
+
+Roster configuration reads each complete canonical profile individually through
+the existing Brain reader and one shared abort signal. A complete roster may
+exceed a single inference context; this does not raise the 128,000-byte document
+or 250,000-byte per-call/inference limits. Root ancestry, before/after revisions,
+profile identity, manager, model tier and assigned-skill validation remain intact.
+All profiles are assembled and validated before the single roster-sync RPC.
+An oversized source or cancellation prevents that commit; no document is
+truncated and no partial roster is published. A new signed worker and actual
+managed roster acceptance are required; admission remains held until accepted.

@@ -164,6 +164,7 @@ export function createWorkforceRoster({ readBrain, rpc }) {
   requireValue(typeof readBrain === 'function' && typeof rpc === 'function', 'roster-adapters-required')
   return {
     async sync(workerId, signal = AbortSignal.timeout(120_000)) {
+      signal.throwIfAborted()
       const source = await rpc('hq_worker_roster_sources', { p_worker_id: workerId })
       const index = indexFiles(source)
       const registry = resolveFile(index, 'Company/Agent Registry'), policy = resolveFile(index, 'Company/Workforce Operating Rules')
@@ -178,10 +179,15 @@ export function createWorkforceRoster({ readBrain, rpc }) {
       const rows = registryRows(documents.get(registry.id), index), tiers = modelPolicy(documents.get(policy.id))
       const profiles = [...rows.values()].map(row => resolveFile(index, row.profilePath))
       const requested = [...new Map(profiles.map(file => [file.id, file])).values()]
-      const reads = await readBrain({ brain_files: requested.map(file => ({ id: file.id })) }, signal)
-      requireValue(Array.isArray(reads) && reads.length === requested.length, 'roster-read-incomplete')
-      for (const file of reads) {
-        requireValue(requested.some(expected => expected.id === file.id && expected.name === file.name)
+      // Complete roster profiles are configuration, not one inference context.
+      // Keep every read inside the existing reader bounds and shared deadline;
+      // parse the entire canonical roster before its single atomic sync RPC.
+      for (const expected of requested) {
+        signal.throwIfAborted()
+        const reads = await readBrain({ brain_files: [{ id: expected.id }] }, signal)
+        requireValue(Array.isArray(reads) && reads.length === 1, 'roster-read-incomplete')
+        const [file] = reads
+        requireValue(file?.id === expected.id && file.name === expected.name
           && typeof file.text === 'string' && file.text.trim() && !documents.has(file.id), 'roster-read-incomplete')
         documents.set(file.id, file.text)
       }
@@ -200,6 +206,7 @@ export function createWorkforceRoster({ readBrain, rpc }) {
         return { ...row, departmentKey, ...tiers.get(tier), skillFileIds: assignedSkills(profile, path, index),
           managerId: row.managerId, modelTier: tier }
       })
+      signal.throwIfAborted()
       const result = await rpc('hq_worker_sync_roster', { p_worker_id: workerId, p_agents: agents })
       requireValue(result?.accepted === true && result.count === agents.length, 'roster-sync-unconfirmed')
       return { count: agents.length }

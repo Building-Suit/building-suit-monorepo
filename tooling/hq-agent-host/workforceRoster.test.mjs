@@ -1,5 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { generateKeyPairSync } from 'node:crypto'
+import { brainReader } from './worker.mjs'
 import { BRAIN_ROOT, createWorkforceRoster } from './workforceRoster.mjs'
 import { assessDepartmentCapacity, workerExecutionBlock } from './departmentWorkflow.mjs'
 
@@ -39,14 +41,14 @@ function fixture(change = () => {}) {
     add(path, `# Profile ${id}\n${path.startsWith('CEO/') ? '## Nine active procedures' : '## 5. Assigned skills'}\n- [[${skill}|Scoped skill]]\n## 6. Brain House Rules\nPrivate unrelated [[CEO/SOUL]] does not become an assigned skill.`)
   }
   change({ files, documents, registry, policy, paths, add })
-  const roster = createWorkforceRoster({
+  const adapters = {
     readBrain: async ({ brain_files }) => brain_files.map(({ id }) => ({ id, name: files.find(file => file.id === id).name, revision: '1', text: documents.get(id) })),
     rpc: async (name, args) => {
       calls.push({ name, args })
       return name === 'hq_worker_roster_sources' ? { rootId: BRAIN_ROOT, files } : { accepted: true, count: args.p_agents.length }
     },
-  })
-  return { roster, calls }
+  }
+  return { roster: createWorkforceRoster(adapters), calls, adapters, files, documents, paths }
 }
 
 test('cloud registry binds all ten identities, current models, exact skills and lifecycle without inventing qualification', async () => {
@@ -189,4 +191,95 @@ test('Markdown label skill assignment resolves exact file and preserves suspende
   })
   await roster.sync('worker-id')
   assert.equal(calls.at(-1).args.p_agents[0].lifecycle, 'Suspended')
+})
+
+
+function largeCanonicalRoster() {
+  const profileIds = []
+  const result = fixture(({ add, documents, registry, paths }) => {
+    let registryText = documents.get(registry)
+    for (const [index, name] of ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta'].entries()) {
+      const id = 'AG-DEV-' + String(index + 2).padStart(3, '0'), path = `Departments/Development/Hire ${name} profile`
+      add(path + '.md', `---\nemployee_id: ${id}\nreports_to: AG-DEV-001\n---\n# Hire ${name}\n## 5. Assigned skills\n- [[Departments/Development/Skills/assigned/SKILL|Full assigned skill]]\n## 6. Brain House Rules`)
+      registryText += `\n| ${id} | Hire ${name} — Drafting Worker / Adam AG-DEV-001 (Development) | [[${path}|Canonical profile]] v1 | Configured; trial pending | T1_WORKER policy only | Evidence |`
+    }
+    documents.set(registry, registryText)
+    for (const [path, id] of paths) if (path.endsWith('profile.md') || profiles.some(([, , expected]) => expected === path)) {
+      const text = documents.get(id)
+      // Assigned-skill sections stay at the END of each complete long profile.
+      documents.set(id, text.replace(/(?=## (?:5\.|Nine active procedures))/, 'Complete synthetic standing instructions.\n'.repeat(600)))
+      profileIds.push(id)
+    }
+  })
+  assert.equal(profileIds.length, 18)
+  assert.ok(profileIds.reduce((sum, id) => sum + Buffer.byteLength(result.documents.get(id)), 0) > 250_000)
+  assert.ok(profileIds.every(id => Buffer.byteLength(result.documents.get(id)) < 128_000))
+  return { ...result, profileIds }
+}
+
+/** Compose the real bounded reader with a synthetic Drive; no network/Brain access. */
+async function withRosterBrain(f, action) {
+  const prior = globalThis.fetch
+  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const reader = brainReader({ brainRoot: BRAIN_ROOT, googleEmail: 'fixture@example.invalid',
+    googleKey: privateKey.export({ type: 'pkcs8', format: 'pem' }) })
+  globalThis.fetch = async (input, options = {}) => {
+    options.signal?.throwIfAborted()
+    const url = new URL(String(input))
+    if (url.href === 'https://oauth2.googleapis.com/token') return Response.json({ access_token: 'synthetic-only-token', expires_in: 3600 })
+    assert.equal(url.origin, 'https://www.googleapis.com')
+    const id = url.pathname.split('/files/')[1]
+    if (url.searchParams.get('alt') === 'media') {
+      const text = f.documents.get(id); assert.equal(typeof text, 'string')
+      return new Response(text, { headers: { 'content-length': String(Buffer.byteLength(text)) } })
+    }
+    const file = id === BRAIN_ROOT ? { id, name: 'Synthetic Brain', mimeType: 'application/vnd.google-apps.folder', parents: [] } : f.files.find(value => value.id === id)
+    assert.ok(file)
+    return Response.json({ ...file, trashed: false, version: '1', modifiedTime: '2026-11-01T00:00:00Z' })
+  }
+  try { return await action(reader) } finally { globalThis.fetch = prior }
+}
+
+test('complete eighteen-profile roster exceeds one context but syncs atomically through bounded real-reader calls', async () => {
+  const f = largeCanonicalRoster(), signal = new AbortController().signal, requests = []
+  await withRosterBrain(f, async reader => {
+    await assert.rejects(() => reader({ brain_files: f.profileIds.map(id => ({ id })) }, signal), error => error.code === 'brain-context-too-large')
+    const roster = createWorkforceRoster({ ...f.adapters, readBrain: (context, sharedSignal) => {
+      assert.equal(sharedSignal, signal); requests.push(context.brain_files.map(file => file.id))
+      return reader(context, sharedSignal)
+    } })
+    assert.deepEqual(await roster.sync('synthetic-worker', signal), { count: 18 })
+    assert.equal(requests.length, 19); assert.equal(requests[0].length, 2)
+    assert.ok(requests.slice(1).every(ids => ids.length === 1))
+    assert.deepEqual(requests.slice(1).flat(), f.profileIds)
+    const writes = f.calls.filter(call => call.name === 'hq_worker_sync_roster')
+    assert.equal(writes.length, 1); assert.equal(writes[0].args.p_agents.length, 18)
+    assert.deepEqual(new Set(writes[0].args.p_agents.map(agent => agent.profileFileId)), new Set(f.profileIds))
+    assert.ok(writes[0].args.p_agents.every(agent => agent.skillFileIds.length === 1 && agent.modelTier))
+    assert.ok(writes[0].args.p_agents.every(agent => agent.lifecycle === 'Configured; trial pending'))
+  })
+})
+
+test('one oversized profile still fails the real 128000-byte reader before any roster sync', async () => {
+  const f = largeCanonicalRoster(), last = f.profileIds.at(-1)
+  f.documents.set(last, f.documents.get(last).padEnd(128_001, 'x'))
+  await withRosterBrain(f, async reader => {
+    const roster = createWorkforceRoster({ ...f.adapters, readBrain: reader })
+    await assert.rejects(() => roster.sync('synthetic-worker', new AbortController().signal), error => error.code === 'brain-source-too-large')
+    assert.equal(f.calls.filter(call => call.name === 'hq_worker_sync_roster').length, 0)
+  })
+})
+
+test('shared roster cancellation after profile reads never commits the assembled roster', async () => {
+  const f = largeCanonicalRoster(), controller = new AbortController()
+  await withRosterBrain(f, async reader => {
+    const roster = createWorkforceRoster({ ...f.adapters, readBrain: async (context, signal) => {
+      assert.equal(signal, controller.signal)
+      const result = await reader(context, signal)
+      if (context.brain_files.some(file => file.id === f.profileIds.at(-1))) controller.abort(Error('synthetic-roster-stop'))
+      return result
+    } })
+    await assert.rejects(() => roster.sync('synthetic-worker', controller.signal), /synthetic-roster-stop/)
+    assert.equal(f.calls.filter(call => call.name === 'hq_worker_sync_roster').length, 0)
+  })
 })
