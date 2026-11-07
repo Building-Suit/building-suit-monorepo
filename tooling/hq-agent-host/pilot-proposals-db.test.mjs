@@ -42,6 +42,7 @@ async function setup(withEvidence = true, withChat = false, withPresence = true)
   if (withChat) await db.exec(await readFile(new URL('20261105180148_hq_conversational_chat.sql',root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('20261105192548_hq_presence_without_snapshot_polling.sql',root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('20261105235516_hq_voice_meetings.sql',root),'utf8'))
+  if (withPresence) await db.exec(await readFile(new URL('./bootstrap/admission-pause.sql', import.meta.url),'utf8'))
   await db.exec(await readFile(new URL('20261106000000_hq_department_staffing_needs.sql',proposals),'utf8'))
   await db.exec(await readFile(new URL('20261106010000_hq_department_orchestration_contract.sql',proposals),'utf8'))
   await db.exec(await readFile(new URL('20261106020000_hq_supervised_worker_trials.sql',proposals),'utf8'))
@@ -552,4 +553,43 @@ test('release contract 2 requires the actual proposed pilot schema and preserves
     await h.as('founder')
     await assert.rejects(() => h.rpc('hq_worker_release_status', [worker]), /HQ_WORKER_REQUIRED/)
   } finally { await h.db.close() }
+})
+
+
+test('bootstrap admission fence survives all pilot wrappers without revoking finish or heartbeat',async()=>{
+ const h=await setup();const {db,as,rpc}=h;const request=randomUUID()
+ try {
+  await as('founder');await rpc('hq_create_task',['Pause fixture','Create one draft','One draft','AG-HR-002',randomUUID()])
+  const job=await h.claim()
+  await db.exec('reset role')
+  assert.deepEqual((await db.query("select hq_private.set_worker_admission_pause($1,true,0,$2,'bootstrap') value",[worker,request])).rows[0].value,{paused:true,generation:1})
+  assert.deepEqual((await db.query("select hq_private.set_worker_admission_pause($1,true,0,$2,'bootstrap') value",[worker,request])).rows[0].value,{paused:true,generation:1})
+  await as('worker')
+  assert.deepEqual(await rpc('hq_worker_admission_status',[worker]),{paused:true,generation:1,activeJobs:1})
+  assert.equal((await rpc('hq_worker_claim',[worker,300])).admissionPaused,true)
+  assert.equal((await rpc('hq_worker_claim',[worker,300,1])).admissionPaused,true)
+  await assert.rejects(()=>rpc('hq_worker_admission_status',[randomUUID()]),/HQ_WORKER_REQUIRED/)
+  await assert.rejects(()=>db.query("select hq_private.set_worker_admission_pause($1,false,1,$2,'worker bypass')",[worker,randomUUID()]),/permission denied/)
+  await assert.rejects(()=>db.query('select * from hq_private.worker_admission_pauses'),/permission denied/)
+  await rpc('hq_worker_heartbeat',[job.id,job.lease_token,worker,'working'])
+  await h.finish(job,'Finished while admission paused')
+  assert.equal((await rpc('hq_worker_admission_status',[worker])).activeJobs,0)
+  await db.exec('reset role')
+  const bypasses=await db.query("select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='hq_private' and proname like 'worker_claim_before%' and has_function_privilege('authenticated',p.oid,'EXECUTE')")
+  assert.deepEqual(bypasses.rows,[])
+  await assert.rejects(()=>db.query("select hq_private.set_worker_admission_pause($1,false,0,$2,'stale unpause')",[worker,randomUUID()]),/HQ_ADMISSION_GENERATION/)
+  await db.query("select hq_private.set_worker_admission_pause($1,false,1,$2,'accepted')",[worker,randomUUID()])
+  assert.ok((await h.claim()).id)
+ } finally {await db.close()}
+})
+
+
+test('bootstrap blocks legacy rollback: its tier-less roster clears contract-2 model bindings',async()=>{
+ const h=await setup();try{
+  const legacyRoster=roster.map(agent=>Object.fromEntries(Object.entries(agent).filter(([key])=>key!=='modelTier')))
+  await h.as('worker')
+  assert.equal((await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(legacyRoster)])).accepted,true)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.agent_roster where model_tier is null')).rows[0].n,10)
+ }finally{await h.db.close()}
 })

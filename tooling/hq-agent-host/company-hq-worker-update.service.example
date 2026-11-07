@@ -7,7 +7,8 @@ After=network-online.target
 Type=oneshot
 User=root
 WorkingDirectory=/opt/building-suit-hq-agent-host
-ExecStart=/usr/bin/python3 /opt/building-suit-hq-agent-host/updater/release.py update --config /etc/building-suit-hq/updater.json
+ExecStartPre=/usr/bin/python3 /opt/building-suit-hq-agent-control/bootstrap.py audit --config /etc/building-suit-hq/updater.json
+ExecStart=/usr/bin/python3 /opt/building-suit-hq-agent-control/release.py update --config /etc/building-suit-hq/updater.json
 # Drain + startup + rollback; no active inference is terminated on update timeout.
 TimeoutStartSec=25min
 UMask=0077

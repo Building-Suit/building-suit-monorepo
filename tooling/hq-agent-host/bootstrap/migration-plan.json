@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "status": "review-proposals-only-not-active-migrations",
+  "projectRef": "dpruoncalmwicrqhqelu",
+  "baselineStgSha": "2c3f34c65ea4511b7a59f3034a728fa583258f87",
+  "appliedBaselineCount": 17,
+  "steps": [
+    {
+      "order": 1,
+      "source": "bootstrap/admission-pause.sql",
+      "sha256": "cc23de0135b4c01a5028868dfc424ad75bb8cdf8ccd19eef388bd53b76fa8461",
+      "phase": "claim-fence",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 2,
+      "source": "proposed-migrations/20261106000000_hq_department_staffing_needs.sql",
+      "sha256": "91013167455996c81482f37b1e562636deb9c6c85d331e52a5841ad6e0c39a1e",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 3,
+      "source": "proposed-migrations/20261106010000_hq_department_orchestration_contract.sql",
+      "sha256": "447c6959bba6078d99b331c26b32169c2bf1761346af70d2eebfbfb432577de8",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 4,
+      "source": "proposed-migrations/20261106020000_hq_supervised_worker_trials.sql",
+      "sha256": "090054b023fb424dcd3d866cedbe50fb67f80c51ba469ee0c61eaff1d4fd040c",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 5,
+      "source": "proposed-migrations/20261106030000_hq_qualified_research_web_search.sql",
+      "sha256": "473d5c25a31a568ab083e3cc0e360ca902173ae7b7fdd76f3796064d0c4e5b9d",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 6,
+      "source": "proposed-migrations/20261106114053_hq_worker_model_execution_receipts.sql",
+      "sha256": "9f433ed56aab324d3f58aa9f82bd80cdca5fcf1e9cbc429e0d08958ba9575a5b",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 7,
+      "source": "database-release-contract.sql",
+      "sha256": "f20004a4899b81f6381508e532c19fbf1a13c6db8929c69fb29f51a43538cba1",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    }
+  ]
+}
