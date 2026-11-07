@@ -813,12 +813,13 @@ test('catalog proof rejects matching overloads including optional extra argument
   try {
     const statement=params=>`create function public.hq_worker_presence(${params}) returns jsonb language sql as $$select '{}'::jsonb$$;`
     for(const params of ['p_worker_id text',"p_worker_id uuid,p_extra text default ''",
-      'p_worker_id text,p_optional text default null']) {
+      'p_worker_id text,p_optional text default null','OUT ignored jsonb, IN p_worker_id text',
+      'OUT ignored jsonb, IN p_worker_id text, IN p_optional text default null']) {
       await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
       await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE/)
       await h.db.exec('rollback;reset role')
     }
-    for(const params of ['p_other_id text','p_worker_id uuid,p_required text','jsonb']) {
+    for(const params of ['p_other_id text','p_worker_id uuid,p_required text','jsonb','OUT ignored jsonb, IN p_other_id text']) {
       await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
       assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
       await h.db.exec('rollback;reset role')

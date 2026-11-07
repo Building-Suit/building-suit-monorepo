@@ -51,12 +51,19 @@ begin
     if exists (
       select 1 from pg_catalog.pg_proc alternative
       cross join lateral (
-        select coalesce(pg_catalog.array_agg(a.name) filter(where a.type is not null),'{}'::text[]) names,
-          coalesce(pg_catalog.array_agg(a.name) filter(where a.type is not null
-            and a.idx<=alternative.pronargs-alternative.pronargdefaults),'{}'::text[]) required_names
-        from rows from (pg_catalog.unnest(alternative.proargnames),
-          pg_catalog.unnest(alternative.proargtypes::oid[]),pg_catalog.unnest(alternative.proargmodes))
-          with ordinality a(name,type,mode,idx)
+        select coalesce(pg_catalog.array_agg(a.name order by a.input_idx),'{}'::text[]) names,
+          coalesce(pg_catalog.array_agg(a.name order by a.input_idx)
+            filter(where a.input_idx<=alternative.pronargs-alternative.pronargdefaults),'{}'::text[]) required_names
+        from (
+          -- Names/modes describe ALL arguments; proargtypes describes inputs.
+          -- Align the full lists first, remove output-only slots, then number
+          -- only inputs so OUT slots cannot shift the default boundary.
+          select raw.name,pg_catalog.row_number() over(order by raw.idx) input_idx
+          from rows from (pg_catalog.unnest(alternative.proargnames),
+            pg_catalog.unnest(coalesce(alternative.proallargtypes,alternative.proargtypes::oid[])),
+            pg_catalog.unnest(alternative.proargmodes)) with ordinality raw(name,type,mode,idx)
+          where raw.type is not null and coalesce(raw.mode,'i') in ('i','b','v')
+        ) a
       ) inputs
       where alternative.pronamespace='public'::pg_catalog.regnamespace
         and alternative.proname=v_required.name and alternative.oid<>v_proc.oid
