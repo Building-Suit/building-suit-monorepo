@@ -72,7 +72,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       if (getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
       if (result?.accepted !== true) throw Error('trial-unconfirmed')
       trialAttempts.delete(key)
-      trialMessage.value = command.action === 'start' ? 'Supervised internal trial queued.' : 'Qualification recorded. Execution still requires the canonical Active lifecycle.'
+      trialMessage.value = command.action === 'start' ? 'Supervised internal trial queued.' : 'Skill qualification recorded. All assigned skills and canonical Active lifecycle are required.'
       await Promise.all([refresh(), refreshTrials()])
     } catch {
       if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trialMessage.value = 'Trial action unconfirmed. Refresh and retry the same action; eligibility and evidence are checked by HQ.'

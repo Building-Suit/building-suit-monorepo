@@ -900,7 +900,7 @@ export async function start(adapters = {}) {
     checkApiContract(spec)
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
-    requireValue(status?.contract === 2 && status.trialDelivery === 1 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
+    requireValue(status?.contract === 2 && status.trialDelivery === 1 && status.trialSkills === 1 && status.trialFailureSettlement === 1 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
     return status
   }
   if (process.argv.includes('--release-preflight')) {

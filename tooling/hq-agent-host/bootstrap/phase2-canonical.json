@@ -65,6 +65,15 @@
       "sha256": "d3ec08d9fce2f4e0444b5254a66d620ba1f80af850454b6d1c1fecea986769b3",
       "status": "source-only-live-approval-required",
       "phase": "trial-delivery-review-only"
+    },
+    {
+      "file": "20261107040848_hq_trial_failure_and_assigned_skills.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107040848_hq_trial_failure_and_assigned_skills.sql",
+      "bytes": 28636,
+      "md5": "18407b94e670ec2797aa686d4cc48aa2",
+      "sha256": "a00bc40d7915b05e68b9b44a1a3ad54b48da17378c123c9c0df9e276eac23608",
+      "status": "source-only-live-approval-required",
+      "phase": "trial-skills-review-only"
     }
   ]
 }
