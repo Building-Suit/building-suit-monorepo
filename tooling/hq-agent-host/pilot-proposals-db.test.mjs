@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
-import { maintenanceGate } from './maintenance.mjs'
+import { maintenanceGate, checkApiContract, REQUIRED_RPCS } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { fake } from './test-cli.mjs'
 import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, webAllowed } from './worker.mjs'
@@ -19,7 +19,7 @@ const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9
 const departments = new Map(ids.map((id,index)=>[id,index===0?null:index===4?'research-market-intelligence':index===5?'customer-acquisition-partnerships':index===6?'customer-success-onboarding':index===7?'social-community':index===8?'email-lifecycle':index===9?'development-maintenance':'hr-agent-development']))
 const managers = new Map(ids.map((id,index)=>[id,index===0?null:[2,3].includes(index)?'AG-HR-001':'AG-CEO-001']))
 const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:tiers.get(id)==='T1_WORKER'?'gpt-6.1-terra':tiers.get(id)==='T3_EXEC'?'gpt-6-astra':'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
-async function setup(withEvidence = true, withChat = false, withPresence = true, withLatest = false) {
+async function setup(withEvidence = true, withChat = false, withPresence = true, withLatest = false, withStatus = false) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create schema extensions; create schema realtime;
@@ -54,6 +54,7 @@ async function setup(withEvidence = true, withChat = false, withPresence = true,
   await db.exec(await readFile(new URL('20261107024348_hq_worker_release_capability.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261107034418_hq_workforce_trial_delivery.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261107040848_hq_trial_failure_and_assigned_skills.sql',root),'utf8'))
+  if (withStatus) for (const file of ['20261105171608_hq_office_observations.sql','20261107133124_hq_worker_status_compatibility.sql']) await db.exec(await readFile(new URL(file,root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
   await db.query(`select set_config('request.jwt.claims',$1,false)`,[JSON.stringify({sub:founder,role:'authenticated',session_id:session})])
@@ -757,4 +758,85 @@ test('each current assigned skill requires its own reviewed receipt with the ful
   await h.db.query("update hq_private.brain_files set source_version='2' where file_id=$1",[skills[1]])
   await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'any indexed skill revision invalidates the full receipt binding')
  }finally{await h.db.close()}
+})
+
+
+test('authenticated catalog proof works without privileged OpenAPI and exposes no queue or identity data',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    const status=await h.rpc('hq_worker_release_status',[worker])
+    assert.equal(checkApiContract(status),2);assert.deepEqual(status.api.rpcs,REQUIRED_RPCS)
+    assert.deepEqual(Object.keys(status).sort(),['activeJobs','api','contract','trialDelivery','trialFailureSettlement','trialSkills'])
+    await assert.rejects(()=>h.db.query('select * from public.hq_agent_jobs'),/permission denied/)
+    await h.as('founder');await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_WORKER_REQUIRED/)
+    await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_release_status',[randomUUID()]),/HQ_WORKER_REQUIRED/)
+    for(const change of [
+      `update hq_private.agent_workers set enabled=false where worker_id='${worker}'`,
+      `delete from auth.sessions where id='${workerSession}'`,
+      `update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id='${workerSession}'`,
+      `update auth.users set email_confirmed_at=null where id='${workerUser}'`
+    ]) {
+      await h.db.exec('reset role;begin;'+change);await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_WORKER_REQUIRED/)
+      await h.db.exec('rollback;reset role')
+    }
+    for(const role of ['anon','service_role']) {
+      await h.db.exec('reset role;set role '+role)
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/permission denied/)
+    }
+  } finally {await h.db.close()}
+})
+test('catalog proof rejects absent RPCs, renamed arguments, revoked execute or schema usage and wrong return types',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    await h.db.exec('reset role')
+    const definition=(await h.db.query("select pg_get_functiondef('public.hq_worker_claim(uuid,integer,integer)'::regprocedure) body")).rows[0].body
+    for(const change of [
+      'drop function public.hq_worker_presence(uuid)',
+      'revoke execute on function public.hq_worker_finish_v4(uuid,uuid,uuid,text,text,jsonb,jsonb,jsonb) from authenticated',
+      'revoke usage on schema public from public,authenticated',
+      'revoke usage on schema hq_private from authenticated',
+      'drop function public.hq_worker_claim(uuid,integer,integer);'+definition.replaceAll('p_meeting_protocol','p_wrong'),
+      "drop function public.hq_worker_presence(uuid);create function public.hq_worker_presence(p_worker_id uuid) returns text language sql as $$select 'bad'::text$$;grant execute on function public.hq_worker_presence(uuid) to authenticated"
+    ]) {
+      await h.db.exec('reset role;begin;'+change);await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE|permission denied/)
+      await h.db.exec('rollback;reset role');await h.as('worker')
+      assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
+    }
+  } finally {await h.db.close()}
+})
+
+
+test('catalog proof rejects matching overloads including optional extra arguments and preserves unrelated overloads',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    const statement=params=>`create function public.hq_worker_presence(${params}) returns jsonb language sql as $$select '{}'::jsonb$$;`
+    for(const params of ['p_worker_id text',"p_worker_id uuid,p_extra text default ''",
+      'p_worker_id text,p_optional text default null','OUT ignored jsonb, IN p_worker_id text',
+      'OUT ignored jsonb, IN p_worker_id text, IN p_optional text default null']) {
+      await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE/)
+      await h.db.exec('rollback;reset role')
+    }
+    for(const params of ['p_other_id text','p_worker_id uuid,p_required text','jsonb','OUT ignored jsonb, IN p_other_id text']) {
+      await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
+      assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
+      await h.db.exec('rollback;reset role')
+    }
+  } finally {await h.db.close()}
+})
+test('catalog proof requires the fixed invoker wrappers private entry signatures and execute grants',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    for(const change of [
+      'revoke execute on function hq_private.worker_finish_v4(uuid,uuid,uuid,text,text,jsonb,jsonb,jsonb) from authenticated',
+      'alter function hq_private.worker_presence(uuid) rename to worker_presence_unavailable'
+    ]) {
+      await h.db.exec('reset role;begin;'+change);await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE/)
+      await h.db.exec('rollback;reset role');await h.as('worker')
+      assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
+    }
+  } finally {await h.db.close()}
 })

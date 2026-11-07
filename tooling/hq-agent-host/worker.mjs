@@ -895,12 +895,9 @@ export async function start(adapters = {}) {
     await syncState()
   } })
   async function compatible() {
-    const token = await api.access()
-    const spec = await jsonRequest(config.url + '/rest/v1/', { headers: { apikey: config.key, Authorization: 'Bearer ' + token, Accept: 'application/openapi+json' } })
-    checkApiContract(spec)
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
-    requireValue(status?.contract === 2 && status.trialDelivery === 1 && status.trialSkills === 1 && status.trialFailureSettlement === 1 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
+    checkApiContract(status)
     return status
   }
   if (process.argv.includes('--release-preflight')) {

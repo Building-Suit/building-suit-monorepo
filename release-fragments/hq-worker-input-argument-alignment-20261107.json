@@ -1,0 +1,21 @@
+{
+  "id": "hq-worker-input-argument-alignment-20261107",
+  "task": "HQ-WORKER-INPUT-ARGUMENT-ALIGNMENT-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Align all-argument names/types/modes before retaining IN/INOUT/VARIADIC inputs; count only inputs for required/default matching. Cover OUT-before-IN ambiguity, optional input and unrelated output-bearing overloads without changing grants or admission."
+}

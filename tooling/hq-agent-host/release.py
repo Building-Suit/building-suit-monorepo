@@ -177,13 +177,20 @@ def stage(root, package, sha):
     manifest, contents = validate(package, sha)
     releases = root / 'releases'
     require(releases.is_dir() and not releases.is_symlink(), 'release-directory-required')
+    # These directories contain verified public code only. mkdir's mode is
+    # filtered by the updater's private umask; finalize traversal explicitly.
+    releases.chmod(0o755)
     target = releases / sha
     if target.exists():
         require(installed(root, sha) == manifest, 'immutable-release-conflict')
+        target.chmod(0o755)
+        sync_dir(target)
+        sync_dir(releases)
         return
     with tempfile.TemporaryDirectory(prefix='.stage-', dir=releases) as temporary:
         directory = Path(temporary) / sha
         directory.mkdir(mode=0o755)
+        directory.chmod(0o755)
         for name, data in contents.items():
             with open(directory / name, 'xb') as stream:
                 stream.write(data)
