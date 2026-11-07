@@ -2,6 +2,17 @@
 -- Apply before the five pilot proposals, in one approved staging transaction.
 -- This fences claims, NOT recovery/roster/Drive publication or legacy shutdown.
 begin;
+-- PG17 staging: bound only this migration transaction, never worker sessions.
+-- Refuse a busy install and roll back rather than consume a heartbeat deadline.
+set local lock_timeout='1s';
+set local statement_timeout='5s';
+set local transaction_timeout='8s';
+-- Global order: queue -> jobs -> worker registry. Heartbeat does not take queue
+-- and updates jobs before registry; presence's jobs SELECT is compatible with
+-- SHARE ROW EXCLUSIVE. Acquire these BEFORE FK/trigger DDL can invert the order.
+select pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('hq-agent-queue',0));
+lock table public.hq_agent_jobs in share row exclusive mode;
+lock table hq_private.agent_workers in share row exclusive mode;
 create table hq_private.worker_admission_pauses (
   worker_id uuid primary key references hq_private.agent_workers(worker_id),
   paused boolean not null,

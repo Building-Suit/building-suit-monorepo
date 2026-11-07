@@ -66,3 +66,35 @@ real managed preflight/health and a genuine compatible rollback baseline. The ol
 worker cannot retroactively supply a trusted drain receipt. No zero-interruption
 legacy conversion, current healthy host, full DB compatibility or timer readiness
 is inferred from these disposable results.
+
+## Canonical phase-1 follow-up
+
+Initial preparation commit `3a40fbc3a7163625060c0c4496ad0a2dd3d4bf51` was
+pushed. Under the subsequent explicit phase-1 authorization, the pinned repository
+CLI generated `20261107022638_hq_worker_admission_fence.sql`. It now includes
+only the generic fence/backstop and the exact verified staging worker's initial
+pause, in one bounded transaction. Canonical SHA256:
+`61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685`.
+
+All 17 original migration bytes/hashes remain unchanged. The source verifier
+separately pins the pending canonical file and its exact composition, without
+claiming it has been applied. All six contract-2 proposals remain outside active
+migrations. The parent verified GitHub integration: this repo/stg/apps/company-hq
+→ staging dpruoncalmwicrqhqelu, automatic provider deployment. There is no separate
+HQ Actions SQL deploy job and no direct connector SQL write is used here.
+
+The SQL reviewer identified a real rollout lock inversion. The migration now
+acquires queue → jobs SHARE ROW EXCLUSIVE → worker registry SHARE ROW EXCLUSIVE
+before FK/trigger DDL; legacy heartbeat instead proceeds jobs → roster → registry
+without the queue lock. Auth reads remain compatible. Migration-only PG17
+lock/statement/transaction timeouts are 1/5/8 seconds; a busy migration rolls back
+rather than canceling a worker heartbeat. **Nine real PG tests passed**, including
+the complete canonical wrapper racing an existing queue holder and the exact
+legacy heartbeat paused mid-call. Both renewals around migration succeeded;
+initial pause had one working job. Wrong target/extra worker rolls back all DDL.
+
+A dedicated actual-baseline/PGlite test passed: canonical initial pause, unchanged
+worker auth/enabled, both claim overloads fenced, active heartbeat and finish_v2
+successful, legacy roster/pending-lessons/presence still available, and no v3,
+release capability or trial activation. Source-parity unit test passed. Further
+exact-head CI results are reported in the task handoff; none are inferred here.

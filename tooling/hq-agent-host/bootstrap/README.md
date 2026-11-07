@@ -1,12 +1,20 @@
 # First-install bridge: review proposals, not a live installation
 
 This directory is deliberately outside `apps/company-hq/supabase/migrations`.
-No SQL here is deployed by the release builder/updater. No provider integration,
+No SQL here is deployed by the release builder/updater. The approved phase-1
+copy alone is now materialized as
+`apps/company-hq/supabase/migrations/20261107022638_hq_worker_admission_fence.sql`;
+its SHA256 is `61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685`.
+The 17 applied baseline entries remain unchanged; parity lists this forward file
+as pending rather than asserting deployment. All six phase-2 proposals remain
+outside active migrations. No provider integration,
 credential, existing login, host, state directory or hosted setting is changed by
-these source tests. The separate provider-linking owner must coordinate the
-actual GitHub staging migration path before any active migration is created.
-Current staging has no dedicated HQ database-deploy Actions workflow; its worker
-CI validates source and publishes code packages, and does not apply HQ SQL.
+these source tests. The parent verified the Supabase GitHub integration for staging
+`dpruoncalmwicrqhqelu`: this repository, branch `stg`, workdir `apps/company-hq`,
+automatic deployment enabled. The parent owns deployment observation. The canonical migration includes the
+initial pause of only the verified existing staging worker in the same transaction. There is no dedicated HQ database-deploy Actions workflow;
+worker CI validates source and publishes code packages, and does not apply SQL.
+Do not use connector SQL or another route to bypass the GitHub requirement.
 
 The current legacy runtime is **not** a compatible contract-2 rollback baseline.
 Its shutdown aborts active inference; its loop also recovers journals, syncs the
@@ -36,19 +44,16 @@ covered by a disposable regression test.
    or enabled here. Dry-run the migration and extend the parity inventory only
    after the new migration is actually approved/applied and verified. A GitHub
    merge or provider link is not itself live SQL authorization.
-3. Deploy that single fence through the approved staging workflow. Its exact
-   claim-body SHA256 gate rejects unexpected live SQL or wrong ordering. A
-   failure rolls the entire proposal transaction back; do not bypass the gate.
-   Under an administrator's approved staging connection, bind the actual worker
-   UUID and a fresh request UUID and call, using parameters (not interpolated
-   job/user data):
-
-   ```sql
-   select hq_private.set_worker_admission_pause(
-     :worker_id::uuid, true, 0, :request_id::uuid, 'approved legacy bootstrap');
-   ```
-
-   Commit immediately. Never hold the queue lock while waiting for work: finish
+3. The reviewed canonical phase-1 migration installs the fence **and its initial
+   pause atomically**, for only worker `3ead9a59-d84b-4e95-9871-abba0b129404`.
+   It fails if that worker is not enabled, if the sole registered worker differs,
+   or if another registered worker exists. It preserves authorization/enabled and
+   never asserts a zero-job drain. Deploy only via the verified GitHub `stg` →
+   Supabase staging integration. The initial pause is not a separate connector or
+   direct SQL/RPC write. Source approval does not prove provider deployment;
+   the parent must observe that exact version/result and worker status.
+   The migration commits immediately after its bounded DDL/pause. Never hold
+   the queue lock while waiting for work: finish
    and heartbeat also need it. The mutation serializes on `hq-agent-queue` before
    locking the pause row, then applies generation CAS. An unchanged request retry
    is idempotent; a reused request with different arguments and stale generation
@@ -183,9 +188,10 @@ code: a worker package can never replace it. Its timer stays disabled.
    roll back the DB. Do not resume while legacy journals/publications are pending.
 5. After actual managed health acceptance, resume the local gate under observation
    while the database hold still prevents claims; verify preserved state and a
-   healthy no-op/manual updater invocation. Only then explicitly compare-and-
-   resume database admission using the **currently observed** generation and a
-   fresh request UUID, with that action's approval. Do not use generation zero,
+   healthy no-op/manual updater invocation. Only then prepare a reviewed GitHub forward migration to compare-and-resume
+   database admission using the **currently observed** generation and a fresh
+   request UUID, with that action's approval. Do not use a direct SQL connector
+   or another route outside GitHub. Do not use generation zero,
    expire the hold, reuse an old resume decision, or let the timer clear it.
 6. Admit only the approved staging acceptance workload. Prove successful delivery,
    model receipts and a subsequent safe maintenance drain with no replay. Retain
@@ -219,7 +225,7 @@ code: a worker package can never replace it. Its timer stays disabled.
 
 ## Proposed action-time approval wording
 
-**First live change, after private source review:** “May I deploy the reviewed
+**Phase-1 wording retained as approved history; do not ask again:** “May I deploy the reviewed
 worker-admission fence to staging `dpruoncalmwicrqhqelu` and pause new claims for
 the existing Oracle worker, while keeping heartbeat and completion enabled? I
 will leave current work running and will not stop the worker, deploy the pilot
@@ -245,3 +251,29 @@ journal acknowledgment and a Drive write without its DB receipt all remain
 unsettled. `mayActivate` is always false: even complete observations still need
 the approved operator boundary. The helper performs no host/DB/network read or
 write, and cannot retrospectively prove legacy execution completion.
+
+## Phase-1 materialization completed
+
+The maintained command was executed with pinned pnpm 10.33.0 / Supabase 2.116.0:
+
+```sh
+SUPABASE_HOME=/tmp/hq-bootstrap-supabase-home XDG_CACHE_HOME=/tmp/hq-bootstrap-cache XDG_CONFIG_HOME=/tmp/hq-bootstrap-config pnpm db company-hq migration new hq_worker_admission_fence
+```
+
+The CLI generated version `20261107022638`; its file composes the exact tested fence proposal (with one transaction
+wrapper) and `initial-staging-pause.sql`, scoped to the verified worker UUID.
+Wrong target identity or extra registered workers abort the entire transaction. The parity verifier checks that
+exact composition equality, pins the reviewed hashes, preserves the 17 historic applied entries and
+rejects any other pending active migration. The PostgreSQL race suite now applies
+the canonical file directly. This source materialization is not evidence that
+Supabase deployed it or that a worker was paused. Observe the provider result following the reviewed staging merge; the initial
+pause is part of that migration, not a separate connector/RPC write.
+
+The canonical initial pause was explicitly owner-approved and must deploy only
+through the verified GitHub/stg provider route. No standalone SQL/RPC pause is
+performed by this coding task. The migration takes queue → jobs → worker-registry
+locks before any DDL. PostgreSQL 17 lock/statement/transaction timeouts of 1/5/8
+seconds bound only the migration and defer a busy installation; worker sessions
+are not canceled. Real installation races cover an existing queue holder and the
+actual legacy heartbeat paused between its jobs and registry writes. New leases
+are fenced at commit; current-job heartbeat and finish remain enabled.

@@ -5607,5 +5607,33 @@
     "sources": [
       "hq-oracle-bootstrap-preparation-20261107"
     ]
+  },
+  {
+    "id": "company-hq-admission-fence-phase1",
+    "task": "HQ-ADMISSION-FENCE-PHASE1-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/supabase/migrations/20261107022638_hq_worker_admission_fence.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "tooling/hq-agent-host/workforce-db.test.mjs",
+      "tooling/hq-agent-host/bootstrap",
+      "tooling/hq-agent-host/bootstrap_race_test.py",
+      "release-changes/items.json"
+    ],
+    "reason": "Materialize only the explicitly approved backward-compatible staging admission fence through the repository CLI; preserve 17 applied sources and track the new file as pending deployment. Keep heartbeat/finish and all stage-2/host boundaries intact.",
+    "sources": [
+      "hq-admission-fence-phase1-20261107"
+    ]
   }
 ]

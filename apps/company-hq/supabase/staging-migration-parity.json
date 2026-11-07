@@ -113,5 +113,16 @@
     "bytes": 5315,
     "md5": "4f154f12a9a6dd757d43d0242a7089bf",
     "sha256": "088fab48e63417f5ab88852ce62219ce46243855ffa803919181b1f33c988cfd"
-  }
+  },
+  "pendingMigrations": [
+    {
+      "file": "20261107022638_hq_worker_admission_fence.sql",
+      "bytes": 9337,
+      "md5": "20947fb64748d50d51a31d95aa217b64",
+      "sha256": "61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685",
+      "status": "approved-source-not-deployed",
+      "phase": "admission-fence",
+      "proposal": "tooling/hq-agent-host/bootstrap/admission-pause.sql"
+    }
+  ]
 }

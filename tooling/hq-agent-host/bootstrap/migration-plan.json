@@ -8,9 +8,14 @@
     {
       "order": 1,
       "source": "bootstrap/admission-pause.sql",
-      "sha256": "cc23de0135b4c01a5028868dfc424ad75bb8cdf8ccd19eef388bd53b76fa8461",
+      "sha256": "441d71c52970e286ce5b6c19c30719021b2c43448465dbc6c958ef597e0d1630",
       "phase": "claim-fence",
-      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+      "canonicalVersion": "20261107022638",
+      "canonicalPath": "apps/company-hq/supabase/migrations/20261107022638_hq_worker_admission_fence.sql",
+      "canonicalSha256": "61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685",
+      "status": "approved-source-not-deployed",
+      "initialPauseSource": "bootstrap/initial-staging-pause.sql",
+      "initialPauseSha256": "7dc72f7393a2d0d8d5514529bcf3d9b8100e3a6b080314c77228254c589fc2f4"
     },
     {
       "order": 2,
