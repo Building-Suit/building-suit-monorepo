@@ -142,19 +142,42 @@ function assignedSkills(profile, profilePath, index) {
     ? profile.match(/## Nine active procedures\s*([\s\S]*?)(?=\n## |$)/)?.[1]
     : profile.match(/## (?:5\. (?:Assigned skills|Exact assigned skill[^\n]*))\s*([\s\S]*?)(?=\n## |$)/i)?.[1]
   requireValue(section, 'assigned-skill-section-required')
+  // Only explicit non-assignment governance paragraphs are excluded. Mixed
+  // list blocks remain subject to the ordinary strict assignment checks.
+  const assignments = section.split(/\r?\n[ \t]*\r?\n/).filter(block => {
+    const text = block.trim()
+    const governance = (/^Governance references:/i.test(text)
+      && /\bnot\s+additional\s+worker\s+skill\s+assignments\b/i.test(text))
+      || /^Governance,\s*not additional assigned worker skills:/i.test(text)
+    return !governance || /^[ \t]*(?:\d+[.)]|[-*+])[ \t]+/m.test(block)
+  }).join('\n\n')
   const paths = [
-    ...[...section.matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map(m => m[1]),
-    ...[...section.matchAll(/`([^`\n]+\/Skills\/[^`\n]+)`/g)].map(m => m[1]),
-    ...[...section.matchAll(/\[([^\]\n]+\/Skills\/[^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/view\)/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/`([^`\n]+\/Skills\/[^`\n]+)`/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/\[([^\]\n]+\/Skills\/[^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/view\)/g)].map(m => m[1]),
   ]
   const ids = new Set()
   for (const path of paths) {
     if (!path.includes('/Skills/')) continue
-    const sharedHr = profilePath === 'Departments/HR/HR Lead.md' && path === 'CEO/Skills/conversation-learning/SKILL.md'
+    const sharedHr = profilePath.split('#')[0].trim().replace(/\.md$/i, '') === 'Departments/HR/HR Lead' && path === 'CEO/Skills/conversation-learning/SKILL.md'
     requireValue(path.startsWith(scope) || sharedHr, 'skill-outside-assigned-department')
     // A linked historical/deferred procedure is not an active assignment.
     requireValue(!/Automation Handoff/.test(path), 'inactive-skill-assignment')
     ids.add(resolveFile(index, path).id)
+  }
+  // Generic-label Drive references count only in explicit numbered SK-ID
+  // assignments. Resolve their IDs through the already validated canonical
+  // index; never fetch or authorize a URL supplied by profile prose.
+  const driveAssignments = /^[ \t]*\d+[.)][ \t]+\*\*SK-[A-Z]+-\d{3}\b[^\n]*?\*\*[ \t]*,?[ \t]*\[([^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{8,200})\/view(?:\?[^\s)]*)?\)/gm
+  for (const [, label, id] of assignments.matchAll(driveAssignments)) {
+    const matches = [...index].filter(([, file]) => file.id === id)
+    requireValue(matches.length === 1 && matches[0][1].mimeType !== FOLDER, 'roster-file-missing')
+    const [path] = matches[0]
+    requireValue(path.startsWith(scope), 'skill-outside-assigned-department')
+    requireValue(!/Automation Handoff/.test(path), 'inactive-skill-assignment')
+    requireValue(resolveFile(index, path).id === id, 'assigned-skill-reference-mismatch')
+    if (label.includes('/Skills/')) requireValue(resolveFile(index, label).id === id, 'assigned-skill-reference-mismatch')
+    ids.add(id)
   }
   requireValue(ids.size > 0 && ids.size <= 10, 'assigned-skills-required')
   return [...ids]
@@ -164,6 +187,7 @@ export function createWorkforceRoster({ readBrain, rpc }) {
   requireValue(typeof readBrain === 'function' && typeof rpc === 'function', 'roster-adapters-required')
   return {
     async sync(workerId, signal = AbortSignal.timeout(120_000)) {
+      signal.throwIfAborted()
       const source = await rpc('hq_worker_roster_sources', { p_worker_id: workerId })
       const index = indexFiles(source)
       const registry = resolveFile(index, 'Company/Agent Registry'), policy = resolveFile(index, 'Company/Workforce Operating Rules')
@@ -178,10 +202,15 @@ export function createWorkforceRoster({ readBrain, rpc }) {
       const rows = registryRows(documents.get(registry.id), index), tiers = modelPolicy(documents.get(policy.id))
       const profiles = [...rows.values()].map(row => resolveFile(index, row.profilePath))
       const requested = [...new Map(profiles.map(file => [file.id, file])).values()]
-      const reads = await readBrain({ brain_files: requested.map(file => ({ id: file.id })) }, signal)
-      requireValue(Array.isArray(reads) && reads.length === requested.length, 'roster-read-incomplete')
-      for (const file of reads) {
-        requireValue(requested.some(expected => expected.id === file.id && expected.name === file.name)
+      // Complete roster profiles are configuration, not one inference context.
+      // Keep every read inside the existing reader bounds and shared deadline;
+      // parse the entire canonical roster before its single atomic sync RPC.
+      for (const expected of requested) {
+        signal.throwIfAborted()
+        const reads = await readBrain({ brain_files: [{ id: expected.id }] }, signal)
+        requireValue(Array.isArray(reads) && reads.length === 1, 'roster-read-incomplete')
+        const [file] = reads
+        requireValue(file?.id === expected.id && file.name === expected.name
           && typeof file.text === 'string' && file.text.trim() && !documents.has(file.id), 'roster-read-incomplete')
         documents.set(file.id, file.text)
       }
@@ -200,6 +229,7 @@ export function createWorkforceRoster({ readBrain, rpc }) {
         return { ...row, departmentKey, ...tiers.get(tier), skillFileIds: assignedSkills(profile, path, index),
           managerId: row.managerId, modelTier: tier }
       })
+      signal.throwIfAborted()
       const result = await rpc('hq_worker_sync_roster', { p_worker_id: workerId, p_agents: agents })
       requireValue(result?.accepted === true && result.count === agents.length, 'roster-sync-unconfirmed')
       return { count: agents.length }
