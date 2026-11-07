@@ -68,7 +68,7 @@ function employeeRoleLabel(agent: HqAgentPresentation): string {
     || te(`hq.agents.departments.${role.toLowerCase()}`)
   return knownFallback && te(employeeKey) ? t(employeeKey) : role || t(`hq.agents.roles.${agent.role}`)
 }
-const { agents, send: sendCeoMessage, createTask: createAgentTask, refresh: refreshAgents } = useHqAgents(() => access.value, () => ({
+const { agents, trialCommand, send: sendCeoMessage, createTask: createAgentTask, refresh: refreshAgents } = useHqAgents(() => access.value, () => ({
   unavailable: t('hq.agents.unavailableLabel'), sendFailed: t('hq.agents.sendFailed'),
   unknownOutcome: t('hq.agents.unknownOutcome'), invalidMessage: t('hq.agents.invalidMessage'),
   taskFailed: t('hq.agents.taskFailed'), unknownTaskOutcome: t('hq.agents.unknownTaskOutcome'), invalidTask: t('hq.agents.invalidTask'),
@@ -299,4 +299,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>

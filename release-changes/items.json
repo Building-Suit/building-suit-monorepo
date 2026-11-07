@@ -5670,6 +5670,29 @@
     ]
   },
   {
+    "id": "hq-trial-delivery-20261107",
+    "task": "HQ-TRIAL-DELIVERY-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq",
+      "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "packages/ui/src/types/hqAgentsPresentation.ts",
+      "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+      "tooling/hq-agent-host",
+      "release-changes/items.json"
+    ],
+    "reason": "Complete the unmerged supervised-trial source path with lease-bound atomic host evidence delivery and authenticated founder controls. Preserve independent qualification review, canonical lifecycle and restricted tools; no live trial, admission resume or deployment."
+  },
+  {
     "id": "company-hq-admission-resume-preparation",
     "task": "HQ-ADMISSION-RESUME-PREPARATION-20261107",
     "suits": [
