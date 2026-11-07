@@ -32,7 +32,7 @@ async function trialAction(command: HqTrialCommand) {
       message: command.action === 'start' ? 'Queue one synthetic internal skill trial, with head and independent HR review? No external actions are permitted.' : 'Record qualification from the completed independently reviewed trial? Canonical Active lifecycle is still required before ordinary execution.',
       confirmLabel: command.action === 'start' ? 'Start trial' : 'Approve qualification', cancelLabel: 'Cancel' })
     const current = selectedTrial.value
-    const valid = command.action === 'start' ? current?.eligible && current.skillFileId === command.skillFileId && !current.receiptIssued
+    const valid = command.action === 'start' ? current?.eligible && current.skillFileId === command.skillFileId
       : current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
     if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgentId.value === agentId && !props.agents?.trialPending) emit('trialCommand', command)
   } finally { trialConfirming.value = false }
@@ -444,8 +444,8 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
         <header class="bs-hq-layout__brain-heading"><div><h2 :id="agentTitleId" ref="agentTitleRef" tabindex="-1" dir="auto">{{ selectedAgent.name }}</h2><p class="bs-hq-layout__workplace-description">{{ selectedAgent.roleLabel }} · <bdi>{{ selectedAgent.id }}</bdi></p></div><BsButton variant="icon" :aria-label="officeCopy.close" @click="closeAgentPanel"><BsIcon name="close" :size="20" /></BsButton></header>
         <BsHqOfficeOverview :agents="[selectedAgent]" :observations="agentsState.observations" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" detail />
         <template v-if="founderAccess.status === 'founder' && selectedTrial">
-          <p role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
-          <BsButton v-if="selectedTrial.eligible && selectedTrial.skillFileId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'start', agentId: selectedAgent.id, skillFileId: selectedTrial.skillFileId })">Start supervised trial</BsButton>
+          <p role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? selectedTrial.skillFileId ? 'Skill qualification recorded; remaining assigned skills require trials' : 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
+          <BsButton v-if="selectedTrial.eligible && selectedTrial.skillFileId" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'start', agentId: selectedAgent.id, skillFileId: selectedTrial.skillFileId })">Start supervised trial</BsButton>
           <BsButton v-if="selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
           <p v-if="agentsState.trialMessage" role="status">{{ agentsState.trialMessage }}</p>
         </template>

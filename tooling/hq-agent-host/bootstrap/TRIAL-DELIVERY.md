@@ -21,7 +21,7 @@ receipt. Workers cannot issue qualifications or call the private administrative
 receipt recorder. An invalid proof rolls back the finish. A lost response or
 journal acknowledgment retries only the same durable delivery, never inference.
 Failed work without host proof cannot qualify. New workers require both the v4
-OpenAPI shape and `trialDelivery: 1` before managed acceptance/admission.
+OpenAPI shape and `trialDelivery: 1`, `trialSkills: 1`, `trialFailureSettlement: 1` before managed acceptance/admission.
 
 The existing head authorization remains unchanged. Steve's rejection of an
 ordinary qualified employee artifact now returns through its actual T2 manager
@@ -35,7 +35,7 @@ before the employee's correction; the scoped trial route to Iris is preserved.
   The earlier 2c3f34c6/79c8b87f runtime is not this functional trial implementation.
   Keep the root-owned trust, paused startup and rollback acceptance rules.
 * Existing founder-controlled trial validators require a T1 worker with a live,
-  versioned profile, exactly one assigned skill and a same-department T2 manager.
+  versioned profile, one selected currently assigned skill per trial and a same-department T2 manager.
   Verify actual canonical eligibility for each requested employee. Do not remove
   extra skills, invent versions/receipts, grandfather staff or widen tools.
 * The global admission pause also blocks trial jobs. The parent must authorize
@@ -76,3 +76,30 @@ build production. The source config now enables exactly `stg` using the
 [documented branch filter](https://vercel.com/docs/project-configuration/git-configuration):
 `{"git":{"deploymentEnabled":{"*":false,"stg":true}}}`. No provider settings,
 manual deployment, other branch or repository-main promotion is performed here.
+
+## Review follow-up: failed startup and multiple assigned skills
+
+`20261107040848_hq_trial_failure_and_assigned_skills.sql` follows the original
+trial-delivery source without changing its bytes. A failed launch with no turn
+request can now commit an artifact-free failed receipt with zero turn counters
+and an observed error. Successful proof validation remains strict. Actual emitted
+null-effort and mismatched-model failures settle as blocked jobs, replay the same
+receipt and leave the maintenance gate unpoisoned; they cannot qualify anyone.
+
+Each assigned skill requires a separate trial and independent review. Every
+receipt retains the FULL current profile/skill-set/model/effort/manager binding;
+coverage is derived from that receipt's trial.skill_file_id. Duplicate receipts
+for one skill cannot cover another, and any indexed source revision change
+invalidates the old binding. The inspector uses its existing controls to offer
+the next uncovered skill and distinguish partial coverage from the final pending
+canonical Active transition. No assignment is truncated and no new approval
+screen, automatic paid trial, receipt table or hiring framework is introduced.
+The existing explicit trial-start and founder qualification actions remain
+separate scoped decisions; they are not a new automatic hiring permission.
+
+The multi-skill regression also exposed that claim responses lack top-level
+job.kind. The forward wrapper now scopes actual worker inputs by context.mode,
+so each trial receives only its selected skill while the canonical full roster
+remains unchanged. New semantic capability flags prevent premature managed
+acceptance before this forward prerequisite is present. Root updater controls,
+manifest format, trust roots and systemd settings are unchanged.

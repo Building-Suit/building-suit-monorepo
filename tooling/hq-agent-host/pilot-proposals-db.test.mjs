@@ -4,9 +4,10 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
+import { maintenanceGate } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { fake } from './test-cli.mjs'
-import { deliverWorkerEntry, invokeCodex, validateJob, webAllowed } from './worker.mjs'
+import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, webAllowed } from './worker.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
@@ -52,6 +53,7 @@ async function setup(withEvidence = true, withChat = false, withPresence = true,
   await db.exec(await readFile(new URL('20261107024338_hq_worker_model_execution_receipts.sql',proposals),'utf8'))
   await db.exec(await readFile(new URL('20261107024348_hq_worker_release_capability.sql',root),'utf8'))
   await db.exec(await readFile(new URL('20261107034418_hq_workforce_trial_delivery.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261107040848_hq_trial_failure_and_assigned_skills.sql',root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
   await db.query(`select set_config('request.jwt.claims',$1,false)`,[JSON.stringify({sub:founder,role:'authenticated',session_id:session})])
@@ -552,7 +554,7 @@ test('release contract 2 requires the actual proposed pilot schema and preserves
   const h = await setup(true, true, true)
   try {
     await h.as('worker')
-    assert.deepEqual(await h.rpc('hq_worker_release_status', [worker]), {contract:2,activeJobs:0,trialDelivery:1})
+    assert.deepEqual(await h.rpc('hq_worker_release_status', [worker]), {contract:2,activeJobs:0,trialDelivery:1,trialSkills:1,trialFailureSettlement:1})
     await h.as('founder')
     await assert.rejects(() => h.rpc('hq_worker_release_status', [worker]), /HQ_WORKER_REQUIRED/)
   } finally { await h.db.close() }
@@ -669,5 +671,90 @@ test('real delivery path commits lease-bound trial proof before independent revi
   j=await h.claim();assert.equal(j.context.mode,'task-report');await h.finish(j,'The reviewed corrected draft is delivered.')
   await h.db.exec('reset role')
   assert.equal((await h.db.query('select status from public.hq_business_tasks where id=$1',[j.context.task.id])).rows[0].status,'completed')
+ }finally{await h.db.close()}
+})
+
+
+async function trialSetup(skills) {
+ const h=await setup(true,true,true,true)
+ await h.db.exec('reset role')
+ for(const skill of skills)await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+   values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic skill.md','text/markdown','1',false,true)`,[skill])
+ await h.db.query(`update hq_private.brain_files set source_version='1' where file_id='profile_source_2'`)
+ const configured=roster.map(a=>a.id==='AG-HR-002'?{...a,skillFileIds:skills}:a)
+ await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+ return {h,configured}
+}
+async function claimTrialWork(h,skill) {
+ await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+ let j=await h.claim();assert.equal(j.context.mode,'task-route')
+ await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head supervises only the selected skill exercise.',message:'@Employee 1 will supervise.'})
+ j=await h.claim();await h.finish(j,{message:'@Employee 2 complete the selected internal exercise.',delegateId:'AG-HR-002'})
+ j=await h.claim();assert.equal(j.context.mode,'trial-start');await h.finish(j,{message:'I will test only the selected assigned skill.'})
+ j=await h.claim();assert.equal(j.context.mode,'worker-trial');assert.deepEqual(j.context.agent.skillFileIds,[skill])
+ return {j,trial}
+}
+const delivery=(h,entry,write=async()=>{})=>deliverWorkerEntry({workerId:worker,retryWait:async()=>{},write,rpc:async(name,input)=>{
+ await h.as('worker');return h.rpc(name,Object.values(input).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))
+}},entry)
+async function passSkillTrial(h,skill) {
+ const {j,trial}=await claimTrialWork(h,skill)
+ const output=await fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+ await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
+ let review=await h.claim();assert.equal(review.context.mode,'head-review');await h.finish(review,{accepted:true,summary:'Head verified the selected skill artifact.',artifactDigest:review.context.artifact.digest})
+ review=await h.claim();assert.equal(review.agent_id,'AG-HR-003');await h.finish(review,{accepted:true,summary:'Independent evaluator verified the exact selected skill exercise.',artifactDigest:review.context.artifact.digest})
+ review=await h.claim();assert.equal(review.context.mode,'task-report');await h.finish(review,'The selected internal skill trial was independently reviewed.')
+ assert.equal(await h.claim(),null)
+ await h.as('founder');await h.rpc('hq_issue_workforce_qualification',[trial.trialId])
+ return trial
+}
+test('actual emitted pre-turn failure proof settles durably without qualification or poisoned drain',async()=>{
+ const {h}=await trialSetup(['failure_skill_01']);try{
+  for(const appServer of [{nullEffort:true},{modelMismatch:true}]){
+   const {j,trial}=await claimTrialWork(h,'failure_skill_01')
+   let failure
+   await fake([],async config=>{try{await invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000))}catch(error){failure=error}},{cliVersion:'codex-cli 0.160.0',appServer})
+   assert.equal(codeOf(failure),'provider-model-resolution-invalid')
+   assert.equal(failure.modelBindingEvidence.invocation.protocol.turnStart,null)
+   assert.equal(failure.modelBindingEvidence.turnsStarted,0)
+   const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:codeOf(failure),evidence:[],
+     modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:failure.modelExecutionEvidence}
+   const gate=maintenanceGate();let written
+   await gate.run(()=>delivery(h,entry,value=>{written=value}))
+   assert.equal(written.phase,'delivered');assert.equal(gate.snapshot().uncertain,false)
+   const replay=await delivery(h,entry);assert.equal(replay.trialReceiptAccepted,true)
+   await h.db.exec('reset role')
+   assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[j.id])).rows[0].status,'blocked')
+   assert.equal((await h.db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
+   assert.equal((await h.db.query('select outcome from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows[0].outcome,'failed')
+   await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+   assert.equal(await h.claim(),null)
+  }
+ }finally{await h.db.close()}
+})
+test('each current assigned skill requires its own reviewed receipt with the full unchanged binding',async()=>{
+ const skills=['assigned_skill_alpha','assigned_skill_beta'],{h,configured}=await trialSetup(skills)
+ const active=configured.map(a=>a.id==='AG-HR-002'?{...a,lifecycle:'Active'}:a)
+ try{
+  await passSkillTrial(h,skills[0])
+  await h.as('founder');let row=(await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002')
+  assert.equal(row.skillFileId,skills[1]);assert.equal(row.eligible,true);assert.equal(row.receiptIssued,true);assert.equal(row.qualified,false)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'Active cannot qualify an untested second skill')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+  await passSkillTrial(h,skills[0])
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'duplicate first-skill receipts cannot cover the second skill')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+  await passSkillTrial(h,skills[1])
+  await h.as('founder');row=(await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002')
+  assert.equal(row.skillFileId,null);assert.equal(row.qualified,false,'pending lifecycle remains blocked after complete evidence')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,true)
+  await h.db.exec('reset role')
+  assert.deepEqual((await h.db.query("select skill_file_ids from hq_private.agent_roster where id='AG-HR-002'")).rows[0].skill_file_ids,skills)
+  await h.db.query("update hq_private.brain_files set source_version='2' where file_id=$1",[skills[1]])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'any indexed skill revision invalidates the full receipt binding')
  }finally{await h.db.close()}
 })

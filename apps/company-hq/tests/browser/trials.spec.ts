@@ -5,15 +5,16 @@ import { installWorkforceFixture } from './workforce-fixture'
 test('founder confirms one trial, approves reviewed proof, and pending lifecycle stays blocked', async ({ page }) => {
   const fixture = await installWorkforceFixture(page)
   const trialId = '60000000-0000-4000-8000-000000000001'
-  const row = { agentId: 'AG-HR-002', skillFileId: 'synthetic_skill_01', eligible: true, qualified: false,
+  let qualifications = 0
+  const row = { agentId: 'AG-HR-002', skillFileId: 'synthetic_skill_01' as string | null, eligible: true, qualified: false,
     trialId: null as string | null, status: null as string | null, receiptIssued: false, reviewComplete: false }
   const submitted: Record<string, unknown>[] = []
   await page.route('**/api/hq/trials', async route => {
     if (route.request().method() === 'GET') return route.fulfill({ json: [row] })
     const body = route.request().postDataJSON() as Record<string, unknown>
     submitted.push(body)
-    if ('trialId' in body) row.receiptIssued = true
-    else { row.trialId = trialId; row.status = 'active'; row.eligible = false }
+    if ('trialId' in body) { row.receiptIssued = true; qualifications++; row.skillFileId = qualifications === 1 ? 'synthetic_skill_02' : null; row.eligible = qualifications === 1 }
+    else { row.trialId = trialId; row.status = 'active'; row.eligible = false; row.receiptIssued = false; row.reviewComplete = false }
     return route.fulfill({ json: { accepted: true } })
   })
   await fixture.open()
@@ -35,10 +36,21 @@ test('founder confirms one trial, approves reviewed proof, and pending lifecycle
   await panel.getByRole('button', { name: 'Approve qualification', exact: true }).click()
   await expect(page.getByRole('dialog')).toContainText('Canonical Active lifecycle is still required')
   await page.getByRole('dialog').getByRole('button', { name: 'Approve qualification', exact: true }).click()
-  await expect(panel.getByText('Qualification recorded; canonical Active lifecycle required', { exact: true })).toBeVisible()
+  await expect(panel.getByText('Skill qualification recorded; remaining assigned skills require trials', { exact: true })).toBeVisible()
   expect(submitted).toHaveLength(2)
   expect(submitted[1]).toEqual({ trialId })
   await expect(panel.getByRole('button', { name: 'Approve qualification', exact: true })).toHaveCount(0)
+  await panel.getByRole('button', { name: 'Start supervised trial', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Start trial', exact: true }).click()
+  await expect(panel.getByText('Supervised trial: active', { exact: true })).toBeVisible()
+  expect(submitted[2]).toMatchObject({ agentId: 'AG-HR-002', skillFileId: 'synthetic_skill_02' })
+  row.status = 'passed'; row.reviewComplete = true
+  await fixture.publish(fixture.snapshot())
+  await panel.getByRole('button', { name: 'Approve qualification', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Approve qualification', exact: true }).click()
+  await expect(panel.getByText('Qualification recorded; canonical Active lifecycle required', { exact: true })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Start supervised trial', exact: true })).toHaveCount(0)
+  expect(submitted).toHaveLength(4)
   expect(fixture.unexpected).toEqual([])
   expect(fixture.errors).toEqual([])
 })
