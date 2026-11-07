@@ -12,7 +12,7 @@ const require = createRequire(new URL('../../apps/company-hq/package.json', impo
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
 const proposals = root // Execute the canonical forward copies; parity also requires exact proposal bytes.
-const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
+const founder = randomUUID(), workerUser = randomUUID(), worker = '3ead9a59-d84b-4e95-9871-abba0b129404', session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
 const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9].includes(index)?'T2_HEAD':'T1_WORKER']))
