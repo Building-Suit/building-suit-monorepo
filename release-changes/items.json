@@ -5691,5 +5691,30 @@
       "release-changes/items.json"
     ],
     "reason": "Complete the unmerged supervised-trial source path with lease-bound atomic host evidence delivery and authenticated founder controls. Preserve independent qualification review, canonical lifecycle and restricted tools; no live trial, admission resume or deployment."
+  },
+  {
+    "id": "hq-public-runtime-permissions-20261107",
+    "task": "HQ-PUBLIC-RUNTIME-PERMISSIONS-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/release.py",
+      "tooling/hq-agent-host/bootstrap.py",
+      "tooling/hq-agent-host/release_test.py",
+      "tooling/hq-agent-host/bootstrap_test.py",
+      "tooling/hq-agent-host/RELEASES.md",
+      "tooling/hq-agent-host/bootstrap/README.md",
+      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Finalize public runtime and control executable directories under private umask without changing ownership or private modes; verify disposable service-user access. Root control receipt review and real managed health remain required before admission/timer activation."
   }
 ]

@@ -122,6 +122,19 @@ Historical paths in the examples are context, not proof of the current machine.
    `/opt/building-suit-hq-agent-host/{releases,updater}` and
    `/etc/building-suit-hq`. The host user must be able to traverse/read release
    source (directories `0755`, runtime/manifest `0644`) but cannot modify it.
+   Do not rely on `mkdir(mode=0755)` under the required `umask 077`.
+   The one-time reviewed root installer must explicitly finalize the public
+   `releases/` directory after creation:
+
+   ```sh
+   mkdir -p /opt/building-suit-hq-agent-host/releases
+   chmod 0755 /opt/building-suit-hq-agent-host/releases
+   ```
+
+   Preserve root ownership; do not use recursive chmod or widen private inputs,
+   credentials, state, updater transaction files or backups. `stage()` now
+   explicitly finalizes `releases/` and each verified SHA directory as `0755`,
+   including an idempotent existing-content path after integrity validation.
    Install reviewed `release.py` into `updater/` separately; releases never
    self-update this privileged program. Install a reviewed current official `gh`
    supporting all policy flags and Python 3.10+ at fixed absolute paths. Verify
