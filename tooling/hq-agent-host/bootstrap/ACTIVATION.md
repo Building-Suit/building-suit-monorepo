@@ -27,8 +27,8 @@ Migration-only PG17 1/5/8-second lock/statement/transaction limits remain bounde
 healthy managed worker, compatible state, reconciled delivery or completed setup.
 The parent now has one-time setup/activation approval but owns all host work;
 this draft MUST remain unmerged until the parent verifies fresh managed-worker
-health and the required adoption/activation gates. #536 must also remain unmerged
-until the parent reports legacy inactive/reconciled and its required CI is green.
+health and the required adoption/activation gates. #536 has merged into stg as
+`fd396d93b8f1159f08804a0283ff453478410c9d`; this activation PR remains held.
 No auto-merge is configured. No direct SQL/RPC pause/resume, host access or timer
 action is performed here. Once approved, the only DB route is reviewed GitHub
 `stg` / `apps/company-hq` → staging `dpruoncalmwicrqhqelu`; never main/production.
@@ -51,7 +51,25 @@ The first managed install exposed `200/CHDIR`: umask `077` filtered mkdir's
 requested `0755` to `0700`. This source corrects only public release/control-bin
 traversal modes. The root operator must review/update `release.py` and
 `bootstrap.py` and their exact digest receipt before enabling the timer. The
-signed worker bundle, trust policy/roots, configuration and systemd units are
-unchanged. Do not chmod recursively or widen private inputs, state, credentials,
+signed worker bundle, trust policy/roots, configuration are unchanged. Do not chmod recursively or widen private inputs, state, credentials,
 receipts or backups. Re-run real service-user preflight/paused managed health
 and preserve the admission hold; these disposable tests are not host acceptance.
+
+
+## Symlink main dispatch correction — keep activation held
+
+Both fixed systemd Node commands now include `--preserve-symlinks-main`.
+Without it, Node resolves the main module to `releases/<sha>/worker.mjs` while
+`argv[1]` retains `current` or `candidate`, so the worker's main guard silently
+skips startup and preflight. Exit zero alone did not establish compatibility.
+The flag preserves main-module identity through the atomic release link;
+relative imports and manifest reads still resolve to the selected release.
+Ordinary imports remain inert. The signed five-module worker bundle is unchanged.
+See the [official Node option](https://nodejs.org/download/release/v24.15.0/docs/api/cli.html#--preserve-symlinks-main).
+
+Review/update both unit files and their control receipt hashes before running
+real preflight and paused managed health. Disposable real-Node tests reproduce
+the false zero exit, require actual authenticated-fixture contract validation,
+reject missing RPC/module dependencies, exercise atomic release switching and
+check PID/release/paused readiness plus the trial source digest. No live
+credentials, model or hosted system are used. Admission and timer remain held.

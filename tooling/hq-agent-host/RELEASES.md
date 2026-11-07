@@ -302,3 +302,9 @@ remain separate operator actions requiring approval.
 ## First installation bridge proposals
 
 See [bootstrap/README.md](bootstrap/README.md) for the worker-specific admission fence, separate maintenance/reconciliation boundary, reviewed migration order, root-owned control preparation and action-time approval wording. `bootstrap.py` prepares controls and audits trust paths; it deliberately cannot stop legacy, activate a release, deploy SQL or enable the timer. The current legacy runtime is not a contract-2 rollback baseline. Root updater Node/gh binaries must use the root-owned control directory, never the historical ubuntu-writable home executable.
+
+The worker and candidate preflight unit examples both require Node's
+`--preserve-symlinks-main` flag. Their signed runtime main guard otherwise skips
+execution through release links and can falsely return zero for preflight.
+Retain the fixed flag when installing units; verify actual contract output and
+observed paused managed health before acceptance. See bootstrap/ACTIVATION.md.
