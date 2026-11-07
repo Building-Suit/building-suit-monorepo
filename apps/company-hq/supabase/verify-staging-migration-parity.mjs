@@ -19,8 +19,8 @@ const phase1 = pending.filter(row => row.phase === 'admission-fence')
 const trialDelivery = pending.filter(row => row.phase === 'trial-delivery-review-only')
 if (trialDelivery.length > 1 || trialDelivery.some(row => row.file !== '20261107034418_hq_workforce_trial_delivery.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown trial delivery source')
 const resume = pending.filter(row => row.phase === 'admission-resume-review-only')
-if (resume.length > 1 || resume.some(row => row.file !== '20261107030606_hq_worker_admission_resume.sql' || row.status !== 'source-only-live-approval-required')) failures.push('unknown activation source')
 const phase2 = pending.filter(row => row.phase === 'contract2-review-only')
+if (resume.length > 1 || (resume.length && (phase2.length !== 6 || trialDelivery.length !== 1)) || resume.some(row => row.file !== '20261107040102_hq_worker_admission_resume.sql' || row.status !== 'source-only-live-approval-required')) failures.push('unknown activation source')
 const contract2Sources = [
   {
     "file": "20261107024306_hq_department_staffing_needs.sql",

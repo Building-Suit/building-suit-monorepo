@@ -2,8 +2,8 @@
 
 This follow-up is based on #536 at
 `72be94574741274d74d02b6829a3960bec19fea6`. It prepares only
-`apps/company-hq/supabase/migrations/20261107030606_hq_worker_admission_resume.sql` (SHA256
-`6ab35589888abd9ee62158fb99563758a92744c2d52f6670adf02e4de6298e37`). The pinned repository CLI generated the version with
+`apps/company-hq/supabase/migrations/20261107040102_hq_worker_admission_resume.sql` (SHA256
+`1ff9b1b229ab926902ece2b98b2f6690b424eb43fe962e7cf3bc3fe7cbb09f9a`). The pinned repository CLI generated the version with
 `pnpm db company-hq migration new hq_worker_admission_resume`.
 
 The parent independently verified phase 1 live: exact staging worker paused at
@@ -40,3 +40,5 @@ working jobs. Rejections preserve the hold and worker records. Fixtures use no
 live jobs, inference, credentials or external mutation. Full pilot regression passed **28/28**, and source parity/unit, workspace
 boundaries and release classification passed. Actual PR CI results are recorded
 in the task handoff; do not interpret skipped stacked aggregate checks as passes.
+
+The new CLI-generated resume follows the trial-delivery prerequisite and additionally requires its v4 worker API. The original never-applied 20261107030606 source is preserved under `bootstrap/superseded/`; it is no longer in the deployable migration directory. Preserve canonical pending/Active qualification rules and verify the new signed runtime. Retargeting this draft to stg permits normal combined CI in advance; it does not authorize merge or resume before fresh managed health and parent acceptance.

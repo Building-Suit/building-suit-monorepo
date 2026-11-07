@@ -679,7 +679,7 @@ async function resumeFixture() {
  await h.db.exec(await readFile(new URL('./bootstrap/initial-staging-pause.sql',import.meta.url),'utf8'))
  return h
 }
-const resumeSource=()=>readFile(new URL('20261107030606_hq_worker_admission_resume.sql',root),'utf8')
+const resumeSource=()=>readFile(new URL('20261107040102_hq_worker_admission_resume.sql',root),'utf8')
 
 test('activation source compare-and-resumes only the exact observed hold without changing auth',async()=>{
  const h=await resumeFixture();try{
@@ -728,6 +728,7 @@ test('activation source rejects a disabled target or another registered worker w
 
 test('activation source fails closed when contract capability or model-receipt prerequisites are missing',async()=>{
  for(const mutation of [
+  'drop function public.hq_worker_finish_v4(uuid,uuid,uuid,text,text,jsonb,jsonb,jsonb)',
   'drop function public.hq_worker_release_status(uuid)',
   'drop table hq_private.workforce_model_execution_receipts',
  ]){

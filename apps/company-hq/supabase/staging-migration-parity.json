@@ -179,14 +179,6 @@
       "phase": "contract2-review-only"
     },
     {
-      "file": "20261107030606_hq_worker_admission_resume.sql",
-      "bytes": 3754,
-      "md5": "d28a11d8f71ff9437e52f16100da57eb",
-      "sha256": "6ab35589888abd9ee62158fb99563758a92744c2d52f6670adf02e4de6298e37",
-      "status": "source-only-live-approval-required",
-      "phase": "admission-resume-review-only"
-    },
-    {
       "file": "20261107034418_hq_workforce_trial_delivery.sql",
       "proposal": "apps/company-hq/supabase/migrations/20261107034418_hq_workforce_trial_delivery.sql",
       "bytes": 10143,
@@ -194,6 +186,14 @@
       "sha256": "d3ec08d9fce2f4e0444b5254a66d620ba1f80af850454b6d1c1fecea986769b3",
       "status": "source-only-live-approval-required",
       "phase": "trial-delivery-review-only"
+    },
+    {
+      "file": "20261107040102_hq_worker_admission_resume.sql",
+      "bytes": 4044,
+      "md5": "2bb2486fee2683097247fd441e81eb58",
+      "sha256": "1ff9b1b229ab926902ece2b98b2f6690b424eb43fe962e7cf3bc3fe7cbb09f9a",
+      "status": "source-only-live-approval-required",
+      "phase": "admission-resume-review-only"
     }
   ]
 }
