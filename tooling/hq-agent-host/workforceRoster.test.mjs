@@ -283,3 +283,83 @@ test('shared roster cancellation after profile reads never commits the assembled
     assert.equal(f.calls.filter(call => call.name === 'hq_worker_sync_roster').length, 0)
   })
 })
+
+const developmentProfile = 'Departments/Development/Adam profile.md'
+const developmentSkill = 'Departments/Development/Skills/assigned/SKILL'
+const governanceSkill = 'Departments/HR/Skills/assigned/SKILL'
+function assignmentProfile(body) { return `# AG-DEV-001\n## 5. Assigned skills\n${body}\n## 6. Brain House Rules` }
+
+test('explicit non-assignment governance paragraphs do not add another department skill', async () => {
+  for (const paragraph of [
+    `Governance references: [[${governanceSkill}|Supervision policy]]. These govern HR and supervision; they are not additional worker skill assignments.`,
+    `Governance, not additional assigned worker skills: [[${governanceSkill}|Supervision policy]].`,
+  ]) {
+    const f = fixture(({ documents, paths }) => documents.set(paths.get(developmentProfile), assignmentProfile(`- [[${developmentSkill}|Assigned skill]]\n\n${paragraph}`)))
+    await f.roster.sync('synthetic-worker')
+    assert.deepEqual(f.calls.at(-1).args.p_agents.find(agent => agent.id === 'AG-DEV-001').skillFileIds, [f.paths.get(developmentSkill + '.md')])
+  }
+})
+
+test('unmarked or mixed governance paragraphs cannot hide real assignment references', async () => {
+  for (const paragraph of [
+    `Governance references: [[${governanceSkill}|Another department skill]].`,
+    `Governance, not additional assigned worker skills: [[${governanceSkill}|Supervision policy]].\n2. **SK-DEV-101 — actual assignment**, [[${developmentSkill}|Assigned skill]]`,
+  ]) {
+    const f = fixture(({ documents, paths }) => documents.set(paths.get(developmentProfile), assignmentProfile(`- [[${developmentSkill}|Assigned skill]]\n\n${paragraph}`)))
+    await assert.rejects(() => f.roster.sync('synthetic-worker'), /skill-outside-assigned-department/)
+    assert.equal(f.calls.length, 1)
+  }
+})
+
+test('numbered SK assignments retain a generic-label canonical Drive source and deduplicate exact IDs', async () => {
+  const f = fixture(({ add, documents, paths }) => {
+    const second = add('Departments/Development/Skills/second/SKILL.md', '# Synthetic second skill')
+    const prose = add('Departments/Development/Skills/prose-reference/SKILL.md', '# Not assigned')
+    const hr = paths.get(governanceSkill + '.md')
+    documents.set(paths.get(developmentProfile), assignmentProfile([
+      `1. **SK-DEV-101 v1.0.0 — first-workflow**, [[${developmentSkill}|Canonical first skill]].`,
+      `2. **SK-DEV-102 v1.0.0 — second-workflow**, [existing canonical source](https://drive.google.com/file/d/${second}/view).`,
+      `3. **SK-DEV-102 — same assignment**, [source alias](https://drive.google.com/file/d/${second}/view).`,
+      `\nArbitrary prose: [source](https://drive.google.com/file/d/${prose}/view).`,
+      `\n4. **License reference**, [license](https://drive.google.com/file/d/${hr}/view).`,
+    ].join('\n')))
+  })
+  await f.roster.sync('synthetic-worker')
+  assert.deepEqual(f.calls.at(-1).args.p_agents.find(agent => agent.id === 'AG-DEV-001').skillFileIds,
+    [f.paths.get(developmentSkill + '.md'), f.paths.get('Departments/Development/Skills/second/SKILL.md')])
+})
+
+test('explicit Drive assignments reject unknown, folder, foreign, non-skill and conflicting identities', async () => {
+  for (const kind of ['unknown', 'folder', 'foreign', 'non-skill', 'conflict']) {
+    const f = fixture(({ add, documents, paths }) => {
+      const second = add('Departments/Development/Skills/second/SKILL.md', '# Synthetic second skill')
+      const id = { unknown: 'synthetic_missing_source', folder: paths.get('Departments/Development/Skills'),
+        foreign: paths.get(governanceSkill + '.md'), 'non-skill': paths.get(developmentProfile), conflict: second }[kind]
+      const label = kind === 'conflict' ? developmentSkill + '.md' : 'existing canonical source'
+      documents.set(paths.get(developmentProfile), assignmentProfile(
+        `1. **SK-DEV-101 — first**, [[${developmentSkill}|First]].\n2. **SK-DEV-102 — second**, [${label}](https://drive.google.com/file/d/${id}/view).`))
+    })
+    await assert.rejects(() => f.roster.sync('synthetic-worker'), /roster-file-missing|skill-outside-assigned-department|assigned-skill-reference-mismatch/)
+    assert.equal(f.calls.length, 1)
+  }
+})
+
+test('numbered Drive skill assignments retain the existing ten-skill ceiling', async () => {
+  for (const total of [10, 11]) {
+    const f = fixture(({ add, documents, paths }) => {
+      const rows = [`1. **SK-DEV-101 — first**, [[${developmentSkill}|First]].`]
+      for (let at = 2; at <= total; at++) {
+        const id = add(`Departments/Development/Skills/synthetic-${at}/SKILL.md`, '# Synthetic skill')
+        rows.push(`${at}. **SK-DEV-${String(100 + at)} — assigned workflow**, [source](https://drive.google.com/file/d/${id}/view).`)
+      }
+      documents.set(paths.get(developmentProfile), assignmentProfile(rows.join('\n')))
+    })
+    if (total === 10) {
+      await f.roster.sync('synthetic-worker')
+      assert.equal(f.calls.at(-1).args.p_agents.find(agent => agent.id === 'AG-DEV-001').skillFileIds.length, 10)
+    } else {
+      await assert.rejects(() => f.roster.sync('synthetic-worker'), /assigned-skills-required/)
+      assert.equal(f.calls.length, 1)
+    }
+  }
+})

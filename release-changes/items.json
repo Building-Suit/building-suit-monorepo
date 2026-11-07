@@ -5833,5 +5833,26 @@
       "release-changes/items.json"
     ],
     "reason": "Read complete canonical roster profiles individually through the existing bounded Brain reader and shared deadline; validate the full roster before one sync RPC. Preserve inference/document limits, source scope and revision checks, and hold admission pending real acceptance."
+  },
+  {
+    "id": "hq-canonical-skill-declarations-20261107",
+    "task": "HQ-CANONICAL-SKILL-DECLARATIONS-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/workforceRoster.mjs",
+      "tooling/hq-agent-host/workforceRoster.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Separate explicit non-assignment governance paragraphs and resolve generic Drive references only in numbered SK declarations through the validated in-department canonical index, retaining complete bounded assignments and strict identity/skill-count guards."
   }
 ]

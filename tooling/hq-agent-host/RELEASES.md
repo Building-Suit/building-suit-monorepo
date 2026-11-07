@@ -344,3 +344,13 @@ All profiles are assembled and validated before the single roster-sync RPC.
 An oversized source or cancellation prevents that commit; no document is
 truncated and no partial roster is published. A new signed worker and actual
 managed roster acceptance are required; admission remains held until accepted.
+
+
+Assigned-skill parsing distinguishes only explicitly labelled non-assignment
+governance paragraphs from actual assignments; unmarked or mixed assignment
+blocks retain strict department checks. Generic-label Drive links count only in
+explicit numbered SK-ID declarations and must uniquely resolve to a non-folder
+canonical Skills file in the employee's department. Canonical path labels must
+agree with the referenced file ID. Prose and license links add no assignments;
+exact IDs deduplicate and the existing one-to-ten limit remains. These rules do
+not grant qualification or authorize profile-supplied URLs as network targets.

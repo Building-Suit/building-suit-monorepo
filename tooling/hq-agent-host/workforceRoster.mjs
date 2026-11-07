@@ -142,10 +142,19 @@ function assignedSkills(profile, profilePath, index) {
     ? profile.match(/## Nine active procedures\s*([\s\S]*?)(?=\n## |$)/)?.[1]
     : profile.match(/## (?:5\. (?:Assigned skills|Exact assigned skill[^\n]*))\s*([\s\S]*?)(?=\n## |$)/i)?.[1]
   requireValue(section, 'assigned-skill-section-required')
+  // Only explicit non-assignment governance paragraphs are excluded. Mixed
+  // list blocks remain subject to the ordinary strict assignment checks.
+  const assignments = section.split(/\r?\n[ \t]*\r?\n/).filter(block => {
+    const text = block.trim()
+    const governance = (/^Governance references:/i.test(text)
+      && /\bnot\s+additional\s+worker\s+skill\s+assignments\b/i.test(text))
+      || /^Governance,\s*not additional assigned worker skills:/i.test(text)
+    return !governance || /^[ \t]*(?:\d+[.)]|[-*+])[ \t]+/m.test(block)
+  }).join('\n\n')
   const paths = [
-    ...[...section.matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map(m => m[1]),
-    ...[...section.matchAll(/`([^`\n]+\/Skills\/[^`\n]+)`/g)].map(m => m[1]),
-    ...[...section.matchAll(/\[([^\]\n]+\/Skills\/[^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/view\)/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/`([^`\n]+\/Skills\/[^`\n]+)`/g)].map(m => m[1]),
+    ...[...assignments.matchAll(/\[([^\]\n]+\/Skills\/[^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/view\)/g)].map(m => m[1]),
   ]
   const ids = new Set()
   for (const path of paths) {
@@ -155,6 +164,20 @@ function assignedSkills(profile, profilePath, index) {
     // A linked historical/deferred procedure is not an active assignment.
     requireValue(!/Automation Handoff/.test(path), 'inactive-skill-assignment')
     ids.add(resolveFile(index, path).id)
+  }
+  // Generic-label Drive references count only in explicit numbered SK-ID
+  // assignments. Resolve their IDs through the already validated canonical
+  // index; never fetch or authorize a URL supplied by profile prose.
+  const driveAssignments = /^[ \t]*\d+[.)][ \t]+\*\*SK-[A-Z]+-\d{3}\b[^\n]*?\*\*[ \t]*,?[ \t]*\[([^\]\n]+)\]\(https:\/\/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{8,200})\/view(?:\?[^\s)]*)?\)/gm
+  for (const [, label, id] of assignments.matchAll(driveAssignments)) {
+    const matches = [...index].filter(([, file]) => file.id === id)
+    requireValue(matches.length === 1 && matches[0][1].mimeType !== FOLDER, 'roster-file-missing')
+    const [path] = matches[0]
+    requireValue(path.startsWith(scope), 'skill-outside-assigned-department')
+    requireValue(!/Automation Handoff/.test(path), 'inactive-skill-assignment')
+    requireValue(resolveFile(index, path).id === id, 'assigned-skill-reference-mismatch')
+    if (label.includes('/Skills/')) requireValue(resolveFile(index, label).id === id, 'assigned-skill-reference-mismatch')
+    ids.add(id)
   }
   requireValue(ids.size > 0 && ids.size <= 10, 'assigned-skills-required')
   return [...ids]
