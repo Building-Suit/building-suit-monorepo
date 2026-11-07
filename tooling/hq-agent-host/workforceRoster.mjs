@@ -159,7 +159,7 @@ function assignedSkills(profile, profilePath, index) {
   const ids = new Set()
   for (const path of paths) {
     if (!path.includes('/Skills/')) continue
-    const sharedHr = profilePath === 'Departments/HR/HR Lead.md' && path === 'CEO/Skills/conversation-learning/SKILL.md'
+    const sharedHr = profilePath.split('#')[0].trim().replace(/\.md$/i, '') === 'Departments/HR/HR Lead' && path === 'CEO/Skills/conversation-learning/SKILL.md'
     requireValue(path.startsWith(scope) || sharedHr, 'skill-outside-assigned-department')
     // A linked historical/deferred procedure is not an active assignment.
     requireValue(!/Automation Handoff/.test(path), 'inactive-skill-assignment')

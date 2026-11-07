@@ -363,3 +363,33 @@ test('numbered Drive skill assignments retain the existing ten-skill ceiling', a
     }
   }
 })
+
+test('shared HR learning assignment accepts canonical profile paths with or without md extension', async () => {
+  for (const extension of ['', '.md']) {
+    const f = fixture(({ add, documents, registry, paths }) => {
+      add('CEO/Skills/conversation-learning/SKILL.md', '# Synthetic authorized shared learning')
+      documents.set(registry, documents.get(registry).replace('Departments/HR/HR Lead|', `Departments/HR/HR Lead${extension}|`))
+      documents.set(paths.get('Departments/HR/HR Lead.md'), '# AG-HR-001\n## 5. Assigned skills\n- [[Departments/HR/Skills/assigned/SKILL|Own skill]]\n- [[CEO/Skills/conversation-learning/SKILL.md|Authorized shared learning]]')
+    })
+    await f.roster.sync('synthetic-worker')
+    assert.deepEqual(f.calls.at(-1).args.p_agents.find(agent => agent.id === 'AG-HR-001').skillFileIds,
+      [f.paths.get('Departments/HR/Skills/assigned/SKILL.md'), f.paths.get('CEO/Skills/conversation-learning/SKILL.md')])
+  }
+})
+
+test('optional profile extensions do not expand the shared HR profile or skill allowlist', async () => {
+  for (const [id, profile, skill] of [
+    ['AG-HR-002', 'Departments/HR/HR Recruiter.md', 'conversation-learning'],
+    ['AG-HR-003', 'Departments/HR/HR Evaluator.md', 'conversation-learning'],
+    ['AG-HR-001', 'Departments/HR/HR Lead.md', 'unassigned-procedure'],
+  ]) for (const extension of ['', '.md']) {
+    const f = fixture(({ add, documents, registry, paths }) => {
+      const bare = profile.replace(/\.md$/, '')
+      add(`CEO/Skills/${skill}/SKILL.md`, '# Synthetic CEO skill')
+      documents.set(registry, documents.get(registry).replace(bare + '|', bare + extension + '|'))
+      documents.set(paths.get(profile), `# ${id}\n## 5. Assigned skills\n- [[Departments/HR/Skills/assigned/SKILL|Own skill]]\n- [[CEO/Skills/${skill}/SKILL.md|Not allowed]]`)
+    })
+    await assert.rejects(() => f.roster.sync('synthetic-worker'), /skill-outside-assigned-department/)
+    assert.equal(f.calls.length, 1)
+  }
+})
