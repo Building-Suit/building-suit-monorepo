@@ -212,6 +212,15 @@
       "sha256": "1eea4fbed76989ebeeafb796d8c1c45acb04be7bcb770ef3e5289511c4481759",
       "status": "source-only-live-approval-required",
       "phase": "admission-resume-review-only"
+    },
+    {
+      "file": "20261107201336_hq_supervised_trial_context_packet.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107201336_hq_supervised_trial_context_packet.sql",
+      "bytes": 6868,
+      "md5": "c5e63f2e36804ba64f581fd7bd39588c",
+      "sha256": "9679765b70d28943ed9b98817c4d3a9286d4624fc5b411a37c489593dad52c6c",
+      "status": "source-only-live-approval-required",
+      "phase": "trial-context-review-only"
     }
   ]
 }
