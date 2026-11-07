@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  Orbit01Icon,
+  Chatting01Icon,
+  CubeIcon,
+  MinusSignIcon,
+  ArrowExpandDiagonal01Icon,
+  Calendar03Icon,
+  Call02Icon,
+  ShoppingBasket01Icon,
   CreditCardIcon,
   BankIcon,
   Image01Icon,
@@ -34,9 +42,20 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   Wallet04Icon,
+  Mic01Icon,
+  StopIcon,
+  SentIcon,
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  microphone: Mic01Icon,
+  stop: StopIcon,
+  send: SentIcon,
+  orb: Orbit01Icon,
+  chat: Chatting01Icon,
+  cube: CubeIcon,
+  minus: MinusSignIcon,
+  maximize: ArrowExpandDiagonal01Icon,
   sun: Sun03Icon,
   moon: Moon02Icon,
   monitor: ComputerIcon,
@@ -50,6 +69,9 @@ const bsIcons = {
   arrowRight: ArrowRight01Icon,
   automation: ArrowReloadHorizontalIcon,
   cash: Cash02Icon,
+  calendar: Calendar03Icon,
+  phone: Call02Icon,
+  basket: ShoppingBasket01Icon,
   card: CreditCardIcon,
   bank: BankIcon,
   check: CheckmarkCircle02Icon,

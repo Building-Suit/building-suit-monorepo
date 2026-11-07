@@ -4,7 +4,7 @@ import { assertLocalFixtureEnvironment } from './safety.mjs'
 assertLocalFixtureEnvironment(process.env)
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 export default defineConfig({
-  testDir: fileURLToPath(new URL('.', import.meta.url)), testMatch: '*.auth.fixture.ts', workers: 1, retries: 0,
+  testDir: fileURLToPath(new URL('.', import.meta.url)), testMatch: ['*.auth.fixture.ts', 'dos-m6-002.spec.ts'], workers: 1, retries: 0,
   preserveOutput: 'never',
   outputDir: fileURLToPath(new URL('../../../../test-results/doctor-auth', import.meta.url)), reporter: 'list',
   // Credential fixtures must never become trace/screenshot artifacts.
@@ -16,6 +16,9 @@ export default defineConfig({
       NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED: 'true', NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT: 'local',
       NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN: 'http://127.0.0.1:4337', NUXT_PUBLIC_DOCTOR_AUTH_URL: 'http://127.0.0.1:4338',
       NUXT_PUBLIC_DOCTOR_AUTH_KEY: 'sb_publishable_synthetic_protocol_fixture',
+      NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY: 'sb_secret_synthetic_protocol_fixture',
+      // Owned loopback proxy simulation; each protocol browser gets an isolated caller IP.
+      VERCEL: '1',
     } },
   ],
 })

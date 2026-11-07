@@ -1,0 +1,20 @@
+{
+  "id": "brand-family-ledger-support-20261022",
+  "task": "BRAND-FAMILY-20261022",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/brand",
+    "docs/work-packages/brand-family",
+    "release-changes/items.json"
+  ],
+  "reason": "Generated Ledger family artwork and canonical app icon aliases, brand catalogue documentation and exact artifact verification. Ledger remains an internal consumer with no invented operational registration or public production baseline; the actual visible Shop crop is independently covered by its public item."
+}

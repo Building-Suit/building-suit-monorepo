@@ -32,7 +32,7 @@ test('POS page covers scanner recovery, locked context, keyboard and bilingual r
   assert.match(page, /save_pos_sale_draft/)
   assert.match(page, /pos_catalog_search/)
   assert.match(page, /pos_checkout_context/)
-  assert.match(page, /refreshNuxtData/)
+  assert.match(page, /refreshShopQueries/); assert.match(page, /useShopClient/); assert.match(page, /useShopQuery/)
 })
 
 test('POS database contract composes existing atomic sale, payment and appointment commands', () => {

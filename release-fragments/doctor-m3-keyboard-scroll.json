@@ -1,0 +1,14 @@
+{
+  "id": "doctor-m3-keyboard-scroll",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": ["shop-suit"],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": ["packages/ui/src/organisms/BsDataTable.vue", "packages/ux/src/index.ts", "packages/ux/src/scrollRegion.ts"],
+  "reason": "Keep physical arrow-key scrolling reliable on the shared named table overflow region without intercepting child editors or modified shortcuts.",
+  "notes": {
+    "title": {"en": "Keyboard access to wide tables", "ar": "تصفح الجداول العريضة بلوحة المفاتيح"},
+    "summary": {"en": "Use Left and Right arrows while the table’s scroll region is focused.", "ar": "استخدم السهمين الأيسر والأيمن عند التركيز على منطقة تمرير الجدول."},
+    "details": {"en": "Scrolling follows the physical arrow direction in English and Arabic. Form controls and keyboard shortcuts retain their existing behavior.", "ar": "يتبع التمرير اتجاه السهم الفعلي بالعربية والإنجليزية، مع الحفاظ على سلوك حقول الإدخال واختصارات لوحة المفاتيح."}
+  }
+}

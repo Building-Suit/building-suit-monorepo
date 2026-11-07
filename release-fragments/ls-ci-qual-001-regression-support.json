@@ -1,0 +1,30 @@
+{
+  "id": "ls-ci-qual-001-regression-support",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests",
+    "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+    "packages/testing",
+    "apps/ledger-suit/docs/accountant-system",
+    "release-changes/items.json",
+    "docs/shared/interactions.md",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "tooling/releases/docker-harness.mjs",
+    "tooling/releases/docker-harness.test.mjs",
+    "tooling/releases/catalog-postgrest-disposable.mjs",
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/src/templates/BsLandingPage.vue"
+  ],
+  "reason": "Repair inherited Shop module harnesses against current Pinia/Colada contracts and current navigation selectors while preserving behavior, geometry, privacy and keyboard assertions; document source provenance and combined staging qualification. Native label changes have active Ledger/Shop and private Doctor consumers; other products receive compatibility checks without an invented visible auth flow. The loading attribute affects Shop’s cinematic entry; non-journey consumers retain their content."
+}

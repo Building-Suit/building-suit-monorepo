@@ -1,0 +1,30 @@
+{
+  "id": "hq-cloud-brain-20261104",
+  "task": "HQ-CLOUD-BRAIN-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/architecture/environments.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/work-packages/company-hq/HQ-CLOUD-BRAIN-20261104.md",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Replace the internal HQ local Brain reader with a private read-only Google Drive service-account source under the fixed authorized Brain root, with verified descendants, bounded paginated reads and source-version revalidation. Retain private-preview request guards and shared escaped note presentation; add visible/online polling, focus refresh, bounded failure backoff and honest setup/auth/cloud states. No filesystem fallback remains. Credentials/root-Viewer setup and application acceptance are pending; no tests/checks/browser/API runtime validation was run under founder direction. Record newly verified HQ provider identities and the founder-reported GitHub migration routine without claiming integration or applying migrations. Preserve historical evidence and postponed office/CEO-proposal requirements. No public product activation/release, staff/model execution, Brain writes, hosted mutation, spending or deployment."
+}

@@ -1,0 +1,30 @@
+{
+  "source": "GitHub check-runs API, filter=all; Supabase app",
+  "staging_sha": "97c1f50e76506cb528fa3b9ea689ee820ae1b1d7",
+  "ledger": {
+    "project_ref": "yqculoltqsyfastmihmu",
+    "check_run_id": 123546262059,
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-29T15:28:19Z",
+    "completed_at": "2026-10-29T15:28:32Z",
+    "details_url": "https://supabase.com/dashboard/project/yqculoltqsyfastmihmu"
+  },
+  "shop": {
+    "project_ref": "jvvelvftpfnlogalgxgv",
+    "check_run_id": 123546273553,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "super_admin": {
+    "project_ref": "lwecnmsosfwovlzxauml",
+    "check_run_id": 123546194144,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "denied_project_read_retried": false,
+  "hosted_mutations_by_this_task": false,
+  "full_live_statement_export_obtained": false,
+  "production_or_later_candidate_verified": false,
+  "note": "Same-name checks must be inspected with filter=all and matched to exact project URL/SHA. An older duplicate in-progress record exists; the newer completed project-specific receipt is retained. Provider success on this SHA supersedes the old failed staging check; it is not proof of an unmerged candidate or production release."
+}

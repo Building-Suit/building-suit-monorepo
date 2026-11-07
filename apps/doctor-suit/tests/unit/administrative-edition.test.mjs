@@ -1,3 +1,4 @@
+import {delegationProtocol,resetDelegationProtocol} from '../fixtures/delegation-provider.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { doctorAdministrativeReasonCodes, doctorAdministrativeReason, doctorEditionMode } from '../../app/utils/administrativeEdition.ts'
@@ -64,4 +65,28 @@ test('same-user edition transition clears private state and rejects an older pen
   assert.equal(appointmentState.board, null)
   assert.equal(state.current.edition, 'administrative_candidate')
   assert.equal(state.current.capabilities.includes('documents.read'), false)
+})
+
+test('real multi-account protocol contexts preserve candidate document/worklist gates after M3 capability additions', () => {
+  resetDelegationProtocol()
+  const state = {delegation: true, edition: 'administrative_candidate', editionRevision: 2}
+  let authorization
+  function call(path, input = {}) {
+    let result
+    assert.equal(delegationProtocol({state, req: {headers: {authorization}}, url: new URL('http://127.0.0.1' + path), input, send: value => {result=value}, deny: () => assert.fail('owned fixture request denied')}), true)
+    return result
+  }
+  const session=call('/auth/v1/token?grant_type=password',{email:'synthetic-doctor-a@example.test',password:'synthetic-password-only'})
+  authorization='Bearer '+session.access_token
+  const rows=call('/rest/v1/rpc/doctor_contexts')
+  assert.equal(rows.length,2)
+  for(const row of rows){
+    const decoded=doctorLocationContext(row,{userId:session.user.id,sessionId:'ae020000-0000-4000-8000-000000000021',practiceId:row.practice_id},'local')
+    assert.equal(decoded.edition,'administrative_candidate')
+    assert.equal(decoded.capabilities.length,10)
+    assert.equal(decoded.capabilities.some(value=>value.startsWith('documents.')||value.startsWith('worklists.')),false)
+  }
+  state.edition='synthetic_preview'
+  assert.equal(call('/rest/v1/rpc/doctor_contexts')[0].capabilities.length,14)
+  resetDelegationProtocol()
 })

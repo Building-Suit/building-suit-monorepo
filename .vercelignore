@@ -1,0 +1,21 @@
+# Local checkouts, credentials and generated output never belong in uploads.
+.local/
+.git/
+**/node_modules/
+**/.nuxt/
+**/.output/
+**/.turbo/
+**/dist/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+!**/.env.*.example
+**/CLAUDE.md
+**/supabase/.temp/
+**/supabase/.branches/
+**/*.log

@@ -1,3 +1,26 @@
+import { practiceFinancialReportRepository,type FinancialReportClient } from '../utils/practiceFinancialReportRepository'
+import { createPracticeFinancialReportController,financialReportState } from '../utils/practiceFinancialReportController'
+import { practiceMoneyRepository, type PracticeMoneyClient } from '../utils/practiceMoneyRepository'
+import { createPracticeMoneyController, practiceMoneyControllerState } from '../utils/practiceMoneyController'
+import { practiceBillingRepository, type PracticeBillingClient } from '../utils/practiceBillingRepository'
+import { createPracticeBillingController, practiceBillingState } from '../utils/practiceBillingController'
+import{createOperationalReportReader,operationalReportState}from'../utils/operationalReports'
+import{operationalReportsRepository}from'../utils/operationalReportsRepository'
+import{createImportController,importState}from'../utils/syntheticImport'
+import{syntheticImportRepository}from'../utils/syntheticImportRepository'
+import{createFulfillmentController,fulfillmentState}from'../utils/operationalFulfillment'
+import{fulfillmentRepository}from'../utils/operationalFulfillmentRepository'
+import{createMessageOutboxReader,messageOutboxState}from'../utils/messageOutbox'
+import{createContactPreferencesController,contactPreferencesState}from'../utils/contactPreferencesController'
+import{contactPreferencesRepository}from'../utils/contactPreferencesRepository'
+import{createWorklistsController,worklistsState}from'../utils/worklistsController'
+import{worklistsRepository}from'../utils/worklistsRepository'
+import {createWaitlistController,waitlistState}from'../utils/waitlistController'
+import {waitlistRepository}from'../utils/waitlistRepository'
+import {createConsultationsController,consultationsState} from '../utils/consultationsController'
+import {consultationsRepository} from '../utils/consultationsRepository'
+import {clinicalReleaseRepository} from '../utils/clinicalReleaseRepository'
+import {createClinicalReleaseController,clinicalReleaseState} from '../utils/clinicalReleaseController'
 import{doctorManualReportRepository}from'../utils/manualReconciliationRepository'
 import{createManualReportController,manualReportState}from'../utils/manualReconciliationController'
 import{doctorManualPaymentRepository}from'../utils/manualPaymentRepository'
@@ -39,6 +62,8 @@ import { createDoctorPatientsController, doctorPatientsState } from '../utils/pa
 import { doctorDelegationRepository } from '../utils/delegationRepository'
 import { createDoctorTeamController, doctorTeamState } from '../utils/teamController'
 import { createDoctorInvitationController, doctorInvitationState } from '../utils/invitationController'
+import { clinicalRepository } from '../utils/clinicalRepository'
+import { createClinicalController,clinicalState } from '../utils/clinicalController'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -66,6 +91,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
   const state = reactive(doctorAuthState())
+  const registrationHandoff = useDoctorRegistrationHandoff()
+  watch(() => state.identity?.userId, userId => { if (userId && registrationHandoff.value?.userId && registrationHandoff.value.userId !== userId) registrationHandoff.value = null })
   const preference = useCookie<DoctorContextPreference | null>(`bs-doctor-${settings.environment}-context`, { sameSite: 'lax', path: '/', secure: provider.origin.startsWith('https:') })
   const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } },import.meta.client ? {
     now: () => performance.now(),set: (callback,delay) => window.setTimeout(callback,delay),clear: handle => window.clearTimeout(handle as number),
@@ -97,13 +124,37 @@ export default defineNuxtPlugin((nuxtApp) => {
     return null
   }
   const entitlementTimers=import.meta.client?{now:()=>performance.now(),set:(callback:()=>void,delay:number)=>setTimeout(callback,delay),clear:(handle:unknown)=>clearTimeout(handle as ReturnType<typeof setTimeout>)}:undefined
+  const practiceBilling = createPracticeBillingController(client ? practiceBillingRepository(client as unknown as PracticeBillingClient) : null, reactive(practiceBillingState()), () => state.identity, provider.environment, entitlementTimers)
+  context.registerClear(practiceBilling.clear)
+  const financialReport=createPracticeFinancialReportController(client?practiceFinancialReportRepository(client as unknown as FinancialReportClient):null,reactive(financialReportState()),()=>state.identity,provider.environment)
+  context.registerClear(financialReport.clear)
+  const practiceMoney = createPracticeMoneyController(client ? practiceMoneyRepository(client as unknown as PracticeMoneyClient) : null, reactive(practiceMoneyControllerState()), () => state.identity, provider.environment, entitlementTimers)
+  context.registerClear(practiceMoney.clear)
   const expiredOwnerScope=()=>context.expire()
   const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope,undefined,entitlementTimers,expiredOwnerScope)
   const patientsScope = () => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
+  const operationalReports=createOperationalReportReader(client?operationalReportsRepository(client):null,reactive(operationalReportState()),()=>{const s=context.state.current;return s?.locationId&&s.capabilities.some(c=>['appointments.read','worklists.read','patients.read'].includes(c))?s:null})
+  context.registerClear(operationalReports.clear)
+  const importPreview=createImportController(client?syntheticImportRepository(client):null,reactive(importState()),patientsScope)
+  context.registerClear(importPreview.clear)
+  const fulfillment=createFulfillmentController(client?fulfillmentRepository(client):null,reactive(fulfillmentState()),patientsScope)
+  context.registerClear(fulfillment.clear)
+  const outbox=createMessageOutboxReader(client?async(practice,location,patient,page,signal)=>{const{data,error}=await client.rpc('doctor_outbox',{p_practice:practice,p_location:location,p_patient:patient,p_page:page}).abortSignal(signal);if(error)throw error;return data}:null,reactive(messageOutboxState()),patientsScope)
+  context.registerClear(outbox.clear)
+  const contactPreferences=createContactPreferencesController(client?contactPreferencesRepository(client):null,reactive(contactPreferencesState()),()=>{const selected=patientsScope();return selected?.edition==='synthetic_preview'?selected:null})
+  context.registerClear(contactPreferences.clear)
   const patients = createDoctorPatientsController(client ? doctorPatientsRepository(client) : null, reactive(doctorPatientsState()), patientsScope)
+  const worklists=createWorklistsController(client?worklistsRepository(client):null,reactive(worklistsState()),()=>{const selected=context.state.current;return selected?.locationId&&selected.capabilities.includes('worklists.read')?selected:null})
+  context.registerClear(worklists.clear)
+  const waitlist=createWaitlistController(client?waitlistRepository(client):null,reactive(waitlistState()),patientsScope)
+  const consultations=createConsultationsController(client?consultationsRepository(client):null,reactive(consultationsState()),patientsScope)
+  const clinical=createClinicalController(client?clinicalRepository(client):null,reactive(clinicalState()),patientsScope)
+  context.registerClear(clinical.clear)
+  const clinicalRelease=createClinicalReleaseController(client?clinicalReleaseRepository(client,provider.url,provider.key):null,reactive(clinicalReleaseState()),()=>state.identity,provider.environment)
+  context.registerClear(clinicalRelease.clear)
   const patientProfile = createDoctorProfileController(client ? doctorPatientProfileRepository(client,provider.url,provider.key) : null,reactive(doctorProfileState()),patientsScope)
   const availabilityScope = () => { const selected = context.state.current; return selected?.capabilities.some(cap => cap==='availability.manage' || cap==='appointments.read') ? selected : null }
   const availability = createDoctorAvailabilityController(client ? doctorAvailabilityRepository(client) : null,reactive(doctorAvailabilityState()),availabilityScope)
@@ -119,10 +170,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope,undefined,undefined,entitlementTimers,expiredOwnerScope)
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
-    clear: () => { manualReport.clear();manualPayment.clear();privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
-    locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
+    clear: () => { financialReport.clear();practiceMoney.clear();practiceBilling.clear();manualReport.clear();manualPayment.clear();privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
+    locked: () => locked.value === '1', lock: () => { registrationHandoff.value = null; if (import.meta.client) { try { window.sessionStorage.removeItem(`doctor-suit.${settings.environment}.registration.v1`) } catch { /* Storage may be denied. */ } }; locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { manualReport.clear();manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { waitlist.clear();consultations.clear();manualReport.clear();manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
@@ -130,5 +181,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorFinancialReport:financialReport,doctorPracticeMoney:practiceMoney,doctorPracticeBilling:practiceBilling,doctorOperationalReports:operationalReports, doctorImportPreview:importPreview, doctorFulfillment:fulfillment, doctorOutbox:outbox, doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

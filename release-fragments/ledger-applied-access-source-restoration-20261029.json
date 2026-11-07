@@ -1,0 +1,17 @@
+{
+  "id": "ledger-applied-access-source-restoration-20261029",
+  "task": "LEDGER-HISTORY-20261029",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+    "apps/ledger-suit/supabase/tests",
+    "apps/ledger-suit/scripts/verify-access-history-restoration.mjs",
+    "apps/ledger-suit/docs/applied-access-history-restoration.md",
+    "apps/ledger-suit/docs/evidence/applied-access-history-20261029"
+  ],
+  "reason": "Restore the exact already-published access migration recorded in prior applied-history evidence; preserve business rows, API capability contracts and accepted history. This is integration recovery, not a new product capability, hosted repair or activation."
+}

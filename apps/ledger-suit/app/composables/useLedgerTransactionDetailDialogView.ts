@@ -1,6 +1,7 @@
 import { scopedQueryKey } from '@building-suit/data-access'
 import { openExternalLink, clearFileSelection } from '@building-suit/ux'
 import type { Database } from '~~/types/database.types'
+import { JOURNAL_SUMMARY_COLUMNS } from '../utils/journalTransport'
 
 type JournalDetailEvents = { close: []; changed: []; navigate: [id: string] }
 /** Ledger-owned queries and authorized journal/attachment commands. */
@@ -60,7 +61,13 @@ async function uploadAttachment(event: Event) {
     })
     if (reserveError) throw reserveError
 
-    const { error: uploadError } = await supabase.storage.from('attachments').upload(key, file, {
+    // Raw bytes keep Content-Length equal to the reserved file size. The SDK
+    // wraps File/Blob bodies in multipart form data, which adds boundary bytes.
+    const bytes = await file.arrayBuffer().catch(async failure => {
+      await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+      throw failure
+    })
+    const { error: uploadError } = await supabase.storage.from('attachments').upload(key, bytes, {
       contentType: file.type,
       upsert: false,
     })
@@ -108,12 +115,12 @@ const { data: detail, pending: detailPending, error: detailError, refresh } = us
       await Promise.all([
         supabase
           .from('transaction_summaries')
-          .select('*')
+          .select(JOURNAL_SUMMARY_COLUMNS)
           .eq('id', props.transactionId)
           .maybeSingle(),
         supabase
           .from('ledger_entries')
-          .select('entry_id, side, amount_minor, currency_code, base_amount_minor, memo, account_code, account_name, account_type')
+          .select('entry_id, side, amount_minor::text, currency_code, base_amount_minor::text, memo, account_code, account_name, account_type')
           .eq('transaction_id', props.transactionId)
           .order('side', { ascending: true }),
         supabase.from('organization_settings').select('books_locked_until').eq('organization_id', currentId.value!).maybeSingle(),

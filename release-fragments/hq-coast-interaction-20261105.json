@@ -1,0 +1,28 @@
+{
+  "id": "hq-coast-interaction-20261105",
+  "task": "HQ-COAST-INTERACTION-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/islandWaterConfig.ts",
+    "packages/ui/src/utils/islandShoreInteraction.ts",
+    "packages/ui/src/utils/islandShoreShaders.ts",
+    "packages/ui/src/utils/islandShoreEffects.ts",
+    "docs/work-packages/company-hq/HQ-COAST-INTERACTION-20261105.md",
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Current coastline extension (5 November): extend the existing open-sea water with terrain-aware interaction; preserve the island/HQ/roads/offices/Brain/camera. Build cached shoreline slices and radial face sections from the existing cliff triangles, with signed distance, outward normals, actual face steepness, bed height and a leeward silhouette field. Use gradual shoaling/refraction, bounded run-up/dry-terrain masking and orbital drift suppression at contact. The shared Gerstner clock/parameters drive crest crossings, six pooled energy/angle/slope-based impacts, directional GPU spray/gravity, transient cool foam, weaker reflected packets, one selected droplet return ripple and wave shadow/diffraction. Keep the 512\u00d764 mesh/pixel budget; at most 216 static GPU points, no texture/target/fluid solver or per-frame terrain scan. Central tunables are in islandWaterConfig.ts. Development-only ?hqWaterDebug=mask|distance|normals|depth|impacts|strength|splash|reflection|shadow, or off; production ignores this URL control. Source-only, with clipping/timing/visual/performance acceptance unrun under the standing testing restriction."
+}

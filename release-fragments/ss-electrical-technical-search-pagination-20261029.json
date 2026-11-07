@@ -1,0 +1,27 @@
+{
+  "id": "ss-electrical-technical-search-pagination-20261029",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql"
+  ],
+  "reason": "Correct the product directory row predicate to include the same tenant-scoped technical matches as its total, retaining the existing RPC authority and bounds.",
+  "notes": {
+    "title": {
+      "en": "Find products by electrical specifications",
+      "ar": "العثور على الأصناف بالمواصفات الكهربائية"
+    },
+    "summary": {
+      "en": "Technical searches return matching products on every page.",
+      "ar": "تعرض عمليات البحث بالمواصفات الأصناف المطابقة في كل صفحة."
+    },
+    "details": {
+      "en": "Product results and their total now use the same technical specification filter, including searches that do not match the product name or SKU. Existing permissions and page limits apply.",
+      "ar": "تستخدم نتائج الأصناف وعددها الإجمالي مرشح المواصفات نفسه، بما يشمل البحث الذي لا يطابق اسم الصنف أو رمزه. تظل الصلاحيات وحدود الصفحات الحالية مطبقة."
+    }
+  }
+}

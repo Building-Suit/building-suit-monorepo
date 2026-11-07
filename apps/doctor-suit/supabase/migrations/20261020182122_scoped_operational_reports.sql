@@ -1,0 +1,35 @@
+-- DOS-M3-010. One statement snapshot; independently granted clinic populations.
+create function doctor_private.operational_report(p_practice uuid,p_location uuid,p_from date,p_to date,p_kind text,p_page integer)returns jsonb
+language plpgsql stable security definer set search_path=''as $$
+declare place public.locations;starts timestamptz;ends timestamptz;ap boolean;tasks boolean;patients boolean;availability jsonb;rows jsonb;totals jsonb;workload jsonb;total bigint;permitted boolean;
+begin
+ perform doctor_private.current_actor();
+ if doctor_private.edition_mode()<>'synthetic_preview'then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+ select * into place from public.locations where practice_id=p_practice and id=p_location and archived_at is null;
+ if place.id is null then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+ ap:=doctor_private.has_access(p_practice,'appointments.read',p_location);tasks:=doctor_private.has_access(p_practice,'worklists.read',p_location);patients:=doctor_private.has_access(p_practice,'patients.read',p_location);
+ if not(ap or tasks or patients)then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+ if p_from is null or p_to is null or p_to<p_from or p_to-p_from>92 or p_page is null or p_page not between 0 and 100000 or p_kind is null or p_kind not in('appointments','follow_up','messages','fulfillment','imports')then raise exception using errcode='22023',message='DOCTOR_REPORT_INVALID';end if;
+ starts:=p_from::timestamp at time zone place.timezone;ends:=(p_to+1)::timestamp at time zone place.timezone;
+ availability:=jsonb_build_object('appointments',ap,'follow_up',tasks,'messages',patients,'fulfillment',patients,'imports',patients);permitted:=(availability->>p_kind)::boolean;
+ with population as materialized(
+  select a.id,'appointments'::text kind,a.state,a.starts_at source_at,a.doctor_user_id assignee,a.version,false blocked from public.appointments a where ap and a.practice_id=p_practice and a.location_id=p_location and a.starts_at>=starts and a.starts_at<ends
+  union all select t.id,'follow_up',t.state,t.due_at,t.assignee_user_id,t.version,not doctor_private.worklist_assignee(t.practice_id,t.location_id,t.assignee_user_id,t.patient_id is not null)or(t.patient_id is not null and not exists(select 1 from public.practice_patients p where p.practice_id=t.practice_id and p.id=t.patient_id and p.archived_at is null))from public.administrative_tasks t where tasks and t.practice_id=p_practice and t.location_id=p_location and t.due_at>=starts and t.due_at<ends
+  union all select m.id,'messages',m.state,m.created_at,null::uuid,m.version,false from public.message_outbox m where patients and m.practice_id=p_practice and m.location_id=p_location and m.created_at>=starts and m.created_at<ends
+  union all select f.id,'fulfillment',f.state,f.created_at,null::uuid,f.version,false from public.operational_fulfillments f where patients and f.practice_id=p_practice and f.location_id=p_location and f.created_at>=starts and f.created_at<ends
+  union all select i.id,'imports',i.state,i.created_at,null::uuid,i.version,false from public.synthetic_import_batches i where patients and i.practice_id=p_practice and i.location_id=p_location and i.created_at>=starts and i.created_at<ends
+ ),selected as(select * from population where kind=p_kind order by source_at,id limit 20 offset p_page*20)
+ select(select count(*)from population where kind=p_kind),coalesce(jsonb_agg(to_jsonb(r) order by source_at,id),'[]'),
+ jsonb_build_object(
+ 'appointments',case when ap then(select jsonb_build_object('population',count(*),'booked',count(*)filter(where state='booked'),'checked_in',count(*)filter(where state='checked_in'),'in_progress',count(*)filter(where state='in_progress'),'completed',count(*)filter(where state='completed'),'cancelled',count(*)filter(where state='cancelled'),'no_show',count(*)filter(where state='no_show'))from population where kind='appointments')end,
+ 'follow_up',case when tasks then(select jsonb_build_object('population',count(*),'assigned',count(*)filter(where state='assigned'),'in_progress',count(*)filter(where state='in_progress'),'completed',count(*)filter(where state='completed'),'cancelled',count(*)filter(where state='cancelled'),'blocked_open',count(*)filter(where state in('assigned','in_progress')and blocked))from population where kind='follow_up')end,
+ 'messages',case when patients then(select jsonb_build_object('population',count(*),'queued',count(*)filter(where state='queued'),'claimed',count(*)filter(where state='claimed'),'sent',count(*)filter(where state='sent'),'delivered',count(*)filter(where state='delivered'),'failed',count(*)filter(where state='failed'),'unknown',count(*)filter(where state='unknown'))from population where kind='messages')end,
+ 'fulfillment',case when patients then(select jsonb_build_object('population',count(*),'requested',count(*)filter(where state='requested'),'arranged',count(*)filter(where state='arranged'),'received',count(*)filter(where state='received'),'cancelled',count(*)filter(where state='cancelled'))from population where kind='fulfillment')end,
+ 'imports',case when patients then(select jsonb_build_object('population',count(*),'previewing',count(*)filter(where state='previewing'),'validated',count(*)filter(where state='validated'),'review_required',count(*)filter(where state='review_required'),'discarded',count(*)filter(where state='discarded'))from population where kind='imports')end),
+ case when tasks then coalesce((select jsonb_agg(w order by assignee)from(select assignee,count(*)open_count,count(*)filter(where blocked)blocked_count from population where kind='follow_up'and state in('assigned','in_progress')group by assignee)w),'[]')end
+ into total,rows,totals,workload from selected r;
+ return jsonb_build_object('practice_id',p_practice,'location_id',p_location,'location_version',place.version,'timezone',place.timezone,'from_day',p_from,'to_day',p_to,'starts_at',starts,'ends_at',ends,'observed_at',statement_timestamp(),'kind',p_kind,'page',p_page,'available',permitted,'availability',availability,'total',case when permitted then total end,'rows',rows,'totals',totals,'workload',workload,'data_mode','synthetic','external_delivery',false,'clinical_acceptance',false,'provider_approval',false);
+end $$;
+create function public.doctor_operational_report(p_practice uuid,p_location uuid,p_from date,p_to date,p_kind text,p_page integer)returns jsonb language sql stable security invoker set search_path=''as $$select doctor_private.operational_report(p_practice,p_location,p_from,p_to,p_kind,p_page)$$;
+revoke all on function doctor_private.operational_report(uuid,uuid,date,date,text,integer),public.doctor_operational_report(uuid,uuid,date,date,text,integer)from public,anon,authenticated,service_role;
+grant execute on function doctor_private.operational_report(uuid,uuid,date,date,text,integer),public.doctor_operational_report(uuid,uuid,date,date,text,integer)to authenticated;

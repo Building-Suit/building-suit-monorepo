@@ -1,0 +1,31 @@
+{
+  "id": "hq-multilingual-meetings-20261105",
+  "task": "HQ-MULTILINGUAL-MEETINGS-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqMeetingCatalogue.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHqMeetingPanel.vue",
+    "packages/ui/src/types/hqMeetingPresentation.ts",
+    "packages/ux/package.json",
+    "packages/ux/src/controllers/createMeetingAudio.mjs",
+    "packages/ux/src/controllers/createMeetingAudio.d.mts",
+    "packages/ux/tests/meeting-audio.test.mjs",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/company-hq",
+    "release-changes/items.json"
+  ],
+  "reason": "Add internal Arabic-first HQ meeting controls, exact local voice/audio fencing, qualified canonical participants, versioned execution approval and source-only adapters reusing existing HQ chat/task/worker/review. Current source includes founder checkpoint4adde130 and upstream9df6ff85. Synthetic fixtures/browser/process tests do not establish live provider, quota, acoustic or Oracle acceptance. Default transport disabled; no hosted migration/deployment, shared-branch merge, new resource or paid fallback."
+}

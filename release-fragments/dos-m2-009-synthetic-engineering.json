@@ -1,0 +1,18 @@
+{
+  "id": "dos-m2-009-synthetic-engineering",
+  "task": "DOS-M2-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020000931_clinical_m2_009.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-009.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-009.md"
+  ],
+  "reason": "Implement version-bound releases and print sources for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

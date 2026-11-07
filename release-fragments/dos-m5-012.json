@@ -1,0 +1,18 @@
+{
+  "id": "dos-m5-012",
+  "task": "DOS-M5-012",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/patientAppointmentsResultsPreview.ts",
+    "apps/doctor-suit/tests/unit/dos-m5-012.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-012.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-012-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Independent synthetic scoped appointment/released-result projection; patient native/provider access remains held."
+}

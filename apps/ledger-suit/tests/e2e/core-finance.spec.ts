@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test'
+import { completePasswordSignIn } from './password-sign-in'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/login')
-  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
-  await page.getByLabel('Email').fill('owner@alpha.test')
-  await page.getByLabel('Password').fill('ledgersuit')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await completePasswordSignIn(page, 'owner@alpha.test', 'ledgersuit')
   await expect(page).toHaveURL('/dashboard')
 })
 
@@ -46,8 +44,10 @@ test('owner can reach reports and transaction entry', async ({ page }) => {
 })
 
 test('navigation keeps the accounting workspace together', async ({ page }) => {
-  const navigation = page.getByRole('navigation', { name: 'Primary' }).first()
-  await expect(navigation.getByRole('heading', { name: 'Accounting' })).toBeVisible()
+  const navigation = page.getByRole('complementary').getByRole('navigation', { name: 'Primary' })
+  await expect(navigation.getByRole('heading', { name: 'Ledger', exact: true })).toBeVisible()
+  await expect(navigation.getByRole('heading', { name: 'Subledgers', exact: true })).toBeVisible()
+  await expect(navigation.getByRole('heading', { name: 'Insights', exact: true })).toBeVisible()
   await expect(navigation.getByRole('heading', { name: 'Operations' })).toBeVisible()
   await expect(navigation.getByRole('heading', { name: 'Workspace' })).toBeVisible()
   await expect(navigation.getByRole('link', { name: 'Accounts', exact: true })).toBeVisible()
@@ -55,7 +55,7 @@ test('navigation keeps the accounting workspace together', async ({ page }) => {
 })
 
 test('owner cannot create a second organization on the current plan', async ({ page }) => {
-  await page.getByRole('button', { name: 'Organization' }).click()
+  await page.getByRole('combobox', { name: 'Organization', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Create your own organization' })).toHaveCount(0)
 })
 
@@ -75,22 +75,22 @@ test('owner can review members, role permissions and invitations', async ({ page
   const adminRole = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Admin', exact: true }) })
   await expect(ownerRole.getByRole('button', { name: 'Edit role' })).toHaveCount(0)
   await adminRole.getByRole('button', { name: 'Edit role' }).click()
-  const editAdmin = page.getByRole('dialog')
-  await expect(editAdmin.getByRole('heading', { name: 'Edit Admin' })).toBeVisible()
+  const editAdmin = page.getByRole('dialog', { name: 'Edit Admin', exact: true })
+  await expect(editAdmin).toBeVisible()
   await expect(editAdmin.getByRole('table')).toBeVisible()
   await editAdmin.getByRole('button', { name: 'Close' }).click()
 
   await page.getByRole('button', { name: 'Permission matrix' }).click()
-  const matrix = page.getByRole('dialog')
-  await expect(matrix.getByRole('heading', { name: 'Permission matrix' })).toBeVisible()
+  const matrix = page.getByRole('dialog', { name: 'Permission matrix', exact: true })
+  await expect(matrix).toBeVisible()
   await expect(matrix.getByRole('checkbox')).toHaveCount(0)
   await matrix.getByRole('button', { name: 'Close' }).click()
 
   await page.getByRole('button', { name: 'New role' }).click()
-  const newRole = page.getByRole('dialog')
-  await expect(newRole.getByRole('heading', { name: 'New role' })).toBeVisible()
+  const newRole = page.getByRole('dialog', { name: 'New role', exact: true })
+  await expect(newRole).toBeVisible()
   await expect(newRole.getByRole('table')).toBeVisible()
-  await expect(newRole.locator('fieldset')).toHaveCount(0)
+  await expect(newRole.locator('form > fieldset')).toBeEnabled()
   const permissionRows = await newRole.getByRole('row').allTextContents()
   const groupIndex = (label: string) => permissionRows.findIndex(text => text.trim().startsWith(`${label} /`))
   expect(groupIndex('Transactions')).toBeGreaterThanOrEqual(0)

@@ -1,0 +1,18 @@
+{
+  "id": "doctor-m3-focus-retention-followup",
+  "task": "DOS-M3-003",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+  ],
+  "reason": "Preserve authorized booking activation during same-query refresh while pending writes and server authorization remain unchanged."
+}

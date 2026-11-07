@@ -1,0 +1,15 @@
+{
+  "staging_base": "6a662776619061d36eb11f38041cecd2fc1fea3e",
+  "shop_parent": "12a4bac097e1eaaee969cb9b06652cf9087d7659",
+  "merge_head": "ebaec76b85141fc84a241f2d8a8d0b9d01512e3f",
+  "both_ancestors": true,
+  "ledger_tree_exact_staging": true,
+  "shop_app_and_migrations_exact_parent": true,
+  "staging_fragments_byte_preserved": true,
+  "inventory_items": 141,
+  "all_original_inventory_values_preserved": true,
+  "doctor_open_head_excluded": "7e518867f6a5fa2f5dd4634faa15d8e772f6158a",
+  "all_shop_source_tests_evidence_exact_parent": true,
+  "shared_ui_ux_testing_database_workflows_exact_parent": true,
+  "shop_fragments_byte_preserved": true
+}

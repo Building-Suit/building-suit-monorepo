@@ -1,0 +1,63 @@
+{
+  "format": 1,
+  "status": "review-proposals-only-not-active-migrations",
+  "projectRef": "dpruoncalmwicrqhqelu",
+  "baselineStgSha": "2c3f34c65ea4511b7a59f3034a728fa583258f87",
+  "appliedBaselineCount": 17,
+  "steps": [
+    {
+      "order": 1,
+      "source": "bootstrap/admission-pause.sql",
+      "sha256": "441d71c52970e286ce5b6c19c30719021b2c43448465dbc6c958ef597e0d1630",
+      "phase": "claim-fence",
+      "canonicalVersion": "20261107022638",
+      "canonicalPath": "apps/company-hq/supabase/migrations/20261107022638_hq_worker_admission_fence.sql",
+      "canonicalSha256": "61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685",
+      "status": "approved-source-not-deployed",
+      "initialPauseSource": "bootstrap/initial-staging-pause.sql",
+      "initialPauseSha256": "7dc72f7393a2d0d8d5514529bcf3d9b8100e3a6b080314c77228254c589fc2f4"
+    },
+    {
+      "order": 2,
+      "source": "proposed-migrations/20261106000000_hq_department_staffing_needs.sql",
+      "sha256": "91013167455996c81482f37b1e562636deb9c6c85d331e52a5841ad6e0c39a1e",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 3,
+      "source": "proposed-migrations/20261106010000_hq_department_orchestration_contract.sql",
+      "sha256": "447c6959bba6078d99b331c26b32169c2bf1761346af70d2eebfbfb432577de8",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 4,
+      "source": "proposed-migrations/20261106020000_hq_supervised_worker_trials.sql",
+      "sha256": "090054b023fb424dcd3d866cedbe50fb67f80c51ba469ee0c61eaff1d4fd040c",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 5,
+      "source": "proposed-migrations/20261106030000_hq_qualified_research_web_search.sql",
+      "sha256": "473d5c25a31a568ab083e3cc0e360ca902173ae7b7fdd76f3796064d0c4e5b9d",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 6,
+      "source": "proposed-migrations/20261106114053_hq_worker_model_execution_receipts.sql",
+      "sha256": "9f433ed56aab324d3f58aa9f82bd80cdca5fcf1e9cbc429e0d08958ba9575a5b",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    },
+    {
+      "order": 7,
+      "source": "database-release-contract.sql",
+      "sha256": "f20004a4899b81f6381508e532c19fbf1a13c6db8929c69fb29f51a43538cba1",
+      "phase": "post-reconciliation-contract2",
+      "canonicalVersion": "generate-with-pinned-CLI-after-separate-approval"
+    }
+  ]
+}

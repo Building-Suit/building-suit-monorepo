@@ -1,0 +1,120 @@
+{
+  "schema": "doctor-tax-evidence/v1",
+  "task_id": "DOS-M6-008",
+  "decision_id": "DOS-M6-GATE-TAX",
+  "parent_pr": 495,
+  "parent_head": "91ad8e4d2aa08dcf3848fc3b7f7573ec1d304d0b",
+  "scope": "synthetic-evidence-preparation-only",
+  "recorded_at_utc": "2026-10-26T12:34:14.933445+00:00",
+  "qualified_applicability_review": null,
+  "accountable_reviewer": null,
+  "decision_approval": null,
+  "task_acceptance": false,
+  "businesses": [
+    {
+      "id": "saas-operator",
+      "ledger_family": "doctor_saas_*",
+      "supplier_legal_entity": null,
+      "tax_residence": null,
+      "tax_registration": null,
+      "customer_classification": null,
+      "service_classification": null,
+      "approved_applicability": null,
+      "approved_official_document_profile": null,
+      "questions": [
+        "Identify actual SaaS supplier, establishment, branch and taxpayer residence/registration.",
+        "Classify actual customers and transactions, including resident/non-resident and B2B/B2C where relevant.",
+        "Review approved catalogue amounts and manual InstaPay route separately from tax inclusion, rates, tax points and official document obligations."
+      ]
+    },
+    {
+      "id": "independent-practice",
+      "ledger_family": "doctor_practice_*",
+      "supplier_legal_entity": null,
+      "tax_residence": null,
+      "tax_registration": null,
+      "customer_classification": null,
+      "service_classification": null,
+      "approved_applicability": null,
+      "approved_official_document_profile": null,
+      "questions": [
+        "Identify each actual practice supplier/taxpayer and whether Doctor is software supplier, agent, collector or another role under an approved agreement.",
+        "Review each actual service and customer category independently; neither a doctor profile nor a medical label establishes an exemption or obligation.",
+        "Determine legally valid collection, refund, cancellation and correction documents for each relevant taxpayer without combining practice money with SaaS subscription settlement."
+      ]
+    }
+  ],
+  "official_profile": {
+    "selected_interface": null,
+    "selected_type_version": null,
+    "verified_enrollment": null,
+    "approved_environment": null,
+    "credential_custodian": null,
+    "signing_authority": null,
+    "approved_required_fields": null,
+    "official_test_receipt": null,
+    "questions": [
+      "Require a reviewer-selected interface/document type/version and exact effective scope, rather than assuming latest technical documentation is applicable.",
+      "Verify taxpayer and branch identity, official enrollment and separated test/production access before approving any adapter work.",
+      "Specify credential/eSeal custody, rotation, revocation, authorized operator and incident handling through private reviewed references; store no secrets in this packet.",
+      "Approve exact schema, service/coding/tax treatment, required parties, currency/precision/rounding, document identity and source-linked return/correction rules.",
+      "Define uncertain submission/status reconciliation before resending, official acceptance/rejection mapping, audit retention and privacy minimization."
+    ]
+  },
+  "adapter": {
+    "enabled": false,
+    "implementation": "blocked-no-approved-scope",
+    "submissions_enabled": false,
+    "compliance_claims_enabled": false,
+    "official_validation_claimed": false,
+    "approved_scope": null,
+    "real_taxpayer_data_allowed": false,
+    "credentials_configured": false,
+    "production_operations_allowed": false
+  },
+  "existing_synthetic_documents": {
+    "practice_receipt_prefix": "SYN-",
+    "eta_document": false,
+    "legal_invoice_claim": false,
+    "tax_applicability": "unreviewed",
+    "tax_amount": "unconfigured-not-fabricated-zero",
+    "refund_is_official_return_receipt": false,
+    "saas_notice_establishes_tax_compliance": false
+  },
+  "public_document_sources": [
+    {
+      "url": "https://sdk.invoicing.eta.gov.eg/start/",
+      "title": "Egyptian eInvoicing & eReceipt SDK \u2014 Getting started",
+      "verified_public_observation": "Separates taxpayer enrollment, ERP/POS registration, API access credentials and eSeal prerequisites; these are not evidence Doctor is enrolled or subject to a particular obligation."
+    },
+    {
+      "url": "https://sdk.invoicing.eta.gov.eg/api/",
+      "title": "Common API",
+      "verified_public_observation": "Publishes login and document type/version discovery interfaces. No account access or active document version for a Doctor taxpayer was established."
+    },
+    {
+      "url": "https://sdk.invoicing.eta.gov.eg/einvoicingapi/",
+      "title": "eInvoicing APIs",
+      "verified_public_observation": "Separate invoice lifecycle interfaces are documented; no taxpayer-specific applicability or successful official test is established."
+    },
+    {
+      "url": "https://sdk.invoicing.eta.gov.eg/ereceiptapi/",
+      "title": "eReceipt API",
+      "verified_public_observation": "Documents POS authentication, receipt submissions, details, status and notifications. A synthetic application receipt is not an official ETA document."
+    },
+    {
+      "url": "https://www.eta.gov.eg/ar/digital-services",
+      "title": "ETA digital and remote services guidance",
+      "verified_public_observation": "Links official non-resident digital/remote-services guidance and Ministerial Decision160/2023. Exact residence, entity, customers and services require accountable current review; no rate, exemption, registration threshold or obligation is selected."
+    }
+  ],
+  "public_sources_retrieved_at_utc": "2026-10-26T12:28:05.705015+00:00",
+  "public_sources_limit": "Public documentation is reference material, not qualified taxpayer applicability, an approved profile, enrollment/access, custody/signing authority or official test acceptance. No rate, exemption, registration threshold or invoice/receipt obligation is inferred.",
+  "case_dispositions": {
+    "DOS-M6-008-C01": "unavailable-qualified-current-entity-review-missing",
+    "DOS-M6-008-C02": "unavailable-required-profile-enrollment-custody-and-fields-not-selected",
+    "DOS-M6-008-C03": "verified-source-specific-blocked-disposition-and-pure-contract-only; re-evaluate-current-publication-head",
+    "DOS-M6-008-C04": "unavailable-accountable-DOS-M6-GATE-TAX-approval-missing"
+  },
+  "independent_comparison_record": "docs/work-packages/doctor-suit/implementation/dos-m6-008-verification.json"
+}

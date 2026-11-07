@@ -1,0 +1,65 @@
+{
+  "task_id": "DOS-M6-010",
+  "parent_pr": 499,
+  "parent_head": "0dd0abf6df135b541022025e76f4887a86874afd",
+  "candidate_binding": "evaluated-committed-head",
+  "synthetic_only": true,
+  "commercial_launch_approved": false,
+  "live_money_used": false,
+  "production_billing_exercised": false,
+  "external_provider_enabled": false,
+  "tax_adapter_enabled": false,
+  "full_task_acceptance": false,
+  "accountable_financial_review": null,
+  "commercial_lifecycle_approval": null,
+  "approved_taxpayer_profile": null,
+  "approved_provider_account": null,
+  "current_candidate_receipts": [],
+  "cases": {
+    "DOS-M6-010-C01": "unrun-exact-candidate-full-journey",
+    "DOS-M6-010-C02": "unavailable-accountable-independent-financial-review",
+    "DOS-M6-010-C03": "pending-independent-exact-candidate-blocked-disposition-comparison"
+  },
+  "inherited_evidence": [
+    {
+      "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40330279377",
+      "disposition": "SQL2120/66 plus95-table exact recovery pass; financial browser fails; aggregate cancelled; source-specific only"
+    },
+    {
+      "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40335045291",
+      "disposition": "Completed failure:009 setup overlaps day-one commitments at009.sql:77; no009/fullSQL/recovery/schema-generation acceptance. Public60/protocol87/stress4/M3actual10 pass; financial10 fail; shared Auth48/settings6pass6fail."
+    },
+    {
+      "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40345633850",
+      "disposition": "SQL job121651685000 completed success after fixture repair; detailed counts/artifact acquisition not yet parsed, browser jobs still pending when observed. Does not qualify own010 exact-candidate journey/review."
+    },
+    {
+      "source_head": "88252710f83e888b51e6f5ec5498bd5e320cfa37",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40347994499",
+      "disposition": "Own SQL aborted before assertions at fixture clinic creation/current_actor: DOCTOR_AUTH_REQUIRED; existing66 SQL suites2143assertions passed. Financial003/004/007 ENAR pass;006 readonly history/009 monetary cells/010 dependent report assertions fail. Full CI failed; no approval."
+    }
+  ],
+  "review_requirements": [
+    "Accountable independent reviewer identity/qualification, scope/date and exact candidate hashes",
+    "Concurrency, replay, interrupted outcome and refund-capacity evidence",
+    "Exact minor-unit rounding and separate currency/scale reconciliation",
+    "Approved commercial lifecycle and merchant/provider evidence where applicable",
+    "Separate SaaS operator and practice taxpayer applicability/profile/custody review"
+  ],
+  "known_limitations": [
+    "No external provider callback adapter/account approved; direct synthetic state commands are verified separately.",
+    "Renewal intake does not execute an unapproved renewal/refund/cancellation policy.",
+    "Shared settings/54 inherited Shop regression failures and required CI remain unresolved.",
+    "Actual generated-schema acquisition and qualified independent financial review are unavailable."
+  ],
+  "claim_boundary": "Machine comparison validates the held disposition and enumerated synthetic contracts. It cannot prove unavailable real-world reviews or turn a proposed receipt into runtime acceptance.",
+  "verified_parent_review": {
+    "pr": 499,
+    "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/499",
+    "qualification": "84 focused cases/Doctor types/static checks; no repaired runtime acceptance."
+  }
+}

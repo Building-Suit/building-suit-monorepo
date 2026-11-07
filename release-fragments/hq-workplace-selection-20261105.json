@@ -1,0 +1,37 @@
+{
+  "id": "hq-workplace-selection-20261105",
+  "task": "HQ-WORKPLACE-SELECTION-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useSpatialWorkspaceSelection.ts",
+    "packages/ux/src/index.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/work-packages/company-hq/HQ-WORKPLACE-SELECTION-20261105.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add internal whole-workplace selection via office/label clicks and reused shared BsSelect picker for CEO plus approved departments. Selected name/X and logical-start overlay share one reversible UX focus session with Brain; fit the complete open-front room beside wider-screen LTR/RTL overlay and refit viewport/floor changes. Clear/close/Escape/Workspace restores the pre-first-selection camera; Reset/Home clears without restore then applies default100%; missing selection/Auth scope restores. Zoom locks through any panel leave while pan/rotation remains. CEO reuses existing plans/Auth content; department read-only four-station capacity/future-space details invent no agents. Rounded current-construction whole-volume picking is depth-aware, roads inactive, closed-orb shake only; labels/minimap expose selected state. No office-record, API/Auth/Brain/database mutation or workforce execution. Source acceptance unrun; no tests/build/lint/typecheck/boundary/release/browser/API/runtime/reviewer checks, provider/Brain work, deployment or public activation."
+}

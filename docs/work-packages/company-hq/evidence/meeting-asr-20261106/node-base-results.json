@@ -1,0 +1,172 @@
+{
+  "runtime": "Node CPU onnxruntime; browser runtime not proven by this test",
+  "library": "@huggingface/transformers 4.3.2",
+  "modelId": "Xenova/whisper-base",
+  "revision": "64da57285918e20ea79ea5c88eed7197933abaa8",
+  "dtype": "q8",
+  "microphone": false,
+  "paidProviderCalls": 0,
+  "results": [
+    {
+      "fixture": "fleurs-ar_eg-test-86.wav",
+      "fixtureSha256": "9ef849070e257ce6f7dd88e60c468eb64dd5f05c83f349d9125d0d2fd54dc2af",
+      "expectedLanguage": "ar",
+      "expectedText": "في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة.",
+      "detection": {
+        "language": "ar",
+        "probability": 0.9971011791844023
+      },
+      "topLanguages": [
+        {
+          "token": "<|ar|>",
+          "logit": 23.324325561523438
+        },
+        {
+          "token": "<|fr|>",
+          "logit": 16.391441345214844
+        },
+        {
+          "token": "<|he|>",
+          "logit": 15.285842895507812
+        },
+        {
+          "token": "<|en|>",
+          "logit": 15.146392822265625
+        },
+        {
+          "token": "<|ms|>",
+          "logit": 15.132804870605469
+        }
+      ],
+      "logitShape": [
+        1,
+        1,
+        51865
+      ],
+      "text": " في موناخ الشرق الأوسط الدفع لم يكن للمنزل أهمية كبيرة",
+      "seconds": 10.138066361000002,
+      "transcriptConfidence": "unknown; draft requires user review"
+    },
+    {
+      "fixture": "fleurs-en_us-validation-28.wav",
+      "fixtureSha256": "dfa565303f145e7ba8dc4f5398829cac959afe3fb4855ac73206dc3054019534",
+      "expectedLanguage": "en",
+      "expectedText": "It's worth half an hour to stroll about the intriguing village.",
+      "detection": {
+        "language": "en",
+        "probability": 0.864312334259368
+      },
+      "topLanguages": [
+        {
+          "token": "<|en|>",
+          "logit": 18.701557159423828
+        },
+        {
+          "token": "<|cy|>",
+          "logit": 15.771831512451172
+        },
+        {
+          "token": "<|nn|>",
+          "logit": 15.15876293182373
+        },
+        {
+          "token": "<|haw|>",
+          "logit": 14.013803482055664
+        },
+        {
+          "token": "<|la|>",
+          "logit": 13.527181625366211
+        }
+      ],
+      "logitShape": [
+        1,
+        1,
+        51865
+      ],
+      "text": " It's worth half an hour to stroll about the intriguing village.",
+      "seconds": 4.926943034,
+      "transcriptConfidence": "unknown; draft requires user review"
+    },
+    {
+      "fixture": "fleurs-mixed-ar-then-en.wav",
+      "fixtureSha256": "796ed9bd4d0d095ac420cdc1a617f74ca7295f642b994c2ed4b2c83d97d5ea1c",
+      "expectedLanguage": "mixed",
+      "expectedText": "في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة. It's worth half an hour to stroll about the intriguing village.",
+      "detection": {
+        "language": "ar",
+        "probability": 0.9881406592055677
+      },
+      "topLanguages": [
+        {
+          "token": "<|ar|>",
+          "logit": 22.043777465820312
+        },
+        {
+          "token": "<|en|>",
+          "logit": 16.040706634521484
+        },
+        {
+          "token": "<|fr|>",
+          "logit": 15.801198959350586
+        },
+        {
+          "token": "<|he|>",
+          "logit": 15.68777847290039
+        },
+        {
+          "token": "<|ms|>",
+          "logit": 15.294252395629883
+        }
+      ],
+      "logitShape": [
+        1,
+        1,
+        51865
+      ],
+      "text": " في موناخ الشرق الأوسط الدفع الأمياء للمنزل أهمية كبيرة",
+      "seconds": 3.807203840999999,
+      "transcriptConfidence": "unknown; draft requires user review"
+    },
+    {
+      "fixture": "fleurs-mixed-en-then-ar.wav",
+      "fixtureSha256": "c48207ee2976b25a467c39fda24d37a969bcb975e4ac9ec27cae5c707b571ec7",
+      "expectedLanguage": "mixed",
+      "expectedText": "It's worth half an hour to stroll about the intriguing village. في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة.",
+      "detection": {
+        "language": "ar",
+        "probability": 0.9299813815580215
+      },
+      "error": "recognition-transcript-truncated",
+      "topLanguages": [
+        {
+          "token": "<|ar|>",
+          "logit": 19.785985946655273
+        },
+        {
+          "token": "<|en|>",
+          "logit": 15.955479621887207
+        },
+        {
+          "token": "<|he|>",
+          "logit": 15.731072425842285
+        },
+        {
+          "token": "<|fr|>",
+          "logit": 14.969474792480469
+        },
+        {
+          "token": "<|de|>",
+          "logit": 14.38344955444336
+        }
+      ],
+      "logitShape": [
+        1,
+        1,
+        51865
+      ],
+      "text": " لقد نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن نحن",
+      "seconds": 6.927766919999998,
+      "transcriptConfidence": "unknown; draft requires user review"
+    }
+  ]
+}

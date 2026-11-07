@@ -43,7 +43,7 @@ test('control focus prefers a native element and falls back to the widget access
   const actions = []
   const native = { value: { focus: () => actions.push('native') } }
   const component = { value: { $el: { querySelector: selector => { assert.equal(selector, '[role="combobox"]'); return { focus: () => actions.push('combobox') } } } } }
-  const { useControlFocus } = controller('../src/composables/useControlFocus.ts', () => { throw new Error('Type-only import must disappear') })
+  const { useControlFocus } = controller('../src/composables/useControlFocus.ts', name => { assert.equal(name, 'vue'); return { nextTick: () => Promise.resolve() } })
   const focus = useControlFocus(native, component).focus
   focus(); native.value = null; focus()
   assert.deepEqual(actions, ['native', 'combobox'])

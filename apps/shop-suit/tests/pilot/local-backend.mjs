@@ -43,6 +43,20 @@ export function localStatus() {
   return status
 }
 
+// Server-only bootstrap for the existing email lookup endpoint. The URL and
+// keys come only from the guarded native CLI status, never a hosted override.
+export function nativeServerEnvironment(status) {
+  if (status.API_URL !== apiUrl || !status.ANON_KEY || !status.SERVICE_ROLE_KEY || status.ANON_KEY === status.SERVICE_ROLE_KEY) {
+    throw new Error('Expected distinct credentials for the fixed disposable Shop API')
+  }
+  return {
+    SUPABASE_URL: apiUrl,
+    NUXT_PUBLIC_SUPABASE_URL: apiUrl,
+    NUXT_PUBLIC_SUPABASE_KEY: status.ANON_KEY,
+    SHOP_AUTH_EMAIL_LOOKUP_KEY: status.SERVICE_ROLE_KEY,
+  }
+}
+
 // Receipts/reports are deliberately included; they are not in the older default
 // runner. Every fixture executes as its own rollback-only transaction.
 export const suites = [

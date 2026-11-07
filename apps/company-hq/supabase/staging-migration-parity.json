@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "environment": "staging",
+  "projectRef": "dpruoncalmwicrqhqelu",
+  "reviewedAt": "2026-11-06",
+  "basis": "Independent reviewer compared all 17 active SQL files with hosted staging saved SQL by byte length and MD5. This manifest pins that reviewed source baseline; it does not query or mutate the hosted project.",
+  "appliedMigrations": [
+    {
+      "file": "20261104194233_hq_founder_company_plans.sql",
+      "bytes": 29926,
+      "md5": "14331f58363370ae220dd34ab41ea60b",
+      "sha256": "4500cd50201759a19ee4b4963b8ceee59cd172a945f1e2b571dc772a32552ff7"
+    },
+    {
+      "file": "20261104231249_brain_drive_sync.sql",
+      "bytes": 35119,
+      "md5": "7284e4ab637d94512c72c4ee81ed00a7",
+      "sha256": "5efd5d44d48b9f5a8203ef33c548cfb0863cc7a5ad52e313879b63f0b9935f68"
+    },
+    {
+      "file": "20261104231318_brain_sync_scheduler.sql",
+      "bytes": 4989,
+      "md5": "8435acb8218a3523e0ba7f2ddc6cf6c7",
+      "sha256": "a1a82d69e85207428f0860eac25e08cbb437fad407bc165365aa0c83971e075e"
+    },
+    {
+      "file": "20261104232516_brain_sync_safeupdate.sql",
+      "bytes": 13205,
+      "md5": "ab56adaad781b4be62cef466bd005a01",
+      "sha256": "36fc218345c7e491cab2203e840f0c9948dc6ad4588b00291a94884022c71040"
+    },
+    {
+      "file": "20261104233340_brain_sync_request_deadline.sql",
+      "bytes": 992,
+      "md5": "25b38c4912d2c29a28e87daac43fe045",
+      "sha256": "b09aa27010c8c4300a2162cd552bbf6ebfbdb993215002ed91a68ad3d3fa0bb3"
+    },
+    {
+      "file": "20261105000725_hq_live_push_events.sql",
+      "bytes": 22598,
+      "md5": "3271aba2e41efedaa77b5eda0235665f",
+      "sha256": "d2d792e1f93941e1346e73b00a974ca2854ab1213b2c995b4af080589e8c49a7"
+    },
+    {
+      "file": "20261105002521_brain_sync_durable_dispatch.sql",
+      "bytes": 12826,
+      "md5": "27781cd8340480493309ced2a79fb7d7",
+      "sha256": "99797dbe79440f0f9ff052d928cac003e0237e966de4c8efb8774852552de1c9"
+    },
+    {
+      "file": "20261105035454_hq_agent_messages_worker_queue.sql",
+      "bytes": 30499,
+      "md5": "9ee6fc58583782b873fd12933bab20b5",
+      "sha256": "e17f50a659b3762ad46f4dcf2b06b96f5000a630c5b2015badf62bfd56d51c8d"
+    },
+    {
+      "file": "20261105150500_hq_workforce_tasks_learning.sql",
+      "bytes": 48526,
+      "md5": "2df9275e3862d08e3f727f0e9067677e",
+      "sha256": "90d5c431af1eef7f1bd21c409d362918fa874ea59dbbc2dac1f1d051eec8293b"
+    },
+    {
+      "file": "20261105155841_hq_native_tool_evidence.sql",
+      "bytes": 26589,
+      "md5": "9cc54f527fcf153b5cc3ba1048d61427",
+      "sha256": "eecd4d410522d9c40070afb0ba2c9ce5ad538d4f6a68187e886720cfb5d9e73e"
+    },
+    {
+      "file": "20261105164140_hq_reviewer_learning_context.sql",
+      "bytes": 9733,
+      "md5": "012842f47267c9f3833d3c0a94297b09",
+      "sha256": "7f75c882fea58147f735d874313dd76661500ebe9c74bd108f2f05f522fb6bcf"
+    },
+    {
+      "file": "20261105171608_hq_office_observations.sql",
+      "bytes": 8621,
+      "md5": "7017a7cfe5735082f3729b957675655a",
+      "sha256": "3f2b8964cbb8816267e6e00e283c1c730952d8a6a66fa7112c1146df590cb927"
+    },
+    {
+      "file": "20261105180148_hq_conversational_chat.sql",
+      "bytes": 37561,
+      "md5": "b868e4ebedd26e0c2767bf8285558fad",
+      "sha256": "7ee2d00dc0949c26ff4c3d524544c0cbca35d67fbe4fc2a1fec5bd56caa30b75"
+    },
+    {
+      "file": "20261105192548_hq_presence_without_snapshot_polling.sql",
+      "bytes": 6787,
+      "md5": "1a1ccb6be6dfca2b8aefd696d77b1403",
+      "sha256": "f274551e8cf4fca90953dffb033e0f87ffcdbc2aff91a707a2f239b913f98cee"
+    },
+    {
+      "file": "20261105201905_hq_chat_intake_size_recovery.sql",
+      "bytes": 6512,
+      "md5": "1ef064d790b26f7204b03d3a7479a783",
+      "sha256": "2a0fff41321c04eac254bd51539cf3d82ad1060c74bc68ca9ac4a450d55f6cab"
+    },
+    {
+      "file": "20261105204244_hq_hr_output_supervisor_recovery.sql",
+      "bytes": 36461,
+      "md5": "75c38f9f99804c8fef21061d861a41f1",
+      "sha256": "9f9b5a6387e67b38d80fea942775d263e0d2fe6c33ce17365a428ddb7c906b71"
+    },
+    {
+      "file": "20261105235516_hq_voice_meetings.sql",
+      "bytes": 80250,
+      "md5": "418b306939a4802efb908409d2049b55",
+      "sha256": "4c1d8d26fb9216a2332971a40bd8624b2906d909db61ea8a7602a62d61a3db3f"
+    }
+  ],
+  "archivedUnapplied": {
+    "file": "20261103194908_hq_dedicated_workspace.sql",
+    "bytes": 5315,
+    "md5": "4f154f12a9a6dd757d43d0242a7089bf",
+    "sha256": "088fab48e63417f5ab88852ce62219ce46243855ffa803919181b1f33c988cfd"
+  },
+  "pendingMigrations": [
+    {
+      "file": "20261107022638_hq_worker_admission_fence.sql",
+      "bytes": 9337,
+      "md5": "20947fb64748d50d51a31d95aa217b64",
+      "sha256": "61dafc8173d8d6613f99de19d3603846d5bbbd7d2e769e0bf9edc086f6d6f685",
+      "status": "approved-source-not-deployed",
+      "phase": "admission-fence",
+      "proposal": "tooling/hq-agent-host/bootstrap/admission-pause.sql"
+    },
+    {
+      "file": "20261107024306_hq_department_staffing_needs.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106000000_hq_department_staffing_needs.sql",
+      "bytes": 3180,
+      "md5": "9438762c2d1e2c4b590d4cd8f3275b90",
+      "sha256": "91013167455996c81482f37b1e562636deb9c6c85d331e52a5841ad6e0c39a1e",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024314_hq_department_orchestration_contract.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106010000_hq_department_orchestration_contract.sql",
+      "bytes": 18800,
+      "md5": "48b1e45e9b935512d21666112e71ae26",
+      "sha256": "447c6959bba6078d99b331c26b32169c2bf1761346af70d2eebfbfb432577de8",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024322_hq_supervised_worker_trials.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106020000_hq_supervised_worker_trials.sql",
+      "bytes": 53294,
+      "md5": "b59ec9335b91d1e14a5a6bbd400df830",
+      "sha256": "090054b023fb424dcd3d866cedbe50fb67f80c51ba469ee0c61eaff1d4fd040c",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024331_hq_qualified_research_web_search.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106030000_hq_qualified_research_web_search.sql",
+      "bytes": 4666,
+      "md5": "d82f2d8b1c8027ea18e61151d47744d1",
+      "sha256": "473d5c25a31a568ab083e3cc0e360ca902173ae7b7fdd76f3796064d0c4e5b9d",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024338_hq_worker_model_execution_receipts.sql",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/20261106114053_hq_worker_model_execution_receipts.sql",
+      "bytes": 14351,
+      "md5": "e7192d8ebab75245a0c627cdaf67d3b6",
+      "sha256": "9f433ed56aab324d3f58aa9f82bd80cdca5fcf1e9cbc429e0d08958ba9575a5b",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107024348_hq_worker_release_capability.sql",
+      "proposal": "tooling/hq-agent-host/database-release-contract.sql",
+      "bytes": 3183,
+      "md5": "5254fc36cb8927508e2b8d2cc29ff7ae",
+      "sha256": "f20004a4899b81f6381508e532c19fbf1a13c6db8929c69fb29f51a43538cba1",
+      "status": "source-only-live-approval-required",
+      "phase": "contract2-review-only"
+    },
+    {
+      "file": "20261107034418_hq_workforce_trial_delivery.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107034418_hq_workforce_trial_delivery.sql",
+      "bytes": 10143,
+      "md5": "f02d945916cc782761e531243d70d511",
+      "sha256": "d3ec08d9fce2f4e0444b5254a66d620ba1f80af850454b6d1c1fecea986769b3",
+      "status": "source-only-live-approval-required",
+      "phase": "trial-delivery-review-only"
+    },
+    {
+      "file": "20261107040848_hq_trial_failure_and_assigned_skills.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107040848_hq_trial_failure_and_assigned_skills.sql",
+      "bytes": 28636,
+      "md5": "18407b94e670ec2797aa686d4cc48aa2",
+      "sha256": "a00bc40d7915b05e68b9b44a1a3ad54b48da17378c123c9c0df9e276eac23608",
+      "status": "source-only-live-approval-required",
+      "phase": "trial-skills-review-only"
+    },
+    {
+      "file": "20261107133124_hq_worker_status_compatibility.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "bytes": 6253,
+      "md5": "e16bdbf415bad82b7058f426f5ddad4e",
+      "sha256": "c194a4ef4f410b1af1d6fb81310824e934d48cfa807013561a4a5b7d5ab48398",
+      "status": "source-only-live-approval-required",
+      "phase": "worker-status-compatibility"
+    },
+    {
+      "file": "20261107142302_hq_worker_admission_resume.sql",
+      "bytes": 4142,
+      "md5": "54c83c7c25b3ae82b8718e1b6de8af00",
+      "sha256": "1eea4fbed76989ebeeafb796d8c1c45acb04be7bcb770ef3e5289511c4481759",
+      "status": "source-only-live-approval-required",
+      "phase": "admission-resume-review-only"
+    }
+  ]
+}

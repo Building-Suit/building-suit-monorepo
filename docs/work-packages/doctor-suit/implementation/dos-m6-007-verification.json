@@ -1,0 +1,328 @@
+{
+  "task_id": "DOS-M6-007",
+  "recorded_at_utc": "2026-10-26T13:22:57.407694+00:00",
+  "parent_pr": 492,
+  "draft_pr": 495,
+  "cut_parent": "8c1cd3fbd200cfd4af130f60aa798f1aefc93347",
+  "incorporated_parent": "c8c7650b0d13e389b23e74023534e7322c3eebcf",
+  "parent_merge": "c6b3897685c02b32353606192d3ba58ac958bc3e",
+  "phase": "persisted-synthetic-finance-workspace-and-owned-runtime-journeys",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "live_collection": false,
+  "external_transport_enabled": false,
+  "tax_applicability": "unreviewed",
+  "real_refund_policy": "unapproved-unavailable",
+  "owned_unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs"
+    ],
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_unit": {
+    "tasks": [
+      "DOS-M6-003",
+      "DOS-M6-004",
+      "DOS-M6-005",
+      "DOS-M6-006",
+      "DOS-M6-007"
+    ],
+    "passed": 65,
+    "failed": 0,
+    "skipped": 0
+  },
+  "changed_file_lint": {
+    "doctor": "passed-scoped",
+    "shared_ui": "passed",
+    "catalogue": "zero-errors-five-pre-existing-warnings"
+  },
+  "types": {
+    "doctor-suit": "passed",
+    "shop-suit": "passed",
+    "ledger-suit": "passed",
+    "inventory-suit": "passed",
+    "super-admin-suit": "passed",
+    "automation-suit": "passed",
+    "building-suit-docs": "passed"
+  },
+  "boundaries": {
+    "status": "passed",
+    "templates": 140,
+    "preserved_migrations": 80
+  },
+  "canonical": {
+    "status": "passed",
+    "packets": 9,
+    "tasks": 104,
+    "source_bytes": "verified",
+    "fingerprints_unchanged": true
+  },
+  "root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2517,
+    "passed": 2440,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": 54,
+    "all_failure_locations_shop": true,
+    "phase": "final-after-parent-one-based-billing-to-zero-based-directory-repair",
+    "duration_ms": 102449.943655
+  },
+  "static_sql": {
+    "parser": "pglast7.21-outside-repository",
+    "migration_statements": 28,
+    "plpgsql_functions": 5,
+    "task_statements": 128,
+    "assertions_static_count": 62,
+    "database_execution": false
+  },
+  "actual_sql": {
+    "status": "passed62-at259be/run40323046338",
+    "assertions": 62
+  },
+  "actual_transactions": {
+    "status": "passed8-at259be/run40323046338",
+    "cases": 8,
+    "source": "apps/doctor-suit/tests/practice-money-concurrency.mjs"
+  },
+  "browser": {
+    "status": "executed-at259be; both-own-cases-timedOut-at-route-because-parent006-prices-not-created; new-repair-unrun",
+    "owned_cases": [
+      "DOS-M6-007-C03-EN",
+      "DOS-M6-007-C03-AR"
+    ],
+    "financial_discovery": 8,
+    "auth_discovery": 87,
+    "public_discovery": 60,
+    "discovery_is_execution": false,
+    "placeholder": false
+  },
+  "generated_types": {
+    "status": "generated-at259be-in-owned-CI; authorized-acquisition-and-local-comparison-unqualified",
+    "handwritten": false
+  },
+  "local_environment": {
+    "node": "26.8.1",
+    "pnpm": "10.33.0",
+    "doctor_runtime_started": false,
+    "absolute_command_start_end_timestamps": "not captured; record time is curation time; available runner duration retained"
+  },
+  "parent_actual_runtime_reference": "docs/work-packages/doctor-suit/implementation/dos-m6-006-verification.json",
+  "source_sha256": {
+    "apps/building-suit-docs/app/pages/components.vue": "213c66a5349d4dc5d44cd8d078a71a7b0c61a169738d3756d6ad08ffc636ba73",
+    "apps/doctor-suit/app/composables/useDoctorPracticeMoney.ts": "4034741bd5f64977596c37829ba82594aade3edf149f4dc268d14e7f74ac9a9d",
+    "apps/doctor-suit/app/pages/practice-payments.vue": "24fdc127ecf1613c42207fade5f45ffd7d39afb2638099a0023d3b27baadda02",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts": "5112dad36324e4e84b29047fd69afe52955b36fe8134ee2ceaafbe19b2e14423",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts": "59974158707d4de3bff11198758bd07d8172d7ec2069bed2a22f4738aa54a491",
+    "apps/doctor-suit/app/utils/practiceBillingPresentation.ts": "53bfe52c0f8eec7c5e8a6d058abd157b5794347625ff78a3090c089450c6f6b5",
+    "apps/doctor-suit/app/utils/practiceMoney.ts": "c1f1b972d44ded62adcb405a0462bd49a1af634018810a1c641a9f39f9a5f33a",
+    "apps/doctor-suit/app/utils/practiceMoneyController.ts": "c1fcdaeed25b3ea258ffbdacf303d0ef15774e9a46d7ac0f5e4202f9040f1d51",
+    "apps/doctor-suit/app/utils/practiceMoneyPresentation.ts": "5456f818088a7abd7ea580ae48ccf2fb225f18d2c0eee734aeb57c3fa7a466d7",
+    "apps/doctor-suit/app/utils/practiceMoneyRepository.ts": "d0d15e7d36d426cc97e9c096344af5662a764aab4f50224cb8428e4b8a061038",
+    "apps/doctor-suit/supabase/migrations/20261026113807_doctor_practice_collections_refunds.sql": "aa6d47e76043cb08db660b479e39b863a9a1eda1311ad1f310e06e19ae6122b0",
+    "apps/doctor-suit/supabase/tests/dos-m6-007.sql": "f8f18bd141a10c50bd0bc4f2d92d420794654be2547cb167e92193a07f2f797a",
+    "apps/doctor-suit/tests/disposable-postgres.mjs": "6ab57dbc3854fc92bdb16cd6470ce5ac727ce016bb825f56db4366c9b164449a",
+    "apps/doctor-suit/tests/e2e/dos-m6-007.spec.ts": "261b3462a2d51f367489c24040cc182a1ebc8c6fcf8ce61da5e80de86d15929d",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "e9a74a1ffda6bfba36a6e32384ae8e801df9e9b918e0ec3d1e70e9025a7f148f",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts": "e4a7aa0dbf11fc16d1084d19430d652d591adbf2df4728476ac1708701f82643",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "913ec66c0cd263093f1662362f206b1f36b9e8abc7fec523cea6f4b4638f1471",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "bc7fe3bf506fbae8737cf66fdb1141f66dc8fec6142a2a05ccb8a3bc2f6609aa",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs": "6fe450eb7dd82e8846fcbc86d58eb5972a7fb866c819a826696c4a74dddab91a",
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "b3ec1fce241b3e85d7bee2c6354eddd0b66c95d165e0e6e823247a1089c6dfd5",
+    "apps/doctor-suit/tests/practice-money-actual-provider.mjs": "192f5452131b9151bebc70d68d7d962495302d1110f07ff04b8bddaec7d6e997",
+    "apps/doctor-suit/tests/practice-money-concurrency.mjs": "8029f60263e6971e5222742e978ef411ceb67a8c39643db4542b23c71ac01e3c",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "fd388a64ef2163b9fa3927815690d47b9eaf4f6e20fd267dec464a5ac9598e41",
+    "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs": "48b889be02eef39ac05f26fc12608db9aef826f33269115a4b6b82fdfdbcd049",
+    "packages/ui/package.json": "976a964eb603b06583b201a79f9325e5a816c407095f7b2fa0d733ec70d5602f",
+    "packages/ui/src/templates/BsPracticeBillingPage.vue": "52d790da655484530d6544784acb04c134f262e83c19f1e3782b6e9a71a2ba7e",
+    "packages/ui/src/templates/BsPracticeMoneyPage.vue": "3e763bbf1e271df17c347776d3974298c8b9b02f1a4279896e05836f5785983f",
+    "packages/ui/src/utils/practiceBillingPresentation.ts": "aa8fe3e88694e7352abdc4ccc009f1afb360abf26645961c4eb64649de50adfe",
+    "packages/ui/src/utils/practiceMoneyPresentation.ts": "51865693c5157c8668e854989e08cf221726f839f0036fbe436a9ea8f422de20"
+  },
+  "earlier_parent_merge": "db712efea52b33a697d13f12867b2972ae548eea",
+  "prior_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "total": 2515,
+    "passed": 2438,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": 54,
+    "all_failure_locations_shop": true,
+    "status": "failed-inherited-Shop-baseline",
+    "phase": "financial-core-and-workspace; final-route-read-guard-followed-up-with-lint-and-types",
+    "duration_ms": 246582.980763
+  },
+  "fixture_mode_follow_up": {
+    "parent_owned_unit": 24,
+    "combined_M6_003_through_007": 64,
+    "scoped_changed_fixture_lint": "passed",
+    "scope": "owned candidate mode/admission lifecycle; no product entitlement rule change",
+    "new_runtime_results": "pending-owned-CI"
+  },
+  "prior_root_before_clinic_page_repair": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2516,
+    "passed": 2439,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": 54,
+    "all_failure_locations_shop": true,
+    "phase": "final-after-parent-fixture-mode-repair-and-child-fixture-protocol-extension",
+    "duration_ms": 103267.025638
+  },
+  "actual_runtime_259_checkpoint": {
+    "head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "run_id": 40323046338,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40323046338",
+    "completed_at": "2026-10-26T13:00:59Z",
+    "aggregate": "failure",
+    "sql_job": 121572593826,
+    "sql_status": "success",
+    "own_sql_passed": 62,
+    "full_assertions": 2120,
+    "full_suites": 66,
+    "own_money_transactions_passed": 8,
+    "inherited_billing_transactions_passed": 7,
+    "isolated_recovery_table_fingerprints": 95,
+    "exact_schema_acl_rls_history": "passed",
+    "public_schema_generation": "passed-acquisition-unqualified",
+    "browser_job": 121572594259,
+    "public_passed": 60,
+    "protocol_passed": 87,
+    "stress_passed": 4,
+    "actual_m3_accepted_tasks": 10,
+    "financial_receipts": [
+      {
+        "task": "DOS-M6-003",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-003-C02-EN",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-003.spec.ts",
+              "line": 30,
+              "column": 82
+            }
+          },
+          {
+            "id": "DOS-M6-003-C02-AR",
+            "status": "passed",
+            "phase": "direction_and_viewport"
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-004",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-004-C01-EN",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-004.spec.ts",
+              "line": 34,
+              "column": 82
+            }
+          },
+          {
+            "id": "DOS-M6-004-C01-AR",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-004.spec.ts",
+              "line": 34,
+              "column": 82
+            }
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-006",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-006-C02-EN",
+            "status": "timedOut",
+            "phase": "price_create"
+          },
+          {
+            "id": "DOS-M6-006-C02-AR",
+            "status": "timedOut",
+            "phase": "price_create"
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-007",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-007-C03-EN",
+            "status": "timedOut",
+            "phase": "route"
+          },
+          {
+            "id": "DOS-M6-007-C03-AR",
+            "status": "timedOut",
+            "phase": "route"
+          }
+        ]
+      }
+    ],
+    "provider_failure_stage": "actual M6 financial subprocess assertions",
+    "later_lifecycle_actual_hook": "unreached",
+    "shared_job": 121572594275,
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6
+  },
+  "clinic_page_follow_up": {
+    "parent_owned": 25,
+    "own_money_units": 18,
+    "combined_M6": 65,
+    "source_bug": "billing one-based UI skipped zero-based directory first25 clinics",
+    "repair": "parent006/c8c7650b translated only the billing adapter and validated page completeness",
+    "new_GUI_runtime": "unrun-await-exact-new-CI"
+  },
+  "oct29_parent_propagation": {
+    "source_head": "1feb7cff9cd914269d16e1969d9f5b0cd7c0e803",
+    "parent_pr": 492,
+    "parent_head": "ab6543ef498a23b36c8e495aae965900bd69bfb4",
+    "focused_tests": {
+      "total": 44,
+      "passed": 44,
+      "failed": 0
+    },
+    "financial_e2e_types": "passed",
+    "workspace": {
+      "routes": 140,
+      "preserved_migrations": 80,
+      "template_debt": 0
+    },
+    "actual_runtime": "pending-owned-CI",
+    "historical_receipts": "retained-original-bindings",
+    "full_task_acceptance": false
+  }
+}

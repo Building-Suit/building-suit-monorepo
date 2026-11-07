@@ -1,0 +1,25 @@
+{
+  "id": "ls-sec-dep-003-patched-nuxt-runtime",
+  "task": "LS-SEC-DEP-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "package.json",
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    "patches",
+    "apps",
+    "packages/nuxt-layer",
+    "tooling/checks",
+    "packages/ux/package.json"
+  ],
+  "reason": "Maintain patched Nuxt and a single supported Vue runtime across shared peers; verify native route-rule case protection, current DevTools consumers and compatible explicit navigation/fetch bindings without changing product routes, business rules or authority. Preserve remaining advisory and release gates."
+}

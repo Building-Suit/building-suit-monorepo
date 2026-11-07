@@ -1,0 +1,5 @@
+{
+  "extends": "../../.nuxt/tsconfig.app.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["dos-m6-*.spec.ts", "financial-notice-diagnostics.ts", "../../.nuxt/nuxt.d.ts"]
+}

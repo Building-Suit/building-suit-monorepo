@@ -1,0 +1,18 @@
+{
+  "id": "doctor-shop-integration-reconciliation-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/shop-reconciliation-2026-10-29.md",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ux/src/index.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts"
+  ],
+  "reason": "History-preserving integration support for already classified Doctor and Shop changes, conflict review and source-bound verification. Existing public feature classifications remain intact; no operational registration or domain/release authority is granted."
+}

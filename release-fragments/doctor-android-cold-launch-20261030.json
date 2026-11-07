@@ -1,0 +1,16 @@
+{
+  "id": "doctor-android-cold-launch-20261030",
+  "task": "DOCTOR-ANDROID-COLD-LAUNCH-AUDIT-20261030",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/scripts/android-launch-observations.mjs",
+    "apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
+    "apps/doctor-suit/mobile/doctor/scripts/candidate-evidence.mjs",
+    "apps/doctor-suit/tests/unit/android-launch-observations.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m4-010.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/android-cold-launch-2026-10-30.md"
+  ],
+  "reason": "Retain bounded original-launch and failure-foreground evidence for the observed owned API29 cold-launch failure, with strict receipt validation. Preserve launch actions, readiness deadlines, retries and acceptance; no unproven product fix or native/domain approval."
+}

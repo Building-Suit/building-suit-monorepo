@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { focusSignupStage } from '@building-suit/ux'
 export interface SignupWizardStep {
   id: string | number
   title: string
@@ -44,7 +45,7 @@ const headingId = computed(() => `signup-step-${current.value?.id ?? props.step}
     <header v-if="current" class="bs-signup-wizard__header">
       <div><p class="bs-signup-wizard__count">{{ ui('step') }} {{ step }} / {{ steps.length }}</p><h2 :id="headingId">{{ current.title }}</h2></div>
     </header>
-    <Transition name="bs-auth-wizard-stage" mode="out-in">
+    <Transition name="bs-auth-wizard-stage" mode="out-in" @after-enter="focusSignupStage">
       <div :key="`${step}:${current?.id ?? 'single'}`" class="bs-signup-wizard__content"><slot :step="step" :step-descriptor="current" /></div>
     </Transition>
     <p v-if="notice" role="status" class="bs-signup-wizard__notice">{{ notice }}</p>

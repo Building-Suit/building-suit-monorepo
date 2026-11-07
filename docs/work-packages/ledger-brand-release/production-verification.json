@@ -1,0 +1,105 @@
+{
+  "browserStates": [
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 390,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 1280,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 390,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 1280,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 390,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 1280,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 390,
+      "status": 200,
+      "visibleMarkLoaded": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 1280,
+      "status": 200,
+      "visibleMarkLoaded": true
+    }
+  ],
+  "assets": [
+    {
+      "path": "/brand/ledger-suit-app-icon.png",
+      "status": 200,
+      "type": "image/png",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-app-icon.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-logo-mark.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-mark-dark.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-mark-light.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-wordmark-dark.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    },
+    {
+      "path": "/brand/ledger-suit-wordmark-light.svg",
+      "status": 200,
+      "type": "image/svg+xml",
+      "sourceBytesMatch": true
+    }
+  ],
+  "limitations": "Cloud-local production build, synthetic public Supabase configuration; no credentials, authenticated backend, financial SQL or hosted acceptance. Initial SSR probe incorrectly expected wordmarks on the compact mark-based login; corrected against actual presentation."
+}

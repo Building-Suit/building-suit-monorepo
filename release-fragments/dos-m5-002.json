@@ -1,0 +1,16 @@
+{
+  "id": "dos-m5-002",
+  "task": "DOS-M5-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m5-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-002-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Prepare patient Android/shared-platform and onboarding/consent evidence with exact proposed registration and explicit missing identity/platform/physical approvals; preserve the canonical pre-scaffold/native/provider hold."
+}

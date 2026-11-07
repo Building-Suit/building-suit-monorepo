@@ -2,6 +2,7 @@ export type ReceiptPaperSize = 'thermal_80' | 'a4'
 export type ReceiptPaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
 export interface SaleReceiptSnapshot {
+  offers?: import('../../shared/catalogOffers').OfferMatch[]
   presentation?: { documentLabel: string | null; referenceLabel?: string | null; language: 'en' | 'ar'; direction: 'auto' | 'ltr' | 'rtl'; showDescriptions: boolean; notes: string | null; logoDataUrl: string | null }
   tax?: import('./tax').TaxQuote | null
   version: 1
@@ -14,6 +15,8 @@ export interface SaleReceiptSnapshot {
   staffName: string | null
   customer: { name: string | null; phone: string | null }
   lines: Array<{
+    pricing?: { source: string; ruleId?: string; revision?: number; actorProfileId?: string; reason?: string; originalBaseUnitPrice?: string; baseUnitPrice?: string } | null
+    measurement?: import('./measurement').MeasurementSnapshot | null
     id: string
     itemType: 'product' | 'service'
     name: string

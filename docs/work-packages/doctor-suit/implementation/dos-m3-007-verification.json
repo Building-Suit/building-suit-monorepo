@@ -1,0 +1,80 @@
+{
+  "task": "DOS-M3-007",
+  "checks": [
+    {
+      "check": "units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs"
+      ],
+      "started_at": "2026-10-20T17:54:21.221446+00:00",
+      "finished_at": "2026-10-20T17:54:21.463849+00:00",
+      "source_head": "e86143e20cf550be5f79ea15a874baca7b9b6573",
+      "base_sha": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+      "exit_code": 0,
+      "log_sha256": "8964e25f45abf794211c25c1e72972a8dce36dc3795ba970669d2d1279fdda2b"
+    },
+    {
+      "check": "sql",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-007.sql"
+      ],
+      "started_at": "2026-10-20T17:54:21.464083+00:00",
+      "finished_at": "2026-10-20T17:54:28.087688+00:00",
+      "source_head": "e86143e20cf550be5f79ea15a874baca7b9b6573",
+      "base_sha": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+      "exit_code": 1,
+      "log_sha256": "d9e452853f6ad1e7f9fbf0c5ec4bebf49ffbbd9542d2fff980ed896b5c7652d1"
+    },
+    {
+      "check": "boundaries",
+      "argv": [
+        "pnpm",
+        "check"
+      ],
+      "started_at": "2026-10-20T17:54:28.087811+00:00",
+      "finished_at": "2026-10-20T17:54:34.498602+00:00",
+      "source_head": "e86143e20cf550be5f79ea15a874baca7b9b6573",
+      "base_sha": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+      "exit_code": 0,
+      "log_sha256": "5144f5a521bc8ee401c316242c8041dcf56e56246ed415625f86a27070b9bf7c"
+    },
+    {
+      "check": "release",
+      "argv": [
+        "pnpm",
+        "release:check"
+      ],
+      "started_at": "2026-10-20T17:54:34.498924+00:00",
+      "finished_at": "2026-10-20T17:54:40.359199+00:00",
+      "source_head": "e86143e20cf550be5f79ea15a874baca7b9b6573",
+      "base_sha": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+      "exit_code": 0,
+      "log_sha256": "0d106378c91818a21d173875a5e1a8765ffec0811a3b8dca634fb4b6f159a397"
+    },
+    {
+      "check": "sql-after-owned-service-image-cleanup",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-007.sql"
+      ],
+      "started_at": "2026-10-20T17:57:04.292598+00:00",
+      "finished_at": "2026-10-20T17:57:14.519538+00:00",
+      "source_head": "e86143e20cf550be5f79ea15a874baca7b9b6573",
+      "exit_code": 0,
+      "log_sha256": "c04e26bb91565d0093a7b88861a6568a5c88f4434fb1c260d2491f6446366e72"
+    }
+  ],
+  "provider_implementation": "blocked",
+  "provider_approval": false,
+  "node": "26.8.1",
+  "pnpm": "10.33.0",
+  "browser": "UNRUN; parent actual local service attempt blocked at image pull/capacity before browser assertions",
+  "full_repository": "Parent configured run:2143 tests,2066 passed,54 Shop failed,23 skipped; no full CI pass"
+}

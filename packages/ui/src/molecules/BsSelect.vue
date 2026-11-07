@@ -14,8 +14,10 @@ const props = withDefaults(defineProps<{
   optionValue?: SelectProps['optionValue']
   optionDisabled?: SelectProps['optionDisabled']
   virtual?: boolean
+  loading?: boolean
+  disabled?: boolean
   virtualScrollerOptions?: SelectProps['virtualScrollerOptions']
-}>(), { value: undefined, label: undefined, options: undefined, native: false, virtual: false, optionLabel: undefined, optionValue: undefined, optionDisabled: undefined, virtualScrollerOptions: undefined })
+}>(), { value: undefined, label: undefined, options: undefined, native: false, virtual: false, loading: false, disabled: false, optionLabel: undefined, optionValue: undefined, optionDisabled: undefined, virtualScrollerOptions: undefined })
 function optionField(option: unknown, field: string | ((option: unknown) => unknown) | undefined): unknown {
   if (typeof field === 'function') return field(option)
   if (field && typeof option === 'object' && option !== null) return field.split('.').reduce<unknown>((value, key) => value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined, option)
@@ -55,11 +57,11 @@ const ui = useUiCopy()
 </script>
 
 <template>
-  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :aria-label="accessibleLabel" @change="emit('change', $event)"><slot v-if="$slots.default" /><template v-else><option v-for="(option, index) in nativeOptions" :key="index" :value="option.value" :disabled="option.disabled">{{ option.label }}</option></template></select>
+  <select v-if="native" ref="nativeSelect" v-bind="$attrs" v-model="nativeModel" class="ls-input" :disabled="disabled || loading" :aria-label="accessibleLabel" @change="emit('change', $event)"><slot v-if="$slots.default" /><template v-else><option v-for="(option, index) in nativeOptions" :key="index" :value="option.value" :disabled="option.disabled">{{ option.label }}</option></template></select>
   <Select
     v-else
     ref="select"
-    v-bind="$attrs" v-model="primeModel" :options="options" :option-label="optionLabel" :option-value="primeOptionValue" :option-disabled="optionDisabled"
+    v-bind="$attrs" v-model="primeModel" :options="options" :option-label="optionLabel" :option-value="primeOptionValue" :option-disabled="optionDisabled" :loading="loading" :disabled="disabled || loading"
     :aria-label="accessibleLabel" :placeholder="typeof $attrs.placeholder === 'string' ? $attrs.placeholder : accessibleLabel" @change="forwardChange"
     :empty-message="ui('empty')" :empty-filter-message="ui('empty')"
     :virtual-scroller-options="virtual || virtualScrollerOptions ? { ...virtualScrollerOptions, itemSize: 44 } : undefined"

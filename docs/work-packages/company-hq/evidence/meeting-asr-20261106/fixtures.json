@@ -1,0 +1,110 @@
+{
+  "purpose": "Public licensed non-microphone ASR smoke-test fixtures; not company or user audio. A tiny fixed sample is not quality qualification.",
+  "fixtures": [
+    {
+      "name": "fleurs-ar_eg-test-86.wav",
+      "language": "ar",
+      "dataset": "google/fleurs",
+      "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+      "config": "ar_eg",
+      "split": "test",
+      "rowIndex": 86,
+      "recordId": 1871,
+      "sourceAudioFilename": "13623382447726804466.wav",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech, Alexis Conneau et al. (2022), Google; publicly released read speech.",
+      "sourceDatasetCard": "https://huggingface.co/datasets/google/fleurs/raw/70bb2e84b976b7e960aa89f1c648e09c59f894dd/README.md",
+      "sourceRowsEndpoint": "https://datasets-server.huggingface.co/first-rows?dataset=google%2Ffleurs&config=ar_eg&split=test",
+      "expectedText": "في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة.",
+      "sha256": "9ef849070e257ce6f7dd88e60c468eb64dd5f05c83f349d9125d0d2fd54dc2af",
+      "bytes": 149838,
+      "sourceFile": "fleurs-ar_eg-test-86.source.wav",
+      "sourceSha256": "1704b9f7c06441cdd0994744bc5ed08e74e9ee75127a1687bee9bf0bd31e7604",
+      "sourceBytes": 299578,
+      "modifications": "Converted datasets-server IEEE float WAV to signed 16-bit PCM WAV, mono 16kHz; no trimming.",
+      "sampleRate": 16000,
+      "channels": 1,
+      "sampleWidthBytes": 2,
+      "frames": 74880,
+      "durationSeconds": 4.68
+    },
+    {
+      "name": "fleurs-en_us-validation-28.wav",
+      "language": "en",
+      "dataset": "google/fleurs",
+      "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+      "config": "en_us",
+      "split": "validation",
+      "rowIndex": 28,
+      "recordId": 1607,
+      "sourceAudioFilename": "10846227846460802233.wav",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech, Alexis Conneau et al. (2022), Google; publicly released read speech.",
+      "sourceDatasetCard": "https://huggingface.co/datasets/google/fleurs/raw/70bb2e84b976b7e960aa89f1c648e09c59f894dd/README.md",
+      "sourceRowsEndpoint": "https://datasets-server.huggingface.co/first-rows?dataset=google%2Ffleurs&config=en_us&split=validation",
+      "expectedText": "It's worth half an hour to stroll about the intriguing village.",
+      "sha256": "dfa565303f145e7ba8dc4f5398829cac959afe3fb4855ac73206dc3054019534",
+      "bytes": 122958,
+      "sourceFile": "fleurs-en_us-validation-28.source.wav",
+      "sourceSha256": "cd18277b92bd22d1c2827f6bee287a636cc227365fd9bc1d7e3ef5b81afe6ad3",
+      "sourceBytes": 245818,
+      "modifications": "Converted datasets-server IEEE float WAV to signed 16-bit PCM WAV, mono 16kHz; no trimming.",
+      "sampleRate": 16000,
+      "channels": 1,
+      "sampleWidthBytes": 2,
+      "frames": 61440,
+      "durationSeconds": 3.84
+    },
+    {
+      "name": "fleurs-mixed-ar-then-en.wav",
+      "language": "mixed",
+      "languageOrder": [
+        "ar",
+        "en"
+      ],
+      "sourceFixtures": [
+        "fleurs-ar_eg-test-86.wav",
+        "fleurs-en_us-validation-28.wav"
+      ],
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech, Alexis Conneau et al. (2022), Google; publicly released read speech.",
+      "sha256": "796ed9bd4d0d095ac420cdc1a617f74ca7295f642b994c2ed4b2c83d97d5ea1c",
+      "bytes": 282284,
+      "sampleRate": 16000,
+      "channels": 1,
+      "sampleWidthBytes": 2,
+      "frames": 141120,
+      "durationSeconds": 8.82,
+      "expectedText": "في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة. It's worth half an hour to stroll about the intriguing village.",
+      "modifications": "Derived test concatenation of attributed source fixtures with 0.3 seconds of PCM silence between them; no claim that mixed-language ASR succeeds."
+    },
+    {
+      "name": "fleurs-mixed-en-then-ar.wav",
+      "language": "mixed",
+      "languageOrder": [
+        "en",
+        "ar"
+      ],
+      "sourceFixtures": [
+        "fleurs-en_us-validation-28.wav",
+        "fleurs-ar_eg-test-86.wav"
+      ],
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech, Alexis Conneau et al. (2022), Google; publicly released read speech.",
+      "sha256": "c48207ee2976b25a467c39fda24d37a969bcb975e4ac9ec27cae5c707b571ec7",
+      "bytes": 282284,
+      "sampleRate": 16000,
+      "channels": 1,
+      "sampleWidthBytes": 2,
+      "frames": 141120,
+      "durationSeconds": 8.82,
+      "expectedText": "It's worth half an hour to stroll about the intriguing village. في مناخ الشرق الأوسط الدافئ، لم يكن للمنزل أهميّة كبيرة.",
+      "modifications": "Derived test concatenation of attributed source fixtures with 0.3 seconds of PCM silence between them; no claim that mixed-language ASR succeeds."
+    }
+  ],
+  "citation": "Conneau, Alexis; Ma, Min; Khanuja, Simran; Zhang, Yu; Axelrod, Vera; Dalmia, Siddharth; Riesa, Jason; Rivera, Clara; Bapna, Ankur (2022). FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech. arXiv:2205.12446. https://arxiv.org/abs/2205.12446"
+}

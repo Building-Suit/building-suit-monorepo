@@ -22,7 +22,7 @@ type CustomerDetail = {
   archived_at: string | null
   can_manage: boolean
 }
-type StatementEvent = { event_id: string; event_type: 'sale' | 'receipt' | 'reversal' | 'refund' | 'void' | 'full_return'; event_at: string; invoice_id: string; document_number: string; debit: number; credit: number; method: string | null; reference: string | null; running_balance: number }
+type StatementEvent = { event_id: string; event_type: 'sale' | 'receipt' | 'reversal' | 'refund' | 'void' | 'full_return'; event_at: string; invoice_id: string | null; order_id?: string | null; document_number: string; debit: number; credit: number; method: string | null; reference: string | null; running_balance: number }
 type StatementPage = { items: StatementEvent[]; total: number; page: number; pageSize: number; outstanding: number }
 type OutstandingInvoice = { id: string; invoice_number: string; total_amount: number; outstanding: number; due_date: string | null; settlement_state: 'unpaid' | 'partial'; overdue: boolean }
 type OutstandingPage = { items: OutstandingInvoice[]; total: number }
@@ -271,7 +271,7 @@ const outstandingView = computed<BsCustomerReceivablesView>(() => ({
   overdue: overduePending.value || overdueError.value ? '' : t('customers.overdueCount', { count: overdueCount.value }),
 }))
 const statementView = computed<BsCustomerStatementView>(() => ({
-  rows: statement.value.items.map(event => ({ id: event.event_id, date: formatDate(event.event_at), type: t(`payments.events.${event.event_type}`), href: `/sales/${event.invoice_id}`, document: event.document_number, debit: Number(event.debit) ? money(Number(event.debit)) : '—', credit: Number(event.credit) ? money(Number(event.credit)) : '—', balance: money(Number(event.running_balance)) })),
+  rows: statement.value.items.map(event => ({ id: event.event_id, date: formatDate(event.event_at), type: t(`payments.events.${event.event_type}`), href: event.invoice_id ? `/sales/${event.invoice_id}` : event.order_id ? `/orders?order=${encodeURIComponent(event.order_id)}` : '', document: event.document_number, debit: Number(event.debit) ? money(Number(event.debit)) : '—', credit: Number(event.credit) ? money(Number(event.credit)) : '—', balance: money(Number(event.running_balance)) })),
   page: statementPageNumber.value, pageSize: statementPageSize, total: statement.value.total, loading: statementPending.value, error: statementError.value ? t('payments.loadError') : null,
 }))
 const profileCopy = computed<BsCustomerProfileCopy>(() => ({

@@ -1,0 +1,15 @@
+{
+  "id": "doctor-m3-page-queue-capture",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Capture the verified keyboard-scrolled queue through a full-page screenshot after actual element detachment at the artifact step. Retain all cases/assertions/thresholds/variants and failed acceptance until new CI."
+}

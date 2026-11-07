@@ -1,0 +1,16 @@
+{
+  "id": "dos-m4-003",
+  "task": "DOS-M4-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/tests/unit/dos-m4-003.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-003.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-003-device-evidence.json"
+  ],
+  "reason": "Implement the owner-authorized synthetic native session task with fresh identity/SID verification, isolated encrypted storage and lifecycle/race protection. Genuine platform/security/device/clinical/offline/provider gates remain explicit and no operational activation is implied."
+}

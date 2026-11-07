@@ -1,0 +1,35 @@
+{
+  "id": "hq-spatial-orb-20261104",
+  "task": "HQ-ORB-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/work-packages/company-hq/HQ-ORB-20261104.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/atoms/BsIcon.vue",
+    "packages/ux/src/index.ts",
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Extend the internal HQ visual workspace with a floating native-WebGL holographic orb and base, mouse/touch orbit-pan-zoom controls, an overview orb icon and a third-button reset to center, 100% zoom and the default camera angle. Keep header business controls disabled and office/agent/backend behavior removed. Current acceptance remains pending under the founder's instruction to defer autonomous testing to future tester agents. No operational product activation, public release, hosted operation, deployment or model execution is introduced."
+}

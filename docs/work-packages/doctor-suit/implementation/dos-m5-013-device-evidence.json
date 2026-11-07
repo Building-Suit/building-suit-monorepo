@@ -1,0 +1,73 @@
+{
+  "task_id": "DOS-M5-013",
+  "scope": "independent-synthetic-complete-instructions-and-truthful-connectivity-projection",
+  "task_acceptance": false,
+  "qualified_accessibility": false,
+  "qualified_native": false,
+  "clinical_approval": false,
+  "external_notifications": false,
+  "delivery_confirmed": false,
+  "private_persistent_cache": false,
+  "approved_private_cache_fields": [],
+  "approvals": {
+    "patient_identity": null,
+    "caregiver_legal": null,
+    "patient_platform_commands": null,
+    "reminder_policy": null,
+    "privacy_offline": null,
+    "accessibility_device_matrix": null
+  },
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-013.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "passed": 100,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2442,
+    "passed": 2365,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "initial_fixture_failure": {
+    "passed": 6,
+    "failed": 1,
+    "reason": "Existing clinical decoder rejects overlapping segments; fixture corrected to disjoint source dates without weakening validation"
+  },
+  "native_cases": [],
+  "physical_devices": [],
+  "text_scaling": {
+    "supported_maximum": null,
+    "smallest_approved_viewport": null,
+    "actual_result": "unrun"
+  },
+  "screen_reader_contrast_keyboard_switch": "unrun-no-approved-patient-renderer-device-candidate",
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientAccessiblePreview.ts": "73bfd78de96e8e25f09246196abf7ae1f38a6355a376f6d41cb8fb2740d12d7e",
+    "apps/doctor-suit/tests/unit/dos-m5-013.test.mjs": "73907125915ccaf4150c511095c717691183c9afee892720f7907cf767f12390"
+  },
+  "document_sha256": "64b963118193c1b2c008ee8c14389447940688cfd35c93947d5d98d7e44995ba",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "Node semantic-content order is not rendered screen-reader/accessibility qualification",
+    "No actual patient Auth/legal/consent/native/lifecycle integration",
+    "No approved private cache or offline authority",
+    "No patient scaffold, native permission/channel/alarm or actual delivery"
+  ]
+}

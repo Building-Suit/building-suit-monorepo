@@ -11,6 +11,8 @@ withDefaults(defineProps<{
 
 const route = useRoute()
 const { open, close } = useNavigationDisclosure(() => route.fullPath)
+const hydrated = ref(false)
+onMounted(() => { hydrated.value = true })
 defineExpose({ close })
 </script>
 
@@ -25,7 +27,7 @@ defineExpose({ close })
         <BsSettingsMenu />
         <NuxtLink :to="signedIn ? dashboardPath : loginPath" class="ls-btn ls-btn-sm hidden xl:inline-flex">{{ signedIn ? labels.openApp : labels.signIn }}</NuxtLink>
         <NuxtLink v-if="!signedIn" :to="signupPath" class="ls-btn ls-btn-primary ls-btn-sm hidden xl:inline-flex">{{ labels.startTrial }}</NuxtLink>
-        <button type="button" class="ls-btn ls-btn-sm xl:hidden" :aria-label="open ? labels.close : labels.open" :aria-expanded="open" aria-controls="marketing-mobile-navigation" @click="open = !open"><BsIcon :name="open ? 'close' : 'menu'" /></button>
+        <button type="button" class="ls-btn ls-btn-sm xl:hidden" :disabled="!hydrated" :aria-label="open ? labels.close : labels.open" :aria-expanded="open" aria-controls="marketing-mobile-navigation" @click="open = !open"><BsIcon :name="open ? 'close' : 'menu'" /></button>
       </div>
     </div>
     <Transition name="bs-marketing-menu">

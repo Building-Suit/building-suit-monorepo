@@ -1,0 +1,28 @@
+{
+  "id": "ss-electrical-supplier-receiving-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/app",
+    "apps/shop-suit/supabase",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ui",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "tooling/database",
+    ".github/workflows/shop-measurement-disposable.yml",
+    "release-changes/items.json"
+  ],
+  "reason": "Generate actual schema contracts and qualify exact supplier order/receipt authority, accounting-period and subscription checks, immutable original package/cost, deferred receiving capacity and real-session retry races. Register the complete shared template and bilingual catalogue; other shared consumers remain internal."
+}

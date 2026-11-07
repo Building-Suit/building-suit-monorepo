@@ -261,7 +261,12 @@ async function uploadImportAttachment(batchId: string, organizationId: string) {
   })
   if (reserveError || !reservationId) throw reserveError ?? new Error('ATTACHMENT_RESERVATION_NOT_FOUND')
 
-  const { error: uploadError } = await supabase.storage.from('attachments').upload(key, file, {
+  // Preserve the exact reserved byte length through the Storage admission check.
+  const bytes = await file.arrayBuffer().catch(async failure => {
+    await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+    throw failure
+  })
+  const { error: uploadError } = await supabase.storage.from('attachments').upload(key, bytes, {
     contentType: file.type,
     upsert: false,
   })

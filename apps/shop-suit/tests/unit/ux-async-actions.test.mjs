@@ -5,7 +5,7 @@ import ts from 'typescript'
 import * as vue from 'vue'
 
 async function pageScript(file, exports, rpc) {
-  const source = (await readFile(new URL(`../../app/pages/${file}`, import.meta.url), 'utf8')).match(/<script setup lang="ts">([\s\S]*?)<\/script>/)[1]
+  const source = (await readFile(new URL(`../../app/pages/${file}`, import.meta.url), 'utf8')).match(/<script setup lang="ts">([\s\S]*?)<\/script>/)[1].replaceAll('import.meta.client','true').replaceAll('import.meta.server','false')
   const code = ts.transpileModule(`${source}\nreturn { ${exports.join(', ')} }`, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const downloads = []
   const toasts = []
@@ -13,7 +13,9 @@ async function pageScript(file, exports, rpc) {
   const currentId = vue.ref('shop-a')
   const globals = {
     ref: vue.ref, computed: vue.computed, watch: vue.watch, definePageMeta: () => {}, useRoute: () => ({ query: {} }),
-    useSupabaseClient: () => ({ schema: () => ({ rpc }) }),
+    useSupabaseUser: () => vue.ref({ id: 'user-a' }),
+    useShopInvalidation: () => ({ refreshShopQueries: async () => {}, clearShopQueries: () => {} }),
+    useShopClient: () => ({ schema: () => ({ rpc }) }),
     useShop: () => ({ current: vue.ref({ id: 'shop-a' }), currentId, activeLocations: vue.ref([]), loading: vue.ref(false) }),
     useI18n: () => ({ locale: vue.ref('en') }),
     useShopTaskScope: () => () => () => context.active,
@@ -22,7 +24,7 @@ async function pageScript(file, exports, rpc) {
     }),
     useConfirmation: () => ({ ask: async () => false }),
     useToasts: () => ({ push: toast => toasts.push(toast) }), refreshNuxtData: async () => {},
-    useAsyncData: (key, handler, options) => ({
+    useShopQuery: (key, handler, options) => ({
       data: vue.ref(typeof key === 'function' && key().includes('report-access')
         ? { 'reports.view': true, 'reports.cost_profit.view': true }
         : typeof key === 'function' && key().includes('operational-report')

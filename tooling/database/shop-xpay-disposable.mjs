@@ -19,10 +19,12 @@ const activation = activationFixture.replaceAll('-- APPLY_REVIEWED_ACTIVATION_MI
 // historical receipts. The deployed public constructor remains guarded.
 const historicalOrder = (await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014051811_checkout_recovery_proration_integration.sql', import.meta.url), 'utf8'))
   .replace('create or replace function public.shop_xpay_order_create(', 'create function pg_temp.historical_order_create(')
+  + '\nGRANT EXECUTE ON FUNCTION pg_temp.historical_order_create(uuid,uuid,uuid,jsonb) TO authenticated;\n'
 const priorQuoteMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261013190345_proration_checkout_windows.sql', import.meta.url), 'utf8')
 const historicalQuote = priorQuoteMigration.slice(priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_quote('), priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_order('))
   .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
   .replace('on conflict(subscription_id) do nothing', 'on conflict(subscription_id,currency) do nothing')
+  + '\nGRANT EXECUTE ON FUNCTION pg_temp.historical_quote_create(uuid,uuid,uuid,jsonb) TO authenticated;\n'
 const historical = value => value.replaceAll('public.shop_xpay_proration_quote(', 'pg_temp.historical_quote_create(')
 const policy = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_scheduled_billing_policy.sql', import.meta.url), 'utf8')
 const journeySetup = journeys.slice(0, journeys.indexOf('\nDO $$'))

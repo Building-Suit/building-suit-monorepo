@@ -85,12 +85,12 @@ begin
       now(), 'cash', 'PAY-1', 'First part', jsonb_build_array(
         jsonb_build_object('vendor_invoice_id', v_purchase, 'amount', 40))) <> v_payment_one
     or (select count(*) from public.payments where id = v_payment_one) <> 1
-    or shop_private.purchase_payable(v_purchase) <> 60 then
+    or (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 60 then
     raise exception 'supplier payment retry/reconciliation failed'; end if;
   v_payment_two := public.record_supplier_payment(gen_random_uuid(), v_shop, v_vendor, 20,
     now(), 'bank_transfer', 'PAY-2', null, jsonb_build_array(
       jsonb_build_object('vendor_invoice_id', v_purchase, 'amount', 20)));
-  if shop_private.purchase_payable(v_purchase) <> 40 then
+  if (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 40 then
     raise exception 'multiple partial supplier payments failed'; end if;
   begin
     perform public.record_supplier_payment(gen_random_uuid(), v_shop, v_vendor, 41,
@@ -118,7 +118,7 @@ begin
   if public.reverse_supplier_payment(v_request, v_shop, v_payment_one,
       now(), 'Correct amount', 'REV-1', jsonb_build_array(
         jsonb_build_object('allocation_id', v_allocation, 'amount', 10))) <> v_reversal
-    or shop_private.purchase_payable(v_purchase) <> 50
+    or (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 50
     or (select amount from public.payments where id = v_payment_one) <> 40 then
     raise exception 'supplier reversal retry/history failed'; end if;
 
@@ -129,7 +129,7 @@ begin
   if public.record_purchase_return(v_request, v_shop, v_purchase, now(),
       'Damaged on receipt', 'RET-1', jsonb_build_array(
         jsonb_build_object('vendor_invoice_item_id', v_item, 'quantity', 2))) <> v_return
-    or shop_private.purchase_payable(v_purchase) <> 30
+    or (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 30
     or (select count(*) from public.purchase_returns where id = v_return) <> 1
     or (select count(*) from public.supplier_credits where purchase_return_id = v_return) <> 1
     or (select sum(quantity_change) from public.inventory_movements
@@ -138,7 +138,7 @@ begin
 
   v_credit := public.record_supplier_credit(gen_random_uuid(), v_shop, v_vendor,
     v_purchase, 5, now(), 'Concession for consumed units', 'CR-1');
-  if shop_private.purchase_payable(v_purchase) <> 25
+  if (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 25
     or (select purchase_return_id from public.supplier_credits where id = v_credit) is not null then
     raise exception 'financial-only supplier credit failed'; end if;
   begin
@@ -180,7 +180,7 @@ begin
   perform public.record_supplier_payment(gen_random_uuid(), v_shop, v_vendor, 25,
     now(), 'cheque', 'PAY-FINAL', 'Full settlement', jsonb_build_array(
       jsonb_build_object('vendor_invoice_id', v_purchase, 'amount', 25)));
-  if shop_private.purchase_payable(v_purchase) <> 0
+  if (public.get_purchase(v_shop,v_purchase)->>'payable')::numeric <> 0
     or (public.get_purchase(v_shop, v_purchase) ->> 'settlementState') <> 'paid' then
     raise exception 'full supplier settlement failed'; end if;
 

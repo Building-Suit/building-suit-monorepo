@@ -1,0 +1,19 @@
+{
+  "id": "dos-m4-002-lifecycle-observation",
+  "task": "DOS-M4-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/scripts/android-lifecycle.mjs",
+    "apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
+    "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
+    "apps/doctor-suit/mobile/doctor/README.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+  ],
+  "reason": "Record the latest failed source and require actual background/resume observations without retries or reduced assertions. Keep activity names private and preserve all historical/qualified gates."
+}

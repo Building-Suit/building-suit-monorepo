@@ -1,0 +1,34 @@
+{
+  "id": "hq-agent-desks-20261105",
+  "task": "HQ-AGENT-DESKS-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/server/utils/officeRoster.ts",
+    "apps/company-hq/server/api/hq/company.get.ts",
+    "apps/company-hq/server/api/hq/plans/[id]/decision.post.ts",
+    "apps/company-hq/shared/types/companyPlans.ts",
+    "apps/company-hq/app/composables/useHqCompanyPlans.ts",
+    "packages/ui/src/utils/hqAgentCharacters.ts",
+    "packages/ui/src/utils/officeArchitecture.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json",
+    "docs/work-packages/company-hq/HQ-AGENT-DESKS-20261105.md"
+  ],
+  "reason": "One desk per canonical current assigned employee instead of four default desks. Scoped version-revalidated cloud roster enriches authenticated approved departments; explicit mapping, ID uniqueness, fail-closed unknown/zero semantics, Brain invalidation refresh and no timer. Reuse station meshes per member, grow platforms/rings and update chair identity, picking/minimap/focus and bilingual count/name/unavailable copy. No staffing, runtime activation, hosted schema/provider change or deployment. Source inspection only: tests/build/type/lint/release/browser/runtime checks deferred under standing founder instruction."
+}

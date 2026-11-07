@@ -10,7 +10,7 @@ async function times(page:Page,ar=false){await choose(page,ar?'الخدمة وا
 test.beforeEach(async({request})=>{await request.post('http://127.0.0.1:46927/control',{data:{}})})
 for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const theme of ['light','dark'])test(`public booking ${locale} ${width} ${theme}`,async({page,context})=>{
  const ar=locale==='ar';await page.setViewportSize({width,height:1000});await page.addInitScript(v=>localStorage.setItem('building-suit.theme',v),theme);await transport(page)
- await page.goto(`https://alpha-tools.shops.building-suit.com/${ar?'':'?lang=en'}`);await mounted(page);await page.getByRole('link',{name:ar?'حجز موعد':'Book an appointment',exact:true}).click();await mounted(page)
+ await page.goto(`https://alpha-tools.shops.building-suit.com/${ar?'':'?lang=en'}`);await mounted(page);await page.getByRole('navigation',{name:ar?'تصفح المتجر':'Shop navigation',exact:true}).getByRole('link',{name:ar?'احجز موعدك':'Book an appointment',exact:true}).click();await mounted(page)
  await expect(page.getByRole('heading',{name:ar?'حجز موعد':'Book an appointment',exact:true})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr')
  expect(await page.locator('body').innerText()).not.toContain('PRIVATE');await times(page,ar);await expectNoPageOverflow(page)
  await page.screenshot({path:test.info().outputPath('booking.png'),fullPage:true})

@@ -1,0 +1,24 @@
+{
+  "id": "hq-chat-intake-recovery-20261105",
+  "task": "HQ-CHAT-INTAKE-RECOVERY-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "tooling/hq-agent-host",
+    "docs/work-packages/company-hq/HQ-CHAT-INTAKE-RECOVERY-20261105.md",
+    "release-changes/items.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue"
+  ],
+  "reason": "Diagnose the exact private HQ intake pre-model size failure; preserve retired history verbatim and all current policy in the complete 45,903-byte agreement. Add truthful source-linked execution progress through actual handoff, acknowledgment, work, recovery and review/report; unrelated requests and learning cannot hide the current job. Preserve actual working-agent counts, catalogue coverage and negotiated legacy-open-tab compatibility. Finite owner-only intake recovery produced Steve handoff 17040f76-b007-4359-965f-fd7100d97c36 at 20:20:50.701114 UTC and Amaya acknowledgment 72ac1a4c-a87a-4207-9115-b0322c8f814b at 20:21:09.007704 UTC for task 81cb0745-c6f1-4cf2-8d59-5dbb0dbc8037. Its later work bb5412aa-59e8-4eb7-8647-07f7b41a155a failed provider-output-invalid at 20:24:33.484566 UTC; the exact validator cause remains unproven. Applied staging migration 20261105204244 preserves that failure and the two-repair budget through an immutable owner-only supervisor audit; explicit invocation at 20:43:20.839008 UTC created real Steve route fbcbde47-422d-41b7-9a4f-51bc8701dfe8 at repair 1. Its actual handoff/acknowledgment led to a 12,483-byte deliverable at 20:46:00.822169 UTC; real CEO review requested substantive changes and normal repair attempt 2 produced the actual accepted 12,663-byte artifact c11e83ec-7576-4fa7-83f5-9ad875d6ebe3 (SHA256 f2319e9231d5d849ce32275f9ce49a136ddbae58d7f1baa93e221aa09e6a891a). Real Steve review 3707a81b-bb78-4edc-b024-3a165cfd16cc accepted at 20:50:13.036906 UTC; Amaya report 9dafc698-abed-4ea2-970f-01db913f8a59 linked the original founder request and task, which completed at 20:50:37.618258 UTC with error:null and repair count 2. Reviewed lesson 1aa2b4bf-8b3d-444e-a8ad-026d9951ba16 published at 20:51:40.927957 UTC; scoped Drive ancestry and actual entry readback confirm it. The existing Conversation Learning ledger's recovery receipt was saved/read back at 20:53:58.595 UTC, preserving concurrent edits and the compact Working Agreement. Prior staging web dpl_5EHf216jhHT3KSkPVK22HXKs5DkG and migration 20261105201905 are applied; the final execution-progress web dpl_CmiXpZ6tbuyZcqsCrjNAzDsWWGCw reached READY at 20:47:29.745 UTC with exact staging alias/HTTP200/new assets and 18 frozen/provider source hashes verified. Source archive SHA256 397af9502306117fc73661d80160ca3e87a3b9c553ce9c540e79cffbd72f47b8 excludes private Brain/temp/credential/worktree files; project/runtime settings remain unchanged. Forty-six distinct runtime checks including four focused supervisor database checks, seventeen distinct fixture browser scenarios, HQ/docs typechecks and scoped lint pass. The 128,000-byte reader remains source-only after SSH timeout, with 250,000-byte aggregate/source/auth fences and the original host/account/journal unchanged. No general retry, fabricated completion, public activation, production or Git action is claimed. Later 20:45:17.625 UTC preflight succeeded with errors[] in tool stdout only; no raw path is claimed for that observation. The real 20:04 raw preflight and final deployment receipt remain preserved."
+}

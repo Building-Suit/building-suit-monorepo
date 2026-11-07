@@ -1,0 +1,18 @@
+{
+  "id": "ls-attach-001-release-support",
+  "task": "LS-ATTACH-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain private bilingual release inventory for Ledger document-upload correction; no other Suit behavior changes."
+}

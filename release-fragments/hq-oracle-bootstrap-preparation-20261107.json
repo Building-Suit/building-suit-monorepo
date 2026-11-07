@@ -1,0 +1,19 @@
+{
+  "id": "hq-oracle-bootstrap-preparation-20261107",
+  "task": "HQ-ORACLE-BOOTSTRAP-PREPARATION-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host",
+    "release-changes/items.json"
+  ],
+  "reason": "Prepare an undeployed staging-only legacy admission fence/backstop, real PostgreSQL races, redacted uncertainty checks and root-owned control-plane staging; preserve the applied migration chain and require operator maintenance/reconciliation before any activation."
+}

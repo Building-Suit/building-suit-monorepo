@@ -1,0 +1,19 @@
+{
+  "id": "dos-m5-006",
+  "task": "DOS-M5-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/patientReminderPreview.ts",
+    "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-006.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-006-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-006-reminder-policy.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Independent deterministic synthetic reminder preview and explicit unreviewed timezone/anchor/DST interpretation packet; no notification, clinical or native approval."
+}

@@ -18,7 +18,10 @@ export function ensureDisposableImage(image, mirror, run = spawnSync) {
   const primary=invoke(['pull',image])
   if(primary.status===0) return
   const reason=dockerFailureReason(primary.stderr)
-  if(mirror && ['DOCKER_REGISTRY_RATE_LIMIT','DOCKER_IMAGE_ACCESS_DENIED','DOCKER_IMAGE_NOT_FOUND'].includes(reason)) {
+  // This failure occurred during pull, not container startup. An unclassified
+  // registry/transport response may still be served by the caller's explicit
+  // same-version mirror. Known local resource/daemon failures remain fatal.
+  if(mirror && ['DOCKER_REGISTRY_RATE_LIMIT','DOCKER_IMAGE_ACCESS_DENIED','DOCKER_IMAGE_NOT_FOUND','DOCKER_START_FAILED'].includes(reason)) {
     if(invoke(['pull',mirror]).status===0 && invoke(['tag',mirror,image]).status===0) return
   }
   throw new Error(`Disposable image unavailable: ${reason}; raw output omitted`)

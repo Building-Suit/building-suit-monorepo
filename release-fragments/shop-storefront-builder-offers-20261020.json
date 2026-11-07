@@ -1,0 +1,14 @@
+{
+  "id": "shop-storefront-builder-offers-20261020",
+  "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+  "suits": ["shop-suit"],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": ["apps/shop-suit", "packages/ui", "packages/ux"],
+  "reason": "Add owner-published customer storefront composition for Team/Multi and fixed-price catalogue bundles with authoritative POS matching and immutable receipt names.",
+  "notes": {
+    "title": {"en": "Custom storefronts and bundle offers", "ar": "تصميم موقع المتجر وعروض الباقات"},
+    "summary": {"en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.", "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."},
+    "details": {"en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.", "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."}
+  }
+}

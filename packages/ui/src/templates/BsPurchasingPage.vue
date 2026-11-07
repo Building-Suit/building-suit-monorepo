@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsPurchasingCopy, BsPurchasingView, BsSupplierForm, BsPurchaseForm, BsPurchaseLineForm, BsSupplierRow, BsPurchaseRow, BsPurchasingPicker, BsPurchasingChoice, BsPurchasingFilters } from '../types/purchasingPresentation'
-defineProps<{ copy: BsPurchasingCopy; view: BsPurchasingView; vendors: BsSupplierRow[]; purchases: BsPurchaseRow[]; supplierPicker: BsPurchasingPicker; productPicker: BsPurchasingPicker; supplierChoices: BsPurchasingChoice[]; filterChoices: BsPurchasingChoice[]; lineChoices: { options: BsPurchasingChoice[] }[] }>()
+defineProps<{ copy: BsPurchasingCopy; view: BsPurchasingView; vendors: BsSupplierRow[]; purchases: BsPurchaseRow[]; supplierPicker: BsPurchasingPicker; productPicker: BsPurchasingPicker; supplierChoices: BsPurchasingChoice[]; filterChoices: BsPurchasingChoice[]; lineChoices: { options: BsPurchasingChoice[]; units?: { value: string; label: string }[]; step?: number; baseEquivalent?: string; loading?: boolean; error?: string }[] }>()
 const supplierForm = defineModel<BsSupplierForm>('supplierForm', { required: true })
 const purchaseForm = defineModel<BsPurchaseForm>('purchaseForm', { required: true })
 const filters = defineModel<BsPurchasingFilters>('filters', { required: true })
@@ -104,11 +104,15 @@ function updateLine(index: number, value: Partial<BsPurchaseLineForm>) { updateP
         <BsFieldGroup :legend="(copy.product)">
           <BsGrid v-for="(line, index) in purchaseForm.lines" :key="line.key" :columns="1">
             <BsEntityPicker :model-value="line.productId" :label="`${copy.product} ${index + 1}`" :options="lineChoices[index]?.options ?? []" option-label="name" option-value="id" :loading="productPicker.loading" :error="productPicker.error" :has-more="productPicker.hasMore" :load-more-label="productPicker.moreLabel" :retry-label="productPicker.retryLabel" @retry="emit('productRetry')" @search="emit('productSearch', $event)" @load-more="emit('productMore')" @update:model-value="emit('selectProduct', index, String($event ?? ''))" />
+            <BsText v-if="lineChoices[index]?.loading" role="status" size="sm">{{ copy.loading }}</BsText>
+            <BsText v-if="lineChoices[index]?.error" role="alert" size="sm" tone="danger">{{ lineChoices[index]?.error }}</BsText>
+            <BsField v-if="lineChoices[index]?.units" v-slot="field" :label="copy.unit || copy.quantity"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="line.unitSelection" :label="copy.unit || copy.quantity" :options="lineChoices[index]?.units" option-label="label" option-value="value" :disabled="view.purchaseSaving || lineChoices[index]?.loading" @update:model-value="updateLine(index, { unitSelection: String($event) })" /></BsField>
+            <BsText v-if="lineChoices[index]?.baseEquivalent" size="sm" tone="muted">{{ lineChoices[index]?.baseEquivalent }}</BsText>
             <BsField v-slot="field" :label="copy.quantity">
-              <BsInput :id="field.id" :model-value="line.quantity" :aria-describedby="field.describedby" type="number" :min="0.001" :max="1000000" :step="0.001" required @update:model-value="updateLine(index, { quantity: Number($event) })"/>
+              <BsInput :id="field.id" :model-value="line.quantity" :aria-describedby="field.describedby" type="number" :min="lineChoices[index]?.step ?? 0.001" :max="1000000" :step="lineChoices[index]?.step ?? 0.001" required @update:model-value="updateLine(index, { quantity: Number($event) })"/>
             </BsField>
             <BsField v-slot="field" :label="copy.unitCost">
-              <BsInput :id="field.id" :model-value="line.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :max="999999999.99" :step="0.01" required @update:model-value="updateLine(index, { unitCost: Number($event) })"/>
+              <BsInput :id="field.id" :model-value="line.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :max="999999999.99" :step="lineChoices[index]?.units ? 0.000001 : 0.01" required @update:model-value="updateLine(index, { unitCost: Number($event) })"/>
             </BsField>
             <BsInline>
               <BsButton type="button" :disabled="purchaseForm.lines.length === 1" :aria-label="`${copy.removeLine} ${index + 1}`" @click="emit('removeLine', line.key)">×</BsButton>

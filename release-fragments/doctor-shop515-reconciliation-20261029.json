@@ -1,0 +1,13 @@
+{
+  "id": "doctor-shop515-reconciliation-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["doctor-suit", "shop-suit", "ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/shop515-reconciliation-2026-10-29.md",
+    "docs/shared/data-table.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Preserve accepted Shop staging and Doctor history, both shared table contracts and existing release inventory while preparing the queued combined candidate. No new public behavior, product activation, runtime acceptance or domain/production approval is supplied."
+}

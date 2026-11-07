@@ -1,0 +1,14 @@
+{
+  "id": "doctor-appointment-preparation-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts",
+    "apps/doctor-suit/tests/unit/appointment-editor-readiness.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/appointment-preparation-2026-10-29.md"
+  ],
+  "reason": "Repair initial synthetic appointment editor preparation and reject stale preparation after cancellation or scope loss. Doctor remains an unregistered, synthetic-only product with clinical/legal/provider/release gates; this changes no operational registration, authorization or real-data permission. Exact owned browser acceptance remains required."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "doctor-shared-navigation-evidence-20261101",
+  "task": "DOCTOR-SHARED-NAVIGATION-AUDIT-20261101",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsAppShell.vue",
+    "packages/testing/e2e/settings-menu-focus.spec.ts",
+    "packages/testing/e2e/shell-navigation-hydration.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/shared-navigation-readiness-2026-11-01.md",
+    "release-changes/items.json",
+    "packages/testing/playwright.settings-focus.config.ts"
+  ],
+  "reason": "Preserve source-bound integration evidence and held-script browser regressions for the shared shell hydration gap. Public existing consumer behavior has separate patch provenance; Doctor remains synthetic and unregistered. No Automation control-plane operation, n8n access, provider or clinical activation."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "hq-orb-larger-20261105",
+  "task": "HQ-ORB-LARGER-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramPresentationGeometry.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Enlarge the floating HQ Orb from scale 1.15 to 1.6, raise its shared center to preserve emitter/base clearance and coordinate shield/Brain/aura, picking/light origin and Brain-focus bounds. Preserve the base, offices, terrain, water and controls. Tests/checks/browser acceptance deferred under standing founder instruction; no merge/deployment."
+}

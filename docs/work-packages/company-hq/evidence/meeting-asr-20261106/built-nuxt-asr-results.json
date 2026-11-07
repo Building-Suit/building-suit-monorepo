@@ -1,0 +1,88 @@
+{
+  "observedAt": "2026-11-06T00:24:57.613Z",
+  "conditions": "Actual built Nuxt application on loopback4357 with internal disposable SQLite meeting fixture. Actual production Worker, worklet and bundled WASM; pinned verified model files locally mirrored; licensed quiet English WAV amplified100x into generated MediaStream; no hardware microphone, live Auth, employee/model service or hosted inference.",
+  "documentLanguage": "en",
+  "draft": "It's worth half an hour to stroll about the intriguing village.",
+  "expectedFixtureText": "It's worth half an hour to stroll about the intriguing village.",
+  "exactFixtureMatch": true,
+  "founderUtterances": 0,
+  "stopped": {
+    "trackStops": 1,
+    "workerResults": 0
+  },
+  "browser": {
+    "syntheticCaptures": 1,
+    "hardwareCaptureCalls": 0,
+    "trackStops": 1,
+    "workers": [
+      "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js"
+    ],
+    "workerEvents": [
+      {
+        "type": "prepare",
+        "id": "prepare:1",
+        "at": 1649.800000000745
+      },
+      {
+        "type": "prepared",
+        "id": "prepare:1",
+        "at": 11050.400000000373
+      },
+      {
+        "type": "transcribe",
+        "id": "chunk:3",
+        "length": 70528,
+        "at": 16450.300000000745
+      },
+      {
+        "type": "result",
+        "id": "chunk:3",
+        "language": "en",
+        "at": 30148.700000001118
+      },
+      {
+        "type": "cancel",
+        "at": 30149.60000000149
+      }
+    ],
+    "nativeRecognitionAvailable": false
+  },
+  "assets": [
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/meetingRecognition.worker-BhUN90Ap.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/transformers.web-N4Oip9YM.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/ort-wasm-simd-threaded.asyncify.CxOG5pUO.wasm",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:4357/_nuxt/ort-wasm-simd-threaded.asyncify.DXIbolS2.mjs",
+      "status": 200
+    }
+  ],
+  "assetErrors": [],
+  "modelFiles": [
+    "preprocessor_config.json",
+    "tokenizer_config.json",
+    "config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "onnx/encoder_model_quantized.onnx",
+    "onnx/decoder_model_merged_quantized.onnx",
+    "generation_config.json"
+  ],
+  "externalRequests": [],
+  "pageErrors": []
+}

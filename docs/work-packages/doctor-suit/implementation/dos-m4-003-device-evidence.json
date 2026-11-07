@@ -1,0 +1,43 @@
+{
+  "task": "DOS-M4-003",
+  "status": "in progress; native storage/device verification unrun at initial checkpoint",
+  "parent_pr": 446,
+  "parent_sha": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+  "planned_native_cases": [
+    "fresh-install-empty",
+    "ciphertext-roundtrip",
+    "tamper-denied",
+    "namespace-denied",
+    "purge-marker",
+    "seed-before-reinstall",
+    "fresh-after-reinstall"
+  ],
+  "api_levels": [
+    29,
+    36
+  ],
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "native_provider_device_flows": "unrun; pure native adapter/controller and inherited web-provider evidence do not replace device Auth acceptance",
+  "candidate_binding": [
+    "sourceHead",
+    "debug APK SHA256",
+    "instrumentation APK SHA256",
+    "API level",
+    "fixed case statuses",
+    "owned cleanup"
+  ],
+  "latest_executed_build": {
+    "source": "4b537e2cd240856c4166a1cbf3b6f19598c19db5",
+    "run": 40024324977,
+    "doctor_app_java": "passed",
+    "doctor_app_instrumentation_java_and_apk": "passed",
+    "overall": "failed",
+    "reason": "unqualified aggregate builds third-party Cordova instrumentation with duplicate Kotlin stdlib classes",
+    "device_cases": "unrun; build dependency failed"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "dos-m5-005",
+  "task": "DOS-M5-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/patientPrescriptionPreview.ts",
+    "apps/doctor-suit/tests/unit/dos-m5-005.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-005.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-005-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Independent synthetic exact-instruction and current-version prescription projection/reconciliation without clinical, native, provider or reminder-policy approval."
+}

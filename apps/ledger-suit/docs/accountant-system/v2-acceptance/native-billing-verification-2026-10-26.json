@@ -1,0 +1,319 @@
+{
+  "task": "LS-BILL-NATIVE-001",
+  "dates": [
+    "2026-10-25",
+    "2026-10-26"
+  ],
+  "parent_pr": 469,
+  "parent_sha": "9d2756ee78350d45b93890123efa5942fdcf09ec",
+  "scope": "Fresh owned local native commercial lifecycle and receipt navigation correction; no hosted/Automation mutation.",
+  "sql": {
+    "task": "LS-BILL-NATIVE-001",
+    "migrations": 107,
+    "checks": [
+      {
+        "file": "77_manual_payment_test.sql",
+        "assertions": 41,
+        "result": "pass"
+      },
+      {
+        "file": "78_platform_admin_test.sql",
+        "assertions": 56,
+        "result": "pass"
+      },
+      {
+        "file": "79_platform_admin_operations_test.sql",
+        "assertions": 37,
+        "result": "pass"
+      }
+    ],
+    "preserved_tables": 122,
+    "before_after_sha256": "c70dbab6d7d22233bab6be6cd6e173206ced01adb559cd1bede00b42a6f1c9a7",
+    "fixture_actions": "Actual pgTAP/SQL assertions; each source fixture rolls back",
+    "result": "pass"
+  },
+  "api_lifecycle": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "result": "pass",
+    "checks": [
+      {
+        "label": "Actual signup has no session, unverified login denied, local email confirmation succeeds",
+        "at": "2026-10-25T16:57:09.709Z"
+      },
+      {
+        "label": "Trial financial write and exact posted receipt",
+        "at": "2026-10-26T10:01:36.504Z"
+      },
+      {
+        "label": "Expired trial preserves readable history and denies financial writes",
+        "at": "2026-10-26T10:01:36.751Z"
+      },
+      {
+        "label": "Exact manual quote, retry identity and customer cancellation",
+        "at": "2026-10-26T10:02:56.484Z"
+      },
+      {
+        "label": "Real Edge rejects invalid bytes, viewer and outsider without creating evidence",
+        "at": "2026-10-26T10:02:57.314Z"
+      },
+      {
+        "label": "Real receipt bytes uploaded, hashed, committed once and replayed",
+        "at": "2026-10-26T10:02:57.815Z"
+      },
+      {
+        "label": "Owner review denied; dedicated operator review, rejection and replacement preserve old evidence",
+        "at": "2026-10-26T10:02:58.046Z"
+      },
+      {
+        "label": "Parallel real operator approvals grant one month once; command replay is stable",
+        "at": "2026-10-26T10:02:58.308Z"
+      },
+      {
+        "label": "Receipt preview is audited, denies tenant/outsider access and survives only its bounded signed lifetime",
+        "at": "2026-10-26T10:05:51.103Z"
+      },
+      {
+        "label": "Real paid member quota reserves an invitation and rejects the next seat",
+        "at": "2026-10-26T10:05:51.206Z"
+      },
+      {
+        "label": "Audited plan correction and replay preserve paid dates and financial entries",
+        "at": "2026-10-26T10:05:51.791Z"
+      },
+      {
+        "label": "Manual access does not renew automatically; expired access renews only after a new reviewed receipt",
+        "at": "2026-10-26T10:05:52.324Z"
+      }
+    ],
+    "actual_services": [
+      "GoTrue",
+      "Mailpit",
+      "PostgREST",
+      "Supabase Edge Runtime 1.74.3 / Deno 2.1.4",
+      "Storage 1.70.3",
+      "PostgreSQL 17.6"
+    ],
+    "fixture": {
+      "trusted_admin_provisioned_other_actors": true,
+      "owner_email_verified_through_real_local_provider": true,
+      "trial_expiry_simulated_by_owned_SQL": true,
+      "real_money_or_external_email": false
+    },
+    "exact_receipt_bytes": 65,
+    "preserved_posted_journals": 1,
+    "preserved_entries": 2,
+    "preserved_debit_and_credit_minor": "12345",
+    "financial_sha256": "3c2bf92f39d566bb0b085287f40f533a7fb03d0b0ffb12ac0a163ccbc32d9024",
+    "limits": [
+      "API phase precedes the separately recorded browser and signed-expiry results. No hosted/accountant claim."
+    ]
+  },
+  "browser_before": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "mode": "baseline",
+    "browser": "154.0.8037.57",
+    "authentication": "Actual email/password UI and native GoTrue; dedicated local operator",
+    "receipt_link_origin": "http://kong:8000",
+    "receipt_token_disclosed": false,
+    "api_interception": false,
+    "session_injection": false,
+    "network_origins": [
+      "http://127.0.0.1:60821",
+      "http://127.0.0.1:60830"
+    ],
+    "result": "internal_gateway_link_reproduced"
+  },
+  "browser_after": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "mode": "verify",
+    "browser": "154.0.8037.57",
+    "authentication": "Actual email/password UI and native GoTrue; dedicated local operator",
+    "receipt_link_origin": "http://127.0.0.1:60821",
+    "receipt_token_disclosed": false,
+    "api_interception": false,
+    "session_injection": false,
+    "customer_mobile_quote_upload_and_operator_desktop_preview_approval": true,
+    "network_origins": [
+      "http://127.0.0.1:60821",
+      "http://127.0.0.1:60830"
+    ],
+    "result": "pass"
+  },
+  "signed_url_expiry": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "signed_url_lifetime_seconds": 60,
+    "elapsed_seconds": 461,
+    "previously_downloaded_and_hashed": true,
+    "status_after_expiry": 400,
+    "result": "pass",
+    "signed_url_or_token_disclosed": false
+  },
+  "upload_and_client_boundary": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "oversized_real_http_status": 400,
+    "direct_authenticated_storage_upload_status": 403,
+    "evidence_and_objects_unchanged": true,
+    "client_assets_value_scanned": 174,
+    "public_html_value_scanned": true,
+    "privileged_values_found": 0,
+    "result": "pass"
+  },
+  "fresh_final_state": {
+    "task": "LS-BILL-NATIVE-001",
+    "date": "2026-10-26",
+    "migrations": 107,
+    "migration_manifest_sha256": "775016929a19b34b6469f5115caf8a75b1033126147c478f46bfa41d61ab82b3",
+    "counts": {
+      "approved": 3,
+      "cancelled": 1,
+      "evidence": 4,
+      "objects": 4,
+      "approval_history": 3,
+      "posted_journals": 1,
+      "members": 2
+    },
+    "financial_sha256": "3c2bf92f39d566bb0b085287f40f533a7fb03d0b0ffb12ac0a163ccbc32d9024",
+    "debit_and_credit_minor": "12345",
+    "subscription_access": "active",
+    "providers": [
+      {
+        "service": "db",
+        "configured_image": "ledger.local/supabase/postgres:17.6.1.165",
+        "image_id": "sha256:fa3211d75c058c2b8eee040e3121045992be7df95fbf93bbf684235ad2e2e09c",
+        "source_repo_digests": []
+      },
+      {
+        "service": "auth",
+        "configured_image": "ledger.local/supabase/gotrue:v2.196.0",
+        "image_id": "sha256:688edbb786f6d736edaa478438f23c7044a22a6a5f19502a7138d38caca6c2f6",
+        "source_repo_digests": [
+          "supabase/gotrue@sha256:c0c25187a6b835e65a6f6e6c6b39d090e832d40e6de5186f2c038e0411944232"
+        ]
+      },
+      {
+        "service": "rest",
+        "configured_image": "ledger.local/supabase/postgrest:v16.1",
+        "image_id": "sha256:eb4951a2f9ac02288100937995af3cb7fb64c296b1228405de5d77ca4dd3410d",
+        "source_repo_digests": []
+      },
+      {
+        "service": "storage",
+        "configured_image": "ledger.local/supabase/storage-api:v1.70.3",
+        "image_id": "sha256:da10ed4735bc3db792eafc2f95b466b95e172a5003ead993099f2005f669dd8f",
+        "source_repo_digests": [
+          "supabase/storage-api@sha256:528ec49c3c32561908b07ee91bced7f8456f3b688164e341eaa422441767a0bd"
+        ]
+      },
+      {
+        "service": "kong",
+        "configured_image": "ledger.local/supabase/kong:2.8.1",
+        "image_id": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+        "source_repo_digests": [
+          "public.ecr.aws/supabase/kong@sha256:e21b0b793879ab96720ed4188f9441260273f4bf775bcbff8d435e019ffb759a"
+        ]
+      },
+      {
+        "service": "inbucket",
+        "configured_image": "ledger.local/supabase/mailpit:v1.30.2",
+        "image_id": "sha256:cdb09a322d77e0b233727104beaafb4b7b503fd3badce6a6d9e58fd9993025f6",
+        "source_repo_digests": [
+          "public.ecr.aws/supabase/mailpit@sha256:f0b0ed33c8cf53aac0dd004abbe245c83420a7ae44914e25178f7791dec5723a"
+        ]
+      },
+      {
+        "service": "edge_runtime",
+        "configured_image": "ledger.local/supabase/edge-runtime:v1.74.3",
+        "image_id": "sha256:7dac1310397d3bb56fe4fdce88605c978db898889e5e7f2ea7625140e3ffaac7",
+        "source_repo_digests": []
+      }
+    ],
+    "actual_http_readiness": [
+      {
+        "route": "/auth/v1/health",
+        "status": 200
+      },
+      {
+        "route": "/storage/v1/status",
+        "status": 200
+      },
+      {
+        "route": "/rest-admin/v1/ready",
+        "status": 200
+      }
+    ],
+    "result": "pass",
+    "financial_reset_or_delete": false
+  },
+  "edge_image_provenance": {
+    "source": "public.ecr.aws/supabase/edge-runtime@sha256:cc355c3d0e9c063a351cad56d1c4c52a3c4d85aff4e1fad9d91688e75f9aad09",
+    "local": "ledger.local/supabase/edge-runtime:v1.74.3",
+    "image_id": "sha256:7dac1310397d3bb56fe4fdce88605c978db898889e5e7f2ea7625140e3ffaac7",
+    "source_filesystem_sha256": "sha256:0e0dc28155724e3ad6ecbb7c740b2115d038af8490864c7d02883e20642aeaf5",
+    "filesystem_and_process_match": true,
+    "source_healthcheck_copied": false,
+    "database_actions": "none"
+  },
+  "checks": {
+    "ledger_units": {
+      "pass": 130,
+      "fail": 0
+    },
+    "ledger_full_lint": "pass",
+    "changed_source_helper_lint": "pass",
+    "ledger_typecheck": "pass",
+    "ledger_production_build": "pass",
+    "workspace": "pass",
+    "release": "pass precommit; committed actual-parent check required before push"
+  },
+  "source_sha256": {
+    "apps/ledger-suit/scripts/native-billing-context.mjs": "9f302c275370119757c61d61340f699e85117772dd5bcc8a242fe70063f56ef8",
+    "apps/ledger-suit/scripts/native-billing-functions.mjs": "2a6ec8897d57be8b265fec99aaad06e9f384d941f98c1363d3f8c20021e486d3",
+    "apps/ledger-suit/scripts/native-billing-runtime.mjs": "86ebe1ee204d1acfea9a772792e5f4de31fea96b512636a0735e7f287ba2f61d",
+    "apps/ledger-suit/scripts/native-billing-ui.mjs": "22901e8aa6f672d51d27feb15fe224ce649a796b7e75d4811f325aa636b51330",
+    "apps/ledger-suit/scripts/prepare-native-billing-image.mjs": "22d5ee2146d723a43907933f28de4be2595e3bebb7a6d8f5301d8f2aa74ca9a2",
+    "apps/ledger-suit/scripts/prepare-native-billing-network.mjs": "36acffe513d889a2d38e697048c2ff61e46f2f6f6a25c8f606c2f048b26dcbde",
+    "apps/ledger-suit/scripts/prepare-native-billing-project.mjs": "004884fd485a24d7e21f3049c11716582b97d0252d48989eaf0df66a0b96fadb",
+    "apps/ledger-suit/scripts/test-native-billing-browser.mjs": "02f1c7dcef016c238b42d067cbcbeb8d8bb044d4d316d2ea719d32cfe9e30094",
+    "apps/ledger-suit/scripts/test-native-billing-lifecycle.mjs": "80b8d3ee167b0b5cbc9f54388c6241fc9cd438ceba0984de07bb4673e63b5354",
+    "apps/ledger-suit/scripts/test-native-billing-preview-expiry.mjs": "e5b70d45888e972172faa27aca9bf088c4965ac343cc3a88168734df6f7c6f46",
+    "apps/ledger-suit/scripts/test-native-billing-sql.mjs": "037e4c6ea38203bcb4d58afcb9b290df44839a018c42c52a741a1bb94530fd7d",
+    "apps/ledger-suit/scripts/test-native-billing-upload-boundary.mjs": "d706bba5c3232f8e3fdcee47b732f96cf5543ae7d152c0be4368bca95386bb67",
+    "apps/ledger-suit/scripts/verify-native-billing-result.mjs": "faf195fc8aa4da883858325a71f14f850900030551e748d1d21c387a2da67f0d",
+    "apps/ledger-suit/app/utils/platformReceiptUrl.ts": "6d40ac9adbc4565db3562a6afe38f25692d87fd2eb70457cfa4b8c953bbf2bb0",
+    "apps/ledger-suit/app/composables/usePlatformAdmin.ts": "a821ba5d55f9e40f331519efbfbcb8dfe4c297bd9f59a34c0e74017885b19dce",
+    "apps/ledger-suit/tests/unit/platform-receipt-url.test.mjs": "712508d6266d1fe0ba41445ff95e97bb14483841f0ed6b5532100a8a0c23f154"
+  },
+  "runtime_failures_repaired": [
+    "Initial vfs exhaustion / Storage readiness failure; no financial reset.",
+    "Pinned Edge npm CA root order must be mozilla,system; CA read-only mounted with TLS checks enabled.",
+    "Fixture revenue subtype, transaction_entries schema and one unfinished quote constraints corrected after actual rejection."
+  ],
+  "limits": [
+    "Checkpointed native run spans the dated steps; fresh final-state verification rechecks actual DB rows/provider readiness independently.",
+    "Auth signup/email proof uses provider API; browser proof covers real login, mobile quote/upload and desktop operator receipt preview/approval, not every signup wizard/locale/viewport.",
+    "No full-repository CI, hosted deployment/configuration, live Automation reconciliation, accountant UAT or sale-ready claim.",
+    "Manual billing is tested without real money or external email; payment-provider live integration remains separately gated."
+  ],
+  "retained_after_stop": {
+    "task": "LS-BILL-NATIVE-001",
+    "result": "pass",
+    "volumes": [
+      {
+        "name": "supabase_db_ledger-billing-20261025",
+        "created_at": "2026-10-25T16:42:34Z",
+        "preserved": true
+      },
+      {
+        "name": "supabase_storage_ledger-billing-20261025",
+        "created_at": "2026-10-25T16:44:02Z",
+        "preserved": true
+      }
+    ],
+    "financial_reset_or_delete": false
+  }
+}

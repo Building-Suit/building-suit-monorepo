@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
+const privacy = useShopPrivacy()
 const user = useSupabaseUser()
 const ui = useUiCopy()
 const copy = computed(() => locale.value === 'ar' ? { home: 'الرئيسية', features: 'المميزات', workflow: 'طريقة العمل', pricing: 'الأسعار', signIn: 'تسجيل الدخول', startTrial: 'إنشاء حساب', openApp: 'فتح النظام', footer: 'إدارة متجرك بوضوح' } : { home: 'Home', features: 'Features', workflow: 'How it works', pricing: 'Pricing', signIn: 'Sign in', startTrial: 'Create account', openApp: 'Open app', footer: 'Manage your shop with clarity' })
@@ -25,7 +26,7 @@ const legalLinks = computed(() => [
 ])
 </script>
 <template>
-  <BsMarketingLayout :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit' }" :navigation="navigation" :legal-links="legalLinks" :signed-in="!!user" login-path="/auth/login" signup-path="/auth/signup" :labels="{ ...copy, navigation: ui('navigation'), open: ui('open'), close: ui('close'), footerNavigation: t('marketing.footerNavigation') }">
+  <BsMarketingLayout :privacy-settings-label="privacy.copy.settings" @privacy-settings="privacy.open" :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit' }" :navigation="navigation" :legal-links="legalLinks" :signed-in="!!user" login-path="/auth/login" signup-path="/auth/signup" :labels="{ ...copy, navigation: ui('navigation'), open: ui('open'), close: ui('close'), footerNavigation: t('marketing.footerNavigation') }">
     <slot />
   </BsMarketingLayout>
 </template>

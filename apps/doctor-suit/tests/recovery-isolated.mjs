@@ -6,7 +6,11 @@ import { mkdtemp,writeFile,readFile,rm,chmod,stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
-export async function verifyDoctorIsolatedRecovery(container) {
+import { observeDoctorSyntheticRecovery } from '../supabase/functions/_shared/operational-signals.ts'
+export async function verifyDoctorIsolatedRecovery(container, observe) {
+  return observeDoctorSyntheticRecovery(() => verifyDoctorIsolatedRecoveryCore(container), observe)
+}
+async function verifyDoctorIsolatedRecoveryCore(container) {
   assert.match(container,/^doctor-sql-[0-9a-f-]{36}$/)
   const run=(args,input,encoding='utf8')=>{const r=spawnSync('docker',args,{input,encoding,timeout:60000,maxBuffer:64*1024*1024});assert.equal(r.status,0,'Owned recovery subprocess failed');return r.stdout}
   assert.equal(run(['inspect','--format','{{.HostConfig.NetworkMode}}',container]).trim(),'none','Recovery source must be the owned network-isolated fixture')

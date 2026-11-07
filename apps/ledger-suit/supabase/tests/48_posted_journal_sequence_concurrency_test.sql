@@ -31,7 +31,7 @@ select extensions.dblink_exec('sequence_setup', format($setup$
   reset role;
   update public.subscriptions
   set status = 'active', provider = 'paymob',
-      provider_subscription_id = 'journal_sequence_race',
+      provider_subscription_id = 'journal_sequence_race:' || organization_id::text,
       provider_status = 'active', billing_interval = 'monthly',
       checkout_completed_at = now(), current_period_start = now(),
       current_period_end = now() + interval '30 days'

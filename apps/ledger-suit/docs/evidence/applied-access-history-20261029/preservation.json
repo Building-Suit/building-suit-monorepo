@@ -1,0 +1,18 @@
+{
+  "task": "LEDGER-HISTORY-20261029",
+  "project": "ledger-access-history-20261029",
+  "container": "supabase_db_ledger-access-history-20261029",
+  "migration": "20261022182716_explicit_data_api_access.sql",
+  "migration_sha256": "42e9922712a955ea509df6a409c84d2946c9d18e25d5a43131c5fc118b13f04f",
+  "before_migrations": 108,
+  "after_migrations": 109,
+  "business_tables_preserved": 122,
+  "business_rows": 927,
+  "business_fingerprint_sha256": "3a080016400be076217ef94658241231d0fe9331600bcaf1ec9130ff2c0aa6ba",
+  "table_crud_permission_comparisons": 1512,
+  "non_trigger_execution_comparisons": 969,
+  "permission_contract_sha256": "6d5b373e60bf0cd25c8b0ce2e52d31f67d6b0800f65b5200efc4f1a51c876689",
+  "existing_migration_records_preserved": 108,
+  "result": "pass",
+  "hosted_access": false
+}

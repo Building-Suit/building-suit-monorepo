@@ -1,0 +1,18 @@
+{
+  "id": "ls-sec-dep-007-release-support",
+  "task": "LS-SEC-DEP-007",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain the shared private inventory for the patched translation-runtime dependency family; no operational registration or public release baseline changes."
+}

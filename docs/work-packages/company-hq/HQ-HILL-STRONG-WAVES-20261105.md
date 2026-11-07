@@ -1,0 +1,9 @@
+# HQ high-cliff island and strong waves — 5 November 2026
+
+The founder rejects the beach and asks to return to a high hill island with more realistic, heavy/strong water waves. This supersedes the beach/width trials, not the independent offices, exact assigned desks, enlarged Orb or removed Gold hill contours.
+
+The compact coast returns to workplace outer radius +4.9, minimum support 18.9. Upper terrain remains protected/flat and weathered cliffs descend directly to the sea. Sand, beach ramps, loungers, umbrellas, tables, fishing pier and lower recreation destinations are removed from active geometry and renderer allocation/draws. Prior exported compatibility fields/helpers remain empty; the existing avatar controller receives no beach recreation configuration. Its office/central-island behavior remains.
+
+Four Gerstner wave trains combine vertical swells and horizontal crest displacement, with amplitudes 0.48, 0.28, 0.13 and 0.055 scene units. Their tangents/bitangents produce normals interpolated to the fragment shader, with fine ripples, Fresnel/sky response, moving whitecaps and stronger broken foam against rocks. The water mesh is 512 angular samples ×64 radial bands, 32,768 nominal vertices and 64,512 triangles within Uint16 indexing. Shared shoreline sizing drives water, camera and minimap. Existing pixel/texture/disposal budgets and reduced-motion time-zero state remain; no reflected scene target or hardware-ray-tracing claim is introduced. Geometry counts are source allocations, not measured performance.
+
+Primary checkout / existing company-hq feature branch. Preserve concurrent private agent/Brain/Auth changes. Source review only; no tests, builds, lint/typechecks, release/boundary or browser/API/runtime/visual verification under the standing founder instruction. Administrative preflight failed with code 128, leaving fresh GitHub/fetch state unverified; no publication, merge or deployment is performed.

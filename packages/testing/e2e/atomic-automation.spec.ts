@@ -40,7 +40,16 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.getByRole('checkbox').check()
     await expect(tasks.getByText('Completed fixture')).toBeVisible()
     await expectNoPageOverflow(page)
-   await recordShellGeometry(page)
+    const navigation = page.locator('.bs-side-navigation')
+    const trigger = page.locator('.bs-app-shell__mobile-trigger')
+    if (width < 1024) await trigger.click()
+    await expect(navigation).toBeVisible()
+    await recordShellGeometry(page, navigation)
+    if (width < 1024) {
+      await page.keyboard.press('Escape')
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+      await expect(trigger).toBeFocused()
+    }
     await navigateFixture(page, '/policies')
     await expect(page.getByRole('heading', { name: 'Fixture retry' })).toBeVisible()
     await page.getByRole('button', { name: 'Edit', exact: true }).click()

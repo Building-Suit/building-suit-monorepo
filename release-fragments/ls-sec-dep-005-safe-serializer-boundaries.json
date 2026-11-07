@@ -1,0 +1,21 @@
+{
+  "id": "ls-sec-dep-005-safe-serializer-boundaries",
+  "task": "LS-SEC-DEP-005",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    "tooling/checks/serializer-security.test.mjs",
+    "apps/ledger-suit/docs/accountant-system"
+  ],
+  "reason": "Patch a shared Nitro build dependency and verify function-source HTML boundaries and real Terser worker compatibility; no product behavior, financial schema or authority change."
+}

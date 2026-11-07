@@ -17,13 +17,14 @@ async function fixture(path = '/dashboard') {
   const env = {
     isTenantWebsiteRequest: () => false,
     defineNuxtPlugin: plugin => plugin.setup,
-    useSupabaseClient: () => ({ auth: { onAuthStateChange: fn => {
+    useShopClient: () => ({ auth: { onAuthStateChange: fn => {
       callback = fn
       return { data: { subscription: { unsubscribe() { unsubscribed = true } } } }
     } } }),
     useSupabaseUser: () => user, useRoute: () => route,
     useShop: () => ({ resetSession() { resets++ } }),
     useConfirmation: () => confirmation, useToasts: () => ({ toasts }),
+    useShopInvalidation: () => ({ clearShopQueries: selector => env.clearNuxtData(selector) }),
     clearNuxtData: predicate => { for (const key of cache.keys()) if (predicate(key)) cache.delete(key) },
     navigateTo: (...args) => navigation.push(args),
     sessionStorage: { removeItem: key => removed.push(key) },

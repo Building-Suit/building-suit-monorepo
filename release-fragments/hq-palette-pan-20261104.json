@@ -1,0 +1,30 @@
+{
+  "id": "hq-palette-pan-20261104",
+  "task": "HQ-PALETTE-PAN-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder correction: use canonical Ink, Charcoal and Graphite instead of navy/blue surfaces throughout the internal HQ workspace and orb, with neutral metallic/glass detail and restrained Premium Gold seams, emitter, aura, nerves and control accents. Confirmed mouse mapping is left-drag rotation and middle-drag map panning without modifiers; Shift + left remains pan, primary click/tap activates the orb, right click stays inactive. Preserve sidebar manual-zoom lock, closed-only vibration, high-resolution budgets, floor/camera bounds and the original design backup. Bilingual hints/catalogue and ownership documentation follow current behavior. No offices, hosted/provider/database changes, public product activation or app verification; tests/builds/lint/typechecks/boundary/release/browser/runtime/API/benchmarks and tester/reviewer delegation remain deferred per founder instruction."
+}

@@ -1,0 +1,19 @@
+{
+  "id": "ls-ci-qual-004-staging-reconciliation",
+  "task": "LS-CI-QUAL-004",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Merge accepted Shop staging 97c1f50e into the existing Ledger root while retaining both histories, immutable fragments, Ledger bytes and accepted Shop electrical/domain/dialog protections. Union unchanged inventory IDs and keep alternative superseded focus probes genuinely inactive. Fresh combined validation remains required; no main promotion or hosted mutation."
+}

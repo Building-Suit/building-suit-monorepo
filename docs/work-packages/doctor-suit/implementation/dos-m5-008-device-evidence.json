@@ -1,0 +1,66 @@
+{
+  "task_id": "DOS-M5-008",
+  "scope": "independent-synthetic-memory-transaction-model",
+  "task_acceptance": false,
+  "patient_reported_is_clinically_verified": false,
+  "clinical_approval": false,
+  "legal_approval": false,
+  "external_notifications": false,
+  "patient_native_scaffold": false,
+  "patient_identity_approval": null,
+  "caregiver_approval": null,
+  "clinician_snooze_policy_approval": null,
+  "patient_platform_approval": null,
+  "native_cases": [],
+  "persisted_server_implementation": "blocked-unrun",
+  "crash_durability_proven": false,
+  "device_status": "blocked-unrun-no-approved-patient-platform-or-native-notification-flow",
+  "owned_unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-008.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "initial_concurrency_regression": {
+    "passed": 9,
+    "failed": 1,
+    "failed_behavior": "Nested snooze during policy evaluation bypassed the original expected-version check.",
+    "correction": "Recheck version/receipt after policy callback and fresh admission before mutation."
+  },
+  "combined_patient_units": {
+    "passed": 54,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root_source_phase": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2396,
+    "passed": 2319,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "final_withdrawal_policy_failure_guard": "Withdrawal/policy-failure and immutable command-input guards: final13-owned/54-combined/final-lint-types, no broad repeat"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientReportPreview.ts": "5846dac639f0a6ee0b84d40dc654445129a7125f0c4bfb73a6cb8769757474db",
+    "apps/doctor-suit/tests/unit/dos-m5-008.test.mjs": "40c92f7bc5d53f152075c6f48298d1f42270f6b935e40fec2c7cbc00aeab3416"
+  },
+  "document_sha256": "8d5f5a59edf1d33e5034e67c04e59c7e781d8ecdf12d469c33bd9712fa00e055",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No actual patient/Auth/caregiver authority or clinical verification",
+    "No durable server transaction/RLS/crash-recovery acceptance",
+    "No actual notification/snooze/reminder/native/device acceptance",
+    "Explicit fixture timing bounds are unreviewed, not clinical defaults",
+    "Accountable identity/caregiver/platform/reminder/privacy/physical qualification held"
+  ]
+}

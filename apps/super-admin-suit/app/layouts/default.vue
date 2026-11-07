@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 const { t } = useI18n()
 const ui = useUiCopy()
 const router = useRouter()

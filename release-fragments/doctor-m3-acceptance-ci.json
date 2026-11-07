@@ -1,0 +1,15 @@
+{
+  "id": "doctor-m3-acceptance-ci",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Connect all ten synthetic M3 actual-service browser journeys to the existing disposable CI lifecycle and require exact structured execution evidence. No user-facing runtime, mobile, clinical, provider or release admission is granted."
+}

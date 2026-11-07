@@ -1,0 +1,342 @@
+{
+  "task": "LS-REL-001",
+  "date": "2026-10-22",
+  "parent_pr": 439,
+  "parent_commit": "9d20beeb69f6eea9ae96c3db0ab2ce57e53894a0",
+  "state": "native_sql_and_bounded_reconciliation_passed; whole release acceptance pending",
+  "environment": {
+    "kind": "fresh owned disposable local Supabase database",
+    "postgres_version": "PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "supabase_cli": "2.116.0",
+    "container": "supabase_db_building-suit-ledger",
+    "project_id": "building-suit-ledger",
+    "container_workdir_matches_current_checkout": true,
+    "actual_database_image": "sha256:00cd0da23f12ffb7da8f74496d19727258403e7ab4e40ebfb35663cfdfcb9ba2",
+    "actual_rootfs_layers": [
+      "sha256:bd69f92bd2cad1dbb535c42fe9732de4d00f02aa7c0da9d19849fab3dd391a5b"
+    ],
+    "container_health": "healthy",
+    "provider_sql_shims": false,
+    "api_services_started": false
+  },
+  "preparation": {
+    "postgres": {
+      "source": "docker.io/supabase/postgres@sha256:fc542c31f334749adbbd3c9e16b6be90f17d0fe6460d5196066d73f2723c9ecf",
+      "local_tag": "ledger.local/supabase/postgres:17.6.1.165",
+      "image_id": "sha256:fa3211d75c058c2b8eee040e3121045992be7df95fbf93bbf684235ad2e2e09c",
+      "filesystem_digest": "sha256:bd69f92bd2cad1dbb535c42fe9732de4d00f02aa7c0da9d19849fab3dd391a5b",
+      "process_and_environment_match": true,
+      "image_healthcheck_copied": false,
+      "healthcheck": "Supabase CLI supplies the container healthcheck"
+    },
+    "providers": [
+      {
+        "source": "docker.io/supabase/realtime@sha256:3211f8ebd59edcd0aa772186f1c8249c82c6b1ae5565f40dedb7aa93e951fe37",
+        "local_tag": "ledger.local/supabase/realtime:v2.129.3",
+        "image_id": "sha256:5a7cf1d60cf3c3b3d6a25aa43d3ea8a1549c8303a4fc21c51b9321e0bdebe51d"
+      },
+      {
+        "source": "docker.io/supabase/gotrue@sha256:c0c25187a6b835e65a6f6e6c6b39d090e832d40e6de5186f2c038e0411944232",
+        "local_tag": "ledger.local/supabase/gotrue:v2.196.0",
+        "image_id": "sha256:688edbb786f6d736edaa478438f23c7044a22a6a5f19502a7138d38caca6c2f6"
+      },
+      {
+        "source": "docker.io/supabase/storage-api@sha256:528ec49c3c32561908b07ee91bced7f8456f3b688164e341eaa422441767a0bd",
+        "local_tag": "ledger.local/supabase/storage-api:v1.70.3",
+        "image_id": "sha256:da10ed4735bc3db792eafc2f95b466b95e172a5003ead993099f2005f669dd8f"
+      }
+    ]
+  },
+  "migrations": {
+    "count": 105,
+    "latest": "20260928240000_support_submission.sql",
+    "manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+    "history_versions_exactly_match": true,
+    "applied_files_modified": false
+  },
+  "native_sql": {
+    "files": 63,
+    "assertions": 1927,
+    "result": "PASS",
+    "wall_seconds": 22,
+    "command": "pnpm db ledger-suit test db --local",
+    "repaired_fixtures": {
+      "19_monthly_transaction_quota_test.sql": "7e518da036ba86be858c5dafa825305700f7fc5f1287063300e89a2e0a139291",
+      "22_financial_report_csv_exports_test.sql": "69ad65d7a6c19fcade69f0db5027cb81a9467dc2a6eb2e6aee30ec3d928efd57",
+      "48_posted_journal_sequence_concurrency_test.sql": "b54f64a62757ee676c73b88b5caa05da050e84913baefbc9e5eb70385d5135a8",
+      "79_platform_admin_operations_test.sql": "a727402ce27fe802d4f8b55e4330e8c22b7e622fc902907172b67a2cd3ac9f27"
+    }
+  },
+  "integrated_probe": {
+    "command": "docker exec -i supabase_db_building-suit-ledger psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < apps/ledger-suit/scripts/verify-v2-reconciliation.sql",
+    "pass_checks": 22,
+    "result": "PASS",
+    "writes": "rolled_back",
+    "journals": 8,
+    "entries": 16,
+    "debits_minor": "193300",
+    "credits_minor": "193300",
+    "closing_bank_minor": "80700",
+    "ar_minor": "18000",
+    "ap_minor": "11000",
+    "profit_minor": "9700",
+    "assets_minor": "120700",
+    "limitations": "manual equipment/depreciation/fee entries do not establish combined asset, bank or cash-flow acceptance"
+  },
+  "database_lint": {
+    "result": "zero errors; warnings retained",
+    "functions_with_findings": 13,
+    "warnings": 21,
+    "findings": [
+      {
+        "function": "app.compute_opening_validation",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "6",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"v_errors\" initialization on line 4",
+            "sqlState": "42804"
+          },
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "6",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"v_rows\" initialization on line 4",
+            "sqlState": "42804"
+          },
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "6",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"v_preview\" initialization on line 4",
+            "sqlState": "42804"
+          }
+        ]
+      },
+      {
+        "function": "app.compute_migration_open_item_validation",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "6",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"v_errors\" initialization on line 4",
+            "sqlState": "42804"
+          },
+          {
+            "level": "warning",
+            "message": "unused variable \"v_result\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "app.compute_migration_operational_validation",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "5",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"errors\" initialization on line 4",
+            "sqlState": "42804"
+          },
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "5",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"variances\" initialization on line 4",
+            "sqlState": "42804"
+          },
+          {
+            "level": "warning",
+            "message": "unused variable \"expected\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "app.compute_migration_cutover_review",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "unused variable \"v_expected\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "public.post_opening_balance",
+        "issues": [
+          {
+            "level": "warning extra",
+            "message": "unused parameter \"p_as_of_date\"",
+            "sqlState": "00000"
+          },
+          {
+            "level": "warning extra",
+            "message": "unused parameter \"p_balances\"",
+            "sqlState": "00000"
+          },
+          {
+            "level": "warning extra",
+            "message": "unused parameter \"p_notes\"",
+            "sqlState": "00000"
+          },
+          {
+            "level": "warning extra",
+            "message": "unused parameter \"p_idempotency_key\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "public.create_opening_balance_batch",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "unused variable \"v_id\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "public.import_bank_statement",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "4",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"errors\" initialization on line 3",
+            "sqlState": "42804"
+          }
+        ]
+      },
+      {
+        "function": "public.correct_bank_statement_line",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "3",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"errors\" initialization on line 2",
+            "sqlState": "42804"
+          }
+        ]
+      },
+      {
+        "function": "public.dispose_fixed_asset",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "3",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"lines\" initialization on line 2",
+            "sqlState": "42804"
+          }
+        ]
+      },
+      {
+        "function": "public.post_fx_settlement",
+        "issues": [
+          {
+            "level": "warning extra",
+            "message": "never read variable \"v_diff\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "public.confirm_fx_revaluation",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "target type is different type than source type",
+            "statement": {
+              "lineNumber": "3",
+              "text": "statement block"
+            },
+            "hint": "The input expression type does not have an assignment cast to the target type.",
+            "detail": "cast \"text\" value to \"jsonb\" type",
+            "context": "during statement block local variable \"v_lines\" initialization on line 2",
+            "sqlState": "42804"
+          }
+        ]
+      },
+      {
+        "function": "public.post_fx_open_item",
+        "issues": [
+          {
+            "level": "warning",
+            "message": "unused variable \"v_kind\"",
+            "sqlState": "00000"
+          }
+        ]
+      },
+      {
+        "function": "public.approve_opening_balance_batch",
+        "issues": [
+          {
+            "level": "warning extra",
+            "message": "never read variable \"v_existing\"",
+            "sqlState": "00000"
+          }
+        ]
+      }
+    ]
+  },
+  "not_performed": [
+    "hosted changes",
+    "Automation task mutation",
+    "full HTTP Auth/Storage/provider acceptance",
+    "timed second-instance restore",
+    "all Node concurrency probes",
+    "accountant UAT",
+    "production promotion"
+  ]
+}

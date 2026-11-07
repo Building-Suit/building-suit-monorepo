@@ -1,0 +1,12 @@
+{
+  "id": "doctor-shared-signup-capture-20261030",
+  "task": "DOCTOR-SHARED-CAPTURE-AUDIT-20261030",
+  "suits": ["doctor-suit", "ledger-suit", "shop-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/testing/e2e/atomic-signup-parity.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/shared-signup-capture-2026-10-30.md"
+  ],
+  "reason": "Add bounded, payload-free capture geometry and timing evidence to investigate the observed shared signup screenshot timeout. Preserve the screenshot matrix, assertions, deadlines and retries; do not claim an unproven cause, product behavior repair or domain approval."
+}

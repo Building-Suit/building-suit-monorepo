@@ -1,0 +1,236 @@
+{
+  "task": "DOS-M3-001",
+  "base_sha": "f0f0ee0107ed6f85276c0ecbc735251429399e4d",
+  "verified_runtime_source_sha": "a6ddad3da50e06305af34dba6d4e08421f9e9a28",
+  "data_mode": "synthetic",
+  "professional_approval": false,
+  "provider_approval": false,
+  "full_repository_acceptance": false,
+  "full_provider_acceptance": false,
+  "timestamps": "Original command start timestamps unavailable; do not infer exact execution-time provenance. Combined M3 exit receipts remain required.",
+  "checks": {
+    "doctor_units": {
+      "command_argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/administration-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-entry.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-root-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-http.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-provider-diagnostics.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-001.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-001.test.mjs",
+        "apps/doctor-suit/tests/unit/early-administrative-scope.test.mjs",
+        "apps/doctor-suit/tests/unit/email-lookup-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/entitlement-context.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/launch-pricing.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-contracts.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-session.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-reconciliation.test.mjs",
+        "apps/doctor-suit/tests/unit/onboarding-refresh.test.mjs",
+        "apps/doctor-suit/tests/unit/operations-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/policy-drafts.test.mjs",
+        "apps/doctor-suit/tests/unit/privacy-requests.test.mjs",
+        "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+        "apps/doctor-suit/tests/unit/registration.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-document.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-financial.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-quotes.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-write-offers.test.mjs",
+        "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/ui-consistency.test.mjs"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-doctor-unit.log",
+      "sha256": "5e6e7520f03c0ae6fb061dd193fce2479b295545fa2f60f449611fd884b5b176",
+      "command_shell": "node --test apps/doctor-suit/tests/unit/*.test.mjs"
+    },
+    "sql_rls_transactions_restore": {
+      "command_argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--types"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-sql-final.log",
+      "sha256": "e69d6e8bc8c999dff4a299f5ff4418bfc9493077047bde501decbb6133eaf5e7"
+    },
+    "actual_provider_browser": {
+      "command_argv": [
+        "node",
+        "apps/doctor-suit/tests/operations-actual-provider.mjs"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-provider.log",
+      "sha256": "d4814992a7e2d97f265b25ebe899c06db6f2ab8423709688470f6d4dc47b78a0"
+    },
+    "actual_browser_details": {
+      "command_argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "apps/doctor-suit/tests/e2e/playwright.operations.config.ts"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-browser-result.log",
+      "sha256": "ca610e026a5891f2486755123264b6d3488f47691234445d656679437310899e"
+    },
+    "full_repository_units": {
+      "command_argv": [
+        "pnpm",
+        "test"
+      ],
+      "exit_code": 1,
+      "local_log": "/tmp/doctor-m3-001-regression-final.log",
+      "sha256": "011985f1875d200d0984920362f15021c6b96437c0b292ed1950f08a6e8f1367"
+    },
+    "parent_repository_units": {
+      "command_argv": [
+        "pnpm",
+        "test"
+      ],
+      "exit_code": 1,
+      "local_log": "/tmp/doctor-m3-parent-regression.log",
+      "sha256": "5969fed18f6dd5feb2505b50bb258a509be5767969e4f99b8751f8a633d2a8ff"
+    },
+    "doctor_typecheck": {
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-types.log",
+      "sha256": "93942ef9440eadb90cbbcee693c1c813634aae24372ce1020f2ac52ec3539798"
+    },
+    "docs_typecheck": {
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/docs",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-docs-types.log",
+      "sha256": "e94f592ea98bdd4553f009d209b46ce2cf84c96fa24bcc0f11ca7d2008b1cb33"
+    },
+    "doctor_lint": {
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "lint"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-lint.log",
+      "sha256": "78b8faeb6cf2eb5eb3ae5bc09a3b5a64f0fd0b47aef807f0cf6420f4012dd450"
+    },
+    "production_build": {
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "build"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-build.log",
+      "sha256": "56155e28c7d12772550be8904e9e94f690e513253d917753d2ae36a9618ee841"
+    },
+    "architecture": {
+      "command_argv": [
+        "pnpm",
+        "check"
+      ],
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-001-check.log",
+      "sha256": "6cd717835cec05a1bc8a1c2895cb210ee216330764c8288ba6d68f4456e9f83e"
+    }
+  },
+  "runtime_inputs": {
+    "apps/building-suit-docs/app/pages/components.vue": "b4bf7d642f1b4f864d8443ba7621470938ca1fd275bc6ec197f2891e137381eb",
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts": "50e246d235cd3cde3e5e6594c8570d710839aab9609840fef3e9351d440c7727",
+    "apps/doctor-suit/app/composables/useDoctorConsultationsPage.ts": "6613c1f21d0becda4c8de160b2e43ed6611a69f24020661beafc362e0ecdd6de",
+    "apps/doctor-suit/app/layouts/practice.vue": "85429f39cfbd2675d880aa6131eff99e29b0457932e8bb9122a640fd433e31d4",
+    "apps/doctor-suit/app/pages/appointment-types.vue": "31701857c3324ac67b68e3387d74383e233b5917a130ce53bba7b6427419be72",
+    "apps/doctor-suit/app/pages/appointments.vue": "0eb5722962f2e8b8c07a7e3fadf1dcfbd744bd81687e3dd5564bf23bae1f513b",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts": "ad2071dcc362386402e638a891b3e4b0362f64732b205b281cf9a1da54d02492",
+    "apps/doctor-suit/app/types/database.types.ts": "1f9e651280ef0b4a3905c603b1db67e53433fe682b1775631a91f3389d75a2e8",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts": "f9420a7e4c51c2d2488c2b78895b1aadd75d2d56309aa9e7617d751dbebbc8b4",
+    "apps/doctor-suit/app/utils/appointments.ts": "b76ea874f44b52be321ca0974d3008d8fb862976826db99f144019ea2ac61d9f",
+    "apps/doctor-suit/app/utils/appointmentsController.ts": "ee0a587315bac168a3c469dda762c2924a99e9cd65a11d98860210c3cd0c35ce",
+    "apps/doctor-suit/app/utils/appointmentsRepository.ts": "90da131b2368c20ebc13dcaafb64ef4e4ce1d9973154a39634bfe3d2d8091f4c",
+    "apps/doctor-suit/app/utils/authConfiguration.ts": "616de87539e5b9e0de40f45de14fcfdf4d858e8b1dc8ea093443aff8a0ce4551",
+    "apps/doctor-suit/app/utils/consultations.ts": "3895c76b4be7ccc96d35f0f9942c5ed64a49f2acf5b4cd0cf638c777a7f82157",
+    "apps/doctor-suit/app/utils/consultationsController.ts": "c6c0f0a7a449120212b7736c3eef386acd685673b68044670ce908b054d05a04",
+    "apps/doctor-suit/app/utils/consultationsRepository.ts": "46a2795cd769527857e83c88e278e5c7d463ee07eae66bf340aafddfe866d658",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts": "a338e21dfe266a975beb92e0f960128fb99cc1570f9c8f63e8dc7eea9f5a7e95",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts": "1f9e651280ef0b4a3905c603b1db67e53433fe682b1775631a91f3389d75a2e8",
+    "apps/doctor-suit/supabase/migrations/20261020122958_practice_consultation_capacity.sql": "be5cedb67733f014fcc6fa751986c1cef913636e1a6e5fd8665a7e52da358b92",
+    "apps/doctor-suit/supabase/tests/dos-m3-001.sql": "f533d1fbd959d82b62669c2c0dc9ceed3abce976a7103d390984232e756503a6",
+    "apps/doctor-suit/tests/consultations-concurrency.mjs": "53dbe23822e3aefc05552b46b62b8fe3220d6a1ce2b3c5e55b694477c3d560a4",
+    "apps/doctor-suit/tests/disposable-postgres.mjs": "26db4510870ba36a6847fa9984a41da1491bd8ed533247e749c21adb05b72978",
+    "apps/doctor-suit/tests/e2e/dos-m3-001.spec.ts": "e2b98457070091da1f4e94f519de2ffd256a465734a7a32f711787cde04c5fb7",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts": "25ae498446cd5cb7073ee854f6ecd9189bbb7841f721e52bfa076bc109228da0",
+    "apps/doctor-suit/tests/e2e/playwright.operations.config.ts": "7795351481f4b495c035dbf5aa299cd86407e6e2f0e5d4f09c52dc5a54f4170f",
+    "apps/doctor-suit/tests/operations-actual-provider.mjs": "59c5d4f4612d384c61898770ab11a8313bd6a028bb0247bfc4d10318f018836b",
+    "apps/doctor-suit/tests/unit/dos-m3-001.test.mjs": "89dde176c6fd6aa5eeb1d77bf47234bd944575bd2e22e881853778660c6abff2",
+    "docs/shared/atomic-template-route-inventory.json": "9700a6e9b1251a5083477ceeeff770abb49da4b5d12b5d0d8624af867b1c44f8",
+    "docs/shared/ui-ownership-manifest.json": "7e79dd4cfd95d35e776cd230e9fcc0cb30247c25c8dac4d9ad683d4c0a604913",
+    "packages/ui/package.json": "9c90af2939d3a02264f8570bb1a5e658c9181cec4661c7bae315e78e00da8ad7",
+    "packages/ui/src/templates/BsConsultationTypesPage.vue": "44382ea62c0bccdbb2dfbe13f96df350fe950f655c85f3fe54560a23a0748e67",
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue": "399486e29cb9f6a272ea8ccedd95169dc27c99a0b36830ebd800938a7d00509f",
+    "packages/ui/src/utils/consultationPresentation.ts": "00bcb5d117118bc01424d74d68360dcefda1501ce585fd7b2d35a9ac218798fc"
+  },
+  "tools": {
+    "node": "26.8.1",
+    "pnpm": "10.33.0",
+    "supabase_cli": "2.116.0"
+  }
+}

@@ -34,8 +34,15 @@ export async function ledgerFixture(page: Page, locale: 'en' | 'ar', capabilitie
     await page.goto(options.login ?? '/login')
     await expect(page.locator('form')).toHaveAttribute('data-client-ready', 'true')
     await page.getByLabel(copy.auth.email).fill('ledger@test.local')
-    await page.getByLabel(copy.auth.password).fill('fixture-password')
+    // The shared sign-in template reveals the password after the email step.
+    // Follow the real interaction instead of bypassing authentication in fixtures.
     await page.getByRole('button', { name: copy.auth.signIn, exact: true }).click()
+    await expect(page.getByLabel(copy.auth.password)).toBeVisible()
+    await page.getByLabel(copy.auth.password).fill('fixture-password')
+    const submit = page.getByRole('button', { name: copy.auth.signIn, exact: true })
+    // The outgoing email arrow and incoming password arrow briefly coexist.
+    await expect(submit).toHaveCount(1)
+    await submit.click()
     await expect(page).toHaveURL(new RegExp(options.landing ?? '/dashboard'))
     await navigateFixture(page, path)
   }

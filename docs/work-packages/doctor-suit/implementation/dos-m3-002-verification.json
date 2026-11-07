@@ -1,0 +1,153 @@
+{
+  "task": "DOS-M3-002",
+  "base_sha": "f89f04a3ece57f902b35fc69c8cbb53987818d15",
+  "verified_runtime_source_sha": "9dade63d35c99ca24302df9ca380966613d42d16",
+  "actual_service_browser_receipt": {
+    "executionId": "447885cd-3e4e-4318-a94c-a973cb54a17a",
+    "startedAt": "2026-10-20T14:13:20.604Z",
+    "finishedAt": "2026-10-20T14:15:33.630Z",
+    "sourceHead": "9dade63d35c99ca24302df9ca380966613d42d16",
+    "baseSha": "f89f04a3ece57f902b35fc69c8cbb53987818d15",
+    "baseVerified": true,
+    "finalHead": "9dade63d35c99ca24302df9ca380966613d42d16",
+    "sourceClean": true,
+    "candidateVerified": true,
+    "nodeVersion": "v26.8.1",
+    "commandArgv": [
+      "/home/tareq/.cache/pnpm/dlx/cccfd02b2925bb5606bc10846568681b34c44d2b4084c797970066ca279b03cb/1a1567f0e80-65bf4/node_modules/.pnpm/node@26.8.1/node_modules/node/bin/node",
+      "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-002/apps/doctor-suit/tests/operations-actual-provider.mjs"
+    ],
+    "exitCode": 0,
+    "stage": "actual M3 browser assertions",
+    "browserResult": {
+      "exitCode": 0,
+      "logSha256": "5b95181655fe7a03543b4ee337125e53ed80cecdaefcb2dbd7d2f30a0ef2d030"
+    },
+    "ownedLocalProject": "building-suit-doctor",
+    "hostedOperations": false,
+    "professionalApproval": false,
+    "providerApproval": false
+  },
+  "data_mode": "synthetic",
+  "full_repository_acceptance": false,
+  "full_provider_acceptance": false,
+  "professional_approval": false,
+  "provider_approval": false,
+  "timestamps": "The actual-service receipt contains exact UTC boundaries. Individual earlier shell start timestamps were not retained; no exact timing claim is made for those checks. M3-010 combined receipts remain required.",
+  "checks": {
+    "sql": {
+      "command_shell": "node apps/doctor-suit/tests/disposable-postgres.mjs --types",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-sql-final.log",
+      "sha256": "907b11e46dcc4d40fc97544bda1dfed1314a6ad98c8a51bac2377a7db26aa8f2"
+    },
+    "doctor_units": {
+      "command_shell": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-doctor-unit-final.log",
+      "sha256": "a500c5688e25453b366ff9be4a3395dba562a491213d44b905771e5cf69c7f59"
+    },
+    "doctor_types": {
+      "command_shell": "pnpm --filter @building-suit/doctor-suit typecheck",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-types-final.log",
+      "sha256": "0c17dc96128755df4f2a851c79e8ca5f8a82bdada672152572e826533c369383"
+    },
+    "docs_types": {
+      "command_shell": "pnpm --filter @building-suit/docs typecheck",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-docs-types-final.log",
+      "sha256": "8a98d1fb24a3378f3247a152a69c458bb221ffbefc590de260ee486ec1f37af5"
+    },
+    "doctor_lint": {
+      "command_shell": "pnpm --filter @building-suit/doctor-suit lint",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-lint-final.log",
+      "sha256": "0d6e0599ec30f3ac40234891bab7f7db0c0984a7baa80778bba356375d8d9c88"
+    },
+    "template_lint": {
+      "command_shell": "pnpm exec eslint packages/ui/src/templates/BsWaitlistPage.vue",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-ui-lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workspace": {
+      "command_shell": "pnpm check",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-check-final.log",
+      "sha256": "4585fa12b5bdda2b3d3c0c89565235b7680d7ec9919896fc65f422f020e74b2a"
+    },
+    "build": {
+      "command_shell": "pnpm --filter @building-suit/doctor-suit build",
+      "exit_code": 0,
+      "local_log": "/tmp/doctor-m3-002-build-final.log",
+      "sha256": "47c97ab1626b3008be1ab1f56d4886294ff2f3bd26858abbd222bd44185c1a10"
+    },
+    "repository": {
+      "command_shell": "pnpm test",
+      "exit_code": 1,
+      "local_log": "/tmp/doctor-m3-002-regression-final.log",
+      "sha256": "d53058a67551274b3b6bfe6c35f2e265795a1626fa78c73305b30a115368ae98"
+    }
+  },
+  "repository_results": {
+    "tests": 2110,
+    "passed": 2033,
+    "failed": 54,
+    "skipped": 23,
+    "parent_failed": 54,
+    "parent_skipped": 23,
+    "normalized_failure_labels_equal": true,
+    "candidate_only_failures": []
+  },
+  "rendered_review": [
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-1280-ar-dark.png",
+      "sha256": "cf111a33cbe8775488c1b3b42589da79a640244836e71eecac564ed3f337adf2"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-1280-ar-light.png",
+      "sha256": "df01b69f9f6651ee947d43c45f256d2137fe50a1070aa054e108ac4f91c74de8"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-1280-en-dark.png",
+      "sha256": "721fb01d621a52e1cf667d71ea045c6e74c6d6db8e5b3527454069ed7e70395b"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-1280-en-light.png",
+      "sha256": "8f4db0ef52a3404641ceb737b5e2f69fef1408a903d609a2b26abe0fd5105f7b"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-390-ar-dark.png",
+      "sha256": "61bbbb31980bc5619fa6564f0c5f6a200a91f0502e31aceb9ac8d48e2a431b7b"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-390-ar-light.png",
+      "sha256": "82aa0564ccdfa62effae7788b70860d95f100eee6320c539db863e21f75c8ede"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-390-en-dark.png",
+      "sha256": "7d8a1192b52629e6eeac2d4aa2874272b36d67d02cf961a737d4423f10b38180"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-390-en-light.png",
+      "sha256": "68a10a8dd757abdce093dfc9ca5f4fb59998d0db733e5eaace8bdccfea94c1d4"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-editor-ar-mobile.png",
+      "sha256": "dd1188cfd3a7bb0e1cfe26be94beea60983ac3730f85666ae359cfa527415137"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-empty.png",
+      "sha256": "de3a229525a5f13478a32fb32c669c8bb238621c1563fe095ab1928c957004ee"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-pending.png",
+      "sha256": "9c7b11599c2a37434425447897c8f82211cb75338e918dada56f5be68a7530c3"
+    },
+    {
+      "local_artifact": "test-results/doctor-m3-actual/waitlist-uncertain.png",
+      "sha256": "6d15d37603244013b9c7622ff2fb26adbb3c3fb7d90484af95dcd362ce4dc602"
+    }
+  ]
+}

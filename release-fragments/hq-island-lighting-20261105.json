@@ -1,0 +1,26 @@
+{
+  "id": "hq-island-lighting-20261105",
+  "task": "HQ-ISLAND-LIGHTING-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/officeArchitecture.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hologramEffects.ts",
+    "apps/company-hq/README.md",
+    "apps/company-hq/AGENTS.md",
+    "docs/work-packages/company-hq/HQ-ISLAND-LIGHTING-20261105.md",
+    "release-changes/items.json",
+    "packages/ui/src/utils/hqIslandGeometry.ts",
+    "packages/ui/src/utils/hologramTerrainMaterial.ts"
+  ],
+  "reason": "Implement the internal HQ reference island with directional growth around actual office/road footprints, a flat matte Coal/Navy top, cached 512-square procedural normal/stone/grain material, faceted rock underside, Gold upper/middle seams, sparse safe rocks/tiny grass and softened standing/Brain light. The same exact coast supplies the minimap; a bounded 256×8 Navy water annulus below the top adds thin Pearl foam and 2.4×offshore fade without office displacement or mirrored object reflections. Mirrored passes, floor reflection sampler and reflection render targets are removed completely; bounded bloom remains (approximately 36 MB effects plus 1.33 MiB material, excluding canvas/geometry/driver overhead). Material/mesh resources are bounded and released on failure/disposal or replacement; no per-frame CPU texture generation. Preserve camera, placement, palette and authority. Reference/brightness/performance acceptance is unmeasured; no tests/checks/browser/runtime/benchmarks/tester agents, business/Brain/provider writes, characters, assignments, merge, production or public activation belong to this visual task."
+}

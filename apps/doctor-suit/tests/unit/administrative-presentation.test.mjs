@@ -6,7 +6,7 @@ import { doctorTeamDirectory } from '../../app/utils/delegation.ts'
 import { doctorDelegationPreset, doctorFormGrants } from '../../app/utils/delegationForms.ts'
 const practice = '53000000-0000-0000-0000-000000000001'
 const location = '54000000-0000-0000-0000-000000000001'
-const allowed = doctorAdministrativeCapabilities.filter(cap => !cap.startsWith('documents.'))
+const allowed = doctorAdministrativeCapabilities.filter(cap => !cap.startsWith('documents.') && !cap.startsWith('worklists.'))
 const directory = () => ({ practice_id: practice, practice_name: 'Synthetic edition', edition: 'administrative_candidate', edition_revision: 2,entitlement:{state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,observed_at:new Date().toISOString()}, available_capabilities: [...allowed], members: [], invitations: [], locations: [], member_total: 0, invitation_total: 0, location_total: 0 })
 test('candidate team authority works without an active clinic and rejects static/forged document offers', () => {
   const parsed = doctorTeamDirectory(directory(), practice)
@@ -14,7 +14,7 @@ test('candidate team authority works without an active clinic and rejects static
   assert.equal(parsed.entitlement.writesAllowed,false)
   assert.equal(parsed.editionRevision, 2)
   assert.deepEqual(parsed.availableCapabilities, allowed)
-  for (const key of ['documents.read', 'documents.write', 'clinical.sign']) {
+  for (const key of ['documents.read', 'documents.write', 'worklists.read', 'worklists.manage', 'clinical.sign']) {
     const value = directory(); value.available_capabilities.push(key)
     assert.throws(() => doctorTeamDirectory(value, practice), /DOCTOR_DELEGATION_RESPONSE_INVALID/)
   }
@@ -28,7 +28,7 @@ test('every candidate preset and form rejects excluded capabilities, while previ
     assert.ok(doctorDelegationPreset(preset, allowed).every(cap => allowed.includes(cap)))
   }
   assert.equal(doctorDelegationPreset('all', allowed).length, 10)
-  assert.equal(doctorDelegationPreset('all').length, 12)
+  assert.equal(doctorDelegationPreset('all').length, 14)
   const form = { name: '', jobTitle: '', email: '', role: 'selected', locationIds: [location], grants: [{ locationId: location, capabilities: ['patients.read', 'documents.read'] }] }
   assert.equal(doctorFormGrants(form, allowed), null)
   assert.ok(doctorFormGrants(form))

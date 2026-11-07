@@ -1,0 +1,192 @@
+{
+  "task": "LS-REL-CONC-001",
+  "observed_at": "2026-10-22",
+  "parent_pr": 444,
+  "parent_sha": "248608c34fb674bf54bee39d6b06263943d30eb9",
+  "scope": "Native independent-session SQL races; no real HTTP/provider/Storage-byte, hosted, Automation or UAT claim.",
+  "migrations": {
+    "files": 105,
+    "manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+    "applied_versions": "Each guarded runner checked the complete source version list before mutation; copied migration bytes validated for all six projects."
+  },
+  "native_database": {
+    "postgresql": "17.6",
+    "supabase_cli": "2.116.0",
+    "postgres_amd64_source_digest": "sha256:fc542c31f334749adbbd3c9e16b6be90f17d0fe6460d5196066d73f2723c9ecf",
+    "imported_rootfs_sha256": "bd69f92bd2cad1dbb535c42fe9732de4d00f02aa7c0da9d19849fab3dd391a5b",
+    "module_image_id": "sha256:fa3211d75c058c2b8eee040e3121045992be7df95fbf93bbf684235ad2e2e09c",
+    "manual_payment_image_id": "sha256:00cd0da23f12ffb7da8f74496d19727258403e7ab4e40ebfb35663cfdfcb9ba2",
+    "provider_schemas": "Actual pinned provider initialization images; optional HTTP services excluded; no SQL shims."
+  },
+  "verification": {
+    "distinct_paired_races": 13,
+    "cases": [
+      {
+        "profile": "customer-subledger",
+        "distinct_paired_races": 3,
+        "result": "pass",
+        "stdout": "PASS: concurrent invoice and receipt retries post once; overlapping allocations serialize and reject overpayment; AR equals Control.",
+        "stdout_sha256": "60a22cfb631a2aa9a7cdb3199384f202aa923a037d33acf0651292de0cdefee6",
+        "runner": "apps/ledger-suit/scripts/test-customer-subledger-concurrency.mjs",
+        "runner_sha256": "63076b47f2f45a078214b957ec612aea70d58ea07b3af7f66bab681751c5d761"
+      },
+      {
+        "profile": "supplier-subledger",
+        "distinct_paired_races": 3,
+        "result": "pass",
+        "stdout": "PASS: concurrent bill and payment retries post once; overlapping allocations serialize and reject overpayment; AP equals Control.",
+        "stdout_sha256": "8b342f18776dac795580bc7ae83acc1a808a72bf42d2c4ced8eae4be9a588561",
+        "runner": "apps/ledger-suit/scripts/test-supplier-subledger-concurrency.mjs",
+        "runner_sha256": "144146d909c12f579068dfdb032e3dfeb417a5f0b308230e508cbf622fa2b634"
+      },
+      {
+        "profile": "fixed-assets",
+        "distinct_paired_races": 1,
+        "result": "pass",
+        "stdout": "PASS: concurrent depreciation retries serialize to one asset-period event and one shared-ledger journal.",
+        "stdout_sha256": "94440a0cbdccfc3f9bf24015598b9bbb21cb8ec922a11156909b1a24ff5b14a1",
+        "runner": "apps/ledger-suit/scripts/test-fixed-assets-concurrency.mjs",
+        "runner_sha256": "53ecef1950e582cdd949be03d17e7b5ad767afaea09ab518b17166cdf246121a"
+      },
+      {
+        "profile": "inventory-accounting",
+        "distinct_paired_races": 1,
+        "result": "pass",
+        "stdout": "PASS: concurrent inventory retries serialize to one source fact and one shared-ledger journal.",
+        "stdout_sha256": "dc978362ac5a1c319df5a48b0cc9b70134b5d78783e412e074aa23f4e3724317",
+        "runner": "apps/ledger-suit/scripts/test-inventory-concurrency.mjs",
+        "runner_sha256": "7836b6d1a0353b550d8fdf182e805d76abe56992b789904709bd3687e331b088"
+      },
+      {
+        "profile": "fx-cross-currency",
+        "distinct_paired_races": 1,
+        "result": "pass",
+        "stdout": "PASS: competing cross-currency allocations serialize; one rejects overpayment; original-currency item equals base Control.",
+        "stdout_sha256": "13aaf8b239a52bcf4ce7e3b8b1c1467ad80bbefd832df1961e98f54dfafd159e",
+        "runner": "apps/ledger-suit/scripts/test-fx-cross-currency-concurrency.mjs",
+        "runner_sha256": "1524ce0bc9029224dec8069b7d5aec92b11b2b7d37e6ce98a9d4a5e1a10a598c"
+      },
+      {
+        "profile": "statement-classification",
+        "distinct_paired_races": 3,
+        "result": "pass",
+        "stdout": "PASS: stale concurrent editor rejected, duplicate concurrent request returns one revision, and classification observes committed books lock",
+        "stdout_sha256": "881b1bab7ddee89600d5f83381d859a1b5101c26c33b300b924d2a20e6e1ad38",
+        "runner": "apps/ledger-suit/scripts/test-statement-classification-concurrency.mjs",
+        "runner_sha256": "0cd08e5cd415d9deb414a98bf96406710a3d29337fa135a03af0ae5ff9062af6"
+      },
+      {
+        "profile": "manual-payment",
+        "distinct_paired_races": 1,
+        "result": "pass",
+        "stdout": "Two real sessions: lock contention observed, one activation, exact monthly period, replay unchanged.",
+        "stdout_sha256": "05912f6a21e281b417e35d0f499a027321e0fbc7af68247dfc3c77c2eb5ced9f",
+        "runner": "apps/ledger-suit/scripts/test-manual-payment-concurrency.mjs",
+        "runner_sha256": "f3effaa4924a2f979af2b8978ebe663c518893c65b402c221b4e329d41076ccd"
+      }
+    ],
+    "classification_repeat": {
+      "result": "pass",
+      "paired_races_repeated": 3,
+      "organizations_after_two_runs": "2",
+      "classification_rows_after_two_runs": "4",
+      "earlier_data_preserved": true,
+      "implicit_resets": 0,
+      "stdout_sha256": "881b1bab7ddee89600d5f83381d859a1b5101c26c33b300b924d2a20e6e1ad38"
+    },
+    "manual_adapter": {
+      "kind": "Ignored host psql forwarding adapter; real independent docker exec sessions",
+      "guards": [
+        "Loopback host and port60322",
+        "database/user postgres",
+        "exact native container workdir label",
+        "actual database port binding"
+      ],
+      "sha256": "0c9828535a651fa037ad5055640eb3e6390911813365737fa685a8d2534814d6",
+      "synthetic_receipt_metadata_only": true
+    },
+    "preparation_checks": {
+      "profiles": [
+        {
+          "profile": "customer-subledger",
+          "project": "ledger-ar-008-disposable",
+          "workdir": ".local/verification/customer-subledger",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 61322,
+          "test": "LEDGER_AR_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-customer-subledger-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        },
+        {
+          "profile": "supplier-subledger",
+          "project": "ledger-ap-009-disposable",
+          "workdir": ".local/verification/supplier-subledger",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 61422,
+          "test": "LEDGER_AP_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-supplier-subledger-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        },
+        {
+          "profile": "fixed-assets",
+          "project": "ledger-assets-011-disposable",
+          "workdir": ".local/verification/fixed-assets",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 61522,
+          "test": "LEDGER_ASSETS_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-fixed-assets-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        },
+        {
+          "profile": "inventory-accounting",
+          "project": "ledger-inventory-014-disposable",
+          "workdir": ".local/verification/inventory-accounting",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 61622,
+          "test": "LEDGER_INVENTORY_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-inventory-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        },
+        {
+          "profile": "fx-cross-currency",
+          "project": "ledger-fx-001-disposable",
+          "workdir": ".local/verification/fx-cross-currency",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 61722,
+          "test": "LEDGER_FX_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-fx-cross-currency-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        },
+        {
+          "profile": "statement-classification",
+          "project": "ledger-statement-classification-20260919",
+          "workdir": ".local/verification/statement-classification",
+          "migrations": 105,
+          "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+          "database_port": 64322,
+          "test": "LEDGER_CLASSIFICATION_DISPOSABLE_TEST=1 node apps/ledger-suit/scripts/test-statement-classification-concurrency.mjs",
+          "result": "prepared_only_no_database_action"
+        }
+      ],
+      "unknown_profile_rejected": true,
+      "connection_argument_rejected": true,
+      "stale_migration_copy_rejected": true,
+      "copied_file_restored_exactly": true
+    },
+    "preparation_latest_code_rechecked_all_six": true,
+    "eslint_and_node_syntax": "pass",
+    "workspace_check": "pass",
+    "financial_runtime_or_migration_changes": false
+  },
+  "preservation": "Owned disposable module databases are stopped with volumes retained; no reset or financial deletion. The original native SQL database remains separate.",
+  "unverified": [
+    "Live Automation queue reconciliation",
+    "A close/post race for every individual posting module",
+    "Pre/post migration preservation pair",
+    "Actual authenticated HTTP and Storage bytes",
+    "Source-to-target restore drill",
+    "Hosted provider/configuration and deployment identity",
+    "Full browser matrix",
+    "Named accountant UAT"
+  ]
+}

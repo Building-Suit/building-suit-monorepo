@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
       origin: config.releaseCatalogUrl,
       key: config.releaseCatalogPublishableKey,
       diagnostic: entry => console.warn('[changelog-reader]', entry),
-      fetchFeed: (origin, key) => $fetch(`${origin}/rest/v1/rpc/release_public_feed`, {
+      fetchFeed: (origin, key) => $fetch<unknown, string>(`${origin}/rest/v1/rpc/release_public_feed`, {
         method: 'POST', body: {}, redirect: 'error', timeout: 10000,
         headers: { apikey: key },
       }),

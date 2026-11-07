@@ -1,0 +1,42 @@
+{
+  "id": "hq-staging-migration-parity-20261106",
+  "task": "HQ-STAGING-MIGRATION-PARITY-20261106",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "CLAUDE.md",
+    "apps/building-suit-docs/CLAUDE.md",
+    "apps/company-hq/CLAUDE.md",
+    "apps/company-hq/supabase/migrations/20261103194908_hq_dedicated_workspace.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "apps/doctor-suit/CLAUDE.md",
+    "apps/doctor-suit/mobile/doctor/CLAUDE.md",
+    "apps/doctor-suit/supabase/CLAUDE.md",
+    "apps/inventory-suit/CLAUDE.md",
+    "apps/inventory-suit/supabase/CLAUDE.md",
+    "apps/ledger-suit/CLAUDE.md",
+    "apps/ledger-suit/supabase/CLAUDE.md",
+    "apps/shop-suit/CLAUDE.md",
+    "apps/shop-suit/supabase/CLAUDE.md",
+    "apps/super-admin-suit/CLAUDE.md",
+    "apps/super-admin-suit/supabase/CLAUDE.md",
+    "packages/testing/e2e/shell-navigation-hydration.spec.ts",
+    "packages/ui/CLAUDE.md",
+    "packages/ui/package.json",
+    "release-changes/items.json",
+    "release-fragments/hq-staging-migration-parity-20261106.json",
+    "supabase/CLAUDE.md",
+    "supabase/legacy/company-hq/migrations/20261103194908_hq_dedicated_workspace.sql"
+  ],
+  "reason": "Keep the never-applied HQ workspace migration outside the active chain without changing its bytes; pin the 17 independently matched staging migrations and guard the source inventory. Classify the inherited root CLAUDE redirect and stabilize the shared-shell hydration test on a focused Docs route with a complete startup-script gate. This source check does not inspect or modify hosted staging."
+}

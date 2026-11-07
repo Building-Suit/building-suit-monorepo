@@ -37,20 +37,6 @@ export function useBilling() {
   // A lapsed subscription stays inside the shell with read-only capabilities.
   const paymentRequired = computed(() => checkoutRequired.value)
 
-  async function createCheckoutSession(
-    organizationId: string,
-    planKey: LaunchPlanKey,
-    interval: BillingInterval,
-    fallbackMessage = 'Secure checkout could not be opened.',
-  ): Promise<string> {
-    const { data, error } = await supabase.functions.invoke('paymob-checkout', {
-      body: { organizationId, planKey, interval },
-    })
-    if (error) throw new Error(await edgeFunctionErrorMessage(error, fallbackMessage))
-    if (!data?.url) throw new Error(data?.error ?? fallbackMessage)
-    return data.url as string
-  }
-
   async function load(options: { force?: boolean } = {}) {
     if (!currentId.value) {
       accessState.value = 'loading'
@@ -110,7 +96,6 @@ export function useBilling() {
     checkoutRequired,
     readOnly,
     paymentRequired,
-    createCheckoutSession,
     load,
   }
 }

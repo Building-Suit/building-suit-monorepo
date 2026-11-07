@@ -1,0 +1,25 @@
+{
+  "id": "ls-sec-dep-004-bounded-operator-validation",
+  "task": "LS-SEC-DEP-004",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "packages/nuxt-layer/package.json",
+    "apps/automation-suit",
+    "apps/ledger-suit",
+    "apps/shop-suit/package.json",
+    "apps/building-suit-docs/package.json",
+    "tooling/checks/operator-validation.test.mjs"
+  ],
+  "reason": "Patch direct Zod selections and adapt the actual operator validator while preserving accepted configuration, authorization and financial behavior; verify early rejection and independent defaults without changing live control-plane records."
+}

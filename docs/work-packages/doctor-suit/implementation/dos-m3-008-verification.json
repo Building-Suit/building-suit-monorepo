@@ -1,0 +1,196 @@
+{
+  "task": "DOS-M3-008",
+  "checks": [
+    {
+      "check": "units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/dos-m3-008.test.mjs"
+      ],
+      "source_head": "f593d6559a019e2c15b471a75d62e9079073b5eb",
+      "started_at": "2026-10-20T18:12:34.712267+00:00",
+      "finished_at": "2026-10-20T18:12:34.833883+00:00",
+      "exit_code": 0,
+      "log_sha256": "17e543ae1d756d58dd141ada8f78d9bdedaa52c9d88077e833bb1e7f2f5d5712"
+    },
+    {
+      "check": "types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "typecheck"
+      ],
+      "source_head": "f593d6559a019e2c15b471a75d62e9079073b5eb",
+      "started_at": "2026-10-20T18:12:34.833982+00:00",
+      "finished_at": "2026-10-20T18:13:10.334260+00:00",
+      "exit_code": 0,
+      "log_sha256": "a68428791f2ee49804aa49f1149ce48b24581a64ef524fe0cff7245f7e4ab8d0"
+    },
+    {
+      "check": "lint",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "lint"
+      ],
+      "source_head": "f593d6559a019e2c15b471a75d62e9079073b5eb",
+      "started_at": "2026-10-20T18:13:10.334313+00:00",
+      "finished_at": "2026-10-20T18:13:17.688017+00:00",
+      "exit_code": 0,
+      "log_sha256": "19c328a78068f097bd4f65360bdcb49e6484f68e741c74429ece178f056607ee"
+    },
+    {
+      "check": "release",
+      "argv": [
+        "pnpm",
+        "release:check"
+      ],
+      "source_head": "f593d6559a019e2c15b471a75d62e9079073b5eb",
+      "started_at": "2026-10-20T18:13:17.688072+00:00",
+      "finished_at": "2026-10-20T18:13:21.424279+00:00",
+      "exit_code": 0,
+      "log_sha256": "cfbc25c6c2e633795c86a9c9f89e0ca0ec765ba18010285c213837b349976050"
+    },
+    {
+      "check": "exact-issued-request-amendment-guard",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-008.sql"
+      ],
+      "source_head": "869fa71f19b623aee17651f1ccd0ae981204622a",
+      "started_at": "2026-10-20T18:33:20.950864+00:00",
+      "finished_at": "2026-10-20T18:33:36.232186+00:00",
+      "exit_code": 0,
+      "log_sha256": "614f520601fd63900a86634952bf3bb5fbf0fe24bc9f6acec49f53681ba227ba"
+    }
+  ],
+  "base_sha": "d4975f0d73523da68b67c841a982e4a80701e32e",
+  "parent_pr": 431,
+  "repository_results": {
+    "tests": 2152,
+    "passed": 2075,
+    "failed": 54,
+    "skipped": 23,
+    "inherited_shop_failures": 54
+  },
+  "sql": {
+    "full_task_assertions": 19,
+    "focused_task_assertions": 28,
+    "transaction_scenarios": 4,
+    "recovery_tables": 83
+  },
+  "browser": "UNRUN: parent owned service image pull exhausted executor capacity; source journey included, no provider or visual acceptance",
+  "prior_diagnostics": [
+    "Initial fixture omitted clinical start before finalize; corrected test fixture, gate preserved.",
+    "Initial SQL assertions:19. Strengthened privacy/clock/clinical-field diagnostics pass24.",
+    "Root UI lint initially lacked generated docs Nuxt config; prepare @building-suit/docs resolved it.",
+    "First compiler run found missing shared dialog error formatter. Fixed with static scoped messages and patient-choice cleanup.",
+    "Docs compiler initially lacked generated document index; pnpm docs:generate resolved it."
+  ],
+  "diagnostics": [
+    {
+      "check": "full-sql",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--types"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e355e9070774712f5694bbcec46f48725cd53142effdb2b7623eca3dc50713d0",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "focused-sql",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-008.sql"
+      ],
+      "exit_code": 0,
+      "log_sha256": "addcc3b3cf9b0ff84f5f4c43b432f401b2a0b9bb7a9a50e890859711e581cd9e",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "full-repository",
+      "argv": [
+        "pnpm",
+        "test"
+      ],
+      "exit_code": 1,
+      "log_sha256": "fd0c3b7b96a664688453d06636e9349d3839901eb380af5bed950fb44cd4a291",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "doctor-units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/*.test.mjs"
+      ],
+      "exit_code": 0,
+      "log_sha256": "a91bf032fa8c7e9fac2f871c389d3eae0f2aac27a9dbf80fa9a0bce88240037c",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "build",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "build"
+      ],
+      "exit_code": 0,
+      "log_sha256": "d7e259e5bad077ec7991bb4ec0b58b9b7e2af68300af65343eab0662f0a503d5",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "docs-types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/docs",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "log_sha256": "6463c6a78629d3b6c9d7a7863635d5726605a5693fd7b3f5ec748586f4d0fa2f",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "architecture",
+      "argv": [
+        "pnpm",
+        "check"
+      ],
+      "exit_code": 0,
+      "log_sha256": "7b8505069e372fe61e6627bb9622dacdc21e6fb90dd2df3490176873e6b48344",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    },
+    {
+      "check": "ui-lint",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+        "packages/ui/src/utils/fulfillmentPresentation.ts"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_clean": false,
+      "timing": "Diagnostic timing not instrumented; final task units/type/lint/release have exact clean-source receipts separately."
+    }
+  ]
+}

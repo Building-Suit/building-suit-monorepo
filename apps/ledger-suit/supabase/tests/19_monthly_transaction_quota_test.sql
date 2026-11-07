@@ -282,11 +282,12 @@ select extensions.dblink_exec('transaction_quota_1', $setup$
      'Race debit', 'asset', 'bank', 'EGP', 'debit'),
     ('19000000-0000-4000-8000-000000000005', '19000000-0000-4000-8000-000000000001',
      'Race credit', 'revenue', 'other_income', 'EGP', 'credit');
+  -- Trigger-free historical rows still need their preserved legacy identities.
   insert into public.transactions (
     organization_id, type, status, source, transaction_date, posting_date,
-    currency_code, exchange_rate, posted_at, description
+    currency_code, exchange_rate, posted_at, description, journal_reference
   ) select '19000000-0000-4000-8000-000000000001', 'income', 'posted', 'api',
-    current_date, current_date, 'EGP', 1, now(), 'Race seed ' || n
+    current_date, current_date, 'EGP', 1, now(), 'Race seed ' || n, gen_random_uuid()::text
   from generate_series(1, 499) n;
   insert into public.transactions (
     id, organization_id, type, status, source, transaction_date,

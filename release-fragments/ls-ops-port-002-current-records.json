@@ -1,0 +1,9 @@
+{
+  "id": "ls-ops-port-002-current-records",
+  "task": "LS-OPS-PORT-002",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit"],
+  "reason": "Cover all current authorized financial module records and private receipt files in operator portability tooling, classify exclusions, and require complete versioned export packages plus actual disk validation for recovery comparison."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "dos-m5-004",
+  "task": "DOS-M5-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/patientReleasedTimeline.ts",
+    "apps/doctor-suit/tests/unit/dos-m5-004.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-004-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Independent synthetic released-only patient timeline projection with existing strict released DTO and explicit missing identity/platform/device acceptance."
+}

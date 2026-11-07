@@ -1,0 +1,95 @@
+{
+  "audit": "DOCTOR-NATIVE-STARTUP-NULL-BRIDGE-AUDIT-20261030",
+  "observedAt": "2026-10-30T12:43:16.769025+00:00",
+  "parentHead": "94b45d75bc2fb5acb8ec1632dd579c2b31545c5e",
+  "binding": "Exact input content hashes; the separate local correction was uncommitted during this execution.",
+  "harnessSha256": "29b9210d21f2516a2bc3c4be3c3f76dcd691426ba16550cb1b27758bf6693f3e",
+  "runtime": "OpenJDK compiler module21.0.12.1 with JVM boundary doubles",
+  "before": {
+    "scope": "JVM boundary doubles; no Android SDK/emulator or application acceptance",
+    "mainActivitySha256": "85b0be3cdeab7547ce6c8e56eb8b6c87c610e774022da791b04a49a8461482e1",
+    "cases": [
+      {
+        "case": "absent-bridge",
+        "created": false,
+        "nullDereference": true,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": false
+      },
+      {
+        "case": "absent-webview",
+        "created": false,
+        "nullDereference": true,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": false
+      },
+      {
+        "case": "available-webview",
+        "created": true,
+        "nullDereference": false,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": true
+      }
+    ],
+    "exitCode": 1,
+    "taskAcceptance": false,
+    "historicalFailureCauseProven": false
+  },
+  "after": {
+    "scope": "JVM boundary doubles; no Android SDK/emulator or application acceptance",
+    "mainActivitySha256": "d1b5a25944e86dd911d20cb30cb636fdf9408ba13d5fdb37e207ed41c6b39bb6",
+    "cases": [
+      {
+        "case": "absent-bridge",
+        "created": true,
+        "nullDereference": false,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": true
+      },
+      {
+        "case": "absent-webview",
+        "created": true,
+        "nullDereference": false,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": true
+      },
+      {
+        "case": "available-webview",
+        "created": true,
+        "nullDereference": false,
+        "secureWindow": true,
+        "responseCacheDisabled": true,
+        "availableWebviewCacheDisabled": true,
+        "stopSafe": true,
+        "availableWebviewCacheCleared": true,
+        "passed": true
+      }
+    ],
+    "exitCode": 0,
+    "taskAcceptance": false,
+    "historicalFailureCauseProven": false
+  },
+  "nativeExecution": "unrun",
+  "taskAcceptance": false,
+  "historicalFailureCauseProven": false
+}

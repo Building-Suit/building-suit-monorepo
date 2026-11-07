@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -69,7 +71,7 @@ try {
   const idempotentSale = await createIssuedSale()
   const sameRequest = randomUUID()
   const sameEffectiveAt = new Date().toISOString()
-  const first = runSql(`begin; select id from public.invoices where id='${idempotentSale}' for update; select pg_sleep(0.35); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select 'RESULT:' || public.correct_location_sale('${sameRequest}','${shopId}','${locationId}','${idempotentSale}','${sameEffectiveAt}','Concurrent identical retry',null); commit;`)
+  const first = runSql(`begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select 'RESULT:' || public.correct_location_sale('${sameRequest}','${shopId}','${locationId}','${idempotentSale}','${sameEffectiveAt}','Concurrent identical retry',null); select pg_sleep(0.35); commit;`)
   await new Promise(resolve => setTimeout(resolve, 50))
   const second = runSql(authenticated(ownerId,
     `select 'RESULT:' || public.correct_location_sale('${sameRequest}','${shopId}','${locationId}','${idempotentSale}','${sameEffectiveAt}','Concurrent identical retry',null);`))

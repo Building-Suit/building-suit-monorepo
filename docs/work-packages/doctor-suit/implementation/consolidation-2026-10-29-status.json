@@ -1,0 +1,489 @@
+{
+  "observed_date": "2026-10-29",
+  "root_pr": 401,
+  "root_head_at_reconciliation": "a814201ece521778d6a38cde95bcd67a547afccf",
+  "original_heads_preserved": 49,
+  "manual_superseded_closures": 44,
+  "github_feature_base_incorporations": 2,
+  "retained_chain": [
+    {
+      "pr": 401,
+      "base": "stg"
+    },
+    {
+      "pr": 502,
+      "head": "40c316843d1cc0c17587e294bdc2a56eee2fe5f7",
+      "parent_pr": 401,
+      "qualified_legal_approval": false
+    },
+    {
+      "pr": 505,
+      "head": "7e5175c6a1c6e2d1e97218631672f9f9c9defc69",
+      "parent_pr": 502,
+      "full_task_acceptance": false
+    }
+  ],
+  "preserved_unpublished_privacy_head": "6174e0dbd31a1299e63e2a8a52f86a3d6b8061d6",
+  "staging_merged": false,
+  "domain_approvals_granted": false,
+  "branches_deleted": false,
+  "dispositions": [
+    {
+      "number": 501,
+      "head": "c76560503713ee27f6a7b82359abda97afdce954",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:03:57Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 499,
+      "head": "0dd0abf6df135b541022025e76f4887a86874afd",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:00Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 498,
+      "head": "98b0a0b46cd4f04db3116fe0d36cbf8832ba38a3",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:03Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 495,
+      "head": "91ad8e4d2aa08dcf3848fc3b7f7573ec1d304d0b",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:06Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 492,
+      "head": "ab6543ef498a23b36c8e495aae965900bd69bfb4",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:09Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 491,
+      "head": "5195b57a126955b32465e9aab923849378067fdd",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:12Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 489,
+      "head": "74f74512e77d2158ba7e16d3bf7e6477d4de9cf2",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:14Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 488,
+      "head": "bb08dc41d78d8f278f63ad870e8fe246e9febd2f",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:18Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 486,
+      "head": "20f6ada30dccdf968bee4427db19eec2668c0e7e",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:20Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 485,
+      "head": "dd535f1d41623bb6507987530abca3942e1067f8",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:25Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 484,
+      "head": "49abe5ab0693f390ccda397256ef6ceadd6314d4",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:27Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 483,
+      "head": "db7fcd726b18d423f745b8db675807550b462d62",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:30Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 482,
+      "head": "754e1cc8302e85d4dbae7590ed320d10e10251e9",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:33Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 481,
+      "head": "acc94150cc8bdaae6709d70117b930cf039b8cb9",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:35Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 480,
+      "head": "6b861750827c8dc947bfc25b3ff2ec7250e92711",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:38Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 479,
+      "head": "ba173ca295356ee5c1f409910b054c6547a857cf",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:41Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 478,
+      "head": "c87cec95708c9582d7102159a38a594ff79f27cc",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:44Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 477,
+      "head": "20774d90563daef0ec220666bbf5e5b6b4b9c8e1",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:46Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 476,
+      "head": "1f0334516365f7f1c400bf75e03e0684d878a52a",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:49Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 475,
+      "head": "3769256b2001f367b8fe7a6a87abc0cb863c63f3",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:51Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 474,
+      "head": "85a5f72856be971a653548b01ee933c3c7e595b8",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:54Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 473,
+      "head": "b0c6373422bcf817077b69d836fb9e3235b288fc",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:56Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 472,
+      "head": "80ff34b0a9894a46147b7aa6f7994027668e87b2",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:04:59Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 471,
+      "head": "2aa51bb6098fb311e040e3fac26d2445e1b4d79e",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:02Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 470,
+      "head": "017cdeb45f5a6c0ce5017e1c258b7ddede1bb351",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:04Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 467,
+      "head": "a0fcf13e0849879e60b32e0354f56c7907055e3d",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:07Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 465,
+      "head": "7570c95affbeb4eecef73c9b26f12c059d09df3d",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:11Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 461,
+      "head": "9060e23a6b07bc51a024c198eb58062430c519a7",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:15Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 458,
+      "head": "b9fd6dc5898a061058707cef3f7af542eab8a7fe",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:17Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 457,
+      "head": "ce18466d8370bc3b19a29390d02be4645719e935",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:19Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 456,
+      "head": "57588e027aba1a8a40d1691d4e9825c6b66e847d",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:22Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 453,
+      "head": "4001da0eb1355ad6237ed0973ef1161084a0b76a",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:25Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 446,
+      "head": "b0bd76c78fce8afd1257da3c0217ad87b190e54c",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:27Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 442,
+      "head": "9afb4eaa246bb382b24c8554a2a3d79496df587e",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:30Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 438,
+      "head": "5cda7ed43a9f2ecdb01387b76b1c17c4f5feaf2b",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:32Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 435,
+      "head": "a438c2b59359c1bf6345664fee3362a2e3176437",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:34Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 434,
+      "head": "080f87b9db40d3431163c3672709dd27581944a6",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:37Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 433,
+      "head": "5cd44035ad01430d186f805b9e776653cccfc9f0",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:39Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 432,
+      "head": "aacc4d92ffa42c8233d43657c4e6eb03553f178b",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:42Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 431,
+      "head": "d4975f0d73523da68b67c841a982e4a80701e32e",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:45Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 430,
+      "head": "3b1dc7573c9d0d4e9ef37e94e5cb2c7456d7d6f9",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:47Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 429,
+      "head": "c1e96dc99edd317da01e2715984a3549036fc8e3",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:50Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 428,
+      "head": "71759ab505f867ef534e46bfccdbd8c92522040d",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:05:52Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 427,
+      "head": "5c39f37ec81026f484794aa4db71f4b0d22ef97b",
+      "state": "already_closed",
+      "merged": true,
+      "closed_at": "2026-10-29T13:35:56Z"
+    },
+    {
+      "number": 504,
+      "head": "a628ecaf9fb5df6b7899d69cc7ec0aaf9b0607ac",
+      "state": "closed_superseded",
+      "merged": false,
+      "closed_at": "2026-10-29T14:17:09Z",
+      "integration_pr": 401,
+      "integration_head": "a814201ece521778d6a38cde95bcd67a547afccf",
+      "branch_retained": true
+    },
+    {
+      "number": 503,
+      "head": "f93df5c463d9098b9a8c7462ba094085213b42fe",
+      "state": "already_closed",
+      "merged": true,
+      "closed_at": "2026-10-29T14:03:19Z",
+      "integration_pr": 502,
+      "integration_head": "40c316843d1cc0c17587e294bdc2a56eee2fe5f7",
+      "branch_retained": true
+    }
+  ]
+}

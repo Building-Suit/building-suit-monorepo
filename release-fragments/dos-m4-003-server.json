@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-003-server",
+  "task": "DOS-M4-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/server/api/auth/mobile-contract.get.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-003-verification.json"
+  ],
+  "reason": "Add local synthetic marker/key-fingerprint admission without exposing server-side email-lookup authority, and retain actual source validation/limitations."
+}

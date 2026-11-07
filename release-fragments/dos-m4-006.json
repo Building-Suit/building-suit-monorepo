@@ -1,0 +1,17 @@
+{
+  "id": "dos-m4-006",
+  "task": "DOS-M4-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/tests/unit/dos-m4-006.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-006.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-006-device-evidence.json"
+  ],
+  "reason": "Owner-authorized synthetic native encounter engineering with explicit unsent/conflict/unknown states and no blind resend, clinical/provider/offline authority or operational activation."
+}

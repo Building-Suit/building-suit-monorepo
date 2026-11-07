@@ -1,0 +1,27 @@
+{
+  "id": "dos-m2-014-rendered-acceptance",
+  "task": "DOS-M2-014",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorClinicalRelease.ts",
+    "apps/doctor-suit/app/composables/useDoctorClinicalWorkspace.ts",
+    "apps/doctor-suit/app/layouts/clinical-recipient.vue",
+    "apps/doctor-suit/tests/clinical-actual-provider.mjs",
+    "apps/doctor-suit/tests/e2e/clinical-actual-fixture.ts",
+    "apps/doctor-suit/tests/e2e/playwright.clinical.config.ts",
+    "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+    "packages/ui/src/utils/clinicalPresentation.ts",
+    "packages/ui/src/utils/reportDocument.ts",
+    "packages/ui/tests/clinical-print.test.mjs"
+  ],
+  "reason": "Finish synthetic Doctor rendered acceptance: gate recipient controls until client readiness, verify real sign-out and fresh-session domain revocation, and preserve literal mixed-direction print values and date ranges. Shared report isolation is opt-in with unchanged legacy output; only the unactivated Doctor fixture consumes it. No clinical approval or live-use activation."
+}

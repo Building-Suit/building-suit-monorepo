@@ -90,7 +90,22 @@ for (const locale of ['en', 'ar'] as const) {
 for (const locale of ['en', 'ar'] as const) {
  test(`document proposals require matching evidence, correction and human attestation: ${locale}`, async ({ page }) => {
   const copy = locale === 'ar' ? ar : en
-  const { calls, goto } = await ledgerFixture(page, locale, ['transactions.read', 'imports.create', 'attachments.create'], name => name === 'can_use_feature' ? true : undefined)
+  const batchId = '47000000-0000-4000-8000-000000000031'
+  let uploaded: Buffer | null = null
+  let uploadMime = ''
+  const { calls, goto } = await ledgerFixture(page, locale, ['transactions.read', 'imports.create', 'attachments.create'], name => {
+   if (name === 'can_use_feature') return true
+   if (name === 'create_csv_import_batch' || name === 'validate_csv_import_batch') return batchId
+   if (name === 'reserve_attachment_upload' || name === 'commit_attachment_upload') return journalId
+   if (name === 'import_batches') return { id: batchId, filename: 'reviewed.csv', status: 'validated', total_rows: 1, valid_rows: 1, invalid_rows: 0, posted_rows: 0, duplicate_rows: 0, failed_rows: 0 }
+   if (name === 'import_rows') return [{ id: 'reviewed-row', row_number: 1, status: 'valid', raw_data: {}, error_code: null, error_message: null, transaction_id: null }]
+   return undefined
+  })
+  await page.route('**/storage/v1/object/attachments/**', async route => {
+   uploaded = route.request().postDataBuffer()
+   uploadMime = route.request().headers()['content-type'] || ''
+   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ Key: 'attachments/reviewed', Id: journalId }) })
+  })
   await goto('/transactions')
   await page.getByRole('button', { name: copy.imports.entryPoint, exact: true }).click()
   const dialog = page.getByRole('dialog')
@@ -113,6 +128,42 @@ for (const locale of ['en', 'ar'] as const) {
   await expect(dialog.getByRole('heading', { name: copy.imports.mappingTitle })).toBeVisible()
   await expect(dialog.getByText('9007199254740993.26', { exact: true })).toBeVisible()
   expect(calls.filter(call => ['create_csv_import_batch', 'confirm_csv_import_batch', 'reserve_attachment_upload'].includes(call.name))).toHaveLength(0)
+  await dialog.getByRole('button', { name: copy.imports.validate, exact: true }).click()
+  await expect(dialog.getByRole('heading', { name: copy.imports.validationTitle })).toBeVisible()
+  expect(uploaded).toEqual(bytes)
+  expect(uploadMime).toBe('application/pdf')
+  expect(calls.find(call => call.name === 'reserve_attachment_upload')?.args).toMatchObject({ p_entity_type: 'import', p_entity_id: batchId, p_size_bytes: bytes.length, p_mime_type: 'application/pdf' })
+  expect(calls.filter(call => call.name === 'commit_attachment_upload')).toHaveLength(1)
+ })
+ test(`transaction attachment sends exact reserved bytes: ${locale}`, async ({ page }) => {
+  const bytes = Buffer.from('%PDF-1.4 synthetic transaction attachment')
+  let uploaded: Buffer | null = null
+  let uploadMime = ''
+  const { calls, goto } = await ledgerFixture(page, locale, ['transactions.read', 'attachments.read', 'attachments.create'], name => {
+   const journal = { id: journalId, journal_reference: 'JRN-001', transaction_date: '2026-10-01', description: 'Attachment journal', source: 'manual', type: 'income', status: 'posted', debit_minor: '100', credit_minor: '100', currency_code: 'EGP', tags: [], total_count: 1 }
+   if (name === 'search_transactions') return [journal]
+   if (name === 'transaction_summaries') return journal
+   if (name === 'organization_settings') return { books_locked_until: null }
+   if (name === 'opening_balance_batches') return null
+   if (name === 'ledger_entries') return []
+   if (name === 'reserve_attachment_upload' || name === 'commit_attachment_upload') return journalId
+   return undefined
+  })
+  await page.route('**/storage/v1/object/attachments/**', async route => {
+   uploaded = route.request().postDataBuffer()
+   uploadMime = route.request().headers()['content-type'] || ''
+   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ Key: 'attachments/transaction', Id: journalId }) })
+  })
+  await goto('/transactions')
+  await page.locator('main').getByText('Attachment journal', { exact: true }).filter({ visible: true }).first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: 'Attachment journal' })).toBeVisible()
+  await dialog.locator('input[type="file"]').setInputFiles({ name: 'transaction.pdf', mimeType: 'application/pdf', buffer: bytes })
+  await expect.poll(() => calls.filter(call => call.name === 'commit_attachment_upload').length).toBe(1)
+  expect(uploaded).toEqual(bytes)
+  expect(uploadMime).toBe('application/pdf')
+  expect(calls.find(call => call.name === 'reserve_attachment_upload')?.args).toMatchObject({ p_entity_type: 'transaction', p_entity_id: journalId, p_size_bytes: bytes.length, p_mime_type: 'application/pdf' })
+  await expect(dialog.getByRole('heading', { name: 'Attachment journal' })).toBeVisible()
  })
  test(`journal reversal requires a reason and keeps exact entry amounts: ${locale}`, async ({ page }) => {
   const copy = locale === 'ar' ? ar : en

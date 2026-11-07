@@ -1,0 +1,20 @@
+{
+  "id": "shop-staging-disposable-image-qualification-20261029",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/releases/docker-harness.mjs",
+    "tooling/releases/docker-harness.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Unblock required combined staging qualification when a public pinned image pull has an unclassified registry response. Use only the caller’s already configured same-version mirror; keep known local resource and daemon failures fatal, preserve redacted diagnostics and every catalog assertion. No publisher, credential, registration, migration or readiness policy changes."
+}

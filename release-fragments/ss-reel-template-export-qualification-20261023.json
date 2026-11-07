@@ -1,0 +1,19 @@
+{
+  "id": "ss-reel-template-export-qualification-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/package.json",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+  ],
+  "reason": "Retain the canonical physical-stock template export and remove its unused duplicate suffix alias, restoring the one-to-one governed source export invariant. No consumer imports the duplicate alias and no rendered behavior changes."
+}

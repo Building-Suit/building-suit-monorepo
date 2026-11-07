@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { readRasterImage } from '@building-suit/ux'
+import { readRasterImage, useInlineForm, useUnsavedFormGuard } from '@building-suit/ux'
 import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView, BsBusinessSettingsSection } from '@building-suit/ui/types/businessSettingsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlanUsageResource } from '~/types/plans'
@@ -38,7 +38,6 @@ const locationPending = ref(false)
 const locationError = ref('')
 const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
-const { visible: locationDialogOpen, dirty: locationDirty } = useRecordAction(() => locationForm)
 const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize, documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
 type BusinessCurrencySettings = { currency: string; locked: boolean; supportedCurrencies: string[] }
 const currencySelection = ref<string | null>(null)
@@ -58,8 +57,8 @@ const selectedBusinessCurrency = computed<string>({
   get: () => currencySettings.value?.locked ? currencySettings.value.currency : currencySelection.value ?? currencySettings.value?.currency ?? current.value?.business_currency ?? 'EGP',
   set: value => { currencySelection.value = value },
 })
-watch(currentId, () => { currencySelection.value = null; currencyError.value = ''; currencySuccess.value = '' })
 const currencyView = computed<BsBusinessCurrencyView>(() => ({
+  dirty: currencyDraft.dirty.value,
   code: currencySettings.value?.currency ?? 'EGP', locked: currencySettings.value?.locked ?? true,
   loading: currencyLoading.value, loadError: Boolean(currencyLoadError.value), pending: currencyPending.value, error: currencyError.value, success: currencySuccess.value,
   title: isArabic.value ? 'عملة النشاط' : 'Business currency',
@@ -80,7 +79,7 @@ async function saveBusinessCurrency() {
     if (error) throw error
     await refreshBusinessCurrency(shopId)
     await refreshCurrencySettings()
-    currencySelection.value = null
+    currencyDraft.reset()
     if (currentId.value === shopId) currencySuccess.value = isArabic.value ? 'اتحفظت عملة النشاط.' : 'Business currency saved.'
   } catch {
     await refreshCurrencySettings()
@@ -142,10 +141,6 @@ const { data: cashPolicy, pending: cashLoading, error: cashLoadError, refresh: r
     return data
   }, { scope: 'shop', enabled: () => Boolean(currentId.value) && section.value === 'cash-policy', watch: [currentId], default: () => null },
 )
-watch([currentId, cashPolicy], () => {
-  cashRequired.value = cashPolicy.value === true
-  cashError.value = ''; cashSuccess.value = ''
-}, { immediate: true })
 async function saveCashPolicy() {
   if (!currentId.value || !canManage.value || cashPending.value || cashPolicy.value === null) return
   const shopId = currentId.value
@@ -154,6 +149,7 @@ async function saveCashPolicy() {
     const { error } = await shopRpc.rpc('set_shop_cash_policy', { p_shop_id: shopId, p_required: cashRequired.value })
     if (error) throw error
     await refreshCashPolicy()
+    cashDraft.reset()
     if (currentId.value === shopId) cashSuccess.value = isArabic.value ? 'اتحفظت سياسة ورديات الخزنة.' : 'Cashier shift policy saved.'
   } catch {
     if (currentId.value === shopId) cashError.value = isArabic.value ? 'مقدرناش نحفظ سياسة ورديات الخزنة. حاول تاني.' : 'Could not save the cashier shift policy. Try again.'
@@ -221,41 +217,93 @@ const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
   body: copy.value[`${value}Body` as const],
 })))
 
-watch([currentId, () => current.value?.business_mode], ([, mode]) => {
-  selectedMode.value = mode ?? 'mixed'
-  errorMessage.value = ''; successMessage.value = ''
-  cancelLocationEdit()
-}, { immediate: true })
-
-watch([currentId, () => current.value?.name], ([, name]) => {
-  profileForm.displayName = name ?? ''
-  profileError.value = ''
-  profileSuccess.value = ''
-}, { immediate: true })
-
-watch(selectedMode, () => {
-  errorMessage.value = ''
-  successMessage.value = ''
+const profileDraft = useInlineForm({
+  read: () => ({ ...profileForm }),
+  source: () => ({ displayName: current.value?.name ?? '' }),
+  write: value => Object.assign(profileForm, value),
+  scope: () => currentId.value,
 })
+const modeDraft = useInlineForm<BusinessMode>({
+  read: () => selectedMode.value,
+  source: () => current.value?.business_mode ?? 'mixed',
+  write: value => { selectedMode.value = value },
+  scope: () => currentId.value,
+})
+const receiptDraft = useInlineForm({
+  read: () => ({ ...receiptForm }),
+  source: () => ({
+    displayName: receiptSettings.value?.displayName ?? '', address: receiptSettings.value?.address ?? '',
+    phone: receiptSettings.value?.phone ?? '', footer: receiptSettings.value?.footer ?? '',
+    paperSize: receiptSettings.value?.paperSize ?? 'thermal_80' as ReceiptPaperSize,
+    documentLabel: receiptSettings.value?.documentLabel ?? '', referenceLabel: receiptSettings.value?.referenceLabel ?? '',
+    documentLanguage: receiptSettings.value?.documentLanguage ?? 'ar', documentDirection: receiptSettings.value?.documentDirection ?? 'auto',
+    showDescriptions: receiptSettings.value?.showDescriptions ?? true, notes: receiptSettings.value?.notes ?? '',
+    logoDataUrl: receiptSettings.value?.logoDataUrl ?? '',
+  }),
+  write: value => Object.assign(receiptForm, value),
+  scope: () => currentId.value,
+})
+const locationDraft = useInlineForm({
+  read: () => ({ ...locationForm }),
+  source: () => {
+    const location = locations.value.find(location => location.id === editingLocationId.value)
+    return { name: location?.name ?? '', code: location?.code ?? '', address: location?.address ?? '', phone: location?.phone ?? '' }
+  },
+  write: value => Object.assign(locationForm, value),
+  scope: () => currentId.value,
+})
+const cashDraft = useInlineForm({
+  read: () => cashRequired.value,
+  source: () => cashPolicy.value === true,
+  write: value => { cashRequired.value = value },
+  scope: () => currentId.value,
+})
+const currencyDraft = useInlineForm({
+  read: () => currencySelection.value ?? 'EGP',
+  source: () => currencySettings.value?.currency ?? current.value?.business_currency ?? 'EGP',
+  write: value => { currencySelection.value = value },
+  scope: () => currentId.value,
+})
+const settingsDirty = computed(() => {
+  switch (section.value) {
+    case 'shop-profile': return profileDraft.dirty.value
+    case 'business-mode': return modeDraft.dirty.value
+    case 'receipt-settings': return receiptDraft.dirty.value
+    case 'locations': return locationDraft.dirty.value
+    case 'cash-policy': return cashDraft.dirty.value
+    case 'currency-settings': return currencyDraft.dirty.value
+    default: return false
+  }
+})
+const settingsPending = computed(() => profilePending.value || pending.value || receiptPending.value || logoPending.value || locationPending.value || cashPending.value || currencyPending.value)
+const formGuard = useUnsavedFormGuard({
+  dirty: () => settingsDirty.value,
+  pending: () => settingsPending.value,
+  confirmDiscard: () => confirmation.ask(ui('discard')),
+})
+onBeforeRouteLeave(() => formGuard.requestLeave())
+onBeforeRouteUpdate(() => formGuard.requestLeave())
 
+async function cancelSettingsEdit(target: BsBusinessSettingsSection) {
+  if (!await formGuard.requestLeave()) return
+  switch (target) {
+    case 'shop-profile': profileDraft.reset(); profileError.value = ''; profileSuccess.value = ''; break
+    case 'business-mode': modeDraft.reset(); errorMessage.value = ''; successMessage.value = ''; break
+    case 'receipt-settings': receiptDraft.reset(); receiptError.value = ''; receiptSuccess.value = ''; break
+    case 'locations': cancelLocationEdit(); break
+    case 'cash-policy': cashDraft.reset(); cashError.value = ''; cashSuccess.value = ''; break
+    case 'currency-settings': currencyDraft.reset(); currencyError.value = ''; currencySuccess.value = ''; break
+  }
+}
 watch(currentId, () => {
-  Object.assign(receiptForm, { displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80', documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
+  cancelLocationEdit()
+  profileError.value = ''; profileSuccess.value = ''
+  errorMessage.value = ''; successMessage.value = ''
   receiptError.value = ''; receiptSuccess.value = ''
+  cashError.value = ''; cashSuccess.value = ''
+  currencyError.value = ''; currencySuccess.value = ''
 })
-
-watch(receiptSettings, (settings) => {
-  if (!settings) return
-  Object.assign(receiptForm, {
-    displayName: settings.displayName,
-    address: settings.address ?? '',
-    phone: settings.phone ?? '',
-    footer: settings.footer ?? '',
-    paperSize: settings.paperSize,
-    documentLabel: settings.documentLabel ?? '', referenceLabel: settings.referenceLabel ?? '', documentLanguage: settings.documentLanguage ?? 'ar', documentDirection: settings.documentDirection ?? 'auto', showDescriptions: settings.showDescriptions ?? true, notes: settings.notes ?? '', logoDataUrl: settings.logoDataUrl ?? '',
-  })
-  receiptError.value = ''
-  receiptSuccess.value = ''
-}, { immediate: true })
+watch(selectedMode, () => { errorMessage.value = ''; successMessage.value = '' })
 
 async function saveMode() {
   if (pending.value || !current.value || !canManage.value || selectedMode.value === current.value.business_mode) return
@@ -270,7 +318,7 @@ async function saveMode() {
     if (error) throw error
     await reload()
     successMessage.value = copy.value.success
-    modeAction.complete()
+    modeDraft.reset()
     success(copy.value.success)
   } catch {
     errorMessage.value = copy.value.failed
@@ -294,7 +342,7 @@ async function saveProfile() {
     if (error) throw error
     await reload()
     profileSuccess.value = copy.value.profileSaved
-    profileAction.complete()
+    profileDraft.reset()
     success(copy.value.profileSaved)
   } catch {
     profileError.value = copy.value.profileFailed
@@ -303,24 +351,16 @@ async function saveProfile() {
   }
 }
 
-function editLocation(location: ShopLocation) {
+async function editLocation(location: ShopLocation) {
+  if (locationPending.value || !canManage.value || !await formGuard.requestLeave()) return
   editingLocationId.value = location.id
-  Object.assign(locationForm, {
-    name: location.name, code: location.code ?? '', address: location.address ?? '', phone: location.phone ?? '',
-  })
+  locationDraft.reset()
   locationError.value = ''
-  locationDialogOpen.value = true
-}
-
-function createLocation() {
-  cancelLocationEdit()
-  locationDialogOpen.value = true
 }
 
 function cancelLocationEdit() {
-  locationDialogOpen.value = false
   editingLocationId.value = null
-  Object.assign(locationForm, { name: '', code: '', address: '', phone: '' })
+  locationDraft.reset()
   locationError.value = ''
 }
 
@@ -398,21 +438,12 @@ async function saveReceiptSettings() {
     if (error) throw error
     await refreshReceiptSettings()
     receiptSuccess.value = copy.value.receiptSaved
-    receiptAction.complete()
+    receiptDraft.reset()
     success(copy.value.receiptSaved)
   }
   catch { receiptError.value = copy.value.receiptFailed }
   finally { receiptPending.value = false }
 }
-
-const profileAction = useRecordAction(() => profileForm)
-const { visible: profileActionOpen, dirty: profileActionDirty } = profileAction
-
-const modeAction = useRecordAction(() => selectedMode.value)
-const { visible: modeActionOpen, dirty: modeActionDirty } = modeAction
-
-const receiptAction = useRecordAction(() => receiptForm)
-const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
 
 const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
   editProfile: isArabic.value ? 'تعديل ملف المتجر' : 'Edit shop profile',
@@ -435,21 +466,20 @@ const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
   cashRequired: isArabic.value ? 'اشتراط وردية خزنة مفتوحة للمبيعات' : 'Require an open cashier shift for sales',
   cashSave: isArabic.value ? 'حفظ سياسة الخزنة' : 'Save cashier policy',
 }))
-const cashView = computed<BsBusinessCashPolicyView>(() => ({ loading: cashLoading.value, loadError: Boolean(cashLoadError.value), pending: cashPending.value, error: cashError.value, success: cashSuccess.value, disabled: !canManage.value || cashPolicy.value === null, submitDisabled: cashPolicy.value === null || cashRequired.value === cashPolicy.value }))
-const profileEditor = computed(() => ({ pending: profilePending.value, error: profileError.value, success: profileSuccess.value, dirty: profileActionDirty.value, submitDisabled: !canManage.value || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.value?.name }))
-const modeEditor = computed(() => ({ pending: pending.value, error: errorMessage.value, success: successMessage.value, dirty: modeActionDirty.value, submitDisabled: !canManage.value || !current.value || selectedMode.value === current.value.business_mode }))
-const receiptEditor = computed(() => ({ pending: receiptPending.value || logoPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptActionDirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
+const cashView = computed<BsBusinessCashPolicyView>(() => ({ dirty: cashDraft.dirty.value, loading: cashLoading.value, loadError: Boolean(cashLoadError.value), pending: cashPending.value, error: cashError.value, success: cashSuccess.value, disabled: !canManage.value || cashPolicy.value === null, submitDisabled: cashPolicy.value === null || cashRequired.value === cashPolicy.value }))
+const profileEditor = computed(() => ({ pending: profilePending.value, error: profileError.value, success: profileSuccess.value, dirty: profileDraft.dirty.value, submitDisabled: !canManage.value || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.value?.name }))
+const modeEditor = computed(() => ({ pending: pending.value, error: errorMessage.value, success: successMessage.value, dirty: modeDraft.dirty.value, submitDisabled: !canManage.value || !current.value || selectedMode.value === current.value.business_mode }))
+const receiptEditor = computed(() => ({ pending: receiptPending.value || logoPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptDraft.dirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
 const receiptSummary = computed<BsBusinessReceiptSummary | null>(() => receiptSettings.value ? ({ displayName: receiptSettings.value.displayName, address: receiptSettings.value.address || '—', phone: receiptSettings.value.phone || '—', footer: receiptSettings.value.footer || '—', paperLabel: receiptSettings.value.paperSize === 'thermal_80' ? copy.value.thermal80 : copy.value.a4 }) : null)
 const locationsView = computed<BsBusinessLocationsView>(() => ({
   rows: locations.value.map(location => ({ id: location.id, name: location.name, summary: location.code || location.address || '—', badge: location.is_default ? 'default' : location.status === 'archived' ? 'archived' : null, canArchive: !location.is_default && location.status === 'active', canRestore: canManage.value && location.status === 'archived' })),
-  pending: locationPending.value, error: locationError.value, dirty: locationDirty.value, editing: Boolean(editingLocationId.value), usageLabel: locationUsageLabel.value, canCreate: canManage.value && !locationCapacityFull.value, capacityNotice: locationCapacityFull.value && !editingLocationId.value, restoreDisabled: locationPending.value || locationCapacityFull.value,
+  pending: locationPending.value, error: locationError.value, dirty: locationDraft.dirty.value, editing: Boolean(editingLocationId.value), editingId: editingLocationId.value, usageLabel: locationUsageLabel.value, canCreate: canManage.value && !locationCapacityFull.value, capacityNotice: locationCapacityFull.value && !editingLocationId.value, restoreDisabled: locationPending.value || locationCapacityFull.value,
 }))
 const profileModel = computed<BsBusinessProfileForm>({ get: () => ({ ...profileForm }), set: value => Object.assign(profileForm, value) })
 const locationModel = computed<BsBusinessLocationForm>({ get: () => ({ ...locationForm }), set: value => Object.assign(locationForm, value) })
 const receiptModel = computed<BsBusinessReceiptForm>({ get: () => ({ ...receiptForm }), set: value => { Object.assign(receiptForm, { ...value, paperSize: value.paperSize === 'a4' ? 'a4' : 'thermal_80' }) } })
 const modeModel = computed<string>({ get: () => selectedMode.value, set: value => { if (BUSINESS_MODES.includes(value as BusinessMode)) selectedMode.value = value as BusinessMode } })
-const modeLabel = computed(() => modeOptions.value.find(mode => mode.value === current.value?.business_mode)?.label || '')
-function editLocationById(id: string) { const location = locations.value.find(location => location.id === id); if (location) editLocation(location) }
+async function editLocationById(id: string) { const location = locations.value.find(location => location.id === id); if (location) await editLocation(location) }
 let logoSelectionVersion = 0
 async function selectDocumentLogo(selection: File | File[] | null) {
   const file = Array.isArray(selection) ? selection[0] : selection
@@ -487,10 +517,6 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     v-model:receipt-form="receiptModel"
     v-model:mode="modeModel"
     v-model:cash-required="cashRequired"
-    v-model:profile-open="profileActionOpen"
-    v-model:mode-open="modeActionOpen"
-    v-model:receipt-open="receiptActionOpen"
-    v-model:location-open="locationDialogOpen"
     :booking-policy-view="bookingPolicyView"
     :website-inquiry-view="websiteInquiryView"
     :website-catalog-view="websiteCatalogView"
@@ -509,7 +535,6 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     :receipt-summary="receiptSummary"
     :locations-view="locationsView"
     :mode-options="modeOptions"
-    :mode-label="modeLabel"
     @edit-booking-policy="editBookingPolicy"
     @save-booking-policy="saveBookingPolicy"
     @retry-booking-policy="refreshBookingPolicy"
@@ -537,18 +562,20 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     @save-currency="saveBusinessCurrency"
     @retry-currency="refreshCurrencySettings()"
     @select-logo="selectDocumentLogo"
-    @edit-profile="profileAction.edit()"
-    @edit-mode="modeAction.edit()"
-    @edit-receipt="receiptAction.edit()"
     @retry="retrySettings"
     @retry-cash="refreshCashPolicy()"
     @retry-receipt="refreshReceiptSettings()"
+    @cancel-profile="cancelSettingsEdit('shop-profile')"
+    @cancel-mode="cancelSettingsEdit('business-mode')"
+    @cancel-receipt="cancelSettingsEdit('receipt-settings')"
+    @cancel-location="cancelSettingsEdit('locations')"
+    @cancel-cash="cancelSettingsEdit('cash-policy')"
+    @cancel-currency="cancelSettingsEdit('currency-settings')"
     @save-cash="saveCashPolicy"
     @save-profile="saveProfile"
     @save-mode="saveMode"
     @save-location="saveLocation"
     @save-receipt="saveReceiptSettings"
-    @create-location="createLocation"
     @edit-location="editLocationById"
     @archive-location="archiveLocation"
     @restore-location="restoreLocation"

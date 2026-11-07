@@ -1,0 +1,28 @@
+{
+  "id": "hq-natural-island-20261105",
+  "task": "HQ-NATURAL-ISLAND-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/naturalIslandGeometry.ts",
+    "packages/ui/src/utils/naturalIslandMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/package.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "README.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/work-packages/company-hq/HQ-NATURAL-ISLAND-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Update only the original internal HQ island landmass and land materials: eroded irregular upper coast within the existing envelope, weathered rocky ledges and cliff layers, subtle exposed-rim relief, matte volcanic mineral/soil variation and sparse moss/grass. Keep protected workplace support exactly flat at existing ground height; a lower rocky shelf covers the unchanged water inner edge. Add separate cached 1024-square land data texture with lifecycle cleanup, leaving the original footprint, 512-square structural texture and concrete sampler unchanged. Preserve Orb, all workplaces/furniture/shared floor/partitions/roads, lighting, water, camera, controls, page layout and business authority. Existing Gold accents and dark Building Suit palette remain. Earlier accepted fragments stay historical. No tests/checks/browser/API/runtime/benchmarks/tester agents were run; source implementation has no visual/performance acceptance claim. No provider change, merge, deployment, production action or public product activation."
+}

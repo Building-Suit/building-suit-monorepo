@@ -1,0 +1,22 @@
+{
+  "id": "hq-dark-rock-20261105",
+  "task": "HQ-DARK-ROCK-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-LOWER-ISLAND-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder follow-up darkens the existing lower island to charcoal rocky top/cliff/soil colors using the existing palette. Same matte texture, hill shape, ocean, offices and camera. Focused local overview visually inspected; no tests/builds or broad acceptance."
+}

@@ -1,0 +1,373 @@
+{
+  "task_id": "DOS-M7-001",
+  "decision_id": "DOS-M7-GATE-LEGAL",
+  "parent_pr": 401,
+  "parent_head": "2884e18aec448ae81555a0fb9431884abc0aa5dd",
+  "candidate_binding": "evaluated-committed-head",
+  "prepared_at_utc": "2026-10-26T15:24:04.213427+00:00",
+  "intended_review_jurisdiction": "Egypt; actual entity/residence and applicable law require qualified determination",
+  "review_receipt": null,
+  "qualified_reviewer": null,
+  "approved_policy_requirements": null,
+  "decision_approval": null,
+  "gate_state": "OPEN",
+  "full_task_acceptance": false,
+  "participants": [
+    {
+      "id": "doctor-practice",
+      "technical_fact": "Stored practice owner controls that practice across clinics; professional standing is a separate unverified claim.",
+      "purposes_for_review": [
+        "practice administration",
+        "synthetic patient relationship/encounter",
+        "practice charges and receipts"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "Which natural/legal person supplies each service?",
+        "Which clinical, professional, record and registration duties apply to the exact practice?"
+      ]
+    },
+    {
+      "id": "practice-staff",
+      "technical_fact": "Independently invited memberships and clinic grants; employment/title/contact matching grants no cross-doctor access.",
+      "purposes_for_review": [
+        "delegated administrative work"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "Who determines purposes and instructions, and under which actual relationship?",
+        "What confidentiality, training, access and termination rules are approved?"
+      ]
+    },
+    {
+      "id": "patient",
+      "technical_fact": "Patient identity, doctor relationship and encounter remain separate; no matching by shared contact.",
+      "purposes_for_review": [
+        "care relationship",
+        "patient rights requests"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "What identity, notice, capacity and rights-handling evidence is required?",
+        "Which bases apply separately to care, administration, payment and optional outreach?"
+      ]
+    },
+    {
+      "id": "caregiver",
+      "technical_fact": "Only memory-only synthetic preview grants/scoped synthetic guardian reviews; these are not authenticated patient access or legal authority.",
+      "purposes_for_review": [
+        "proposed scoped proxy access",
+        "purpose-specific synthetic contact review"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "How are authority, capacity, identity, scope, expiry, revocation and conflicts established?",
+        "When must patient/caregiver access be restricted despite a claimed relationship?"
+      ]
+    },
+    {
+      "id": "saas-operator",
+      "technical_fact": "Product account/subscription ledger is distinct from practice patient money and professional authority.",
+      "purposes_for_review": [
+        "account/session administration",
+        "SaaS subscription accounting",
+        "proposed hosting/support"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "Which exact operator entity/residence and activities determine its separate roles?",
+        "What contract/instructions are required before processing clinical data or support access?"
+      ]
+    },
+    {
+      "id": "external-processors",
+      "technical_fact": "Hosting/Auth/Storage/email/telemetry roles and actual regions/contracts remain unapproved; repository hosted Doctor refs are blank.",
+      "purposes_for_review": [
+        "proposed infrastructure services"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "Identify each legal supplier, subprocessor, location, transfer, retention and incident obligation.",
+        "Which permits/registrations, contracts, controls and accountable contacts are required?"
+      ]
+    },
+    {
+      "id": "external-health-partners",
+      "technical_fact": "Labs/pharmacies/referrals/other organizations are not authorized by an integration label or generated document.",
+      "purposes_for_review": [
+        "future ecosystem coordination"
+      ],
+      "legal_role": null,
+      "approved_legal_basis": null,
+      "actual_entity": null,
+      "review_questions": [
+        "Which organizations act in which legally reviewed roles and purposes?",
+        "What patient authority, agreements, independent verification and disclosure limits precede sharing?"
+      ]
+    }
+  ],
+  "product_data_flow": [
+    {
+      "id": "account-session",
+      "actors": [
+        "doctor-practice",
+        "practice-staff",
+        "saas-operator"
+      ],
+      "technical_state": "synthetic-own-product-auth",
+      "data_categories": [
+        "account identity",
+        "verified session",
+        "unverified personal/professional claims"
+      ],
+      "boundary": "Independent Doctor Auth/environment; verification does not grant professional or cross-practice authority.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "practice-administration",
+      "actors": [
+        "doctor-practice",
+        "practice-staff",
+        "patient"
+      ],
+      "technical_state": "synthetic-guarded-web",
+      "data_categories": [
+        "practice/clinic/membership",
+        "patient identity/relationship/encounter",
+        "synthetic records/files"
+      ],
+      "boundary": "Fresh stored doctor/clinic grants and separate patient relationship; clinical release gates remain held.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "contact-outbox",
+      "actors": [
+        "doctor-practice",
+        "practice-staff",
+        "patient",
+        "caregiver",
+        "external-processors"
+      ],
+      "technical_state": "synthetic-transport-only",
+      "data_categories": [
+        "contact destination",
+        "purpose consent/version",
+        "scoped synthetic guardian review",
+        "neutral outbox state"
+      ],
+      "boundary": "Fresh consent/guardian checks at dispatch; persisted acceptance is distinct from acknowledgement/delivery; no approved external provider.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "patient-caregiver-preview",
+      "actors": [
+        "patient",
+        "caregiver",
+        "doctor-practice"
+      ],
+      "technical_state": "memory-only-synthetic-model",
+      "data_categories": [
+        "proposed account/session/relationship scope",
+        "synthetic released timeline/prescription/reminder/report projections"
+      ],
+      "boundary": "No patient endpoint, legal authority or inferred caregiver access; actual identity/platform/clinical review remains held.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "native-clinician-shell",
+      "actors": [
+        "doctor-practice",
+        "saas-operator",
+        "external-processors"
+      ],
+      "technical_state": "existing-synthetic-android-shell",
+      "data_categories": [
+        "encrypted Auth persistence under fixed exception",
+        "online-only scoped projections"
+      ],
+      "boundary": "Separate Android-first Doctor app; no chart/command cache or replay and no qualified signed-in clinical/physical/distribution acceptance. This packet starts no new native action.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "financial-ledgers",
+      "actors": [
+        "doctor-practice",
+        "patient",
+        "saas-operator"
+      ],
+      "technical_state": "separate-synthetic-ledgers",
+      "data_categories": [
+        "immutable practice charge/collection/refund source",
+        "separate SaaS quote/transfer notice/received-funds/period evidence"
+      ],
+      "boundary": "SYN receipts are not tax documents; paid synthetic entitlement grants no clinical/legal authority; no real merchant or tax profile approved.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "privacy-operations",
+      "actors": [
+        "patient",
+        "caregiver",
+        "doctor-practice",
+        "saas-operator",
+        "external-processors"
+      ],
+      "technical_state": "synthetic-own-account-intake",
+      "data_categories": [
+        "access/correction/erasure/restriction review requests",
+        "audit and proposed retention/hold records"
+      ],
+      "boundary": "Existing own-account intake returns awaiting_review with policy/fulfillment unavailable; no automatic export, erasure or retention schedule is approved.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    },
+    {
+      "id": "future-partner-sharing",
+      "actors": [
+        "doctor-practice",
+        "patient",
+        "caregiver",
+        "external-health-partners"
+      ],
+      "technical_state": "disabled-unapproved-partner",
+      "data_categories": [
+        "proposed referral/request/document/financial coordination"
+      ],
+      "boundary": "No external recipient organization/account, agreement, disclosure basis or live provider activation is authorized.",
+      "legal_basis": null,
+      "actual_hosting_region": null,
+      "real_data_approved": false
+    }
+  ],
+  "data_flow_sha256": "01e3ee4f60633cc36390846b854847a64cbbcb23d66e46d26c99862e285a931d",
+  "policy_questions": [
+    {
+      "id": "notices-purposes",
+      "proposed_review_requirement": "Separate operator, practice and optional outreach notices/purposes; no blanket signup/marketing/clinical approval.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "roles-instructions",
+      "proposed_review_requirement": "Identify actual entities and independent roles per purpose; document staff, support and processor instructions/contracts.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "identity-capacity-caregivers",
+      "proposed_review_requirement": "Specify reviewed identity/capacity/authority evidence, scope, expiry/revocation and conflicts; no inferred contact-based authority.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "clinical-professional",
+      "proposed_review_requirement": "Determine current professional registration, clinical record, electronic document/signature and complaint duties without certification claims.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "retention-holds-rights",
+      "proposed_review_requirement": "Approve each record category retention/hold/rights procedure and conflicts with immutable financial/audit history; no invented period or automatic deletion.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "security-processors-transfers",
+      "proposed_review_requirement": "Approve actual suppliers/subprocessors/regions/transfers/security and support access before real data.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "incidents-complaints",
+      "proposed_review_requirement": "Define accountable contacts, escalation, lawful notification criteria/deadlines and complaints/rights handling; no fixed statutory deadline invented.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "billing-tax",
+      "proposed_review_requirement": "Review SaaS operator and each practice separately for accounting/tax/document/privacy duties; synthetic receipts/terms are not official approval.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    },
+    {
+      "id": "change-review",
+      "proposed_review_requirement": "Specify review validity and triggers: changed entity, purpose, data category, processor/region, access, caregiver model or clinical/native/provider flow.",
+      "approved_requirement": null,
+      "accountable_policy_owner": null,
+      "due_at": null
+    }
+  ],
+  "review_receipt_requirements": [
+    "Accountable reviewer identity/qualification and independently verifiable private authority reference",
+    "Signed dated receipt with exact candidate and product/data-flow SHA256, participants/purposes and jurisdiction/entity scope",
+    "Current authoritative legal/healthcare/professional references and applicability reasoning by the reviewer",
+    "Explicit approved requirements, unresolved actions and responsible owners; no certification invented",
+    "Recorded review validity, supersession and change triggers; no arbitrary expiry or statutory deadline supplied by automation"
+  ],
+  "qualified_authoritative_legal_texts": [],
+  "public_reference_discovery": [
+    {
+      "url": "https://pdpc.gov.eg/",
+      "observed_at_utc": "2026-10-26",
+      "status": "public-official-portal-pointer-only; direct web open yielded no readable text",
+      "qualified_review": false
+    },
+    {
+      "url": "https://pdpc.gov.eg/assets/pdf-data/Guidelines/DPO.pdf",
+      "observed_at_utc": "2026-10-26",
+      "status": "search-discovered-guideline-pointer; direct open yielded HTML/no readable PDF text; document contents/currency unverified",
+      "qualified_review": false
+    }
+  ],
+  "source_limit": "Secondary translations/search snippets were not accepted as current authoritative review. No portal registration, application, legal engagement or real-data submission occurred.",
+  "dependent_actions": {
+    "new_dependent_native_enabled": false,
+    "provider_activation_enabled": false,
+    "real_patient_entry_enabled": false,
+    "hosted_migration_enabled": false,
+    "privacy_fulfillment_enabled": false,
+    "clinical_release_approved": false,
+    "production_publication_enabled": false,
+    "automation_mutation_enabled": false
+  },
+  "cases": {
+    "DOS-M7-001-C01": "unavailable-qualified-current-legal-healthcare-review",
+    "DOS-M7-001-C02": "unavailable-no-existing-qualified-review-receipt",
+    "DOS-M7-001-C03": "unavailable-approved-policies-and-owner-actions",
+    "DOS-M7-001-C04": "unavailable-accountable-legal-gate-approval"
+  },
+  "independent_comparison": "Validate exact source/packet/scope and rejected receipt/protocol claims; missing legal review remains unavailable, never a passed opinion."
+}

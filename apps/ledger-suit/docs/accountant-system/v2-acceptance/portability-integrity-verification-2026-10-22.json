@@ -1,0 +1,72 @@
+{
+  "task": "LS-OPS-PORT-001",
+  "observed_at": "2026-10-22",
+  "parent_pr": 447,
+  "parent_sha": "c889633ad7e8d777ef7e111984d7c349185403ea",
+  "scope": "Operator portability and restore-evidence integrity; subsequent inventory coverage and full provider restore are pending.",
+  "before": {
+    "native_profiles": "PGRST201 / HTTP300 ambiguous organization_members user/inviter relationship",
+    "native_bank_match_lines": "42703 / HTTP400 nonexistent id order",
+    "private_request_table": "Authenticated SELECT denied; removed from customer export without broadening privileges",
+    "table_page_digest": "Hash omitted newline present on disk",
+    "attachment_manifest_digest": "Hash used compact JSON while disk held indented JSON with newline",
+    "restore_false_positive": "Empty or inconsistent object manifests could pass"
+  },
+  "native_verification": {
+    "result": "pass",
+    "tables": 64,
+    "reports": 4,
+    "actual_postgrest": "16.1",
+    "migration_files": 105,
+    "exact_minor_units": true,
+    "file_digests": "match",
+    "second_readable_tenant": "excluded",
+    "outsider_and_viewer_export": "denied",
+    "internal_request_table": "403",
+    "storage_bytes": "not_exercised"
+  },
+  "native_components": {
+    "postgresql": "17.6",
+    "migration_files": 105,
+    "migration_manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6",
+    "postgrest_index": "sha256:5922bde07147b82b1c9d8f749e48c1e5b99ebb233f3888bb7ab65f07cf4ac82d",
+    "postgrest_amd64_image": "sha256:eb4951a2f9ac02288100937995af3cb7fb64c296b1228405de5d77ca4dd3410d",
+    "identity_scope": "Locally signed synthetic JWTs verified by real PostgREST; no GoTrue/gateway claim",
+    "database_mutation": "Only retained synthetic users, organizations, membership and a posting through public RPCs; no reset"
+  },
+  "verification": {
+    "ledger_units": {
+      "pass": 126,
+      "fail": 0,
+      "skip": 0
+    },
+    "focused_final_after_restore_guard": {
+      "pass": 9,
+      "fail": 0,
+      "skip": 0
+    },
+    "native_runner": "pass, twice; final run includes exact JSON and CSV large-unit assertions",
+    "changed_app_eslint": "pass",
+    "node_syntax": "pass",
+    "workspace_check": "pass",
+    "committed_parent_aware_release_check": "Recorded in PR validation after committing",
+    "binary_storage_check": "Local HTTP unit fixture only; actual Storage-provider bytes not yet exercised",
+    "full_ci": "PR447 review fails in existing unrelated Shop unit fixtures; no waiver or full green claim"
+  },
+  "source_sha256": {
+    "scripts/export-organization-portability.mjs": "e3f244434e75475d94ba0eba14fd1b30cf6f985e50675cd64a49e82733f6acc1",
+    "scripts/compare-restore-evidence.mjs": "08f03985bdc1d2a2898ec9f9730e2bb23f75c3c698aac69d989a85629bec6162",
+    "scripts/test-portability-native.mjs": "c4cc30b73f76942e82fa70cd378debaac607ab7f647ef3e8aa152ecde0ea80b1",
+    "tests/unit/restore-evidence.test.mjs": "bb0102b4de92e8178c9ea56560d576371a146792c9b565114e961737741fb003",
+    "tests/unit/portability-export.test.mjs": "3821863ae2492646ca8eefe5305f33a97054c8e7aa6d11363f63f45f6bc00a9a"
+  },
+  "pending": [
+    "Newer FX/ETA/migration/manual-payment export inventory",
+    "Private manual-payment receipt recovery",
+    "Real Storage bytes and timed two-instance restore",
+    "External operating backup configuration",
+    "Live Automation reconciliation",
+    "Hosted/authenticated configuration and candidate identity",
+    "Named accountant UAT"
+  ]
+}

@@ -56,7 +56,7 @@ do $$declare f record; other record; entry jsonb; profile jsonb; location uuid; 
  if public.shop_website_public_catalog('catalog-fixture') is not null then raise exception 'last unpublish cached public catalog';end if;
  perform public.shop_website_catalog_publish(f.shop,'product',f.product,true);
  v:=public.shop_website_public_catalog('catalog-fixture');
- if v->>'total'<>'1' or v->'items'->0->>'kind'<>'product' or v->'items'->0->>'price'<>'12.50' then raise exception 'product only projection %',v;end if;
+ if v->>'total'<>'1' or v->'items'->0->>'kind'<>'product' or (v->'items'->0->>'price')::numeric<>12.50 then raise exception 'product only projection %',v;end if;
  perform public.shop_website_catalog_publish(f.shop,'service',f.service,true);
  v:=public.shop_website_public_catalog('catalog-fixture');
  if v->>'total'<>'2' or v->'items'->0->>'name'<>'Public service' or v->'items'->1->>'name'<>'Public product' then raise exception 'mixed order incorrect';end if;

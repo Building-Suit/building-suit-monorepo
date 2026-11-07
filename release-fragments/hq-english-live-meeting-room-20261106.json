@@ -1,0 +1,43 @@
+{
+  "id": "hq-english-live-meeting-room-20261106",
+  "task": "HQ-LIVE-MEETING-ROOM-20261106",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "apps/building-suit-docs/app/components/HqMeetingCatalogue.vue",
+    "packages/ui/src/organisms/BsHqMeetingPanel.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/src/types/hqMeetingPresentation.ts",
+    "packages/ux/package.json",
+    "packages/ux/src/composables/useSpeechDictation.ts",
+    "packages/ux/src/controllers/createMeetingAudio.mjs",
+    "packages/ux/src/controllers/createMeetingAudio.d.mts",
+    "packages/ux/src/controllers/createMultilingualMeetingRecognition.mjs",
+    "packages/ux/src/controllers/createMultilingualMeetingRecognition.d.mts",
+    "packages/ux/src/controllers/meetingLanguageDetection.mjs",
+    "packages/ux/src/controllers/meetingLanguageDetection.d.mts",
+    "packages/ux/src/controllers/meetingRecognitionModel.mjs",
+    "packages/ux/src/workers",
+    "packages/ux/src/worklets",
+    "packages/ux/tests/meeting-audio.test.mjs",
+    "packages/ux/tests/meeting-recognition.test.mjs",
+    "packages/ux/tests/meeting-language-detection.test.mjs",
+    "packages/ux/tests/speech-dictation.test.mjs",
+    "pnpm-lock.yaml",
+    "tooling/hq-agent-host",
+    "docs/work-packages/company-hq",
+    "release-changes/items.json",
+    "packages/ux/tests/meeting-capture-finish.test.mjs"
+  ],
+  "reason": "Founder correction makes HQ interface English and uses actual per-utterance Arabic/English detection with a pinned on-device multilingual model. A real-room launcher uses existing founder Auth and durable worker receipts. Versioned context-only head conversation disables tools and remains distinct from research qualification. Reviewed meeting schema is applied to HQ staging; the founder will perform the existing Oracle worker SSH upgrade. Local inference and synthetic tests do not establish real microphone quality, code-switch accuracy, present quota or deployed host acceptance. No production deployment, merge, new paid API or extra worker."
+}

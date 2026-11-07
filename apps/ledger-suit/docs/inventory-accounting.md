@@ -1,5 +1,7 @@
 # Approved inventory accounting — V2-IMP-014
 
+2026-10-22 update: native independent-session **duplicate inventory ingestion passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Status: implemented in the local worktree; verification is partial. No commit, push, merge, deployment, hosted database operation, live Inventory Suit connection, or accountant UAT was performed.
 
 ## Decision and boundary

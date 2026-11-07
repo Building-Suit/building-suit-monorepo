@@ -1,0 +1,23 @@
+{
+  "id": "shop-native-electrical-control-target-20261029",
+  "task": "SS-ELEC-606",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-catalog-capacity.yml",
+    "apps/shop-suit/tests/e2e/electrical-native.spec.ts",
+    "apps/shop-suit/tests/e2e/electrical-native-controls.ts",
+    "apps/shop-suit/tests/e2e/electrical-native-controls.spec.ts",
+    "apps/shop-suit/tests/e2e/electrical-native-controls.config.ts",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-CI-REPAIRS-2026-10-29.md"
+  ],
+  "reason": "Disambiguate two intentional Add surfaces without changing product behavior, and exercise the shared native item driver in separate explicitly synthetic EN/AR regressions. Root workflow support has private provenance for all consumers; genuine native financial acceptance remains required with original assertions and deadlines."
+}

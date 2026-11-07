@@ -22,6 +22,7 @@ test('signup survives session establishment and provisioning while operational c
     useShop: () => ({ currentId, currentLocationId, loadShops: async options => loads.push(options) }),
     useConfirmation: () => confirmation,
     useToasts: () => ({ toasts }),
+    useShopInvalidation: () => ({ clearShopQueries: selector => env.clearNuxtData(selector) }),
     clearNuxtData: predicate => cleared.push(predicate),
     useLocaleHead: () => ref({ htmlAttrs: { lang: 'en', dir: 'ltr' }, link: [], meta: [] }),
     useHead: () => {},

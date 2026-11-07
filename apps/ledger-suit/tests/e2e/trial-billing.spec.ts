@@ -78,16 +78,9 @@ async function openBilling(page: Page, arabic = false) {
 }
 
 test('active Trial explains its benefits, limits, optional conversion, and checkout identity', async ({ page }) => {
-  let checkoutBody: Record<string, unknown> | undefined
+  const manualCheckout = await manualCheckoutFixture(page)
   await mockTrial(page, 'trialing')
-  await page.route('**/functions/v1/paymob-checkout', async (route) => {
-    checkoutBody = route.request().postDataJSON() as Record<string, unknown>
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ url: '/subscribe?checkout=complete&success=false' }),
-    })
-  })
+
 
   await signIn(page)
   await openBilling(page)
@@ -112,7 +105,9 @@ test('active Trial explains its benefits, limits, optional conversion, and check
   await expect(pricing.getByRole('button', { name: 'Choose Business' })).toBeVisible()
   await pricing.getByRole('radio', { name: 'Yearly', exact: true }).check()
   await pricing.getByRole('button', { name: 'Choose Business' }).click()
-  await expect.poll(() => checkoutBody).toMatchObject({ planKey: 'business', interval: 'yearly' })
+  await expect(page.getByRole('dialog')).toContainText(manualCheckout.instructions)
+  expect(manualCheckout.commands[0]).toMatchObject({ p_plan_key: 'business', p_interval: 'yearly' })
+  expect(manualCheckout.onlineCalls()).toBe(0)
 })
 
 test('active Trial semantics are localized in Arabic under RTL', async ({ page, context }) => {

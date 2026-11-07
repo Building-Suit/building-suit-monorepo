@@ -1,12 +1,22 @@
-name: Disposable Shop website launch qualification
+name: Shop website and booking qualification
 on:
   pull_request:
     paths:
       - '.github/workflows/shop-website-launch-disposable.yml'
       - 'apps/shop-suit/**'
-      - 'packages/ui/**'
-      - 'packages/ux/**'
-      - 'tooling/database/test-shop-website-launch-local.mjs'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.node-version'
+      - 'tooling/database/test-shop-website-*.mjs'
+      - 'tooling/database/test-shop-appointment-access*.mjs'
+      - 'tooling/database/test-shop-customer-portal*.mjs'
+      - 'tooling/database/test-shop-public-booking*.mjs'
+      - 'tooling/database/test-shop-appointment-email*.mjs'
+      - 'tooling/database/configure-shop-reminder-schedule.mjs'
+      - 'tooling/database/account-provisioning-disposable.mjs'
+      - 'tooling/database/test-shop-local.mjs'
+      - 'tooling/ui/build-appointment-reminder-email.mjs'
 permissions:
   contents: read
 concurrency:
@@ -15,7 +25,7 @@ concurrency:
 jobs:
   website-launch:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,6 +37,17 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.7
+      - run: node tooling/ui/build-appointment-reminder-email.mjs --check
+      - name: Check deployable function graph without monorepo parent paths
+        run: |
+          mkdir -p "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender" "$RUNNER_TEMP/reminder-edge/_shared/generated"
+          cp apps/shop-suit/supabase/functions/shop-appointment-reminder-sender/index.ts "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender/"
+          cp apps/shop-suit/supabase/functions/_shared/appointment-reminders.mjs "$RUNNER_TEMP/reminder-edge/_shared/"
+          cp apps/shop-suit/supabase/functions/_shared/generated/appointmentReminderEmail.ts "$RUNNER_TEMP/reminder-edge/_shared/generated/"
+          deno check --no-config "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender/index.ts"
       - name: Prepare maintained disposable legacy upgrade baseline
         env:
           ACCOUNT_PROVISION_DISPOSABLE: '1'
@@ -52,6 +73,8 @@ jobs:
           LAUNCH_FULL_SHOP_DB: '1'
           SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
         run: node tooling/database/test-shop-website-launch-local.mjs
+      - name: Verify appointment email scheduling and concurrency
+        run: node tooling/database/test-shop-appointment-email-local.mjs
       - name: Stop owned disposable backend after SQL qualification
         env:
           SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
@@ -62,6 +85,8 @@ jobs:
         run: |
           git restore -- apps/shop-suit/supabase/config.toml
           rm apps/shop-suit/supabase/migrations/20260929185959_disposable_legacy_catalog.sql
+      - name: Verify hostname and email source contracts
+        run: node --test apps/shop-suit/tests/unit/website-address.test.mjs apps/shop-suit/tests/unit/website-hostname-suffix.test.mjs apps/shop-suit/tests/unit/appointment-email-reminders.test.mjs apps/shop-suit/tests/unit/appointment-email-schedule.test.mjs
       - run: pnpm docs:generate
       - run: pnpm --filter @building-suit/shop-suit typecheck
       - run: pnpm --filter @building-suit/shop-suit lint
@@ -70,7 +95,7 @@ jobs:
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
-      - run: node --test apps/shop-suit/tests/integration/website-host-built.test.mjs apps/shop-suit/tests/integration/website-public-built.test.mjs apps/shop-suit/tests/integration/appointment-access-built.test.mjs apps/shop-suit/tests/integration/customer-portal-built.test.mjs apps/shop-suit/tests/integration/public-booking-built.test.mjs apps/shop-suit/tests/integration/ss-web-launch-001-built.test.mjs
+      - run: node --test apps/shop-suit/tests/integration/website-host-built.test.mjs apps/shop-suit/tests/integration/website-public-built.test.mjs apps/shop-suit/tests/integration/appointment-access-built.test.mjs apps/shop-suit/tests/integration/customer-portal-built.test.mjs apps/shop-suit/tests/integration/public-booking-built.test.mjs apps/shop-suit/tests/integration/ss-web-launch-001-built.test.mjs apps/shop-suit/tests/integration/website-hostname-suffix-built.test.mjs
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/appointment-access.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/appointment-actions.config.ts
@@ -79,10 +104,13 @@ jobs:
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-appt-002.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-appt-002-settings.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-address.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-catalog.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-profile.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-public-001-obligation-1.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-owner.config.ts
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

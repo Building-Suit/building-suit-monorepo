@@ -1,0 +1,42 @@
+{
+  "status": "asset changes verified; full CI/integration not claimed",
+  "base_sha": "2efbed85c5893dfcd4d7a40eaa27a22e9690b00d",
+  "pr": 437,
+  "stack": "shared",
+  "shop_artwork_payload_unchanged": true,
+  "new_ledger_assets": 7,
+  "checks": {
+    "builds": {
+      "successful": 2,
+      "total": 2,
+      "command": "pnpm exec turbo run build --filter=@building-suit/shop-suit --filter=@building-suit/ledger-suit --concurrency=2"
+    },
+    "source_brand_tests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "built_assets": {
+      "command": "pnpm test:built-assets",
+      "passed": 1,
+      "failed": 0
+    },
+    "exact_affected_asset_responses": 11,
+    "auth_rendered_states": 16,
+    "public_landing_rendered_states": 4,
+    "landing_transport": "Owned loopback public catalogue reads only; no real backend/provider acceptance. Unknown/private/write routes denied.",
+    "workspace_boundaries": {
+      "suits": 6,
+      "routes": 114,
+      "result": "passed"
+    },
+    "release_check": "passed against parent 2efbed85c5893dfcd4d7a40eaa27a22e9690b00d; final publication head rechecked",
+    "pr_stack": "PR437 -> stg; no prior shared root"
+  },
+  "limitations": [
+    "Without a local catalogue backend, the diagnostic Shop landing returned HTTP500 (connection refused / non-POJO error serialization); product error handling is unchanged.",
+    "SVG drawing payload unchanged and occupied pixel bounds match; exact antialiased PNG equality is not claimed.",
+    "No hosted deployment, email configuration, provider activation, financial behavior change, real data, Automation mutation or staging/main merge.",
+    "Full repository/financial suites not rerun for these asset changes; the 54 inherited Shop failures and shared-settings limitations remain recorded."
+  ],
+  "verified_asset_source_sha": "ed6bf394a8fd21ac579d5f3a584fc83b4abff1ae"
+}

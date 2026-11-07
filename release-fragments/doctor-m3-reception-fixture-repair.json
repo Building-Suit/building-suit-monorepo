@@ -1,0 +1,16 @@
+{
+  "id": "doctor-m3-reception-fixture-repair",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Repair repeated-disclosure action and ambiguous uncertain-result fixture locators; retain completed exact-source SQL/schema/provider evidence and all failing/unrun acceptance obligations. No runtime or operational activation."
+}

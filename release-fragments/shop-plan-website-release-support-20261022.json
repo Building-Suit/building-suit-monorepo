@@ -1,0 +1,18 @@
+{
+  "id": "shop-plan-website-release-support-20261022",
+  "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain private bilingual release inventory provenance for the Shop plan-card clarification. This bookkeeping does not change other products or activate public releases for internal consumers."
+}

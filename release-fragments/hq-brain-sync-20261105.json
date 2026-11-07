@@ -1,0 +1,21 @@
+{
+  "id": "hq-brain-sync-20261105",
+  "task": "HQ-BRAIN-SYNC-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "README.md",
+    "docs/work-packages/company-hq/HQ-BRAIN-SYNC-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add the internal fixed-root read-only Google Drive Brain-to-Supabase operational/source-version metadata projection and reconcile seven already-approved departments from canonical historical evidence. Preserve Drive knowledge authoring, stable source mappings, date-only approvals/null original reviews and no fabricated Auth actor. Optional strict JSON whole-plan publication remains unselected/unbound: automatic processing is metadata-only, with no live CEO/HR publisher or staffing/skill execution. Founder approval remains the separate authenticated atomic whole-plan decision; prose and notifications cannot create departments. Actual staging sync/index/watch receipts and ACTIVE worker v4 are recorded. Latest event-driven delivery supersedes the initial minute data-recovery job; only watch renewal recurs without Drive data reads. Durable event-triggered dispatch/retry/watchdog migration 20261105002521 is applied; no idle jobs or data cron remain at the setup observation. Source/setup receipts establish no app/freshness acceptance. No tests/checks/browser/runtime acceptance or tester agents, Brain writes, production action, merge or public activation."
+}

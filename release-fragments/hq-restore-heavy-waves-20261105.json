@@ -1,0 +1,23 @@
+{
+  "id": "hq-restore-heavy-waves-20261105",
+  "task": "HQ-RESTORE-HEAVY-WAVES-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-RESTORE-HEAVY-WAVES-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Latest founder correction (5 November): restore the original heavy/strong water baseline from before the flat-water trials. Four choppy Gerstner swells (0.48/0.28/0.13/0.055), fine ripples, whitecaps and strong shoreline foam are current again. Remove the later slow/randomized surge clock and separate splash particles. This supersedes both calmer-water corrections below; keep the high hill, no beach, no Gold hill contours and current offices/Orb. Source-only; standing testing restriction remains."
+}

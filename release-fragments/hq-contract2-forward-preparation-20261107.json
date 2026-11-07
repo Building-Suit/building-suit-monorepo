@@ -1,0 +1,30 @@
+{
+  "id": "hq-contract2-forward-preparation-20261107",
+  "task": "HQ-CONTRACT2-FORWARD-PREPARATION-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261107024306_hq_department_staffing_needs.sql",
+    "apps/company-hq/supabase/migrations/20261107024314_hq_department_orchestration_contract.sql",
+    "apps/company-hq/supabase/migrations/20261107024322_hq_supervised_worker_trials.sql",
+    "apps/company-hq/supabase/migrations/20261107024331_hq_qualified_research_web_search.sql",
+    "apps/company-hq/supabase/migrations/20261107024338_hq_worker_model_execution_receipts.sql",
+    "apps/company-hq/supabase/migrations/20261107024348_hq_worker_release_capability.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "tooling/hq-agent-host/bootstrap/PHASE2.md",
+    "tooling/hq-agent-host/bootstrap/phase2-canonical.json",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Prepare six ordered exact proposal copies as canonical forward sources in an unmerged child PR. Preserve phase 1 and all 17 applied bytes; live phase-2 deployment, legacy maintenance, adoption and host changes remain unauthorized."
+}

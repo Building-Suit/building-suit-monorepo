@@ -1,0 +1,50 @@
+{
+  "task_id": "DOS-M5-004",
+  "scope": "independent-synthetic-released-timeline-projection",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "legal_approval": false,
+  "external_delivery": false,
+  "patient_native_scaffold": false,
+  "patient_identity_approval": null,
+  "patient_platform_approval": null,
+  "native_cases": [],
+  "device_status": "blocked-unrun-no-approved-patient-platform-or-command-mapping",
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-004.test.mjs"
+    ],
+    "exit_code": 0,
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2356,
+    "passed": 2279,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all54-under-apps/shop-suit/tests"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientReleasedTimeline.ts": "82654ba1b0346f24b8f60b83c982058240c836f4bf5da38a04f64f178ff0c974",
+    "apps/doctor-suit/tests/unit/dos-m5-004.test.mjs": "596d3991b7ce2498a5f9a8626c5d68606305187045ca5204422afd4da163a1a6"
+  },
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No native/provider/live-data patient integration",
+    "No patient identity/caregiver/platform approval",
+    "No reciprocal clinician access or contact-based identity association",
+    "No approved-platform/device/rendered UI acceptance",
+    "Future adapters must freshly authorize and notify withdrawal/offline/background",
+    "Source hashes retained as provenance; no original clinical bytes verified"
+  ]
+}

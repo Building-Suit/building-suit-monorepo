@@ -1,0 +1,9 @@
+{
+  "id": "doctor-m3-acceptance-accessibility",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/templates/BsFulfillmentTrackingPage.vue"],
+  "reason": "Associate source and timestamp fields with canonical visible BsField labels in the gated synthetic Doctor fulfillment template. This fixes actual-service browser accessibility without widening clinical/provider access or changing existing product consumers."
+}

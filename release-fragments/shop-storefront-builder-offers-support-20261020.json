@@ -1,0 +1,9 @@
+{
+  "id": "shop-storefront-builder-offers-support-20261020",
+  "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+  "suits": ["shop-suit", "ledger-suit", "inventory-suit", "doctor-suit", "super-admin-suit", "automation-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui", "packages/ux", "apps/building-suit-docs", "docs/shared", "release-changes/items.json"],
+  "reason": "Maintain shared presentation exports, bounded image interaction, route ownership and synthetic catalogue documentation. Shared source consumption does not activate other products or create additional public release claims."
+}

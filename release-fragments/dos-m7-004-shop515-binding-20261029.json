@@ -1,0 +1,16 @@
+{
+  "id": "dos-m7-004-shop515-binding-20261029",
+  "task": "DOS-M7-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-shop515-verification.json"
+  ],
+  "reason": "Rebind current evidence to the Shop-reconciled parent while preserving prior receipts and all unavailable domain/independent review gates. No product change, self-issued approval or runtime acceptance."
+}

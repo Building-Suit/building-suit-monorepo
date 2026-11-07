@@ -1,0 +1,268 @@
+{
+  "task": "LS-OPS-RECOVERY-001",
+  "observed_at": "2026-10-23T21:26:55.090Z",
+  "result": "native_recovery_verified",
+  "parent": {
+    "pr": 455,
+    "sha": "ebc0ecf0011d02b84c166da5b2d2347ab7bf9547"
+  },
+  "environment": {
+    "kind": "two owned disposable native Supabase projects",
+    "source_project": "ledger-recovery-source-20261023",
+    "target_project": "ledger-recovery-target-20261023",
+    "source_database_container": "0a368af40aa8673a350bb088a49a82ce55fc5fe25839b72adc2ac78485cd9805",
+    "target_database_container": "58b217461b48a23d7c8051d69d821b2199ea1a4040a6d16727ae0b10eebe014c",
+    "source_preserved": true,
+    "target_pristine_before_restore": true,
+    "distinct_signing_keys_and_volumes": true,
+    "application_migrations": 107,
+    "target_application_migrations_before_restore": 0,
+    "migration_manifest_sha256": "775016929a19b34b6469f5115caf8a75b1033126147c478f46bfa41d61ab82b3",
+    "development_seed": false,
+    "provider_schema_or_filesystem_shims": false
+  },
+  "runtime": {
+    "database": "Supabase PostgreSQL17.6.1.165",
+    "auth": "GoTrue2.196.0",
+    "storage": "Storage1.70.3",
+    "additional_image_provenance": [
+      {
+        "source": "public.ecr.aws/supabase/kong@sha256:e21b0b793879ab96720ed4188f9441260273f4bf775bcbff8d435e019ffb759a",
+        "local": "ledger.local/supabase/kong:2.8.1",
+        "image_id": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+        "unmodified": true
+      },
+      {
+        "source": "public.ecr.aws/supabase/mailpit@sha256:f0b0ed33c8cf53aac0dd004abbe245c83420a7ae44914e25178f7791dec5723a",
+        "local": "ledger.local/supabase/mailpit:v1.30.2",
+        "image_id": "sha256:cdb09a322d77e0b233727104beaafb4b7b503fd3badce6a6d9e58fd9993025f6",
+        "unmodified": true
+      },
+      {
+        "source": "postgrest/postgrest@sha256:5922bde07147b82b1c9d8f749e48c1e5b99ebb233f3888bb7ab65f07cf4ac82d",
+        "local": "ledger.local/supabase/postgrest:v16.1",
+        "image_id": "sha256:eb4951a2f9ac02288100937995af3cb7fb64c296b1228405de5d77ca4dd3410d",
+        "unmodified": true
+      }
+    ],
+    "readiness": "Actual Auth health, Storage status and REST readiness HTTP200; Docker wget health checks affected by managed proxy",
+    "proxy_change": "Exact owned local DNS exclusions only; external proxies, credentials and Docker configuration preserved"
+  },
+  "capture": {
+    "customer_export": {
+      "tables": 103,
+      "reports": 4,
+      "private_objects": 2,
+      "private_bytes": 115,
+      "foreign_readable_tenant": "excluded",
+      "elapsed_ms": 1596
+    },
+    "migration_history_preserved": true,
+    "customer_journals": 11,
+    "customer_entries": 22,
+    "fixture": "Real SMTP-confirmed signup and sign-in, integrated financial cycle, posted/reversed pair, confirmed/retried CSV import, future recurrence, attachment and manual-payment receipt"
+  },
+  "backup": {
+    "frozen_at": "2026-10-23T20:54:54.420Z",
+    "started_at": "2026-10-23T20:54:53.849Z",
+    "completed_at": "2026-10-23T20:56:32.923Z",
+    "elapsed_ms": 99074,
+    "database_online": true,
+    "owned_API_providers_frozen": true,
+    "artifacts": [
+      {
+        "kind": "roles.sql",
+        "bytes": 370,
+        "sha256": "168a95a9c745af5ed4679751f90419ac9dc434240a213b03e32a06d5664c2308",
+        "elapsed_ms": 19472
+      },
+      {
+        "kind": "schema.sql",
+        "bytes": 1470336,
+        "sha256": "f1894964e83d967665d1b74c21dfda7bc85c591a32f0cecd1997eb7abd34c0d9",
+        "elapsed_ms": 15937
+      },
+      {
+        "kind": "data.sql",
+        "bytes": 191222,
+        "sha256": "f7fdd99cff657d2276d0981d2b50a4accb6e4e17c07652a3c8748edb30370439",
+        "elapsed_ms": 19248
+      },
+      {
+        "kind": "history-schema.sql",
+        "bytes": 887,
+        "sha256": "18b99fbbb3ec9fbb964bb255a56171329acd99b6977ece2addd89fdf5aa5105b",
+        "elapsed_ms": 22476
+      },
+      {
+        "kind": "history-data.sql",
+        "bytes": 1543323,
+        "sha256": "a62a3076a1a426bf4029a28967357902c755c1ca425c8a1b1749fe0f8d1ca6d6",
+        "elapsed_ms": 21232
+      },
+      {
+        "kind": "storage.tar",
+        "bytes": 15360,
+        "sha256": "af52c651c4a055a3ef9a8a35f094997f88a9c32bd26a2ecb5b4ed5da01fc9765",
+        "elapsed_ms": 31
+      }
+    ],
+    "privacy": "Raw Auth, credentials, SQL dumps and file archives remain ignored private operator artifacts; no raw rows or keys published"
+  },
+  "restore": {
+    "result": "pass",
+    "database_restore_ms": 1311,
+    "storage_restore_ms": 213,
+    "provider_restart_ms": 4062,
+    "elapsed_ms": 5849,
+    "started_at": "2026-10-23T21:16:27.455Z",
+    "completed_at": "2026-10-23T21:16:33.306Z",
+    "provider_metadata": "exact including UUIDs/versions/owners",
+    "physical_storage_bytes": 262,
+    "provider_endpoints": "actual HTTP200",
+    "application_migrations": 107
+  },
+  "storage": {
+    "backend": "native file backend /mnt; TENANT_ID and global bucket stub",
+    "all_tenants_objects": 5,
+    "all_tenants_bytes": 262,
+    "customer_objects": 2,
+    "customer_bytes": 115,
+    "physical_files": [
+      {
+        "bytes": 49,
+        "sha256": "4be3df217c9963405a76a21ae46d705b8caaf3e47e51d8bfa4efe4ebb8f81c64",
+        "uid": 0,
+        "gid": 0,
+        "mode": 420
+      },
+      {
+        "bytes": 49,
+        "sha256": "4be3df217c9963405a76a21ae46d705b8caaf3e47e51d8bfa4efe4ebb8f81c64",
+        "uid": 0,
+        "gid": 0,
+        "mode": 420
+      },
+      {
+        "bytes": 49,
+        "sha256": "4be3df217c9963405a76a21ae46d705b8caaf3e47e51d8bfa4efe4ebb8f81c64",
+        "uid": 0,
+        "gid": 0,
+        "mode": 420
+      },
+      {
+        "bytes": 54,
+        "sha256": "79ca79c923ac4ba671e4d4cc8e3ba516e488a45b9212f8092090e2aa1c794b6f",
+        "uid": 0,
+        "gid": 0,
+        "mode": 420
+      },
+      {
+        "bytes": 61,
+        "sha256": "b6cff24dd2c2b19bed9337991faf13264e08e7f381900cb8ddb4cce4caeed312",
+        "uid": 0,
+        "gid": 0,
+        "mode": 420
+      }
+    ],
+    "metadata": "Object IDs, versions, owners and complete rows exact before/after copy",
+    "archive": "Paths, content, sizes, uid/gid and mode exact; safe tar entries only",
+    "downloads": "All five files downloaded from actual restored Storage and verified"
+  },
+  "pre_traffic_copy_audit": {
+    "result": "pass",
+    "tables": 153,
+    "public_app_tables": 122,
+    "rows": 940,
+    "digest_sha256": "10fc8f8b8db2266a22c6e6d3ff329cb24ebea72171b4a52f6e4714f42ee7e4f4",
+    "elapsed_ms": 15616
+  },
+  "post_restore": {
+    "restored_auth": "Actual password sign-in retains the original actor UUID",
+    "source_project_key": "unexpired source-signed key rejected with401",
+    "negative_access": "viewer export, outsider export and private download denied",
+    "altered_evidence": "One minor-unit mismatch rejected",
+    "continuation": "Authenticated native post/reversal and next professional number pass; transaction rolled back",
+    "continuation_table_preservation": {
+      "tables": 122,
+      "fingerprint_sha256": "87773d8e03e9deb6b80561199e040f2c86550a162bacd21186cb1ca88481b9b0",
+      "before_after_equal": true
+    },
+    "elapsed_ms": 2582,
+    "total_rehearsal_elapsed_ms": 1921241,
+    "completed_at": "2026-10-23T21:26:55.090Z"
+  },
+  "comparison": {
+    "journals": "11",
+    "entries": "22",
+    "attachment_objects": "2",
+    "attachment_bytes": "115",
+    "result": "exact_match",
+    "schema_version": "ls-ops-001-v2",
+    "exported_tables": 103
+  },
+  "verification": {
+    "unit_tests": {
+      "passed": 128,
+      "failed": 0
+    },
+    "scoped_eslint": "pass",
+    "workspace_checks": "pass",
+    "node_syntax": "pass",
+    "release_check": "pass; parent-aware committed comparison also required before push",
+    "latest_fixture_wrapper": "Syntax/lint verified; the existing native Storage regression actually produced and verified the foreign fixture in this run before its invocation was integrated into the fresh-source seed helper"
+  },
+  "source_files": [
+    {
+      "path": "apps/ledger-suit/scripts/audit-native-recovery-copy.mjs",
+      "sha256": "4d92eb6a93f91d9d165a17bb5c8c192f58d21f6935df8d5ea5c82983975e6a3f"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/backup-native-recovery-source.mjs",
+      "sha256": "a63295b8bea916764851e68099a79cb92d63b82272b42d3b32dd95ced41a31e8"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/capture-native-recovery-source.mjs",
+      "sha256": "967d9bf14359a4eb174d94a9798282004ca47cce9894586f73adbddbf5e4493a"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/native-recovery-context.mjs",
+      "sha256": "636942a5e65766f19b60307d608c2e404aa876bf77f6a2ed8e7217bd061d75e3"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/native-recovery-runtime.mjs",
+      "sha256": "41b2b250dfaffb05e59c612ace9fdd73d5b5e44728dd158f8ae56a2829855053"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/prepare-native-recovery-images.mjs",
+      "sha256": "3a64259647cbdee7fcfb8f0600d6da076da6d62dd6c8d86a2da79b2dfc02b503"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/prepare-native-recovery-network.mjs",
+      "sha256": "5617668de8654c04e70575fc9b1c47bc251c0d1f7859091acc3f482e1313cf24"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/prepare-native-recovery-project.mjs",
+      "sha256": "c04070dc01ebca74b9fde809a6218af59d6ec11616320d7762b50d772a899a92"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/restore-native-recovery-target.mjs",
+      "sha256": "e1ff59a004872465bff721a51f599f595bf09833cf81dc24c996356e420fc8e3"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/seed-native-recovery-source.mjs",
+      "sha256": "741f365fdddfcda8c0b3381d566faff605ad11367e93c668c0a8a2766f1c0938"
+    },
+    {
+      "path": "apps/ledger-suit/scripts/verify-native-recovery-target.mjs",
+      "sha256": "d46a847b4d1e1b3228547c15544ffe3f079b8bb95c7345afb0ddadcace576ce0"
+    }
+  ],
+  "limits": [
+    "Synthetic local fixture measurements do not establish production RPO/RTO; 32-minute interval includes backup, target provisioning, investigation and rolled-back failures, and excludes prior source setup.",
+    "Existing native supabase_admin operator is used only for restore grants; no application role elevated.",
+    "All retained source/target volumes preserved and stopped after verification.",
+    "No hosted S3 restore, off-site backup schedule/retention/owner, hosted deployment, accountant UAT or live Automation row reconciliation claimed.",
+    "Manual-payment receipt service Storage upload and database submission tested; full Edge byte-validation flow remains separate."
+  ]
+}

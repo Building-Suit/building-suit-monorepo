@@ -1,0 +1,94 @@
+{
+  "transport": "Owned loopback read-only empty public catalogue fixtures; unknown/private/write routes return 503. No provider/business acceptance claim.",
+  "asset_responses": 11,
+  "rendered_states": 4,
+  "checks": [
+    {
+      "product": "shop",
+      "file": "shop-suit-mark-light.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "shop",
+      "file": "shop-suit-mark-dark.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "shop",
+      "file": "shop-suit-wordmark-light.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "shop",
+      "file": "shop-suit-wordmark-dark.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-mark-light.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-mark-dark.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-wordmark-light.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-wordmark-dark.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-app-icon.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-app-icon.png",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "ledger",
+      "file": "ledger-suit-logo-mark.svg",
+      "http_exact_bytes": true
+    },
+    {
+      "product": "shop",
+      "width": 390,
+      "lang": "ar",
+      "theme": "light",
+      "visible_decoded_logos": 2,
+      "horizontal_overflow": false
+    },
+    {
+      "product": "shop",
+      "width": 1280,
+      "lang": "en",
+      "theme": "dark",
+      "visible_decoded_logos": 3,
+      "horizontal_overflow": false
+    },
+    {
+      "product": "ledger",
+      "width": 390,
+      "lang": "ar",
+      "theme": "light",
+      "visible_decoded_logos": 2,
+      "horizontal_overflow": false
+    },
+    {
+      "product": "ledger",
+      "width": 1280,
+      "lang": "en",
+      "theme": "dark",
+      "visible_decoded_logos": 2,
+      "horizontal_overflow": false
+    }
+  ]
+}

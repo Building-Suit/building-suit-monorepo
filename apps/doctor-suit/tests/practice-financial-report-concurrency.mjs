@@ -1,0 +1,33 @@
+// Real interleavings in the owned disposable CI database only; never a hosted database.
+import assert from 'node:assert/strict'
+import { spawn,spawnSync } from 'node:child_process'
+export async function verifyPracticeFinancialReportConcurrency(container){
+ const args=['exec','-i',container,'psql','-h','127.0.0.1','-U','postgres','-v','ON_ERROR_STOP=1','-At'],id=n=>`d2091900-0000-4000-8000-${String(n).padStart(12,'0')}`
+ function sql(input){const r=spawnSync('docker',args,{input,encoding:'utf8'});assert.equal(r.status,0,'Owned financial report SQL failed');return r.stdout.trim()}
+ function value(input){return JSON.parse(sql(input).split('\n').at(-1))}
+ const claim=n=>`set role authenticated;select set_config('request.jwt.claims','${JSON.stringify({sub:id(n),session_id:id(n+10),role:'authenticated'})}',false);`
+ function start(input,open=false){const child=spawn('docker',args,{stdio:['pipe','pipe','pipe']});let output='',errors='';child.stdout.on('data',v=>output+=v);child.stderr.on('data',v=>errors+=v);const done=new Promise(resolve=>child.once('close',status=>resolve({status,errors,output})));child.stdin.write(input);if(!open)child.stdin.end();return{child,done,output:()=>output}}
+ async function until(check){const end=Date.now()+10000;while(!check()){if(Date.now()>end)throw Error('Financial report transaction handshake timed out');await new Promise(r=>setTimeout(r,25))}}
+ async function race(number,firstSql,secondSql){const first=start(`begin;${firstSql}\n\\echo financial_report_held\n`,true);let second;try{await until(()=>first.output().includes('financial_report_held'));second=start(`set application_name='doctor_report_wait_${number}';${secondSql}`);await until(()=>sql(`select count(*)from pg_stat_activity where application_name='doctor_report_wait_${number}'and wait_event_type='Lock'and wait_event='advisory';`)==='1');first.child.stdin.end('commit;\n\\q\n');assert.equal((await first.done).status,0,'First report transaction failed');return{...await second.done,firstOutput:first.output()}}finally{for(const p of[first,second])if(p&&!p.child.killed&&p.child.exitCode===null)p.child.kill('SIGTERM')}}
+ sql(`insert into auth.users(id,email,email_confirmed_at)values('${id(1)}','synthetic-ledger-report-race@example.test',now());insert into auth.sessions(id,user_id)values('${id(11)}','${id(1)}');
+ insert into public.doctor_candidate_admissions(user_id,purpose,evidence_ref,valid_until)values('${id(1)}','synthetic_fixture','disposable-report-race',clock_timestamp()+interval'2 hours');
+ insert into public.doctor_profiles(user_id,display_name)values('${id(1)}','Synthetic report doctor');insert into public.practices(id,owner_user_id,name)values('${id(21)}','${id(1)}','Synthetic report practice');insert into public.locations(id,practice_id,name,timezone)values('${id(31)}','${id(21)}','Synthetic report clinic','Etc/UTC');
+ insert into public.patient_identities(id)values('${id(41)}');insert into public.practice_patients(id,practice_id,patient_identity_id,display_name,created_location_id,created_by)values('${id(51)}','${id(21)}','${id(41)}','Synthetic report patient','${id(31)}','${id(1)}');
+ insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,created_by)values('${id(61)}','${id(21)}','${id(1)}','${id(31)}','${id(51)}',now()+interval'1 day',now()+interval'1 day 20 minutes','Etc/UTC','Synthetic report clinic','${id(1)}');`)
+ const price=value(`${claim(1)}select public.doctor_write_service_price('${id(21)}','${id(31)}',null,0,'Synthetic report service','10000','EGP',2,'${id(101)}');`)
+ const charge=value(`${claim(1)}select public.doctor_write_visit_charge('${id(21)}','${id(31)}','${id(61)}',1,'${id(51)}','${price.id}',1,null,0,'Synthetic report charge','${id(102)}');`)
+ const report=()=>`${claim(1)}select public.doctor_practice_financial_report('${id(21)}');`
+ const prepare=value(`${claim(1)}select public.doctor_prepare_practice_payment('${id(21)}','${id(31)}','collection','${charge.id}',null,'6000','Synthetic report collection','${id(103)}');`)
+ const advance=(revision,action,key,outcome='null')=>`${claim(1)}select public.doctor_advance_practice_payment('${id(21)}','${id(31)}','${prepare.id}',${revision},'${action}',${outcome},'${id(key)}');`
+ value(advance(1,'dispatch',104,"'accepted'"))
+ const before=value(report());assert.equal(before.totals[0].collections_minor,'0');assert.equal(before.totals[0].reserved_collection_minor,'6000')
+ let result=await race(1,report(),advance(2,'reconcile',105));assert.equal(result.status,0,'Collection reconciliation failed after report lock');const locked=JSON.parse(result.firstOutput.split('\n').find(line=>line.startsWith('{')&&line.includes('date_basis')));assert.equal(locked.totals[0].collections_minor,'0');assert.equal(locked.totals[0].reserved_collection_minor,'6000');const posted=JSON.parse(result.output.trim().split('\n').at(-1))
+ const after=value(report());assert.equal(after.totals[0].collections_minor,'6000');assert.equal(after.totals[0].reserved_collection_minor,'0');assert.equal(after.totals[0].outstanding_minor,'4000')
+ const p2=value(`${claim(1)}select public.doctor_write_service_price('${id(21)}','${id(31)}','${price.service_id}',1,'Synthetic report service','15000','EGP',2,'${id(106)}');`)
+ result=await race(2,report(),`${claim(1)}select public.doctor_write_visit_charge('${id(21)}','${id(31)}','${id(61)}',1,'${id(51)}','${p2.id}',1,'${charge.charge_id}',1,'Synthetic report correction','${id(107)}');`)
+ assert.equal(result.status,0,'Charge correction failed after report lock');const oldSnapshot=JSON.parse(result.firstOutput.split('\n').find(line=>line.startsWith('{')&&line.includes('date_basis')));assert.equal(oldSnapshot.totals[0].charges_minor,'10000');assert.equal(oldSnapshot.totals[0].outstanding_minor,'4000');assert.equal(value(report()).totals[0].charges_minor,'15000')
+ const source=value(`${claim(1)}select public.doctor_practice_financial_source('${id(21)}','charge','${charge.id}',1);`);assert.equal(source.record.amount_minor,'10000');assert.equal(source.record.revision,1)
+ result=await race(3,`select pg_advisory_xact_lock(hashtextextended('${id(21)}',1));delete from auth.sessions where id='${id(11)}';`,`${claim(1)}select public.doctor_practice_financial_source('${id(21)}','ledger','${posted.entry.id}');`)
+ assert.notEqual(result.status,0);assert.equal(result.errors.includes('DOCTOR_AUTH_REQUIRED'),true,'Post-lock revoked session read financial source')
+ console.log('Three financial report transactions passed: report/collection reconciliation, report/charge correction and post-lock session revocation; original source snapshots remain immutable, no external settlement.')
+}

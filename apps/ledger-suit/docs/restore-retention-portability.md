@@ -1,10 +1,12 @@
 # Restore, retention, and customer portability
 
-Status: **tooling implemented locally; native restore evidence blocked** (LS-OPS-001, 2026-09-27). No hosted database, provider setting, deployment, or customer record was changed. This record does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
+Status: **native second-instance database/private-file recovery verified** (LS-OPS-RECOVERY-001, 2026-10-23). The actual 107-version rehearsal matches 153 application/Auth/Storage tables, the 103-table/four-report customer export, both private buckets and all five project object files. See [the work package and timings](accountant-system/work-packages/LS-OPS-RECOVERY-001.md). Hosted configuration, operating off-site backups, retention commitments and accountant UAT remain unverified; no production RPO/RTO is promised.
 
-## Actual exercise result
+The 103-table export includes FX/ETA/migration/manual-payment records, existing financial modules and both private object buckets. Object files use `objects/<encoded-bucket>/<tenant-key>`. Recovery comparison requires version-2 SQL/object/export manifests and validates every actual file, table row count, report and object digest. HTTP unit fixtures remain separate from genuine Storage-provider evidence. A tenant API export is not a transactionally consistent database backup: freeze source writes for recovery evidence and retain the separate database/Storage backup procedure below.
 
-The required second-instance restore did not start in this worktree. The checks below were actually run against the prepared branch at `0db3ea00ffa8ab5ecf771d9de3b4af1031951302` before edits:
+## Original exercise result (2026-09-27; superseded by the native rehearsal above)
+
+The historical September exercise did not start its second-instance restore. The October rehearsal above closes that local execution blocker; the following observations remain historical. The checks below were actually run against the prepared branch at `0db3ea00ffa8ab5ecf771d9de3b4af1031951302` before edits:
 
 | Check | Observed result |
 |---|---|
@@ -15,11 +17,11 @@ The required second-instance restore did not start in this worktree. The checks 
 | Local PostgreSQL | `pg_isready` found no server on `127.0.0.1:60322` or `127.0.0.1:5432`; no `postgres`/`initdb` server binary is installed. |
 | Backup, restore, reconciliation, attachment copy | Not started. Consequently there is no honest backup duration, restore duration, recoverable point, storage volume, RPO, or RTO to report. |
 
-This is a hard acceptance blocker, not a skipped test counted as evidence. A real run needs two fresh, explicitly owned disposable Supabase instances and Docker/native PostgreSQL access. Hosted writes are outside this task's authorization.
+These September environment blockers are preserved as historical evidence. The October native run used two fresh owned projects and actual providers; its separate remaining hosted/off-site/UAT gates are recorded above.
 
-## Verified hosting-plan limits
+## Historical hosting-plan review (2026-09-27; current hosted plan unverified)
 
-No paid Supabase plan has been selected or created in the maintained environment setup. The current planning baseline is therefore **Free**, subject to owner confirmation in the provider dashboard. This is a source-level conclusion, not verification of either live Ledger project's plan or backup dashboard.
+At the September checkpoint, no paid plan selection was recorded in the maintained setup and the planning baseline was **Free**. The current hosted plan and backup dashboard remain unverified; the native rehearsal does not select or purchase a hosting plan.
 
 Read-only review of official Supabase material on 2026-09-27 established:
 
@@ -30,7 +32,7 @@ Read-only review of official Supabase material on 2026-09-27 established:
 | Team | Starts at USD 599/month and includes daily database backups retained for 14 days. | Not selected or enabled. |
 | PITR add-on | Available on paid plans, requires at least Small compute, and is currently listed at about USD 100/200/400 monthly for 7/14/28 days. Enabling PITR replaces daily backups for that project. | No PITR purchase or RPO is approved. Provider granularity is not a measured Ledger RPO or RTO. |
 | Restore | A managed restore makes the project inaccessible; duration varies with database size. | Only an actual timed Ledger rehearsal can establish recovery time. |
-| Storage | Database backups cover database data/metadata, not the object bytes stored through Storage. | Every usable Ledger backup must separately copy the private `attachments` object bytes and reconcile them with `public.attachments`. |
+| Storage | Database backups cover database data/metadata, not the object bytes stored through Storage. | Every usable Ledger backup must separately copy private `attachments` and `manual-payment-receipts` bytes and reconcile both metadata sources. |
 
 Sources: [Supabase database backups](https://supabase.com/docs/guides/platform/backups), [Supabase pricing](https://supabase.com/pricing), [Supabase CLI backup/restore and Storage migration](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore), and [Storage object downloads](https://supabase.com/docs/guides/storage/management/download-objects).
 
@@ -39,7 +41,7 @@ Sources: [Supabase database backups](https://supabase.com/docs/guides/platform/b
 Use the existing V2-IMP-015 synthetic fixture and dates. Do not reset the normal local Ledger project and never restore over the source.
 
 1. Create source and target disposable Supabase projects under this worktree with unique project IDs, container ownership labels, ports, and service keys. Record their resolved workdirs and prove that neither URL is hosted.
-2. Replay the complete Ledger migration chain into the source. Create a committed synthetic organization through the existing public commands; include posted/reversed journals, AR/AP, configuration, recurrence/import evidence, and at least one real private attachment object.
+2. Replay the complete Ledger migration chain into the source. Create a committed synthetic organization through the existing public commands; include posted/reversed journals, AR/AP, configuration, recurrence/import evidence, at least one real private attachment and a manual-payment receipt object.
 3. Run `capture-restore-evidence.sql` on the source with `psql -X -Atq -v ON_ERROR_STOP=1`, saving its single JSON row. Run `export-organization-portability.mjs` with the source user's publishable key/access token to capture the existing report CSVs, tenant tables, attachment bytes, and SHA-256 manifest. Tokens are environment variables and must never enter shell history, logs, or artifacts.
 4. Create the database backup using the current official Supabase CLI procedure (roles, schema, data, and `supabase_migrations` history). Copy the private Storage objects separately. Record UTC start/end timestamps, CLI versions, migration-manifest hash, database bytes, attachment count/bytes, exit codes, and artifact SHA-256 values.
 5. Restore only into the second fresh target instance using the official procedure. Recreate only externally managed configuration—Auth/Storage customizations from migrations, Edge Functions, secrets by **name**, Vault entries by **name**, scheduler jobs, SMTP/callbacks, and provider settings. Do not copy secret values into evidence.
@@ -49,7 +51,8 @@ Use the existing V2-IMP-015 synthetic fixture and dates. Do not reset the normal
    node apps/ledger-suit/scripts/compare-restore-evidence.mjs \
      source.json restored.json \
      source-export/attachments-manifest.json \
-     restored-export/attachments-manifest.json
+     restored-export/attachments-manifest.json \
+     source-export/manifest.json restored-export/manifest.json
    ```
 
    Passing requires nonempty journals, zero unbalanced journals, exact journal/entry identities and minor-unit totals, exact TB/BS/P&L/Control and existing CSV digests, configuration/recurrence/import equality, and byte-identical attachment manifests. Row counts alone are insufficient.
@@ -103,9 +106,9 @@ The package intentionally excludes Auth credentials/passwords, service-role keys
 
 | Requirement | Code/tooling | Tests | Deployed | Accountant accepted |
 |---|---|---|---|---|
-| CORE-04 | Existing append-only/reversal behavior is included in exact restore digests; unchanged | Comparator unit coverage passed locally; native restore unverified | Unverified | Pending |
-| CORE-07 | Portability/export and attachment-byte evidence tooling added; runtime behavior unchanged | Offline unit coverage passed locally; native RLS/API/export/Storage run unverified | Unverified | Pending |
-| CORE-08 | Exact source/target evidence contract added | Offline mismatch detection passed; real source/target reconciliation unverified | Unverified | Pending |
+| CORE-04 | Existing append-only/reversal behavior is included in exact restore digests; unchanged | Native 11-journal/22-entry recovery and exact data/identity comparison pass; continuation rolls back without financial changes | Unverified | Pending |
+| CORE-07 | Portability/export and attachment-byte evidence tooling added; runtime behavior unchanged | Actual native Auth/Storage/API export, two private buckets and cross-tenant/key denials pass | Unverified | Pending |
+| CORE-08 | Exact source/target evidence contract added | Native independent source/target reconciliation and corruption rejection pass; hosted/off-site operation remains pending | Unverified | Pending |
 | VAL-08 | Separate states retained | Artifact/state validator remains the authority | Unverified | Pending |
 
-LS-OPS-001 is not complete until one native, isolated, timed restore produces reviewed matching artifacts. The tooling and provider review are ready for that independent run.
+The native, isolated, timed restore now has matching artifacts and actual Auth/Storage/permission evidence. LS-OPS-001 still requires an operating off-site destination/schedule, current hosted configuration, responsible operator and separately recorded acceptance before any production recovery guarantee.

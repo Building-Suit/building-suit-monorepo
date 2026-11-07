@@ -1,0 +1,16 @@
+{
+  "id": "dos-m6-001",
+  "task": "DOS-M6-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m6-001.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-001-commercial-packet.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Concrete commercial decision/evidence packet preserves prior authorized Doctor pricing/InstaPay direction while missing complete policy and live authority remain held."
+}

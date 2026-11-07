@@ -9,7 +9,7 @@ type Location = { id: string; name: string }
 // Local Auth + real PostgREST, with no intercepted responses. Credentials live
 // only in this process. Fixtures remain in the disposable backend for recovery
 // verification; this helper never resets a database or deletes unrelated data.
-export async function backendFixture(role: PilotRole) {
+export async function backendFixture(role: PilotRole, businessMode: 'service' | 'mixed' = 'service') {
   const status = localStatus()
   const runId = randomUUID()
   async function request<T>(path: string, token: string, body?: unknown): Promise<T> {
@@ -31,7 +31,7 @@ export async function backendFixture(role: PilotRole) {
     return { email, password, token: session.access_token }
   }
   const owner = await account('owner')
-  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_plan_slug: 'pro', p_business_mode: 'service' })
+  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_business_mode: businessMode })
   const locations = await rpc<Location[]>(owner, 'list_shop_locations', { p_shop_id: shopId })
   const second = await rpc<string>(owner, 'save_shop_location', { p_shop_id: shopId, p_location_id: null, p_name: 'Pilot second branch', p_code: 'P2', p_address: null, p_phone: null })
   locations.push({ id: second, name: 'Pilot second branch' })
@@ -67,7 +67,9 @@ export async function backendFixture(role: PilotRole) {
     p_shop_id: shopId, p_customer_id: null, p_name: 'Pilot booked customer',
     p_phone: null, p_email: null, p_address: null, p_notes: null,
   })
-  return { owner, actor, shopId, locations, membershipId, serviceId, customerId, rpc }
+  const read = <T>(reader: Account, table: 'product_stock' | 'inventory_movements' | 'invoice_items' | 'invoices', query: Record<string, string>) =>
+    request<T>(`/rest/v1/${table}?${new URLSearchParams(query)}`, reader.token)
+  return { owner, actor, shopId, locations, membershipId, serviceId, customerId, rpc, read, account }
 }
 
 export async function login(page: Page, account: Account, locale: string) {
@@ -92,20 +94,26 @@ export async function login(page: Page, account: Account, locale: string) {
     return root.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
   })
 
-  const email = page.locator('#login-email')
-  const password = page.locator('#login-password')
-  const submit = page.locator('form button[type="submit"]')
-
+  const form = page.locator('form')
+  await expect(form).toHaveAttribute('data-client-ready', 'true', { timeout: 30_000 })
+  const email = page.getByLabel(locale === 'ar' ? /^البريد الإلكتروني\s*\*?$/ : /^Email\s*\*?$/)
+  const password = page.getByLabel(locale === 'ar' ? /^كلمة المرور\s*\*?$/ : /^Password\s*\*?$/)
   await expect(email).toBeEditable()
-  await expect(password).toBeEditable()
-  await expect(submit).toBeEnabled()
-
+  await expect(password).toHaveCount(0)
   await email.fill(account.email)
+  const emailResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/email-step' && response.request().method() === 'POST')
+  await page.getByRole('button', { name: locale === 'ar' ? 'التالي' : 'Continue', exact: true }).click()
+  const checkedEmail = await emailResponse
+  expect(checkedEmail.ok()).toBe(true)
+  expect(await checkedEmail.json()).toEqual({ canContinue: true })
+  await expect(password).toBeEditable()
   await password.fill(account.password)
-
+  const submit = form.locator('button[type="submit"]')
+  await expect(submit).toHaveCount(1)
+  await expect(submit).toBeEnabled()
   await Promise.all([
     page.waitForURL(/\/dashboard/, { timeout: 20_000 }),
     submit.click(),
   ])
-  await expect(page.getByRole('main').getByRole('heading', { name: locale === 'ar' ? 'لوحة التشغيل' : 'Operating dashboard', exact: true })).toBeVisible()
+  await expect(page.getByRole('main').getByRole('heading', { name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard', exact: true })).toBeVisible()
 }

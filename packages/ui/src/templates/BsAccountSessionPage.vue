@@ -1,5 +1,6 @@
 <script setup lang="ts">
 defineProps<{
+  primaryAction?: { label: string; to: string; description: string }
   settings?: { title: string; description: string; loading: boolean; loadingLabel: string; error: string|null; saved: string|null; canEdit: boolean; needsReauthentication: boolean; summary: { label: string; value: string }[]; copy: { name: string; phone: string; phoneHint: string; confirmations: string; preference: string; edit: string; save: string; cancel: string; retry: string; signIn: string; unavailable: string }; editor: { dirty: boolean; pending: boolean; error: string|null; submitDisabled: boolean } }
   product: { name: string; homeLabel: string; title: string; description: string }
   title: string
@@ -23,6 +24,7 @@ const emit = defineEmits<{ signOut: []; editAccount: []; saveAccount: []; reload
       <BsHeading :level="1">{{ title }}</BsHeading>
       <BsText as="p">{{ description }}</BsText>
       <BsStateSurface state="success" :title="status" :description="statusDescription" />
+      <BsActionTile v-if="primaryAction" :to="primaryAction.to" :title="primaryAction.label" :aria-label="primaryAction.label" :description="primaryAction.description" tone="accent" />
       <BsAlert v-if="error" tone="error" :description="error" />
       <BsStack v-if="settings">
         <BsHeading :level="2">{{ settings.title }}</BsHeading>

@@ -11,7 +11,7 @@ for(const locale of ['en','ar'])test(`owner explicitly configures booking and st
   if(name==='shop_booking_settings_save'){settings={policy:{...args.p_policy as typeof settings.policy,reminders_enabled:Boolean((args.p_policy as {reminders_enabled?:boolean}).reminders_enabled),reminder_channel:(args.p_policy as {reminders_enabled?:boolean}).reminders_enabled?'email':null},staff:(args.p_staff as {membershipId:string;publicName:string}[]).map(s=>({...s,name:'Private staff identity',published:true}))};return null}
   return undefined
  })
- await fixtureGoto(page,'/settings');const panel=page.locator('#public-booking-settings')
+ await fixtureGoto(page,'/settings/public-booking-settings');const panel=page.locator('#public-booking-settings')
  await expect(panel).toContainText(ar?'الحجز العام معطل':'Public booking disabled')
  await panel.getByRole('button',{name:ar?'تعديل سياسة الحجز':'Edit booking policy',exact:true}).click();const dialog=page.getByRole('dialog')
  await dialog.getByRole('checkbox',{name:ar?'تفعيل الحجز العام':'Enable public booking',exact:true}).check()
@@ -25,5 +25,5 @@ for(const locale of ['en','ar'])test(`owner explicitly configures booking and st
 })
 test('ordinary staff cannot edit booking publication policy',async({page})=>{
  const {calls}=await pilotFixture(page,'en','staff',name=>name==='shop_permission_access'?{'settings.manage':false}:undefined)
- await fixtureGoto(page,'/settings');await expect(page.locator('#public-booking-settings')).toContainText('Only the owner can manage public booking.');expect(calls.some(c=>c.name==='shop_booking_settings')).toBe(false)
+ await fixtureGoto(page,'/settings/public-booking-settings');await expect(page.locator('#public-booking-settings')).toContainText('Only the owner can manage public booking.');expect(calls.some(c=>c.name==='shop_booking_settings')).toBe(false)
 })

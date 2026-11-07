@@ -19,15 +19,24 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
       { to: '/taxes', label: locale === 'ar' ? 'الضرائب' : 'Taxes', icon: 'settings' },
       { to: '/commissions', label: locale === 'ar' ? 'العمولات' : 'Commissions', icon: 'wallet' },
       { to: '/cash-shifts', label: copy.cashShifts, icon: 'wallet' },
+      { to: '/quotations', label: locale === 'ar' ? 'عروض الأسعار' : 'Quotations', icon: 'invoice' },
+      { to: '/orders', label: locale === 'ar' ? 'أوامر العملاء' : 'Customer orders', icon: 'invoice' },
       { to: '/sales', label: t('sales.title'), icon: 'invoice' },
     ] },
     ...(businessModeSupportsProducts(mode) ? [{ key: 'stock', label: copy.inventory, links: [
       { to: '/products', label: copy.products, icon: 'ledger' },
       { to: '/inventory', label: copy.inventory, icon: 'wallet' },
+      { to: '/commodity-pricing', label: locale === 'ar' ? 'أسعار المواد المرجعية' : 'Commodity reference prices', icon: 'settings' },
+      { to: '/weighing-setup', label: locale === 'ar' ? 'الموازين ومعاملات الوزن' : 'Scales & weight conversions', icon: 'settings' },
+      { to: '/supply-planning', label: locale === 'ar' ? 'المواقع الداخلية وتخطيط التوريد' : 'Storage & supply planning', icon: 'store' },
+      { to: '/purchase-orders', label: locale === 'ar' ? 'أوامر شراء الموردين' : 'Supplier purchase orders', icon: 'invoice' },
       { to: '/purchases', label: copy.purchases, icon: 'cash' },
     ] }] : []),
     { key: 'manage', label: copy.manage, links: [
       { to: '/reports', label: copy.reports, icon: 'reports' },
+      { to: '/trade-pricing', label: locale === 'ar' ? 'مجموعات وأسعار العملاء' : 'Customer groups & pricing', icon: 'user' },
+      { to: '/offers', label: locale === 'ar' ? 'العروض والباقات' : 'Promos & offers', icon: 'basket' },
+      { to: '/website-builder', label: locale === 'ar' ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
       { to: '/catalog-import', label: copy.catalogSetup, icon: 'ledger' },
       ...(businessModeSupportsServices(mode) ? [{ to: '/services', label: copy.services, icon: 'invoice' }] : []),
       { to: '/expenses', label: copy.expenses, icon: 'cash' },
@@ -47,6 +56,7 @@ export function shopSettingsNavigation(isArabic: boolean, includeBilling: boolea
     : ['Shop profile', 'Business operation mode', 'Business locations', 'Receipt settings', 'Cashier shift policy', 'Public booking', 'Website inquiries', 'Public catalog', 'Public shop profile', 'Shop website address', 'Business currency']
   const icons = ['store', 'settings', 'store', 'invoice', 'wallet', 'invoice', 'mail', 'ledger', 'store', 'monitor', 'cash']
   return [
+    { to: '/website-builder', label: isArabic ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
     ...SHOP_SETTINGS_SECTIONS.map((section, index) => ({ to: `/settings/${section}`, label: labels[index]!, icon: icons[index]! })),
     ...(includeBilling ? [{ to: '/billing', label: shopShellCopy(isArabic).billing, icon: 'wallet' }] : []),
   ]

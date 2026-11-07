@@ -1,0 +1,23 @@
+{
+  "id": "shared-workspace-chrome-support-20261019",
+  "task": "SHARED-WORKSPACE-CHROME-20261019",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs",
+    "apps/super-admin-suit/tests/unit/bootstrap.test.mjs",
+    "docs/shared",
+    "release-changes/items.json"
+  ],
+  "reason": "Converge every shared-shell source consumer on the canonical rail, drawer, collapse and page-context presentation, including the registry-driven control plane; maintain contracts, catalogue and regression coverage. Public Shop control changes are separately classified. Other consumer release registration/baselines remain unchanged; shared source consumption does not authorize product activation or fabricated public releases."
+}

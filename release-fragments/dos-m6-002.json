@@ -1,0 +1,21 @@
+{
+  "id": "dos-m6-002",
+  "task": "DOS-M6-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/unit/dos-m6-002.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m6-002.sql",
+    "apps/doctor-suit/tests/e2e/dos-m6-002.spec.ts",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts",
+    "apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-002-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Task-specific executable verification of existing trusted server entitlements/quota/history and expiry protocol; no new commercial or provider authority."
+}

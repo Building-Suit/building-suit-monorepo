@@ -1,0 +1,17 @@
+import {emptyClinicalSnapshot,validClinicalSnapshot,type ClinicalSnapshot} from '@building-suit/contracts'
+import type {BsClinicalFields,BsClinicalSegmentFields} from '@building-suit/ui/utils/clinicalPresentation'
+export function nativePrescriptionFields(snapshot:ClinicalSnapshot=emptyClinicalSnapshot(),patientId=''):BsClinicalFields {
+ return {patientId,note:snapshot.note.sections.find(s=>s.key==='entered_note')?.text??'',reviewNote:snapshot.note.sections.find(s=>s.key==='review_notes')?.text??'',intake:snapshot.intake.map(item=>({...item})),prescriptions:snapshot.prescriptions.map(item=>({id:item.id,identity:item.medicine.identity,name:item.medicine.label,strength:item.medicine.strength,form:item.medicine.form,amount:item.dose.amount,unit:item.dose.unit,route:item.dose.route,start:item.start_date,end:item.end_date,instructions:item.instructions,segments:item.segments.map(segment=>({kind:segment.kind,start:segment.start_date,end:segment.end_date,timezone:segment.timezone,interval:segment.interval_minutes===null?'':String(segment.interval_minutes),weekdays:segment.weekdays.join(','),times:segment.times.join(','),instructions:segment.instructions}))})),orders:snapshot.orders.map(item=>({id:item.id,kind:item.kind,request:item.request,due:item.due_at??'',state:item.state,reason:item.reason})),results:snapshot.results.map(item=>({id:item.id,orderId:item.order_id,documentVersionId:item.document_version_id??'',stage:item.stage,annotation:item.annotation}))}
+}
+export function nativePrescriptionSnapshot(fields:BsClinicalFields):ClinicalSnapshot|null {
+ const values:unknown={intake:fields.intake.map(item=>({...item})),note:{template_id:'synthetic-neutral',template_version:1,sections:[{key:'entered_note',text:fields.note},{key:'review_notes',text:fields.reviewNote}]},prescriptions:fields.prescriptions.map(item=>({id:item.id,medicine:{identity:item.identity,label:item.name,provenance:'synthetic_manual',source_version:'manual-synthetic-v1',strength:item.strength,form:item.form},dose:{amount:item.amount,unit:item.unit,route:item.route},start_date:item.start,end_date:item.end,instructions:item.instructions,segments:item.segments.map(segment=>({kind:segment.kind,start_date:segment.start,end_date:segment.end,timezone:segment.timezone,interval_minutes:segment.interval===''?null:/^[1-9][0-9]*$/.test(segment.interval)?Number(segment.interval):Number.NaN,weekdays:segment.weekdays.trim()===''?[]:segment.weekdays.split(',').map(value=>/^[1-7]$/.test(value.trim())?Number(value.trim()):Number.NaN),times:segment.times.trim()===''?[]:segment.times.split(',').map(value=>value.trim()),instructions:segment.instructions}))})),orders:fields.orders.map(item=>({id:item.id,kind:item.kind,request:item.request,due_at:item.due||null,state:item.state,reason:item.reason})),results:fields.results.map(item=>({id:item.id,order_id:item.orderId,document_version_id:item.documentVersionId||null,stage:item.stage,annotation:item.annotation}))}
+ return validClinicalSnapshot(values)?values:null
+}
+
+/** Identifiers are technical; every entered clinical value starts blank. */
+export function emptyNativePrescription(id:string):BsClinicalFields['prescriptions'][number]{
+ return{id,identity:'',name:'',strength:'',form:'',amount:'',unit:'',route:'',start:'',end:'',instructions:'',segments:[]}
+}
+export function emptyNativePrescriptionSegment():BsClinicalSegmentFields{
+ return{kind:'',start:'',end:'',timezone:'',interval:'',weekdays:'',times:'',instructions:''}
+}

@@ -1,0 +1,319 @@
+{
+  "task_id": "DOS-M6-006",
+  "recorded_at_utc": "2026-10-26T13:14:44.176940+00:00",
+  "parent_pr": 491,
+  "cut_parent": "256e868912cb2e488d82b84722b41a27e1f81b47",
+  "draft_pr": 492,
+  "phase": "persisted-billing-workspace-bound-visit-source-and-owned-CI-journeys",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "live_collection": false,
+  "tax_applicability": "unreviewed",
+  "discount_policy": "unavailable-no-implicit-rounding-or-overrides",
+  "owned_unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs"
+    ],
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0
+  },
+  "changed_file_lint": {
+    "doctor": "passed-scoped-config-zero-errors",
+    "shared_ui": "passed",
+    "catalogue": "zero-errors-five-pre-existing-warnings",
+    "root_ignored_app_invocation": "not-counted-as-app-lint; repeated-with-own-scoped-config"
+  },
+  "doctor_types": "passed",
+  "boundaries": {
+    "status": "passed",
+    "templates": 139,
+    "preserved_migrations": 80
+  },
+  "canonical": {
+    "status": "passed",
+    "packets": 9,
+    "tasks": 104,
+    "fingerprints_unchanged": true
+  },
+  "root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2497,
+    "passed": 2420,
+    "failed": 54,
+    "skipped": 23,
+    "all_failures": "unchanged apps/shop-suit/tests",
+    "failure_locations": 54,
+    "phase": "final-billing-workspace-visit-binding-and-CI-harness-source"
+  },
+  "actual_sql": {
+    "status": "passed57-at-8c1c/run40316151266",
+    "assertions_static_count": 57,
+    "rolled_back_synthetic_fixture": true
+  },
+  "actual_transactions": {
+    "status": "passed7-at-8c1c/run40316151266",
+    "cases": 7,
+    "source": "apps/doctor-suit/tests/practice-billing-concurrency.mjs"
+  },
+  "browser_and_UI": {
+    "status": "implemented-statically-verified; actual-journeys-unrun-after-owned-fixture-stage-failure",
+    "browser_file": "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts",
+    "owned_cases": [
+      "DOS-M6-006-C02-EN",
+      "DOS-M6-006-C02-AR"
+    ],
+    "total_financial_discovery": 6,
+    "auth_discovery": 87,
+    "discovery_is_execution": false,
+    "placeholder_created": false,
+    "artifacts_containing_credentials": false
+  },
+  "generated_types": {
+    "status": "8c1c-generation-success; artifact acquisition pending; generated files never handwritten",
+    "handwritten": false
+  },
+  "source_sha256": {
+    "apps/doctor-suit/app/utils/practiceBilling.ts": "86e467cdc91324d06811fe4b9adb0051c993ff2b09589dc7d76ccc65ed603f20",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "896b569a53316433203cd19f0c1c2c55bb53472f21d37d267b743b14d918c97e",
+    "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql": "5729c46b299ebad9564f148916080f688a06fd4a94df0f2964a09cac280cd707",
+    "apps/doctor-suit/supabase/tests/dos-m6-006.sql": "74de370b078b6e7ec7866ee7b804109bfbed1ab297261161ad13c748b61ce264",
+    "apps/doctor-suit/tests/disposable-postgres.mjs": "3fcdffb3b99c52021d2135d18960670616e44ac7869064e7e214df703e84b60d",
+    "apps/doctor-suit/tests/practice-billing-concurrency.mjs": "3d9b74db5807efaaf6915f7143fd4da644180f3927d05edc9b9ba0f3328871c3",
+    "apps/doctor-suit/supabase/migrations/20261026101913_doctor_practice_billing_board.sql": "748292349221f5104388bb4f2b12e27247f4d968e143ea851c8b1e2b73b4eb7a",
+    "apps/doctor-suit/app/utils/practiceBillingBoard.ts": "74a89504fa46b31bb09df741efe69d5117b4bc34034d3ef7adddc94f06c7720c",
+    "apps/doctor-suit/app/utils/practiceBillingController.ts": "936692e3dba1606c5fcf1015a1fe8b1e7309cdbc87bd806a51077babfa6210c1",
+    "apps/doctor-suit/app/utils/practiceBillingRepository.ts": "e9177fd96c20f4f578cdc3a426a5feb9fd9ab61e30a7a083a41b491dd8409332",
+    "apps/doctor-suit/app/utils/practiceBillingPresentation.ts": "9783adb757dddf2760bc1e53f6f16e4e129acfc9c17da502135fb0a8561f1b33",
+    "apps/doctor-suit/app/composables/useDoctorPracticeBilling.ts": "718eeff13cfe819a09cb9cf49dd10561fa458b9b8771d21520d9c0ca72c8de43",
+    "apps/doctor-suit/app/pages/practice-billing.vue": "2e4cfff8247ca71fb6cb16f03a122c84032388fb5bec1bb86af82cbac04fe0e1",
+    "apps/doctor-suit/app/pages/account.vue": "df50bcb76224ab56ea64bc25739075a011c31ab030144f2ded82ac203dbc1844",
+    "apps/doctor-suit/app/layouts/practice.vue": "397fa1010a3e96698e00e0664ff7ff21e6eb9d40541b91533bfb81b06e7df13f",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts": "c64355f9886a10859454a05c81dee2ef4a65f8d8fd67d9f47aee1528bc33b330",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts": "b7202c148a2027e47dbaf379a5949e218749e30de31818b533b2c0b4fea7a896",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts": "b2a965e5b38cc0630a377fd6b3b96b1c9abc62b1bd1c59892927dab7b79eee3d",
+    "packages/ui/package.json": "f06d768f756c009e279f45f7614dbe71952d022441d5ff47d5cb92f9102ae51c",
+    "packages/ui/src/utils/practiceBillingPresentation.ts": "856c4fae5c6479488a24b506e7025df27e6bc83c265d8d7db31cb3f247863146",
+    "packages/ui/src/templates/BsPracticeBillingPage.vue": "17bcdd2d3e9f1cab646850556d6598b709bb7ebd844717da227d7e926edab4a3",
+    "apps/building-suit-docs/app/pages/components.vue": "c93344709c8520d03b2f045be58ca05b4f147d463e646e3a39e1c4321d7a414c",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "5f4dcbca0f1d450cf3450fecc78ba55d65e7579f3fe0cb954a828bf80cc7ec88",
+    "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts": "de2523e909b6e661e19d4b459e37a2730b547ab4adb11083d6d8520b17ac2771",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts": "40d34dafe10a3116eaab5fa8bc5c0b29dab3338e7f57fb84e33159b554379cae",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "8bc6f160d4ecce8db0a9132ac09bfcb9da71da720f7d97dca2ccac29db089e06",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "9a4753fc0cf3c6a3db9bd4a683ec78764e5335c2dcc5e3dfb48f43d9985adff1",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "d5562b0d05de6cbb8df510d8b1ae734fa181f24e2eb70930ebc90b11640cff13",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs": "5d70fa8310007630d54ebb751589af54cee39e80fc0c2ffd69cb712c15922a02",
+    "apps/doctor-suit/tests/manual-payments-actual-provider.mjs": "f47aa3b80e614f93edc71870f4a2e42a4df45a01f9265d45fb5e225975f9ddc3",
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "f9abdf4816a996110fa9cdcb70af313e30b0722da636639c5c3c90c1d1e4fda4"
+  },
+  "unknown_acceptance_guard": "one first revision per visit/service; subsequent explicit correction appends revision",
+  "incorporated_parent_evidence_head": "9d005aabb00a3f292920c9700fc40a863f8430d7",
+  "parent_merge": "ddbd450dbe7c941d644edcf784b0aaa90630a9b5",
+  "focused_unit": {
+    "tasks": [
+      "DOS-M6-003",
+      "DOS-M6-004",
+      "DOS-M6-005",
+      "DOS-M6-006"
+    ],
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0
+  },
+  "affected_consumer_types": {
+    "doctor-suit": "passed",
+    "shop-suit": "passed",
+    "ledger-suit": "passed",
+    "inventory-suit": "passed",
+    "super-admin-suit": "passed",
+    "automation-suit": "passed",
+    "building-suit-docs": "passed"
+  },
+  "static_sql": {
+    "parser": "pglast-7.21-outside-repository",
+    "original_migration_statements": 25,
+    "original_migration_plpgsql": 4,
+    "forward_migration_statements": 18,
+    "forward_migration_plpgsql": 3,
+    "task_sql_statements": 110,
+    "status": "parsed-static-only-no-database-acceptance"
+  },
+  "actual_backend_checkpoint": {
+    "source_head": "830663330033c3205a1e0a3a8fc697f1710030d8",
+    "run_id": 40306458285,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40306458285",
+    "created_at": "2026-10-26T10:19:07Z",
+    "updated_at": "2026-10-26T10:49:30Z",
+    "aggregate": "failure",
+    "doctor_sql_job": 121516665208,
+    "own_sql_passed": 39,
+    "full_sql_assertions_passed": 2040,
+    "full_sql_suites_passed": 65,
+    "own_actual_transactions_passed": 6,
+    "predecessor_actual_request_transactions_passed": 6,
+    "recovery": "failed-exact-schema-fingerprint; first-difference reason CHECK nested AND deparse; row fingerprint/probes not reached",
+    "generated_types": "skipped-after-recovery-failure",
+    "doctor_browser_job": 121516665288,
+    "public_passed": 60,
+    "auth_protocol_passed": 86,
+    "auth_protocol_failed": 1,
+    "auth_failure": "M1-020 AR mobile/light shared-secretary queue confirmation-dialog click timeout10000ms",
+    "stress": "skipped",
+    "actual_m3_tasks_accepted": 10,
+    "financial_tasks_003_004_passed": 4,
+    "full_provider_final_marker": "passed",
+    "new006_gui_and_provider": "absent-at-this-source-not-accepted",
+    "shared_job": 121516665709,
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6
+  },
+  "compatibility": {
+    "old_unbound_charge_overload": "execution-revoked",
+    "new_charge_preconditions": [
+      "visit-version",
+      "patient-id"
+    ],
+    "legacy_visit_version": "null-retained-no-invented-backfill",
+    "existing_hosted_deployment": false,
+    "unknown_old_overload_command": "requires-review-not-unbound-retry"
+  },
+  "actual_workspace_checkpoint": {
+    "source_head": "8c1cd3fbd200cfd4af130f60aa798f1aefc93347",
+    "run_id": 40316151266,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40316151266",
+    "completed_at": "2026-10-26T11:54:33Z",
+    "aggregate": "failure",
+    "doctor_sql_job": 121549138285,
+    "doctor_sql": "success",
+    "own_sql_passed": 57,
+    "full_sql_suites_passed": 65,
+    "full_sql_assertions_passed": 2058,
+    "own_actual_transactions_passed": 7,
+    "isolated_recovery_table_fingerprints": 89,
+    "isolated_recovery_exact_schema_acl_rls_history": "passed",
+    "generated_public_schema": "generated-in-CI; acquisition-not-qualified",
+    "doctor_browser_job": 121549138229,
+    "public_passed": 60,
+    "auth_protocol_passed": 86,
+    "auth_protocol_failed": 1,
+    "protocol_failure": "M1-020 AR mobile/light; queue confirmation dialog absent; ready authenticated secretary canQueue=true/canWrite=false, no transition request",
+    "stress": "skipped",
+    "actual_m3_tasks_accepted": 10,
+    "actual_provider": "failure before financial subprocess at actual M6-003/004 frozen quote and reviewed notice browser assertions",
+    "financial_receipts": "absent; all6 cases unrun/unaccepted at this source",
+    "predecessor_lifecycle_actual_hook": "unreached",
+    "shared_job": 121549137989,
+    "shared_auth_passed": 47,
+    "shared_auth_failed": 1,
+    "shared_settings": "skipped"
+  },
+  "diagnostic_update": {
+    "scope": "fixed allowlisted stages before each owned billing fixture operation and subprocess, no values/IDs/errors/DOM/Auth output",
+    "root_cause": "not-established",
+    "product_fix_claimed": false,
+    "assertions_retries_timeouts_changed": false,
+    "focused_units_passed": 30,
+    "scoped_changed_file_lint": "passed",
+    "expensive_root_repeat": "not-repeated-for-diagnostic-only-update;2497/2420/54/23-source8c1c-retained"
+  },
+  "fixture_mode_repair": {
+    "defect": "readonly suspension was asserted while global edition remained synthetic_preview, which deliberately reports writable preview entitlement",
+    "before": {
+      "owned_passed": 23,
+      "owned_failed": 1,
+      "failed_assertion": "Inactive fixture must retain owned history without write authority"
+    },
+    "after": {
+      "owned_passed": 24,
+      "focused_003_006_passed": 31,
+      "combined_003_004_005_006_passed": 46,
+      "lint": "passed"
+    },
+    "scope": "owned-fixture-only; current owner/patient/entitlement gates unchanged",
+    "admission": "two actual actor IDs, synthetic_fixture purpose, two-hour validity, appended revocation at cleanup",
+    "edition": "explicit administrative_candidate during financial exercise; preview restored with appended revision on success/preparation failure",
+    "cleanup": "audited account resume, edition restoration and admission revocation in one owned SQL transaction",
+    "runtime_acceptance": "unrun-at-new-source-await-owned-CI",
+    "root": "prior2497/2420/54/23 at8c1 retained; diagnostic/fixture-only focused follow-up, not a new full-root pass"
+  },
+  "clinic_page_repair": {
+    "before": {
+      "owned_passed": 24,
+      "owned_failed": 1
+    },
+    "after": {
+      "owned_passed": 25,
+      "combined_003_004_005_006_passed": 47,
+      "scoped_lint": "passed",
+      "doctor_types": "passed"
+    },
+    "defect": "one-based UI page sent unchanged to existing zero-based doctor_locations RPC; page1 skipped first25 clinics and hid billing creation controls",
+    "repair": "validate UI page; translate page-1 only in billing adapter; enforce full returned-page count",
+    "regression": "one-clinic and26-clinic fixtures, both page boundaries and no invalid-page RPC",
+    "runtime_after_repair": "unrun-await-new-owned-CI",
+    "other_directory_consumers": "unchanged"
+  },
+  "descendant_259_runtime_reference": {
+    "run_id": 40323046338,
+    "head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "completed_at": "2026-10-26T13:00:59Z",
+    "sql_job": 121572593826,
+    "full_suites": 66,
+    "full_assertions": 2120,
+    "own006_sql_passed": 57,
+    "billing_transactions": 7,
+    "money_transactions": 8,
+    "recovery_fingerprints": 95,
+    "generated_schema": "success; acquisition unqualified",
+    "browser_job": 121572594259,
+    "public": 60,
+    "protocol": 87,
+    "stress": 4,
+    "financial003_AR": "passed",
+    "financial003_EN_004_EN_AR": "failed-notice_row-detail-heading",
+    "financial006_EN_AR": "timedOut-price_create",
+    "financial007_EN_AR": "timedOut-route-dependent-source-missing",
+    "provider_failure_stage": "actual M6 financial subprocess assertions",
+    "later_lifecycle_hook": "unreached",
+    "shared_job": 121572594275,
+    "shared_auth_passed": 48,
+    "settings_passed": 6,
+    "settings_failed": 6,
+    "aggregate": "failure"
+  },
+  "readonly_interaction_followup": {
+    "observed_candidate": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "run_id": 40345633850,
+    "observation": "Both locales complete price/correction/history/direction assertions then fail readonly history visibility. Previous diagnostic captured owner; now captures blocked context. No full browser pass claimed.",
+    "local_reproduction": "25 prior cases pass / one new read-only pending assertion fails before change;26/26 pass after. SSR read-only history controls must be pending until hydration/current Auth ready.",
+    "typecheck": "passed",
+    "scoped_lint": "passed",
+    "runtime_acceptance": "pending owned disposable CI; no local runtime"
+  },
+  "diagnostic_symbol_followup": {
+    "actual_source": "2349c0de0e267ee806100e906315634ef5b89ade",
+    "actual_run": 40354399829,
+    "prior_SQL": {
+      "suites": 66,
+      "assertions": 2120
+    },
+    "financial_browser": {
+      "003": "EN/AR passed",
+      "004": "EN/AR passed",
+      "006": "EN/AR failed before readonly navigation at undefined diagnostic variable",
+      "007": "EN/AR passed"
+    },
+    "introduced_error": "Earlier diagnostic assignment was copied into parent006 where its variable is not defined; later009 defines it. Remove it only on parent006 and preserve later009 own scoped diagnostic during propagation.",
+    "static_reproduction": "Dedicated financial e2e Vue TypeScript project reports one TS2304 Cannot find name diagnosticPage before correction, zero afterward;26/26 own unit cases pass.",
+    "owned_CI_prevention": "Existing owned financial runner now runs bounded120s static type check before browser execution; no browser budget/assertion/retry weakened, raw type errors not published.",
+    "provenance": "Add new type-project path to this open task fragment; accepted ancestor fragments unchanged.",
+    "repaired_actual_acceptance": "pending owned CI; full CI/domain approval not claimed"
+  }
+}

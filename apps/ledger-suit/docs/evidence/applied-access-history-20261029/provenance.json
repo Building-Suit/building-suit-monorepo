@@ -1,0 +1,16 @@
+{
+  "source_pr": 440,
+  "original_commit": "4f3ca3e89d9706dd471d9cc374567c69bc14f522",
+  "published_commit": "cdb22ec3278d2f016e487c52119ed0c2b490b8df",
+  "path": "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+  "git_blob": "6e14c9b7e6390112ae54dadcec5857a38d9af0b1",
+  "sha256": "42e9922712a955ea509df6a409c84d2946c9d18e25d5a43131c5fc118b13f04f",
+  "bytes": 78437,
+  "lines": 654,
+  "original_and_published_bytes_match": true,
+  "prior_108_source_migrations_unchanged": true,
+  "retained_applied_audit": "docs/shared/supabase-oct30-access.md at cdb22ec3278d2f016e487c52119ed0c2b490b8df records the same version applied to Ledger staging and production.",
+  "hosted_history_reverified": false,
+  "hosted_operation_performed": false,
+  "known_missing_source_version": "20261022182716"
+}

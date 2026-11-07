@@ -1,0 +1,21 @@
+{
+  "id": "ss-electrical-public-settings-browser-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/e2e",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "release-changes/items.json"
+  ],
+  "reason": "Qualify current section routes, intentional duplicate storefront links, current Arabic booking labels, explicit public map links and archived-location navigation while preserving guest access, privacy, permission denial, host isolation and publication assertions. Changelog qualification uses real disposable public feeds and asserts that the loader releases visibility; other dependency consumers remain internal."
+}

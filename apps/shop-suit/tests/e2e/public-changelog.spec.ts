@@ -3,6 +3,20 @@ import { join } from 'node:path'
 import { test, expect } from '@playwright/test'
 const text = { en: 'Deployed counter update', ar: 'تحديث نقطة البيع المنشور' }
 const now = '2026-10-15T12:00:00Z'
+
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus) return
+  const state = await page.evaluate(() => ({
+    loading: document.documentElement.getAttribute('data-shop-landing-loading'),
+    loaderPresent: Boolean(document.querySelector('[data-landing-loader]')),
+    mainBusy: document.querySelector('main.bs-landing')?.getAttribute('aria-busy'),
+    inert: [...document.querySelectorAll('[inert]')].map(element => ({ tag: element.tagName, id: element.id, class: element.className })),
+    headings: [...document.querySelectorAll('#whats-new h1, #whats-new h2, #whats-new h3')].map(element => ({ text: element.textContent, visibility: getComputedStyle(element).visibility, display: getComputedStyle(element).display })),
+    privacyControls: document.querySelectorAll('.bs-privacy-banner, .bs-privacy-reopen').length,
+  })).catch(() => ({ unavailable: true }))
+  await info.attach('public-page-interaction-state', { body: JSON.stringify(state), contentType: 'application/json' })
+})
+
 const entry = { id: 'deployed', suit: 'shop-suit', visibility: 'public', status: 'released', version: '2.8.0', publishedAt: '2026-10-14T12:00:00Z', releasedAt: '2026-10-14T12:00:00Z', title: text, summary: text, details: text, links: [] }
 const suits = [{ id: 'shop-suit', name: { en: 'Shop Suit', ar: 'شوب سوت' } }, { id: 'ledger-suit', name: { en: 'Ledger Suit', ar: 'ليدجر سوت' } }]
 const entries = [entry,
@@ -23,6 +37,7 @@ for (const locale of ['en','ar'] as const) for (const theme of ['light','dark'] 
     await page.addInitScript(theme => { localStorage.setItem('building-suit.theme',theme); Date.now=()=>0 },theme)
     await page.route('**/api/changelog',route=>route.fulfill({json:{serverNow:now,suits,entries}}))
     await page.goto('/')
+    await expect(page.locator('html')).not.toHaveAttribute('data-shop-landing-loading','true')
     const section=page.locator('#whats-new')
     await section.scrollIntoViewIfNeeded()
     await expect(section.getByRole('heading',{name:locale==='ar'?'ما الجديد':'What’s new',exact:true})).toBeVisible()
@@ -167,6 +182,7 @@ for(const locale of ['en','ar'] as const) test(`${locale}: retrospective milesto
   await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4393'}])
   await page.route('**/api/changelog',route=>route.fulfill({json:{serverNow:'2026-10-16T18:00:00Z',suits,entries:history}}))
   await page.goto('/')
+  await expect(page.locator('html')).not.toHaveAttribute('data-shop-landing-loading','true')
   const section=page.locator('#whats-new')
   await section.scrollIntoViewIfNeeded()
   await expect(section.locator('article')).toHaveCount(3)

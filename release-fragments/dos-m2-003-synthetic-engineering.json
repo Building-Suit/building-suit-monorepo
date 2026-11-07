@@ -1,0 +1,24 @@
+{
+  "id": "dos-m2-003-synthetic-engineering",
+  "task": "DOS-M2-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/clinicalPresentation.ts",
+    "apps/doctor-suit/supabase/migrations/20261019234827_clinical_intake_provenance.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-003.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-003.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-003.md",
+    "packages/ui/package.json",
+    "packages/ui/src/utils/clinicalPresentation.ts"
+  ],
+  "reason": "Implement intake provenance for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

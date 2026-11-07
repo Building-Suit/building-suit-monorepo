@@ -1,0 +1,56 @@
+{
+  "task_id": "DOS-M5-009",
+  "scope": "independent-synthetic-lifecycle-state-transition",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "qualified_expiry_interpretation": false,
+  "patient_native_scaffold": false,
+  "external_notifications": false,
+  "patient_identity_approval": null,
+  "caregiver_approval": null,
+  "patient_platform_approval": null,
+  "clinician_reminder_policy_approval": null,
+  "native_cases": [],
+  "persisted_server_or_device_restart_acceptance": false,
+  "node_checkpoint_roundtrip": "Executed plain-memory JSON roundtrip only; no private cache/storage approval",
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-009.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "passed": 65,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2407,
+    "passed": 2330,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientReminderLifecycle.ts": "af203184116a0655bb96676f611f3fe31d7c7f5a8b237b041d4a8939c113a194",
+    "apps/doctor-suit/tests/unit/dos-m5-009.test.mjs": "52713ef0142c50ca1b3aa3e885469f89300d60d71f90bcd7f1fc6bc89403fc87"
+  },
+  "document_sha256": "6d5ece33bd577c60e3d07eb4d680967322d7b3ff0e75e242e3b68633d8c9ef80",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "blocked_obligations": [
+    "Approved patient platform/commands and real device notification/reboot/restart evidence",
+    "Actual authorized/durable patient server and native integration",
+    "Clinician-approved expiry/late/stop/conflict interpretation",
+    "Physical/accessibility/security/privacy/offline/identity qualification"
+  ]
+}

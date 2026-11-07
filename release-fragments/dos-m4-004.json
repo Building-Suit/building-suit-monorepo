@@ -1,0 +1,16 @@
+{
+  "id": "dos-m4-004",
+  "task": "DOS-M4-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/tests/unit/dos-m4-004.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-004-device-evidence.json"
+  ],
+  "reason": "Owner-authorized synthetic native scoped context engineering; no operational activation or clinical/device/platform acceptance implied."
+}

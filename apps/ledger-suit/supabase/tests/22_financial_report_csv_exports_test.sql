@@ -17,18 +17,10 @@ where organization_id = (select value from export_test_ids where key = 'alpha_or
 select app.seed_chart_of_accounts((select value from export_test_ids where key = 'alpha_org'));
 select app.seed_categories((select value from export_test_ids where key = 'alpha_org'));
 
-update public.subscriptions
-set plan_id = (select id from public.subscription_plans where key = 'solo')
-where organization_id = (select value from export_test_ids where key = 'alpha_org');
-
 insert into export_test_ids
 select 'bank', id from public.accounts
 where organization_id = (select value from export_test_ids where key = 'alpha_org')
   and system_key = 'bank';
-insert into export_test_ids
-select 'revenue', id from public.accounts
-where organization_id = (select value from export_test_ids where key = 'alpha_org')
-  and system_key = 'product_sales';
 insert into export_test_ids
 select 'rent', id from public.categories
 where organization_id = (select value from export_test_ids where key = 'alpha_org')
@@ -38,6 +30,25 @@ select set_config(
   'request.jwt.claims',
   '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true
 );
+
+-- Historical reports retain the name at posting. Create the punctuation case
+-- with its original label rather than renaming already-posted history.
+insert into export_test_ids
+select 'revenue', public.create_account(
+  (select value from export_test_ids where key = 'alpha_org'),
+  'إيرادات, "محلية"', 'revenue', 'other_income'
+);
+insert into export_test_ids
+select 'formula_revenue', public.create_account(
+  (select value from export_test_ids where key = 'alpha_org'),
+  E'\t=HYPERLINK("https://example.invalid")', 'revenue', 'other_income'
+);
+
+-- Prepare fixture accounts on the fixture plan, then test sold Solo exports
+-- without attempting to create accounts above the downgraded account limit.
+update public.subscriptions
+set plan_id = (select id from public.subscription_plans where key = 'solo')
+where organization_id = (select value from export_test_ids where key = 'alpha_org');
 
 insert into export_test_ids (key, value)
 select 'income_txn', app.create_and_post(
@@ -68,11 +79,6 @@ select public.record_expense(
   p_description => 'Negative cash flow fixture'
 );
 
-reset role;
-update public.accounts set name = 'إيرادات, "محلية"'
-where id = (select value from export_test_ids where key = 'revenue');
-set local role authenticated;
-
 select is(
   (select description from public.capabilities where key = 'exports.create'),
   'Export financial reports to CSV',
@@ -85,18 +91,6 @@ select ok(
   ) like
   E'%"إيرادات, ""محلية""",100.00,EGP%',
   'profit and loss CSV preserves UTF-8 names and escapes CSV punctuation');
-
-reset role;
-update public.accounts set name = E'\t=HYPERLINK("https://example.invalid")'
-where id = (select value from export_test_ids where key = 'revenue');
-set local role authenticated;
-
-select ok(
-  public.export_financial_report_csv(
-    (select value from export_test_ids where key = 'alpha_org'),
-    'profit_loss', '2026-09-01', '2026-09-30'
-  ) like E'%''\t=HYPERLINK(""https://example.invalid"")%,100.00,EGP%',
-  'formula-looking account names are exported as inert text');
 
 select ok(
   public.export_financial_report_csv(
@@ -132,6 +126,27 @@ select ok(
     p_account_id => (select value from export_test_ids where key = 'bank')
   ) like E'%''=1+1,''\t+CSV export fixture,"''  @SUM(1,1)",100.00,0.00,100.00,EGP%',
   'formula-looking ledger reference, description and memo are exported as inert text');
+
+-- Keep the preceding negative-cash and ledger amounts unchanged. A separate
+-- posted account now exercises formula escaping under the historical contract.
+reset role;
+select app.create_and_post(
+  p_organization_id => (select value from export_test_ids where key = 'alpha_org'),
+  p_type => 'income', p_transaction_date => '2026-09-12',
+  p_lines => jsonb_build_array(
+    jsonb_build_object('account_id', (select value from export_test_ids where key = 'bank'),
+      'side', 'debit', 'amount_minor', 10000),
+    jsonb_build_object('account_id', (select value from export_test_ids where key = 'formula_revenue'),
+      'side', 'credit', 'amount_minor', 10000)
+  ), p_description => 'Formula account export fixture'
+);
+set local role authenticated;
+select ok(
+  public.export_financial_report_csv(
+    (select value from export_test_ids where key = 'alpha_org'),
+    'profit_loss', '2026-09-01', '2026-09-30'
+  ) like E'%''\t=HYPERLINK(""https://example.invalid"")%,100.00,EGP%',
+  'formula-looking account names are exported as inert text');
 
 reset role;
 update public.subscription_entitlements

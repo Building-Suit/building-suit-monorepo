@@ -1,0 +1,48 @@
+{
+  "sourcePr": 437,
+  "sourceSha": "613177246eb05eda4e7458fd5d5d212062e03f5e",
+  "checks": [
+    {
+      "path": "packages/brand/assets/ledger-suit-app-icon.png",
+      "bytes": 26814,
+      "sha256": "28f58427b0f433f65835316eb36a7357459f591a079843f626db14fbd0488457",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-app-icon.svg",
+      "bytes": 20244,
+      "sha256": "78c590beaaacc890e86a35a625b94f1c106fb43751f7b66bd0c80bb616b098be",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-logo-mark.svg",
+      "bytes": 20244,
+      "sha256": "78c590beaaacc890e86a35a625b94f1c106fb43751f7b66bd0c80bb616b098be",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-mark-dark.svg",
+      "bytes": 20244,
+      "sha256": "78c590beaaacc890e86a35a625b94f1c106fb43751f7b66bd0c80bb616b098be",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-mark-light.svg",
+      "bytes": 20244,
+      "sha256": "78c590beaaacc890e86a35a625b94f1c106fb43751f7b66bd0c80bb616b098be",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-wordmark-dark.svg",
+      "bytes": 53050,
+      "sha256": "499327c0f3fa50804ae0c69b7b6f3efc9295721cc646ae743d27f1285110b5fb",
+      "matchesGeneratedPr437": true
+    },
+    {
+      "path": "packages/brand/assets/ledger-suit-wordmark-light.svg",
+      "bytes": 52671,
+      "sha256": "93d23e18c559cd18f1c6f3fa277e951c0b90e8166158172668018477dc123df8",
+      "matchesGeneratedPr437": true
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "ss-electrical-scale-qualification-20261026",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/app",
+    "apps/shop-suit/supabase",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "tooling/database",
+    ".github/workflows/shop-measurement-disposable.yml",
+    "release-changes/items.json"
+  ],
+  "reason": "Qualify stable protocol framing, bounded session cleanup, exact whole-ratio conversion, immutable capture and approval evidence, actor/location/subscription authority, lost-response retry and competing capture/invoice/device-retirement sessions. Generate actual database contracts and register shared presentation; physical hardware and final native/consumer qualification remain explicit gates."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "ss-electrical-approved-scale-sales-20261026",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useScaleCounter.ts",
+    "apps/shop-suit/app/composables/useWeighingSetup.ts",
+    "apps/shop-suit/app/pages/weighing-setup.vue",
+    "apps/shop-suit/app/pages/pos.vue",
+    "apps/shop-suit/app/utils/scaleMeasurement.js",
+    "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+    "packages/ui/src/organisms/BsScaleCaptureDialog.vue",
+    "packages/ui/src/templates/BsWeighingSetupPage.vue",
+    "packages/ui/src/templates/BsPointOfSalePage.vue",
+    "packages/ux/src/controllers/createSicsScale.ts"
+  ],
+  "reason": "Add optional explicitly connected stable scale readings and versioned product-specific mass/length approvals to ordinary authoritative counter sales.",
+  "notes": {
+    "title": {
+      "en": "Approved scale readings for counter sales",
+      "ar": "قراءات ميزان معتمدة للبيع من الكاونتر"
+    },
+    "summary": {
+      "en": "Confirm supported scale readings and convert weight using an approved relationship for the selected product.",
+      "ar": "أكّد قراءات الموازين المدعومة وحوّل الوزن بعلاقة معتمدة تخص الصنف المختار."
+    },
+    "details": {
+      "en": "Managers approve each device and product factor with a reference and immutable history. Staff connect explicitly, review stable net, tare, gross and stock quantity, then confirm a separate locked sale line. Unknown results retry the same request. Manual measured sales remain available without a scale; actual device approval and supported protocol settings are required.",
+      "ar": "يعتمد المدير كل جهاز ومعامل صنف بمرجع وسجل ثابت. يوصّل الموظف الجهاز صراحةً ويراجع الصافي ووزن الوعاء والإجمالي وكمية المخزون، ثم يؤكد بند بيع مستقلًا بكمية مقفلة. تُعاد النتيجة غير المؤكدة بالطلب نفسه. يظل البيع بالكمية المدخلة يدويًا متاحًا دون ميزان؛ ويلزم اعتماد الجهاز الفعلي وإعدادات البروتوكول المدعوم."
+    }
+  }
+}

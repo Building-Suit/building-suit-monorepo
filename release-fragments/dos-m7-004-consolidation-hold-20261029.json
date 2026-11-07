@@ -1,0 +1,13 @@
+{
+  "id": "dos-m7-004-consolidation-hold-20261029",
+  "task": "DOS-M7-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004.md"
+  ],
+  "reason": "Preserve the unfinished privacy task and unpublished checkpoint on the current gated parent after published stack consolidation; no policy approval or fulfillment implementation."
+}

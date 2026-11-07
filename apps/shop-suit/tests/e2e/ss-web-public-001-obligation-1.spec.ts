@@ -9,7 +9,7 @@ for(const locale of ['en','ar'])test(`owner privately manages escaped inquiry st
   if(name==='shop_website_inquiry_status'){status=String(args.p_status);return null}
   return undefined
  })
- await fixtureGoto(page,'/settings');const panel=page.locator('#website-inquiries')
+ await fixtureGoto(page,'/settings/website-inquiries');const panel=page.locator('#website-inquiries')
  await expect(panel).toContainText('Private visitor')
  await panel.getByRole('button',{name:ar?'عرض الاستفسار':'Open inquiry',exact:true}).click()
  const dialog=page.getByRole('dialog');await expect(dialog).toContainText('<script>window.inquiryInjected=true</script>')
@@ -22,6 +22,6 @@ for(const locale of ['en','ar'])test(`owner privately manages escaped inquiry st
 })
 test('settings employee has no inquiry data or read/status calls',async({page})=>{
  const {calls}=await pilotFixture(page,'en','employee',name=>name==='shop_permission_access'?{'settings.manage':true}:undefined)
- await fixtureGoto(page,'/settings');await expect(page.locator('#website-inquiries')).toContainText('Website inquiries are available to the owner only.')
+ await fixtureGoto(page,'/settings/website-inquiries');await expect(page.locator('#website-inquiries')).toContainText('Website inquiries are available to the owner only.')
  expect(calls.some(c=>c.name.startsWith('shop_website_inquir'))).toBe(false)
 })

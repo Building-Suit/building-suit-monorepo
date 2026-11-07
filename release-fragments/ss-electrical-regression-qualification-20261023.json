@@ -1,0 +1,21 @@
+{
+  "id": "ss-electrical-regression-qualification-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "tooling/database/shop-measurement-schema-disposable.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Repair stale Shop harnesses around the current data client, real Pinia/Colada stores, current settings/receipt templates and scoped query contracts; preserve tenant/race/amount assertions and add actual cache-cancellation checks. Support explicitly selected existing SQL fixtures only in the uniquely owned disposable schema runner. No product activation or hosted mutation is included."
+}

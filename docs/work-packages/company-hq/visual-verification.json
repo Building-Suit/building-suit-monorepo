@@ -1,0 +1,17 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "theme": "dark",
+  "zoom": "100%",
+  "browser": "/usr/bin/chromium",
+  "source": "production Nuxt build on managed cloud loopback3101",
+  "reference": "docs/work-packages/company-hq/design/office-acceptance-1440x1000.png",
+  "actual": "docs/work-packages/company-hq/office-built-1440x1000.png",
+  "changedPixels": 0,
+  "totalPixels": 1440000,
+  "meanAbsoluteChannelDifference": 0.0,
+  "referenceSha256": "7526b8a1067a372d71a2b65bbbf8c59e4e64fb7e19b21d005ab825a0423f72a4",
+  "actualSha256": "7526b8a1067a372d71a2b65bbbf8c59e4e64fb7e19b21d005ab825a0423f72a4"
+}

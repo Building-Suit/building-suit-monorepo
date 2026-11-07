@@ -1,0 +1,11 @@
+import type{SupabaseClient}from'@supabase/supabase-js'
+import type{Database,Json}from'../types/database.types'
+import{contactDirectory,contactGuardianOptions,contactHistory,contactCommandResult,type ContactRecordKind,type ContactAction,type ContactInput}from'./contactPreferences.ts'
+import{doctorPatientsRepository}from'./patientsRepository'
+export function contactPreferencesRepository(client:SupabaseClient<Database>){const patients=doctorPatientsRepository(client);return{
+ async load(practice:string,location:string,patient:string,contactPage:number,guardianPage:number,signal:AbortSignal){const{data,error}=await client.rpc('doctor_contact_preferences',{p_practice:practice,p_location:location,p_patient:patient,p_contact_page:contactPage,p_guardian_page:guardianPage}).abortSignal(signal);if(error)throw error;return contactDirectory(data,practice,location,patient,contactPage,guardianPage)},
+ async guardians(practice:string,location:string,patient:string,page:number,search:string,signal:AbortSignal){const{data,error}=await client.rpc('doctor_contact_guardian_options',{p_practice:practice,p_location:location,p_patient:patient,p_page:page,p_search:search}).abortSignal(signal);if(error)throw error;return contactGuardianOptions(data,practice,location,patient,page)},
+ async history(practice:string,location:string,patient:string,kind:ContactRecordKind,id:string,page:number,signal:AbortSignal){const{data,error}=await client.rpc('doctor_contact_history',{p_practice:practice,p_location:location,p_patient:patient,p_kind:kind,p_record:id,p_page:page}).abortSignal(signal);if(error)throw error;return contactHistory(data,practice,location,patient,kind,id,page)},
+ async command(practice:string,location:string,patient:string,id:string,version:number,action:ContactAction,input:ContactInput,key:string,signal:AbortSignal){const{data,error}=await client.rpc('doctor_contact_command',{p_practice:practice,p_location:location,p_patient:patient,p_record:id,p_expected_version:version,p_action:action,p_input:input as Json,p_key:key}).abortSignal(signal);if(error)throw error;return contactCommandResult(data,id,version,action)},
+ async patients(practice:string,location:string,search:string,signal:AbortSignal){return patients.load(practice,location,{page:0,size:20,search,status:'active'},signal)}
+}}
