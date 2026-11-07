@@ -10,7 +10,7 @@ const require = createRequire(new URL('../../apps/company-hq/package.json', impo
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
 const proposals = root // Execute the canonical forward copies; parity also requires exact proposal bytes.
-const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
+const founder = randomUUID(), workerUser = randomUUID(), worker = '3ead9a59-d84b-4e95-9871-abba0b129404', session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
 const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9].includes(index)?'T2_HEAD':'T1_WORKER']))
@@ -591,5 +591,87 @@ test('bootstrap blocks legacy rollback: its tier-less roster clears contract-2 m
   assert.equal((await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(legacyRoster)])).accepted,true)
   await h.db.exec('reset role')
   assert.equal((await h.db.query('select count(*)::int n from hq_private.agent_roster where model_tier is null')).rows[0].n,10)
+ }finally{await h.db.close()}
+})
+
+
+async function resumeFixture() {
+ const h=await setup()
+ await h.db.exec('reset role')
+ await h.db.exec(await readFile(new URL('./bootstrap/initial-staging-pause.sql',import.meta.url),'utf8'))
+ return h
+}
+const resumeSource=()=>readFile(new URL('20261107030606_hq_worker_admission_resume.sql',root),'utf8')
+
+test('activation source compare-and-resumes only the exact observed hold without changing auth',async()=>{
+ const h=await resumeFixture();try{
+  const before=(await h.db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers')).rows
+  await h.db.exec(await resumeSource())
+  assert.deepEqual((await h.db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers')).rows,before)
+  await h.as('worker')
+  assert.deepEqual(await h.rpc('hq_worker_admission_status',[worker]),{paused:false,generation:2,activeJobs:0})
+ }finally{await h.db.close()}
+})
+
+test('activation source rejects stale, missing, already resumed or mismatched holds',async()=>{
+ for(const mutation of [
+  "update hq_private.worker_admission_pauses set generation=2",
+  "update hq_private.worker_admission_pauses set paused=false",
+  "update hq_private.worker_admission_pauses set request_id=gen_random_uuid()",
+  "delete from hq_private.worker_admission_pauses",
+ ]){
+  const h=await resumeFixture();try{
+   await h.db.exec(mutation)
+   const before=(await h.db.query('select * from hq_private.worker_admission_pauses')).rows
+   const sql=await resumeSource()
+   await assert.rejects(()=>h.db.exec(sql),/HQ_ACTIVATION_PAUSE_MISMATCH/)
+   await h.db.exec('rollback')
+   assert.deepEqual((await h.db.query('select * from hq_private.worker_admission_pauses')).rows,before)
+  }finally{await h.db.close()}
+ }
+})
+
+test('activation source rejects a disabled target or another registered worker without changing either',async()=>{
+ for(const mutation of [
+  'update hq_private.agent_workers set enabled=false',
+  `insert into hq_private.agent_workers(worker_id,auth_user_id,enabled) values('${randomUUID()}','${randomUUID()}',false)`,
+ ]){
+  const h=await resumeFixture();try{
+   await h.db.exec(mutation)
+   const before=(await h.db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers order by worker_id')).rows
+   const sql=await resumeSource()
+   await assert.rejects(()=>h.db.exec(sql),/HQ_ACTIVATION_WORKER_MISMATCH/)
+   await h.db.exec('rollback')
+   assert.deepEqual((await h.db.query('select worker_id,auth_user_id,enabled from hq_private.agent_workers order by worker_id')).rows,before)
+   assert.equal((await h.db.query('select paused from hq_private.worker_admission_pauses')).rows[0].paused,true)
+  }finally{await h.db.close()}
+ }
+})
+
+test('activation source fails closed when contract capability or model-receipt prerequisites are missing',async()=>{
+ for(const mutation of [
+  'drop function public.hq_worker_release_status(uuid)',
+  'drop table hq_private.workforce_model_execution_receipts',
+ ]){
+  const h=await resumeFixture();try{
+   await h.db.exec(mutation)
+   const sql=await resumeSource()
+   await assert.rejects(()=>h.db.exec(sql),/HQ_ACTIVATION_CONTRACT_REQUIRED/)
+   await h.db.exec('rollback')
+   assert.deepEqual((await h.db.query('select paused,generation from hq_private.worker_admission_pauses')).rows,[{paused:true,generation:1}])
+  }finally{await h.db.close()}
+ }
+})
+
+test('activation source refuses existing working jobs without clearing the hold',async()=>{
+ const h=await setup();try{
+  await h.as('founder');await h.rpc('hq_create_task',['Activation guard fixture','One internal draft','One draft','AG-HR-002',randomUUID()])
+  assert.ok(await h.claim()) // Disposable DB lease only; no model process is invoked.
+  await h.db.exec('reset role')
+  await h.db.exec(await readFile(new URL('./bootstrap/initial-staging-pause.sql',import.meta.url),'utf8'))
+  const sql=await resumeSource()
+  await assert.rejects(()=>h.db.exec(sql),/HQ_ACTIVATION_WORK_UNSETTLED/)
+  await h.db.exec('rollback')
+  assert.deepEqual((await h.db.query('select paused,generation from hq_private.worker_admission_pauses')).rows,[{paused:true,generation:1}])
  }finally{await h.db.close()}
 })

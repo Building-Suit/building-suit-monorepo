@@ -17,6 +17,7 @@ const failures = []
 // never asserts a hosted migration or authorizes deployment/merge.
 const phase1 = pending.filter(row => row.phase === 'admission-fence')
 const phase2 = pending.filter(row => row.phase === 'contract2-review-only')
+const resume = pending.filter(row => row.phase === 'admission-resume-review-only')
 const contract2Sources = [
   {
     "file": "20261107024306_hq_department_staffing_needs.sql",
@@ -44,7 +45,8 @@ const contract2Sources = [
   }
 ]
 if (phase1.length !== 1 || phase1.some(row => row.status !== 'approved-source-not-deployed' || !/^\d{14}_hq_worker_admission_fence\.sql$/.test(row.file))) failures.push('approved phase-1 fence inventory changed')
-if (pending.length !== phase1.length + phase2.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (pending.length !== phase1.length + phase2.length + resume.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (resume.length > 1 || (resume.length && phase2.length !== 6) || resume.some(row => row.file !== '20261107030606_hq_worker_admission_resume.sql' || row.status !== 'source-only-live-approval-required')) failures.push('activation resume source requires the complete reviewed contract-2 stack')
 for (const [index,row] of phase2.entries()) {
   if (row.status !== 'source-only-live-approval-required' || row.file !== contract2Sources[index].file || row.proposal !== contract2Sources[index].proposal) failures.push('contract-2 source/order differs from reviewed proposals')
 }
@@ -61,6 +63,7 @@ for (const expected of [...manifest.appliedMigrations, ...pending]) {
   }
 }
 for (const expected of pending) {
+  if (expected.phase === 'admission-resume-review-only') continue // Exact file bytes are pinned above; no duplicate SQL proposal.
   const proposal = readFileSync(path.join(root, expected.proposal))
   const canonical = readFileSync(path.join(migrationsDir, expected.file))
   if (expected.phase === 'contract2-review-only') {
