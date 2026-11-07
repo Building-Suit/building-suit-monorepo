@@ -67,3 +67,15 @@ export async function hqTaskBody(event: H3Event): Promise<{ title: string; brief
   return { title: String(entry.title).trim(), brief: String(entry.brief).trim(), acceptance: String(entry.acceptance).trim(),
     assigneeId: entry.assigneeId as string | null, requestKey: String(entry.requestKey).toLowerCase() }
 }
+
+export async function hqTrialBody(event: H3Event): Promise<{ agentId: string; skillFileId: string; requestKey: string } | { trialId: string }> {
+  const body = await boundedBody(event, 4096)
+  const qualification = exact(body, ['trialId'])
+  if (qualification && id(qualification.trialId)) return { trialId: String(qualification.trialId) }
+  const trial = exact(body, ['agentId', 'skillFileId', 'requestKey'])
+  if (trial && typeof trial.agentId === 'string' && /^AG-[A-Z]+-[0-9]{3}$/.test(trial.agentId)
+    && typeof trial.skillFileId === 'string' && /^[A-Za-z0-9_-]{8,200}$/.test(trial.skillFileId) && id(trial.requestKey)) {
+    return { agentId: trial.agentId, skillFileId: trial.skillFileId, requestKey: String(trial.requestKey) }
+  }
+  throw createError({ statusCode: 400, statusMessage: 'HQ trial unavailable' })
+}

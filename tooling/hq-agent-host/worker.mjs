@@ -525,7 +525,12 @@ function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, wor
           const thread=record(message.result?.thread)
           if (!thread || typeof thread.id!=='string' || !UUID.test(thread.id)) { fail('provider-thread-id-unavailable'); return }
           threadId=thread.id
-          threadSettings={model:thread.model,modelProvider:thread.modelProvider,reasoningEffort:thread.reasoningEffort}
+          // v0.160 ThreadStartResponse resolves settings on result, not on the
+          // optional persisted/configured fields inside result.thread.
+          threadSettings={model:message.result.model,modelProvider:message.result.modelProvider,reasoningEffort:message.result.reasoningEffort}
+          if (['model','modelProvider','reasoningEffort'].some(key => thread[key] != null && thread[key] !== threadSettings[key])) {
+            fail('provider-model-resolution-invalid'); return
+          }
           if (!threadSettingsValid(threadSettings)) { fail('provider-model-resolution-invalid'); return }
           hostResolution={source:'codex-app-server-thread-start',...threadSettings,threadId}
           launchedTurnRequest={method:'turn/start',id:3,params:{threadId,inputSha256:createHash('sha256').update(prompt).digest('hex')}}
@@ -845,6 +850,25 @@ export async function invokeCodex(config, job, brain, signal) {
   }
 }
 
+/** Retry durable delivery only; never invoke inference while recovering a receipt. */
+export async function deliverWorkerEntry({ rpc, write, workerId, retryWait = wait }, entry) {
+  const input = { p_job_id: entry.job.id, p_lease_token: entry.job.lease_token, p_worker_id: workerId,
+    p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [],
+    p_model_evidence: entry.modelExecutionEvidence || null, p_trial_evidence: entry.modelBindingEvidence || null }
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = await rpc('hq_worker_finish_v4', input)
+      requireValue(accepted(result), 'delivery-rejected')
+      if (input.p_trial_evidence && !result.discarded) requireValue(result.trialReceiptAccepted === true, 'trial-receipt-unconfirmed')
+      await write({ ...entry, phase: 'delivered', reply: '', error: null, evidence: [] })
+      return result
+    } catch (error) {
+      if (codeOf(error) === 'authorization-required' || attempt === 2) throw error
+      await retryWait(500 * 2 ** attempt)
+    }
+  }
+}
+
 export async function start(adapters = {}) {
   const config = configuration()
   await privateDirectory(config.state)
@@ -876,7 +900,7 @@ export async function start(adapters = {}) {
     checkApiContract(spec)
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
-    requireValue(status?.contract === 2 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
+    requireValue(status?.contract === 2 && status.trialDelivery === 1 && status.trialSkills === 1 && status.trialFailureSettlement === 1 && Number.isSafeInteger(status.activeJobs) && status.activeJobs >= 0, 'schema-incompatible')
     return status
   }
   if (process.argv.includes('--release-preflight')) {
@@ -941,22 +965,7 @@ export async function start(adapters = {}) {
     // Only an actual pending lease/delayed job can arm this one-off wake.
     wakeTimer = setTimeout(requestDrain, Math.min(2_147_000_000, when - Date.now() + 100))
   }
-  async function deliver(entry) {
-    const input = { p_job_id: entry.job.id, p_lease_token: entry.job.lease_token, p_worker_id: config.id,
-      p_reply: entry.reply || '', p_error: entry.error || null, p_evidence: entry.evidence || [],
-      p_model_evidence: entry.modelExecutionEvidence || null }
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const result = await api.rpc('hq_worker_finish_v3', input)
-        requireValue(accepted(result), 'delivery-rejected')
-        await journal.write({ ...entry, phase: 'delivered', reply: '', error: null, evidence: [] })
-        return result
-      } catch (error) {
-        if (codeOf(error) === 'authorization-required' || attempt === 2) throw error
-        await wait(500 * 2 ** attempt)
-      }
-    }
-  }
+  const deliver = entry => deliverWorkerEntry({ rpc: (name, input) => api.rpc(name, input), write: value => journal.write(value), workerId: config.id }, entry)
   async function recover() {
     for (const id of await journal.pending()) {
       const entry = await journal.read(id)

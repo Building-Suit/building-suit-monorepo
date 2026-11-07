@@ -4,12 +4,14 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
+import { maintenanceGate } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
-import { validateJob, webAllowed } from './worker.mjs'
+import { fake } from './test-cli.mjs'
+import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, webAllowed } from './worker.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
-const proposals = new URL('./proposed-migrations/', import.meta.url)
+const proposals = root // Execute the canonical forward copies; parity also requires exact proposal bytes.
 const founder = randomUUID(), workerUser = randomUUID(), worker = randomUUID(), session = randomUUID(), workerSession = randomUUID()
 const commonIds = ['1IRzs2Q41vfq0ocAT6HB3-bcMDPGTdMx5','1efnq6B7sKn4x099Dv5xsNyFJFIrnC6Xz','1kYDlexJRpJblhEFTq-XSqOEMIDnYdyjf','14A5qRpobLLnX9-e2iJxw7ekB2TB_IBvB','1ayMJWoihUx0rSYCkRc5hotRBRY1AAz9N']
 const ids = ['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','AG-RES-001','AG-SALES-001','AG-CS-001','AG-SOC-001','AG-EMAIL-001','AG-DEV-001']
@@ -17,7 +19,7 @@ const tiers = new Map(ids.map((id,index)=>[id,index===0?'T3_EXEC':[1,4,5,6,7,8,9
 const departments = new Map(ids.map((id,index)=>[id,index===0?null:index===4?'research-market-intelligence':index===5?'customer-acquisition-partnerships':index===6?'customer-success-onboarding':index===7?'social-community':index===8?'email-lifecycle':index===9?'development-maintenance':'hr-agent-development']))
 const managers = new Map(ids.map((id,index)=>[id,index===0?null:[2,3].includes(index)?'AG-HR-001':'AG-CEO-001']))
 const roster = ids.map((id,index)=>({id,name:'Employee '+index,role:'Fixture',departmentKey:departments.get(id),profileFileId:'profile_source_'+index,skillFileIds:[],lifecycle:'configured trial pending',model:tiers.get(id)==='T1_WORKER'?'gpt-6.1-terra':tiers.get(id)==='T3_EXEC'?'gpt-6-astra':'gpt-6.1-sol',effort:'medium',managerId:managers.get(id),modelTier:tiers.get(id)}))
-async function setup(withEvidence = true, withChat = false, withPresence = true) {
+async function setup(withEvidence = true, withChat = false, withPresence = true, withLatest = false) {
   const db=new PGlite()
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create schema extensions; create schema realtime;
@@ -41,14 +43,17 @@ async function setup(withEvidence = true, withChat = false, withPresence = true)
   }
   if (withChat) await db.exec(await readFile(new URL('20261105180148_hq_conversational_chat.sql',root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('20261105192548_hq_presence_without_snapshot_polling.sql',root),'utf8'))
+  if (withLatest) for (const file of ['20261105201905_hq_chat_intake_size_recovery.sql','20261105204244_hq_hr_output_supervisor_recovery.sql']) await db.exec(await readFile(new URL(file,root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('20261105235516_hq_voice_meetings.sql',root),'utf8'))
   if (withPresence) await db.exec(await readFile(new URL('./bootstrap/admission-pause.sql', import.meta.url),'utf8'))
-  await db.exec(await readFile(new URL('20261106000000_hq_department_staffing_needs.sql',proposals),'utf8'))
-  await db.exec(await readFile(new URL('20261106010000_hq_department_orchestration_contract.sql',proposals),'utf8'))
-  await db.exec(await readFile(new URL('20261106020000_hq_supervised_worker_trials.sql',proposals),'utf8'))
-  await db.exec(await readFile(new URL('20261106030000_hq_qualified_research_web_search.sql',proposals),'utf8'))
-  await db.exec(await readFile(new URL('20261106114053_hq_worker_model_execution_receipts.sql',proposals),'utf8'))
-  await db.exec(await readFile(new URL('./database-release-contract.sql', import.meta.url),'utf8'))
+  await db.exec(await readFile(new URL('20261107024306_hq_department_staffing_needs.sql',proposals),'utf8'))
+  await db.exec(await readFile(new URL('20261107024314_hq_department_orchestration_contract.sql',proposals),'utf8'))
+  await db.exec(await readFile(new URL('20261107024322_hq_supervised_worker_trials.sql',proposals),'utf8'))
+  await db.exec(await readFile(new URL('20261107024331_hq_qualified_research_web_search.sql',proposals),'utf8'))
+  await db.exec(await readFile(new URL('20261107024338_hq_worker_model_execution_receipts.sql',proposals),'utf8'))
+  await db.exec(await readFile(new URL('20261107024348_hq_worker_release_capability.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261107034418_hq_workforce_trial_delivery.sql',root),'utf8'))
+  await db.exec(await readFile(new URL('20261107040848_hq_trial_failure_and_assigned_skills.sql',root),'utf8'))
   await db.query(`insert into auth.users values($1,'ceo@building-suit.com',clock_timestamp()),($2,'worker@example.invalid',clock_timestamp());`,[founder,workerUser])
   await db.query(`insert into auth.sessions(id,user_id) values($1,$2),($3,$4)`,[session,founder,workerSession,workerUser])
   await db.query(`select set_config('request.jwt.claims',$1,false)`,[JSON.stringify({sub:founder,role:'authenticated',session_id:session})])
@@ -549,7 +554,7 @@ test('release contract 2 requires the actual proposed pilot schema and preserves
   const h = await setup(true, true, true)
   try {
     await h.as('worker')
-    assert.deepEqual(await h.rpc('hq_worker_release_status', [worker]), {contract:2,activeJobs:0})
+    assert.deepEqual(await h.rpc('hq_worker_release_status', [worker]), {contract:2,activeJobs:0,trialDelivery:1,trialSkills:1,trialFailureSettlement:1})
     await h.as('founder')
     await assert.rejects(() => h.rpc('hq_worker_release_status', [worker]), /HQ_WORKER_REQUIRED/)
   } finally { await h.db.close() }
@@ -591,5 +596,165 @@ test('bootstrap blocks legacy rollback: its tier-less roster clears contract-2 m
   assert.equal((await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(legacyRoster)])).accepted,true)
   await h.db.exec('reset role')
   assert.equal((await h.db.query('select count(*)::int n from hq_private.agent_roster where model_tier is null')).rows[0].n,10)
+ }finally{await h.db.close()}
+})
+
+
+test('real delivery path commits lease-bound trial proof before independent review and founder qualification',async()=>{
+ const h=await setup(true,true,true,true);try{
+  const skill='trial_skill_delivery', key=randomUUID()
+  await h.db.exec('reset role')
+  await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+    values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic skill.md','text/markdown','1',false,true)`,[skill])
+  await h.db.query(`update hq_private.brain_files set source_version='1' where file_id='profile_source_2'`)
+  const configured=roster.map(a=>a.id==='AG-HR-002'?{...a,skillFileIds:[skill]}:a)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,key]),/HQ_FOUNDER_REQUIRED/)
+  await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,key])
+  assert.equal((await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,key])).trialId,trial.trialId)
+  await assert.rejects(()=>h.rpc('hq_begin_supervised_worker_trial',['AG-HR-003',skill,key]),/HQ_TRIAL_REQUEST_KEY_REUSED/)
+  let j=await h.claim();assert.equal(j.context.mode,'task-route')
+  await h.finish(j,{assigneeId:'AG-HR-001',reason:'HR head supervises the internal exercise.',message:'@Employee 1 will supervise.'})
+  j=await h.claim();await h.finish(j,{message:'@Employee 2 complete the bounded internal exercise.',delegateId:'AG-HR-002'})
+  j=await h.claim();assert.equal(j.context.mode,'trial-start');await h.finish(j,{message:'I will follow the supplied skill and acceptance.'})
+  j=await h.claim();assert.equal(j.context.mode,'worker-trial')
+  const output=await fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+  assert.equal(output.modelBindingEvidence.hostResolution.model,'gpt-6.1-terra')
+  const entry={version:3,job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+    modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence}
+  let written=null, calls=0
+  const rpc=async(name,input)=>{await h.as('worker');return h.rpc(name,Object.values(input).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))}
+  const input={p_job_id:j.id,p_lease_token:j.lease_token,p_worker_id:worker,p_reply:output.reply,p_error:null,p_evidence:[],p_model_evidence:output.modelExecutionEvidence,p_trial_evidence:output.modelBindingEvidence}
+  await assert.rejects(()=>rpc('hq_worker_finish_v4',{...input,p_lease_token:randomUUID()}),/HQ_LEASE_LOST/)
+  await assert.rejects(()=>rpc('hq_worker_finish_v4',{...input,p_trial_evidence:null}),/HQ_TRIAL_HOST_EXECUTION_REQUIRED/)
+  await assert.rejects(()=>rpc('hq_worker_finish_v4',{...input,p_trial_evidence:{...output.modelBindingEvidence,trialId:randomUUID()}}),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  await assert.rejects(()=>rpc('hq_worker_finish_v4',{...input,p_trial_evidence:{...output.modelBindingEvidence,artifactDigest:'0'.repeat(64)}}),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  await assert.rejects(()=>rpc('hq_worker_finish_v4',{...input,p_trial_evidence:{...output.modelBindingEvidence,workerId:randomUUID()}}),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[j.id])).rows[0].status,'working','invalid proof rolls back artifact and finish')
+  const result=await deliverWorkerEntry({workerId:worker,retryWait:async()=>{},rpc:async(name,input)=>{
+    const result=await rpc(name,input);if(++calls===1)throw Error('lost-response-after-commit');return result
+  },write:async value=>{written=value}},entry)
+  assert.equal(calls,2);assert.equal(result.trialReceiptAccepted,true);assert.equal(written.phase,'delivered')
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.workforce_trial_host_execution_receipts')).rows[0].n,1)
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[trial.trialId]),/HQ_FOUNDER_REQUIRED/)
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+  j=await h.claim();assert.equal(j.context.mode,'head-review');await h.finish(j,{accepted:true,summary:'Head checked the exact internal artifact.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.agent_id,'AG-HR-003');assert.equal(j.context.mode,'ceo-review');await h.finish(j,{accepted:true,summary:'Independent HR review confirms the scoped skill exercise.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-report');await h.finish(j,'The internal skill trial was independently reviewed.')
+  assert.equal(await h.claim(),null)
+  await h.as('founder');const receipt=await h.rpc('hq_issue_workforce_qualification',[trial.trialId]);assert.equal(receipt.accepted,true)
+  const status=await h.rpc('hq_workforce_trial_status');const row=status.find(a=>a.agentId==='AG-HR-002')
+  assert.equal(row.receiptIssued,true);assert.equal(row.qualified,false,'pending canonical lifecycle must remain blocked')
+  const active=configured.map(a=>a.id==='AG-HR-002'?{...a,lifecycle:'Active'}:a)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,true)
+  // Founder approval alone did not fabricate a canonical lifecycle transition.
+  await h.rpc('hq_create_task',['Qualified internal draft','Prepare a bounded draft.','State assumptions and limits.','AG-HR-001',randomUUID()])
+  j=await h.claim();await h.finish(j,{assigneeId:'AG-HR-001',reason:'HR head delegates bounded drafting.',message:'@Employee 1 will supervise.'})
+  j=await h.claim();await h.finish(j,{message:'@Employee 2 prepare the approved draft.',delegateId:'AG-HR-002'})
+  j=await h.claim();await h.finish(j,{message:'I will prepare the bounded draft.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(workerExecutionBlock(j),null)
+  await h.finish(j,'Bounded draft with assumptions and limits.')
+  j=await h.claim();assert.equal(j.context.mode,'head-review');await h.finish(j,{accepted:true,summary:'Head checked the draft.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'ceo-review');assert.equal(j.agent_id,'AG-CEO-001')
+  await h.finish(j,{accepted:false,summary:'Add a concrete acceptance self-check.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-ack');assert.equal(j.agent_id,'AG-HR-001','Steve correction returns through the manager')
+  await h.finish(j,{message:'@Employee 2 add the exact acceptance self-check Steve requested.',delegateId:'AG-HR-002'})
+  j=await h.claim();assert.equal(j.context.mode,'task-start');assert.equal(workerExecutionBlock(j),null)
+  await h.finish(j,{message:'I will add the exact self-check.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(workerExecutionBlock(j),null)
+  await h.finish(j,'Revised draft with an explicit acceptance self-check.')
+  j=await h.claim();assert.equal(j.context.mode,'head-review');await h.finish(j,{accepted:true,summary:'The head verified the correction.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.agent_id,'AG-CEO-001');await h.finish(j,{accepted:true,summary:'Steve accepts the corrected artifact.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-report');await h.finish(j,'The reviewed corrected draft is delivered.')
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select status from public.hq_business_tasks where id=$1',[j.context.task.id])).rows[0].status,'completed')
+ }finally{await h.db.close()}
+})
+
+
+async function trialSetup(skills) {
+ const h=await setup(true,true,true,true)
+ await h.db.exec('reset role')
+ for(const skill of skills)await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+   values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic skill.md','text/markdown','1',false,true)`,[skill])
+ await h.db.query(`update hq_private.brain_files set source_version='1' where file_id='profile_source_2'`)
+ const configured=roster.map(a=>a.id==='AG-HR-002'?{...a,skillFileIds:skills}:a)
+ await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+ return {h,configured}
+}
+async function claimTrialWork(h,skill) {
+ await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+ let j=await h.claim();assert.equal(j.context.mode,'task-route')
+ await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head supervises only the selected skill exercise.',message:'@Employee 1 will supervise.'})
+ j=await h.claim();await h.finish(j,{message:'@Employee 2 complete the selected internal exercise.',delegateId:'AG-HR-002'})
+ j=await h.claim();assert.equal(j.context.mode,'trial-start');await h.finish(j,{message:'I will test only the selected assigned skill.'})
+ j=await h.claim();assert.equal(j.context.mode,'worker-trial');assert.deepEqual(j.context.agent.skillFileIds,[skill])
+ return {j,trial}
+}
+const delivery=(h,entry,write=async()=>{})=>deliverWorkerEntry({workerId:worker,retryWait:async()=>{},write,rpc:async(name,input)=>{
+ await h.as('worker');return h.rpc(name,Object.values(input).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))
+}},entry)
+async function passSkillTrial(h,skill) {
+ const {j,trial}=await claimTrialWork(h,skill)
+ const output=await fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+ await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
+ let review=await h.claim();assert.equal(review.context.mode,'head-review');await h.finish(review,{accepted:true,summary:'Head verified the selected skill artifact.',artifactDigest:review.context.artifact.digest})
+ review=await h.claim();assert.equal(review.agent_id,'AG-HR-003');await h.finish(review,{accepted:true,summary:'Independent evaluator verified the exact selected skill exercise.',artifactDigest:review.context.artifact.digest})
+ review=await h.claim();assert.equal(review.context.mode,'task-report');await h.finish(review,'The selected internal skill trial was independently reviewed.')
+ assert.equal(await h.claim(),null)
+ await h.as('founder');await h.rpc('hq_issue_workforce_qualification',[trial.trialId])
+ return trial
+}
+test('actual emitted pre-turn failure proof settles durably without qualification or poisoned drain',async()=>{
+ const {h}=await trialSetup(['failure_skill_01']);try{
+  for(const appServer of [{nullEffort:true},{modelMismatch:true}]){
+   const {j,trial}=await claimTrialWork(h,'failure_skill_01')
+   let failure
+   await fake([],async config=>{try{await invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000))}catch(error){failure=error}},{cliVersion:'codex-cli 0.160.0',appServer})
+   assert.equal(codeOf(failure),'provider-model-resolution-invalid')
+   assert.equal(failure.modelBindingEvidence.invocation.protocol.turnStart,null)
+   assert.equal(failure.modelBindingEvidence.turnsStarted,0)
+   const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:codeOf(failure),evidence:[],
+     modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:failure.modelExecutionEvidence}
+   const gate=maintenanceGate();let written
+   await gate.run(()=>delivery(h,entry,value=>{written=value}))
+   assert.equal(written.phase,'delivered');assert.equal(gate.snapshot().uncertain,false)
+   const replay=await delivery(h,entry);assert.equal(replay.trialReceiptAccepted,true)
+   await h.db.exec('reset role')
+   assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[j.id])).rows[0].status,'blocked')
+   assert.equal((await h.db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
+   assert.equal((await h.db.query('select outcome from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows[0].outcome,'failed')
+   await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+   assert.equal(await h.claim(),null)
+  }
+ }finally{await h.db.close()}
+})
+test('each current assigned skill requires its own reviewed receipt with the full unchanged binding',async()=>{
+ const skills=['assigned_skill_alpha','assigned_skill_beta'],{h,configured}=await trialSetup(skills)
+ const active=configured.map(a=>a.id==='AG-HR-002'?{...a,lifecycle:'Active'}:a)
+ try{
+  await passSkillTrial(h,skills[0])
+  await h.as('founder');let row=(await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002')
+  assert.equal(row.skillFileId,skills[1]);assert.equal(row.eligible,true);assert.equal(row.receiptIssued,true);assert.equal(row.qualified,false)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'Active cannot qualify an untested second skill')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+  await passSkillTrial(h,skills[0])
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'duplicate first-skill receipts cannot cover the second skill')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+  await passSkillTrial(h,skills[1])
+  await h.as('founder');row=(await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002')
+  assert.equal(row.skillFileId,null);assert.equal(row.qualified,false,'pending lifecycle remains blocked after complete evidence')
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(active)])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,true)
+  await h.db.exec('reset role')
+  assert.deepEqual((await h.db.query("select skill_file_ids from hq_private.agent_roster where id='AG-HR-002'")).rows[0].skill_file_ids,skills)
+  await h.db.query("update hq_private.brain_files set source_version='2' where file_id=$1",[skills[1]])
+  await h.as('founder');assert.equal((await h.rpc('hq_workforce_trial_status')).find(a=>a.agentId==='AG-HR-002').qualified,false,'any indexed skill revision invalidates the full receipt binding')
  }finally{await h.db.close()}
 })
