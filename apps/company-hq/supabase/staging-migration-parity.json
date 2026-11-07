@@ -197,14 +197,6 @@
       "phase": "trial-skills-review-only"
     },
     {
-      "file": "20261107041557_hq_worker_admission_resume.sql",
-      "bytes": 4142,
-      "md5": "6a51cc677382bbc4a3a57902570051f4",
-      "sha256": "7679becae3378e871a6bb2b286466c264030da42157c05f3d10eb86c24a3c126",
-      "status": "source-only-live-approval-required",
-      "phase": "admission-resume-review-only"
-    },
-    {
       "file": "20261107133124_hq_worker_status_compatibility.sql",
       "proposal": "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
       "bytes": 6253,
@@ -212,6 +204,14 @@
       "sha256": "c194a4ef4f410b1af1d6fb81310824e934d48cfa807013561a4a5b7d5ab48398",
       "status": "source-only-live-approval-required",
       "phase": "worker-status-compatibility"
+    },
+    {
+      "file": "20261107142302_hq_worker_admission_resume.sql",
+      "bytes": 4142,
+      "md5": "54c83c7c25b3ae82b8718e1b6de8af00",
+      "sha256": "1eea4fbed76989ebeeafb796d8c1c45acb04be7bcb770ef3e5289511c4481759",
+      "status": "source-only-live-approval-required",
+      "phase": "admission-resume-review-only"
     }
   ]
 }

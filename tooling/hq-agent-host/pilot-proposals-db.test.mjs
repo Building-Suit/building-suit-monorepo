@@ -848,7 +848,7 @@ async function resumeFixture() {
  await h.db.exec(await readFile(new URL('./bootstrap/initial-staging-pause.sql',import.meta.url),'utf8'))
  return h
 }
-const resumeSource=()=>readFile(new URL('20261107041557_hq_worker_admission_resume.sql',root),'utf8')
+const resumeSource=()=>readFile(new URL('20261107142302_hq_worker_admission_resume.sql',root),'utf8')
 
 test('activation source compare-and-resumes only the exact observed hold without changing auth',async()=>{
  const h=await resumeFixture();try{
