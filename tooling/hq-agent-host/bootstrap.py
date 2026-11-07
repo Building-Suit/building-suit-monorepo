@@ -113,6 +113,9 @@ def stage_controls(provisioned, destination=CONTROL, source=SOURCE, uid=0, check
             stream.flush()
             os.fsync(stream.fileno())
         (temporary / 'verified-inputs.json').chmod(0o600)
+        # mkdir(0755) becomes 0700 under the required private umask. Only
+        # public executable/traversal directories are widened at publication.
+        (temporary / 'bin').chmod(0o755)
         temporary.chmod(0o755)
         for directory in (temporary / 'bin', temporary / 'staged', temporary):
             fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)

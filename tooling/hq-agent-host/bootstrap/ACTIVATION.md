@@ -44,3 +44,14 @@ in the task handoff; do not interpret skipped stacked aggregate checks as passes
 The new CLI-generated resume follows the trial-delivery prerequisite and additionally requires its v4 worker API. The original never-applied 20261107030606 source is preserved under `bootstrap/superseded/`; it is no longer in the deployable migration directory. Preserve canonical pending/Active qualification rules and verify the new signed runtime. Full combined CI requires a stg base after #536 is accepted and merged under the one-root policy; no verification authorizes early resume.
 
 The current resume is ordered after `20261107040848_hq_trial_failure_and_assigned_skills.sql` and requires its private per-skill evidence validator. The prior 20261107040102 source is also preserved in `bootstrap/superseded/`. Both request ID and SHA above are copied from the current canonical source. Branch policy permits one open HQ stg root: keep this PR based on #536 until that parent is accepted, then retarget to stg for full verification. Do not bypass the policy or merge before fresh managed health.
+
+## Public directory mode correction — keep activation held
+
+The first managed install exposed `200/CHDIR`: umask `077` filtered mkdir's
+requested `0755` to `0700`. This source corrects only public release/control-bin
+traversal modes. The root operator must review/update `release.py` and
+`bootstrap.py` and their exact digest receipt before enabling the timer. The
+signed worker bundle, trust policy/roots, configuration and systemd units are
+unchanged. Do not chmod recursively or widen private inputs, state, credentials,
+receipts or backups. Re-run real service-user preflight/paused managed health
+and preserve the admission hold; these disposable tests are not host acceptance.

@@ -99,6 +99,32 @@ class Releases(unittest.TestCase):
         r.activate(self.root, A)
         self.host = FakeHost(self.root)
 
+    def test_public_release_directories_finalize_modes_under_private_umask(self):
+        releases = self.root / 'releases'
+        releases.chmod(0o700)
+        owners = (releases.stat().st_uid, releases.stat().st_gid)
+        previous = os.umask(0o077)
+        try:
+            r.stage(self.root, package(B), B)
+            self.assertEqual(os.umask(0o077), 0o077)
+            for directory in (releases, releases / B):
+                self.assertEqual(directory.stat().st_mode & 0o777, 0o755)
+                self.assertEqual((directory.stat().st_uid, directory.stat().st_gid), owners)
+            for name in (*r.FILES, 'manifest.json'):
+                self.assertEqual((releases / B / name).stat().st_mode & 0o777, 0o644)
+            # An interrupted older stage with valid immutable content is repaired
+            # idempotently; mismatched content must still fail before that repair.
+            (releases / B).chmod(0o700)
+            r.stage(self.root, package(B), B)
+            self.assertEqual((releases / B).stat().st_mode & 0o777, 0o755)
+            (releases / B).chmod(0o700)
+            (releases / B / 'worker.mjs').write_text('tampered')
+            with self.assertRaises(RuntimeError):
+                r.stage(self.root, package(B), B)
+            self.assertEqual((releases / B).stat().st_mode & 0o777, 0o700)
+        finally:
+            os.umask(previous)
+
     def test_contract_one_baseline_cannot_be_silently_promoted_to_pilot_contract_two(self):
         path = self.root / 'releases' / A / 'manifest.json'
         manifest = json.loads(path.read_text())

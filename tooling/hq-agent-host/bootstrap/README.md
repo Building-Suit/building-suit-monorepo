@@ -176,7 +176,13 @@ code: a worker package can never replace it. Its timer stays disabled.
    isolated GH_CONFIG_DIR. Validate/import-smoke the extracted five-file bundle.
    Do not copy private environment/auth/source exports into it.
 3. Under the stopped legacy boundary, stage the complete first managed release
-   and manifest in `releases/SHA`, then establish root-controlled `candidate` and
+   and manifest in `releases/SHA`. The reviewed installer must explicitly set
+   the public `releases/` and `releases/SHA/` directories to `0755`; `mkdir` modes
+   alone are filtered by `umask 077`. Keep runtime/manifest files `0644`, root
+   ownership and no group/other write. Do not widen credentials, state, backup or
+   staged-input directories. The control stager similarly finalizes its public
+   root and `bin/` as `0755`, retaining `staged/` as `0700` and its receipt `0600`.
+   Then establish root-controlled `candidate` and
    `current` links with the reviewed operator procedure. Preserve the old runtime
    backup separately: it is a recovery artifact, **not** a contract-2 rollback.
    Run the fixed preflight, then managed paused startup. Require observed startup,
