@@ -5716,5 +5716,28 @@
       "release-changes/items.json"
     ],
     "reason": "Finalize public runtime and control executable directories under private umask without changing ownership or private modes; verify disposable service-user access. Root control receipt review and real managed health remain required before admission/timer activation."
+  },
+  {
+    "id": "hq-symlink-main-dispatch-20261107",
+    "task": "HQ-SYMLINK-MAIN-DISPATCH-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/company-hq-worker.service.example",
+      "tooling/hq-agent-host/company-hq-worker-preflight.service.example",
+      "tooling/hq-agent-host/symlink-entry.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Preserve real Node main dispatch through atomic release symlinks in both fixed units; verify actual preflight, paused startup, import isolation and selected-release source binding without changing the signed worker artifact. Activation remains held."
   }
 ]

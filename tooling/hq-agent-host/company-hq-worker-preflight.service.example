@@ -10,7 +10,7 @@ WorkingDirectory=/opt/building-suit-hq-agent-host/candidate
 EnvironmentFile=/home/ubuntu/.config/building-suit-hq/worker.env
 Environment=HQ_WORKER_STATE_DIR=/home/ubuntu/.local/state/building-suit-hq-worker
 Environment=HQ_RELEASE_MANAGED=1
-ExecStart=/opt/building-suit-hq-agent-control/bin/node /opt/building-suit-hq-agent-host/candidate/worker.mjs --release-preflight
+ExecStart=/opt/building-suit-hq-agent-control/bin/node --preserve-symlinks-main /opt/building-suit-hq-agent-host/candidate/worker.mjs --release-preflight
 TimeoutStartSec=90
 UMask=0077
 NoNewPrivileges=true
