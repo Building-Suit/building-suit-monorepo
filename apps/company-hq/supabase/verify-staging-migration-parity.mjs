@@ -23,6 +23,8 @@ if (trialSkills.length > 1 || trialSkills.some(row => row.file !== '202611070408
 const trialDelivery = pending.filter(row => row.phase === 'trial-delivery-review-only')
 if (trialDelivery.length > 1 || trialDelivery.some(row => row.file !== '20261107034418_hq_workforce_trial_delivery.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown trial delivery source')
 const phase2 = pending.filter(row => row.phase === 'contract2-review-only')
+const resume = pending.filter(row => row.phase === 'admission-resume-review-only')
+if (resume.length > 1 || (resume.length && (phase2.length !== 6 || trialDelivery.length !== 1 || trialSkills.length !== 1)) || resume.some(row => row.file !== '20261107142302_hq_worker_admission_resume.sql' || row.status !== 'source-only-live-approval-required')) failures.push('unknown activation source')
 const contract2Sources = [
   {
     "file": "20261107024306_hq_department_staffing_needs.sql",
@@ -50,7 +52,7 @@ const contract2Sources = [
   }
 ]
 if (phase1.length !== 1 || phase1.some(row => row.status !== 'approved-source-not-deployed' || !/^\d{14}_hq_worker_admission_fence\.sql$/.test(row.file))) failures.push('approved phase-1 fence inventory changed')
-if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length + resume.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
 for (const [index,row] of phase2.entries()) {
   if (row.status !== 'source-only-live-approval-required' || row.file !== contract2Sources[index].file || row.proposal !== contract2Sources[index].proposal) failures.push('contract-2 source/order differs from reviewed proposals')
 }
@@ -67,6 +69,7 @@ for (const expected of [...manifest.appliedMigrations, ...pending]) {
   }
 }
 for (const expected of pending) {
+  if (expected.phase === 'admission-resume-review-only') continue
   const proposal = readFileSync(path.join(root, expected.proposal))
   const canonical = readFileSync(path.join(migrationsDir, expected.file))
   if (['contract2-review-only', 'trial-delivery-review-only', 'trial-skills-review-only', 'worker-status-compatibility'].includes(expected.phase)) {

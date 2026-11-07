@@ -204,6 +204,14 @@
       "sha256": "c194a4ef4f410b1af1d6fb81310824e934d48cfa807013561a4a5b7d5ab48398",
       "status": "source-only-live-approval-required",
       "phase": "worker-status-compatibility"
+    },
+    {
+      "file": "20261107142302_hq_worker_admission_resume.sql",
+      "bytes": 4142,
+      "md5": "54c83c7c25b3ae82b8718e1b6de8af00",
+      "sha256": "1eea4fbed76989ebeeafb796d8c1c45acb04be7bcb770ef3e5289511c4481759",
+      "status": "source-only-live-approval-required",
+      "phase": "admission-resume-review-only"
     }
   ]
 }
