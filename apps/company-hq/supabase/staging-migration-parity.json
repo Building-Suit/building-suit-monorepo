@@ -188,14 +188,6 @@
       "phase": "trial-delivery-review-only"
     },
     {
-      "file": "20261107040102_hq_worker_admission_resume.sql",
-      "bytes": 4044,
-      "md5": "2bb2486fee2683097247fd441e81eb58",
-      "sha256": "1ff9b1b229ab926902ece2b98b2f6690b424eb43fe962e7cf3bc3fe7cbb09f9a",
-      "status": "source-only-live-approval-required",
-      "phase": "admission-resume-review-only"
-    },
-    {
       "file": "20261107040848_hq_trial_failure_and_assigned_skills.sql",
       "proposal": "apps/company-hq/supabase/migrations/20261107040848_hq_trial_failure_and_assigned_skills.sql",
       "bytes": 28636,
@@ -203,6 +195,14 @@
       "sha256": "a00bc40d7915b05e68b9b44a1a3ad54b48da17378c123c9c0df9e276eac23608",
       "status": "source-only-live-approval-required",
       "phase": "trial-skills-review-only"
+    },
+    {
+      "file": "20261107041557_hq_worker_admission_resume.sql",
+      "bytes": 4142,
+      "md5": "6a51cc677382bbc4a3a57902570051f4",
+      "sha256": "7679becae3378e871a6bb2b286466c264030da42157c05f3d10eb86c24a3c126",
+      "status": "source-only-live-approval-required",
+      "phase": "admission-resume-review-only"
     }
   ]
 }

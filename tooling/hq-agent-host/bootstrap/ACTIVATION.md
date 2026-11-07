@@ -1,9 +1,9 @@
 # Admission resume source — draft/unmerged until managed health is verified
 
 This follow-up is based on #536 at
-`72be94574741274d74d02b6829a3960bec19fea6`. It prepares only
-`apps/company-hq/supabase/migrations/20261107040102_hq_worker_admission_resume.sql` (SHA256
-`1ff9b1b229ab926902ece2b98b2f6690b424eb43fe962e7cf3bc3fe7cbb09f9a`). The pinned repository CLI generated the version with
+`595bbd36547e8b7b5486b1e1167895a533f70b25`. It prepares only
+`apps/company-hq/supabase/migrations/20261107041557_hq_worker_admission_resume.sql` (SHA256
+`7679becae3378e871a6bb2b286466c264030da42157c05f3d10eb86c24a3c126`). The pinned repository CLI generated the version with
 `pnpm db company-hq migration new hq_worker_admission_resume`.
 
 The parent independently verified phase 1 live: exact staging worker paused at
@@ -18,7 +18,7 @@ and sole registered worker, against paused=true/generation=1/the original reques
 Under the existing queue lock it also requires the contract-2 RPC signatures and
 relations, and no working job (including expired or missing-expiry leases). It
 uses the existing administrator-only setter to resume with fresh request
-`6da24f6e-6d4c-4f44-ac79-3783c50ed203`, advancing to generation 2. Wrong identity,
+`9df74560-8ddf-403b-bd3d-d2c98c10338f`, advancing to generation 2. Wrong identity,
 an extra worker, changed/missing hold, missing prerequisite or unfinished work
 aborts the transaction. No authorization/enabled record or other worker changes.
 Migration-only PG17 1/5/8-second lock/statement/transaction limits remain bounded.
@@ -41,4 +41,6 @@ live jobs, inference, credentials or external mutation. Full pilot regression pa
 boundaries and release classification passed. Actual PR CI results are recorded
 in the task handoff; do not interpret skipped stacked aggregate checks as passes.
 
-The new CLI-generated resume follows the trial-delivery prerequisite and additionally requires its v4 worker API. The original never-applied 20261107030606 source is preserved under `bootstrap/superseded/`; it is no longer in the deployable migration directory. Preserve canonical pending/Active qualification rules and verify the new signed runtime. Retargeting this draft to stg permits normal combined CI in advance; it does not authorize merge or resume before fresh managed health and parent acceptance.
+The new CLI-generated resume follows the trial-delivery prerequisite and additionally requires its v4 worker API. The original never-applied 20261107030606 source is preserved under `bootstrap/superseded/`; it is no longer in the deployable migration directory. Preserve canonical pending/Active qualification rules and verify the new signed runtime. Full combined CI requires a stg base after #536 is accepted and merged under the one-root policy; no verification authorizes early resume.
+
+The current resume is ordered after `20261107040848_hq_trial_failure_and_assigned_skills.sql` and requires its private per-skill evidence validator. The prior 20261107040102 source is also preserved in `bootstrap/superseded/`. Both request ID and SHA above are copied from the current canonical source. Branch policy permits one open HQ stg root: keep this PR based on #536 until that parent is accepted, then retarget to stg for full verification. Do not bypass the policy or merge before fresh managed health.
