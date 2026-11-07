@@ -38,6 +38,32 @@ begin
       or v_proc.proargmodes is not null
       or not pg_catalog.has_function_privilege('authenticated',v_oid,'EXECUTE')
     then raise exception 'HQ_RELEASE_SCHEMA_INCOMPATIBLE' using errcode='55000'; end if;
+    -- Fixed SECURITY INVOKER wrappers need their one private entry point too.
+    -- This is not arbitrary call-graph discovery and grants no new authority.
+    v_oid:=pg_catalog.to_regprocedure(pg_catalog.replace(v_required.signature,'public.hq_','hq_private.'));
+    if v_oid is null or not pg_catalog.has_function_privilege('authenticated',v_oid,'EXECUTE')
+    then raise exception 'HQ_RELEASE_SCHEMA_INCOMPATIBLE' using errcode='55000'; end if;
+    -- PostgREST findProc matches JSON keys to required/optional input names,
+    -- independent of SQL types. A valid intended OID alone is insufficient.
+    -- Unnamed JSON fallbacks cannot compete with an existing named match.
+    -- Its schema cache includes same-name functions regardless of EXECUTE ACL;
+    -- only named candidates accepting this exact worker key set can conflict.
+    if exists (
+      select 1 from pg_catalog.pg_proc alternative
+      cross join lateral (
+        select coalesce(pg_catalog.array_agg(a.name) filter(where a.type is not null),'{}'::text[]) names,
+          coalesce(pg_catalog.array_agg(a.name) filter(where a.type is not null
+            and a.idx<=alternative.pronargs-alternative.pronargdefaults),'{}'::text[]) required_names
+        from rows from (pg_catalog.unnest(alternative.proargnames),
+          pg_catalog.unnest(alternative.proargtypes::oid[]),pg_catalog.unnest(alternative.proargmodes))
+          with ordinality a(name,type,mode,idx)
+      ) inputs
+      where alternative.pronamespace='public'::pg_catalog.regnamespace
+        and alternative.proname=v_required.name and alternative.oid<>v_proc.oid
+        and alternative.prokind='f' and alternative.prorettype<>'pg_catalog.trigger'::pg_catalog.regtype
+        and v_required.arguments <@ inputs.names
+        and inputs.required_names <@ v_required.arguments
+    ) then raise exception 'HQ_RELEASE_SCHEMA_INCOMPATIBLE' using errcode='55000'; end if;
     v_rpcs:=v_rpcs||pg_catalog.jsonb_build_object(v_required.name,v_required.arguments);
   end loop;
   return v_status||pg_catalog.jsonb_build_object('trialDelivery',1,'trialSkills',1,'trialFailureSettlement',1,

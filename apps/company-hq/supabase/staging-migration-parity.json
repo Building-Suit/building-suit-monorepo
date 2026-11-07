@@ -199,9 +199,9 @@
     {
       "file": "20261107133124_hq_worker_status_compatibility.sql",
       "proposal": "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
-      "bytes": 3882,
-      "md5": "84337cb508602b21354a91d035125276",
-      "sha256": "60cb1edbb4cb31a94059b1db2a970141988945fbab218237896a88d380761b3e",
+      "bytes": 5793,
+      "md5": "8b71fdfd9a61ab4997f9f482f6154999",
+      "sha256": "06cff983bbb21a4109a086818dfc2144aea51ae0567b5bcd4ad257ff788e2796",
       "status": "source-only-live-approval-required",
       "phase": "worker-status-compatibility"
     }

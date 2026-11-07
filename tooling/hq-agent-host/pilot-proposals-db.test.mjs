@@ -806,3 +806,36 @@ test('catalog proof rejects absent RPCs, renamed arguments, revoked execute or s
     }
   } finally {await h.db.close()}
 })
+
+
+test('catalog proof rejects matching overloads including optional extra arguments and preserves unrelated overloads',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    const statement=params=>`create function public.hq_worker_presence(${params}) returns jsonb language sql as $$select '{}'::jsonb$$;`
+    for(const params of ['p_worker_id text',"p_worker_id uuid,p_extra text default ''",
+      'p_worker_id text,p_optional text default null']) {
+      await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE/)
+      await h.db.exec('rollback;reset role')
+    }
+    for(const params of ['p_other_id text','p_worker_id uuid,p_required text','jsonb']) {
+      await h.db.exec('reset role;begin;'+statement(params));await h.as('worker')
+      assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
+      await h.db.exec('rollback;reset role')
+    }
+  } finally {await h.db.close()}
+})
+test('catalog proof requires the fixed invoker wrappers private entry signatures and execute grants',async()=>{
+  const h=await setup(true,false,true,false,true)
+  try {
+    for(const change of [
+      'revoke execute on function hq_private.worker_finish_v4(uuid,uuid,uuid,text,text,jsonb,jsonb,jsonb) from authenticated',
+      'alter function hq_private.worker_presence(uuid) rename to worker_presence_unavailable'
+    ]) {
+      await h.db.exec('reset role;begin;'+change);await h.as('worker')
+      await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_RELEASE_SCHEMA_INCOMPATIBLE/)
+      await h.db.exec('rollback;reset role');await h.as('worker')
+      assert.equal(checkApiContract(await h.rpc('hq_worker_release_status',[worker])),2)
+    }
+  } finally {await h.db.close()}
+})
