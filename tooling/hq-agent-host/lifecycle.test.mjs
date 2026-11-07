@@ -21,11 +21,10 @@ async function fixture(t, extra = {}) {
   await writeFile(join(root, 'manifest.json'), JSON.stringify({ sha }))
   await copyFile(new URL('workforceRoster.mjs', import.meta.url), join(root, 'workforceRoster.mjs'))
   await writeFile(join(root, 'brainPublisher.mjs'), 'export const createBrainPublisher = () => ({})')
-  const spec = { paths: {}, definitions: {} }
-  for (const [name, args] of Object.entries(REQUIRED_RPCS)) spec.paths['/rpc/' + name] = { post: { parameters: [{ in: 'body', schema: { properties: Object.fromEntries(args.map(key => [key, {}])) } }] } }
+  const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
-const root = ${JSON.stringify(root)}, spec = ${JSON.stringify(spec)}
+const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}
 let activeJobs = 0
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
@@ -33,9 +32,8 @@ globalThis.fetch = async (url, options = {}) => {
   let body = true, status = 200
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
-    body = spec
-    if (process.env.FIXTURE_SCHEMA_BAD) delete body.paths['/rpc/hq_worker_claim']
-  } else if (url.endsWith('/hq_worker_release_status')) body = {contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}
+    throw Error('privileged-openapi-must-not-be-requested')
+  } else if (url.endsWith('/hq_worker_release_status')) { body = {api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
   else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
   else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence)); await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
@@ -142,10 +140,12 @@ test('unknown claim outcome persists poison and candidate schema failure never a
   await until(async () => (await f.control('status')).uncertain)
   assert.match(await readFile(join(f.state, 'maintenance-uncertain'), 'utf8'), /reconcile/)
   assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
-  const bad = await fixture(t, { FIXTURE_SCHEMA_BAD: '1' })
-  assert.equal((await bad.control('status')).ready, false)
-  assert.equal((await bad.control('resume')).error, 'maintenance-unavailable')
-  assert.equal(await bad.events(), '')
+  for (const failure of [{ FIXTURE_SCHEMA_BAD: '1' }, { FIXTURE_PROOF_MISSING: '1' }]) {
+    const bad = await fixture(t, failure)
+    assert.equal((await bad.control('status')).ready, false)
+    assert.equal((await bad.control('resume')).error, 'maintenance-unavailable')
+    assert.equal(await bad.events(), '')
+  }
 })
 
 

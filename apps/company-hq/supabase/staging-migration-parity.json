@@ -195,6 +195,15 @@
       "sha256": "a00bc40d7915b05e68b9b44a1a3ad54b48da17378c123c9c0df9e276eac23608",
       "status": "source-only-live-approval-required",
       "phase": "trial-skills-review-only"
+    },
+    {
+      "file": "20261107133124_hq_worker_status_compatibility.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "bytes": 3882,
+      "md5": "84337cb508602b21354a91d035125276",
+      "sha256": "60cb1edbb4cb31a94059b1db2a970141988945fbab218237896a88d380761b3e",
+      "status": "source-only-live-approval-required",
+      "phase": "worker-status-compatibility"
     }
   ]
 }

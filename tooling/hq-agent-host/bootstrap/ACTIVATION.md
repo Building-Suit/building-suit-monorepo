@@ -1,33 +1,33 @@
-# Managed bootstrap controls — admission remains held
+# Bootstrap prerequisite — admission remains held
 
-This prerequisite contains no admission-resume migration. Fresh managed health,
-roster reconciliation and parent acceptance remain required before activation.
+This prerequisite contains no admission-resume migration. Keep #537 draft and
+unmerged until fresh managed health, roster reconciliation and parent acceptance.
+This source task performs no host, database or provider operation.
 
-## Public directory mode correction — keep activation held
+Public release/control executable directories explicitly finalize to 0755 under
+umask077, preserving root ownership and private inputs, state, credentials,
+receipts and backups. Never chmod recursively. Both fixed Node systemd commands
+require `--preserve-symlinks-main`: without it, the main guard silently skips
+startup and preflight through current/candidate links. Exit zero alone was not
+acceptance. Review control hashes and require actual contract output and observed
+paused PID/release readiness. The control fixes themselves retain runtime bytes.
 
-The first managed install exposed `200/CHDIR`: umask `077` filtered mkdir's
-requested `0755` to `0700`. This source corrects only public release/control-bin
-traversal modes. The root operator must review/update `release.py` and
-`bootstrap.py` and their exact digest receipt before enabling the timer. The
-signed worker bundle, trust policy/roots, configuration are unchanged. Do not chmod recursively or widen private inputs, state, credentials,
-receipts or backups. Re-run real service-user preflight/paused managed health
-and preserve the admission hold; these disposable tests are not host acceptance.
+The separate compatibility correction DOES require a new signed worker bundle.
+Its candidate preflight/managed health uses the existing authenticated read-only
+worker-status RPC, not privileged OpenAPI discovery. The additive forward
+migration checks exact required function types, ordered argument names, JSONB
+return shape, authenticated execute and schema access behind the unchanged
+enabled-worker/non-founder/live-session authorization. It returns only the small
+versioned public-API proof and existing semantic capability/active-job counts.
+Missing/inconsistent proof prevents readiness/resume; no privileged key is added.
+The host never applies this migration. Deployment remains reviewed GitHub/stg
+through the native staging integration, with admission unchanged.
 
+This prerequisite does not establish the first healthy managed baseline or
+prove legacy rollback. After accepted source deployment and signed publication,
+the parent owns installation, real preflight/paused managed health and roster
+reconciliation. Admission and timer activation remain separate held actions.
 
-## Symlink main dispatch correction — keep activation held
-
-Both fixed systemd Node commands now include `--preserve-symlinks-main`.
-Without it, Node resolves the main module to `releases/<sha>/worker.mjs` while
-`argv[1]` retains `current` or `candidate`, so the worker's main guard silently
-skips startup and preflight. Exit zero alone did not establish compatibility.
-The flag preserves main-module identity through the atomic release link;
-relative imports and manifest reads still resolve to the selected release.
-Ordinary imports remain inert. The signed five-module worker bundle is unchanged.
-See the [official Node option](https://nodejs.org/download/release/v24.15.0/docs/api/cli.html#--preserve-symlinks-main).
-
-Review/update both unit files and their control receipt hashes before running
-real preflight and paused managed health. Disposable real-Node tests reproduce
-the false zero exit, require actual authenticated-fixture contract validation,
-reject missing RPC/module dependencies, exercise atomic release switching and
-check PID/release/paused readiness plus the trial source digest. No live
-credentials, model or hosted system are used. Admission and timer remain held.
+Reference: [Node main-link option](https://nodejs.org/download/release/v24.15.0/docs/api/cli.html#--preserve-symlinks-main),
+[Supabase key/role mapping](https://supabase.com/docs/guides/getting-started/api-keys),
+[function security and grants](https://supabase.com/docs/guides/database/functions).

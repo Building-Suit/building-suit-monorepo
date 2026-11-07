@@ -28,12 +28,15 @@ export const REQUIRED_RPCS = {
   hq_worker_roster_sources: ['p_worker_id'], hq_worker_sync_roster: ['p_worker_id', 'p_agents'],
   hq_worker_pending_lessons: ['p_worker_id'], hq_worker_publish_lesson: ['p_worker_id', 'p_lesson_id', 'p_reference', 'p_digest'],
 }
-export function checkApiContract(spec) {
+export function checkApiContract(status) {
+  const api = status?.api
+  if (status?.contract !== 2 || status.trialDelivery !== 1 || status.trialSkills !== 1
+    || status.trialFailureSettlement !== 1 || !Number.isSafeInteger(status.activeJobs) || status.activeJobs < 0
+    || api?.version !== 1 || api.role !== 'authenticated' || api.schemaUsage !== true || api.execute !== true
+    || !api.rpcs || Object.keys(api.rpcs).length !== Object.keys(REQUIRED_RPCS).length) throw Error('schema-incompatible')
   for (const [name, names] of Object.entries(REQUIRED_RPCS)) {
-    const operation = spec?.paths?.['/rpc/' + name]?.post
-    const body = operation?.parameters?.find(value => value.in === 'body')?.schema
-    const definition = body?.$ref?.startsWith('#/definitions/') ? spec.definitions?.[body.$ref.slice(14)] : body
-    if (!definition?.properties || names.some(key => !Object.hasOwn(definition.properties, key))) throw Error('schema-incompatible')
+    const actual = api.rpcs[name]
+    if (!Array.isArray(actual) || actual.length !== names.length || names.some((key, index) => actual[index] !== key)) throw Error('schema-incompatible')
   }
   return 2
 }

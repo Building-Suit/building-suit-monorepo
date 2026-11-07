@@ -30,17 +30,16 @@ async function setup(t) {
     await writeFile(join(directory,'manifest.json'),JSON.stringify({format:1,sha,files:contents}))
   }
   for (const [link,sha] of [['current',a],['candidate',b]]) await symlink('releases/'+sha,join(root,link),'dir')
-  const spec = {paths:{}}
-  for (const [name,args] of Object.entries(REQUIRED_RPCS)) spec.paths['/rpc/'+name]={post:{parameters:[{in:'body',schema:{properties:Object.fromEntries(args.map(key=>[key,{}]))}}]}}
+  const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   const preload = join(root,'fixture.mjs')
   await writeFile(preload,`
 import {appendFile} from 'node:fs/promises'
-const spec=${JSON.stringify(spec)},log=${JSON.stringify(join(root,'calls'))}
+const api=${JSON.stringify(api)},log=${JSON.stringify(join(root,'calls'))}
 globalThis.fetch=async url=>{
  let body,kind
  if(url.includes('/auth/')){kind='auth';body={access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}}
- else if(url.endsWith('/rest/v1/')){kind='spec';body=spec;if(process.env.FIXTURE_BAD_SCHEMA)delete body.paths['/rpc/hq_worker_claim']}
- else if(url.endsWith('/hq_worker_release_status')){kind='status';body={contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0}}
+ else if(url.endsWith('/rest/v1/')){return new Response(JSON.stringify({error:'api-key',category:'privileged-key-required'}),{status:401})}
+ else if(url.endsWith('/hq_worker_release_status')){kind='status';body={api,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
  else throw Error('unexpected-fixture-request')
  await appendFile(log,kind+'\\n');return new Response(JSON.stringify(body))
 }
@@ -78,11 +77,14 @@ function status(root) {
 }
 test('real candidate main reproduces false zero exit without flag; fixed preflight actually validates',async t=>{
   const f=await setup(t),entry=join(f.root,'candidate','worker.mjs')
+  const discovery=await run(process.execPath,['--import',f.preload,'--input-type=module','-e',
+    "const r=await fetch('https://fixture.invalid/rest/v1/');process.stdout.write(String(r.status))"],{env:f.env,timeout:5000})
+  assert.equal(discovery.stdout,'401','publishable fixture cannot discover privileged OpenAPI')
   const old=await run(process.execPath,['--import',f.preload,entry,'--release-preflight'],{env:f.env,timeout:5000})
   assert.equal(old.stdout,'');assert.equal(await f.calls(),'','unfixed symlink dispatch falsely exited zero without preflight')
   const args=await unitArguments('company-hq-worker-preflight.service.example','candidate')
   const checked=await run(process.execPath,[...args,'--import',f.preload,entry,'--release-preflight'],{env:f.env,timeout:5000})
-  assert.deepEqual(JSON.parse(checked.stdout),{contract:2});assert.equal(await f.calls(),'auth\nspec\nstatus\n')
+  assert.deepEqual(JSON.parse(checked.stdout),{contract:2});assert.equal(await f.calls(),'auth\nstatus\n')
   await assert.rejects(()=>run(process.execPath,[...args,'--import',f.preload,entry,'--release-preflight'],
     {env:{...f.env,FIXTURE_BAD_SCHEMA:'1'},timeout:5000}),error=>error.code===1&&error.stdout.includes('worker-unavailable'))
   const dependency=join(f.root,'releases',f.b,'departmentWorkflow.mjs')
@@ -100,7 +102,7 @@ test('real current main starts paused, reads the selected manifest and follows a
     const health=await status(f.root)
     assert.equal(health.pid,child.pid);assert.equal(health.release,sha);assert.equal(health.ready,true)
     assert.equal(health.paused,true);assert.equal(health.busy,0);assert.equal(health.activeJobs,0)
-    assert.match(await f.calls(),/auth\nspec\nstatus/);assert.doesNotMatch(await f.calls(),/claim|roster|lesson|presence/)
+    assert.match(await f.calls(),/auth\nstatus/);assert.doesNotMatch(await f.calls(),/claim|roster|lesson|presence/)
     child.kill('SIGTERM');await until(()=>child.exitCode!==null);assert.equal(child.exitCode,0)
   }
 })

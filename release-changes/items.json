@@ -5739,5 +5739,35 @@
       "release-changes/items.json"
     ],
     "reason": "Preserve real Node main dispatch through atomic release symlinks in both fixed units; verify actual preflight, paused startup, import isolation and selected-release source binding without changing the signed worker artifact. Activation remains held."
+  },
+  {
+    "id": "hq-authenticated-worker-compatibility-20261107",
+    "task": "HQ-AUTHENTICATED-WORKER-COMPATIBILITY-20261107",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/worker.mjs",
+      "tooling/hq-agent-host/maintenance.mjs",
+      "tooling/hq-agent-host/maintenance.test.mjs",
+      "tooling/hq-agent-host/lifecycle.test.mjs",
+      "tooling/hq-agent-host/symlink-entry.test.mjs",
+      "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+      "tooling/hq-agent-host/RELEASES.md",
+      "tooling/hq-agent-host/bootstrap/ACTIVATION.md",
+      "apps/company-hq/supabase/migrations/20261107133124_hq_worker_status_compatibility.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Verify runtime compatibility through the existing read-only authenticated worker-status contract without privileged OpenAPI discovery or new credentials. Preserve authorization and admission hold; test exact catalog signatures, privileges and real managed/preflight refusal."
   }
 ]
