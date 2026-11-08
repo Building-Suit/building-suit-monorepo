@@ -1,0 +1,26 @@
+{
+  "id": "hq-character-avatars-20261108",
+  "task": "HQ-CHARACTER-AVATARS-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/composables/useHqAvatarAssets.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/app/utils/hqAgentAvatars.ts",
+    "apps/company-hq/public/avatars",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hqAgentCharacters.ts",
+    "packages/ui/src/utils/hqAvatarRenderer.ts",
+    "packages/ui/src/utils/hqSceneMatrices.ts",
+    "tooling/hq-character-library.py",
+    "tooling/hq-character-runtime.py",
+    "tooling/hq-character-studio.html"
+  ],
+  "reason": "Private Company HQ scene renders sourced, rigged male and female avatars for the known roster using stable appearance presets. Each character has an individual pace, stride, arm swing and idle rhythm. Retain reduced motion, neutral asset fallback and the separation between cosmetic motion and actual worker activity. Include credited GLB packs and the current studio and export sources."
+}

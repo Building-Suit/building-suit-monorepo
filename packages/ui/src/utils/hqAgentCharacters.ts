@@ -1,4 +1,5 @@
 import type { DepartmentOfficeLayout, OfficePlacement } from './departmentOfficeLayout.ts'
+import type { HqAgentAvatar } from '../types/hqAgentsPresentation'
 import { departmentDeskLayout, officeExecutiveHitRegions } from './officeArchitecture.ts'
 import { organicBoundaryAtX } from './organicOfficePlatform.ts'
 import type { OfficeArchitectureGeometry } from './officeArchitecture.ts'
@@ -13,6 +14,7 @@ export interface HqAgentCharacter {
   departmentId: string | null
   deskIndex: number | null
   activity: 'working' | 'idle' | 'offline' | 'unknown'
+  avatar?: HqAgentAvatar
   /** Explicit presentation permission, independent of actual worker activity. */
   cosmeticIdle?: boolean
 }
@@ -27,6 +29,7 @@ export interface HqAgentPose extends HqAgentPoint {
   yaw: number
   mode: 'working' | 'walking' | 'standing' | 'fishing' | 'lounging'
   phase: number
+  gait: Readonly<{ strideScale: number; armSwing: number; idleRate: number; offset: number }>
   visible: boolean
 }
 
@@ -143,6 +146,7 @@ export function createHqAgentCharacterGeometry(): HqAgentCharacterGeometry {
 interface Seat extends HqAgentPoint { yaw: number; office: OfficePlacement; localX: number; localZ: number }
 interface AgentState {
   pose: HqAgentPose
+  walkSpeed: number
   previousActivity: HqAgentCharacter['activity']
   previousCosmeticIdle: boolean
   route: HqAgentPoint[]
@@ -157,7 +161,6 @@ interface AgentState {
   seatSignature: string
 }
 const FULL_TURN = Math.PI * 2
-const WALK_SPEED = 0.91
 const FLOOR_RISE = 0.14
 const MAX_FRAME_STEP = 0.10
 const MAX_VISIBLE_AGENTS = 256
@@ -168,6 +171,20 @@ function seed(value: string): number {
   let hash = 2166136261
   for (let index = 0; index < value.length; index++) hash = Math.imul(hash ^ value.charCodeAt(index), 16777619)
   return (hash >>> 0) / 4294967296
+}
+function movementStyle(personality: number) {
+  // Mix the hash before reading separate ranges so neighboring IDs don't
+  // inherit almost identical speeds and rhythms.
+  const hash = Math.imul(personality * 4294967296, 0x9e3779b1) >>> 0
+  return {
+    walkSpeed: 0.62 + (hash & 0xffff) / 0xffff * 0.64,
+    gait: {
+      strideScale: 0.83 + ((hash >>> 10) & 255) / 255 * 0.34,
+      armSwing: 0.72 + ((hash >>> 4) & 255) / 255 * 0.56,
+      idleRate: 0.75 + ((hash >>> 18) & 255) / 255 * 0.50,
+      offset: (hash >>> 26) / 64 * FULL_TURN,
+    },
+  }
 }
 function copy(point: HqAgentPoint): HqAgentPoint { return { x: point.x, y: point.y, z: point.z } }
 function spawnAngle(id: string, ids: ReadonlySet<string>, personality: number): number {
@@ -344,14 +361,16 @@ export function createHqAgentMotion(groundY = -0.69): HqAgentMotion {
         const visible = roaming || (agent.activity === 'working' && seat !== null)
         let state = states.get(agent.id)
         if (!state) {
+          const { walkSpeed, gait } = movementStyle(personality)
           const startAngle = spawnAngle(agent.id, ids, personality)
           const start = agent.activity === 'working' && seat ? seat : radial(4.1 + personality * 1.7, startAngle, courtY)
           const initialYaw = seat && agent.activity === 'working' ? seat.yaw : (personality > 0.5 ? Math.PI : 0) - startAngle
           const initialMode: PoseMode = agent.activity === 'working' && seat ? 'working' : 'standing'
           state = {
-            pose: { id: agent.id, ...copy(start), yaw: initialYaw, mode: initialMode, phase: personality * FULL_TURN, visible },
+            pose: { id: agent.id, ...copy(start), yaw: initialYaw, mode: initialMode, phase: gait.offset, gait, visible },
+            walkSpeed,
             previousActivity: agent.activity, previousCosmeticIdle: cosmeticIdle, route: [], routeIndex: 0, targetMode: initialMode, targetYaw: initialYaw, home: [],
-            roamLegs: 0, restUntil: 0, destinationIndex: null, returning: false, seatSignature: signature,
+            roamLegs: 0, restUntil: roaming ? now + gait.offset * 0.12 : 0, destinationIndex: null, returning: false, seatSignature: signature,
           }
           states.set(agent.id, state)
         }
@@ -420,7 +439,7 @@ export function createHqAgentMotion(groundY = -0.69): HqAgentMotion {
         }
         state.previousActivity = agent.activity; state.previousCosmeticIdle = cosmeticIdle; state.seatSignature = signature
         if (!reducedMotion) {
-          let remaining = delta * WALK_SPEED, walked = 0, carried = 0
+          let remaining = delta * state.walkSpeed, walked = 0, carried = 0
           while (state.route.length && remaining > 0.000001) {
             const travelled = advance(state, remaining)
             walked += travelled; remaining -= travelled
@@ -448,8 +467,9 @@ export function createHqAgentMotion(groundY = -0.69): HqAgentMotion {
           state.pose.yaw += nearestAngleDelta(state.pose.yaw, facing) * (1 - Math.exp(-9 * delta))
           // Gait tracks actual distance, including carried waypoints. Explicit
           // standing poses keep stopped avatars out of a frozen mid-stride.
-          if (walked > 0) state.pose.phase += walked * 8.0
-          else if (state.pose.mode !== 'walking') state.pose.phase += delta * (state.pose.mode === 'working' ? 2.8 : 0.65)
+          const { strideScale, idleRate } = state.pose.gait
+          if (walked > 0) state.pose.phase += walked * 8.0 / strideScale
+          else if (state.pose.mode !== 'walking') state.pose.phase += delta * idleRate * (state.pose.mode === 'working' ? 2.8 : 0.65)
         }
         poses.push({ ...state.pose })
       }

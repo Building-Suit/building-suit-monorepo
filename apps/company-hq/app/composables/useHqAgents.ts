@@ -55,7 +55,9 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
         trials.value = []; return
       }
       trials.value = result as HqTrialPresentation[]
-    } catch { trials.value = [] }
+    } catch {
+      if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trials.value = []
+    }
   }
   async function trialCommand(command: HqTrialCommand) {
     if (getAccess().status !== 'founder' || trialPending.value) return
@@ -388,7 +390,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     clock.value = now; scheduleFreshness()
   })
 
-  live.subscribe('agents', () => { void refresh(); void refreshTrials() }, reason => invalidate(false, reason === 'offline' ? 'unavailable' : null))
+  live.subscribe('agents', () => Promise.all([refresh(), refreshTrials()]), reason => invalidate(false, reason === 'offline' ? 'unavailable' : null))
   watch(() => {
     const access = getAccess()
     return `${access.status}\u0000${accessIdentity(access) ?? ''}`

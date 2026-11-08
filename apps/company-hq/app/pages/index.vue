@@ -2,6 +2,8 @@
 import type { HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
 
 import type { HqAgentPresentation, HqAgentsContent, HqAgentsPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import { useHqAvatarAssets } from '../composables/useHqAvatarAssets'
+import { hqAvatarForAgent } from '../utils/hqAgentAvatars'
 
 defineOptions({ name: 'HqHomePage' })
 definePageMeta({ layout: false })
@@ -88,11 +90,13 @@ const { agents, trialCommand, send: sendCeoMessage, refresh: refreshAgents } = u
 const labeledAgents = computed<HqAgentsPresentation>(() => ({
   ...agents.value,
   agents: agents.value.agents.map(agent => ({ ...agent,
+    avatar: hqAvatarForAgent(agent.id),
     roleLabel: employeeRoleLabel(agent), activityLabel: t(`hq.agents.activities.${agent.activity}`),
     departmentName: localizedDepartments.value.find(department => department.id === agent.departmentId)?.name
       ?? (agent.role === 'ceo' ? companyPlansCopy.value.executiveLabel : agent.departmentName ? agentLabel('departments', agent.departmentName) : undefined),
   })),
 }))
+const avatarAssets = useHqAvatarAssets(() => labeledAgents.value.agents)
 const agentsContent = computed<HqAgentsContent>(() => ({
   locale: locale.value,
   title: t('hq.agents.title'),
@@ -224,6 +228,7 @@ const content = computed<HqLayoutContent>(() => ({
   zoomInLabel: t('hq.zoomInLabel'),
   fitViewLabel: t('hq.fitViewLabel'),
   hologramLabel: t('hq.hologramLabel'),
+  avatarAssets: avatarAssets.value,
   sceneUnavailableLabel: t('hq.sceneUnavailableLabel'),
   mouseControlsLabel: t('hq.mouseControlsLabel'),
   touchControlsLabel: t('hq.touchControlsLabel'),

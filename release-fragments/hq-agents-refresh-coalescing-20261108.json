@@ -1,0 +1,19 @@
+{
+  "id": "hq-agents-refresh-coalescing-20261108",
+  "task": "HQ-AGENTS-REFRESH-COALESCING-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/composables/useHqAgents.ts",
+    "apps/company-hq/tests/unit/agents-refresh-coalescing.test.mjs"
+  ],
+  "reason": "Await both agent and trial snapshot reads in the existing live hub queue, preserving one dirty follow-up and preventing stale failed reads from clearing a new founder scope."
+}
