@@ -16,7 +16,7 @@ const skillFileId='synthetic_skill_001',trialId='11111111-1111-4111-8111-1111111
 const state=overrides=>({skillFileId,eligible:true,qualified:false,trialId:null,taskId:null,status:null,receiptIssued:false,reviewComplete:false,bindingCurrent:true,...overrides})
 const row=publicResearch=>({agentId:'AG-RES-002',eligible:false,qualified:true,receiptIssued:true,reviewComplete:true,skillFileId,trialId:null,status:null,publicResearch})
 const snapshot=()=>({version:2,conversationId:null,agents:[],messages:[],jobs:[],tasks:[],lessons:[],runtime:{connected:false,lastSeenAt:null}})
-async function fixture(t,initial=state()) {
+async function fixture(t,initial=state(),setup={}) {
   const access=ref({status:'founder',user:{displayName:'Generated founder',detailLabel:'Test'}}),mounts=[],disposers=[],posts=[]
   let current=initial, heldRead=null
   const scope=effectScope(),descriptors=new Map()
@@ -24,7 +24,7 @@ async function fixture(t,initial=state()) {
     useHqLiveEvents:()=>({subscribe(){},subscribePresence(){},invalidate(){}}),
     $fetch:(url,options={})=>{
       if(options.method==='POST'){const request={...deferred(),url,options};posts.push(request);return request.promise}
-      if(url==='/api/hq/trials')return Promise.resolve([row(current)])
+      if(url==='/api/hq/trials')return Promise.resolve([{...row(current),agentId:setup.agentId??'AG-RES-002',...(setup.ordinary?{ordinary:setup.ordinary}:{}),...(setup.retail?{publicRetail:setup.retail}:{})}])
       assert.equal(url,'/api/hq/agents');return heldRead ? heldRead.promise : Promise.resolve(snapshot())
     }}
   for(const [key,value]of Object.entries(globals)){descriptors.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,writable:true,value})}
@@ -88,4 +88,38 @@ test('CEO send superseding a background read cannot leave trial controls permane
  // The superseded command cannot display feedback in a newer snapshot epoch.
  assert.equal(f.result.agents.value.trialMessage,'')
  read.resolve(snapshot());f.posts[1].resolve(snapshot());await Promise.all([refresh,send])
+})
+
+const ordinaryState=extra=>({...state(),skillName:'Generated skill',reviewerId:'AG-HR-003',reviewerReady:true,...extra})
+for(const agentId of ['AG-SOC-002','AG-HR-002','AG-HR-003'])test(`assigned skill ${agentId} uses fixed guarded route and stable uncertain request`,async t=>{
+ const f=await fixture(t,state(),{agentId,ordinary:ordinaryState({reviewerId:agentId==='AG-HR-003'?'AG-CEO-001':'AG-HR-003'})})
+ const command={action:'start-skill-trial',agentId,skillFileId};let call=f.result.trialCommand(command);await flush()
+ assert.equal(f.posts[0].url,agentId==='AG-HR-003'?'/api/hq/evaluator-trials':'/api/hq/trials/start')
+ assert.deepEqual(Object.keys(f.posts[0].options.body).sort(),agentId==='AG-HR-003'?['requestKey','skillFileId']:['agentId','requestKey','skillFileId'])
+ const key=f.posts[0].options.body.requestKey;f.posts[0].reject(Error('synthetic uncertainty'));await call
+ call=f.result.trialCommand(command);await flush();assert.equal(f.posts[1].options.body.requestKey,key)
+ f.posts[1].resolve({accepted:true,trialId});await call;assert.equal(f.result.agents.value.trialMessageAgentId,agentId)
+})
+test('unavailable reviewer and stale ordinary review cannot dispatch',async t=>{
+ const agentId='AG-HR-003',f=await fixture(t,state(),{agentId,ordinary:ordinaryState({reviewerReady:false,reviewComplete:true,trialId})})
+ await f.result.trialCommand({action:'start-skill-trial',agentId,skillFileId});await f.result.trialCommand({action:'qualify',agentId,trialId});assert.equal(f.posts.length,0)
+})
+test('retail selection is finite and each uncertain category retains its own request identity',async t=>{
+ const f=await fixture(t,state(),{retail:{...state(),categories:['clothing','footwear','homewares'],lastCategory:null,setupRequired:false}})
+ await f.result.trialCommand({action:'start-public-retail',skillFileId,category:'pharmacy'});assert.equal(f.posts.length,0)
+ let call=f.result.trialCommand({action:'start-public-retail',skillFileId,category:'clothing'});await flush()
+ assert.equal(f.posts[0].url,'/api/hq/retail-trials');assert.equal(f.posts[0].options.body.category,'clothing');const key=f.posts[0].options.body.requestKey
+ f.posts[0].reject(Error('synthetic uncertainty'));await call
+ call=f.result.trialCommand({action:'start-public-retail',skillFileId,category:'footwear'});await flush();assert.notEqual(f.posts[1].options.body.requestKey,key)
+ f.posts[1].reject(Error('synthetic uncertainty'));await call
+ call=f.result.trialCommand({action:'start-public-retail',skillFileId,category:'clothing'});await flush();assert.equal(f.posts[2].options.body.requestKey,key)
+ f.posts[2].resolve({accepted:true,trialId});await call
+})
+test('changing employee clears completed feedback and suppresses late old feedback without releasing pending ownership',async t=>{
+ const f=await fixture(t);let call=f.result.trialCommand(start);await flush();f.posts[0].resolve({accepted:true,trialId});await call
+ assert.equal(f.result.agents.value.trialMessageAgentId,'AG-RES-002');await f.result.trialCommand({action:'clear-trial-feedback'})
+ assert.equal(f.result.agents.value.trialMessage,'');assert.equal(f.result.agents.value.trialMessageAgentId,null)
+ call=f.result.trialCommand(start);await flush();await f.result.trialCommand({action:'clear-trial-feedback'})
+ assert.equal(f.result.agents.value.trialPending,true);f.posts[1].reject(Error('late old reply'));await call
+ assert.equal(f.result.agents.value.trialMessage,'');assert.equal(f.result.agents.value.trialPending,false)
 })

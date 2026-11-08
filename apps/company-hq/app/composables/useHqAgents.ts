@@ -1,4 +1,4 @@
-import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation, HqPublicResearchTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation, HqPublicResearchTrialPresentation, HqOrdinaryTrialPresentation, HqRetailTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import { provideHqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot, type HqBusinessTask } from '#shared/types/agents'
@@ -36,6 +36,25 @@ function publicResearchTrial(value: unknown): HqPublicResearchTrialPresentation 
   return row as unknown as HqPublicResearchTrialPresentation
 }
 
+function ordinaryTrial(value: unknown): HqOrdinaryTrialPresentation | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return
+  const { skillName, reviewerId, reviewerReady, ...base } = value as Record<string, unknown>
+  const trial = publicResearchTrial(base)
+  if (!trial || typeof reviewerReady !== 'boolean'
+    || !(reviewerId === null || typeof reviewerId === 'string' && /^AG-[A-Z]{2,10}-[0-9]{3}$/.test(reviewerId))
+    || !(skillName === null || typeof skillName === 'string' && skillName.trim() && skillName.length <= 240 && !hasHqControlCharacters(skillName))) return
+  return { ...trial, skillName, reviewerId, reviewerReady } as HqOrdinaryTrialPresentation
+}
+function retailTrial(value: unknown): HqRetailTrialPresentation | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return
+  const { categories, lastCategory, setupRequired, ...base } = value as Record<string, unknown>
+  const trial = publicResearchTrial(base), known = ['clothing','footwear','homewares']
+  if (!trial || typeof setupRequired !== 'boolean' || !Array.isArray(categories) || categories.length > 3 || new Set(categories).size !== categories.length
+    || categories.some(category => typeof category !== 'string' || !known.includes(category))
+    || !(lastCategory === null || typeof lastCategory === 'string' && known.includes(lastCategory))) return
+  return { ...trial, categories, lastCategory, setupRequired } as HqRetailTrialPresentation
+}
+
 function responseStatus(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined
   const entry = error as { statusCode?: unknown; status?: unknown; response?: { status?: unknown } }
@@ -54,9 +73,10 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   const live = useHqLiveEvents()
   provideHqTaskBrowserSource({ load: loadTaskPage, detail: loadTaskDetail })
   const trials = shallowRef<readonly HqTrialPresentation[]>([])
-  const trialPending = ref(false), trialMessage = ref('')
+  const trialPending = ref(false), trialMessage = ref(''), trialMessageAgentId = ref<string | null>(null)
+  let trialFeedbackEpoch = 0
   let trialSequence = 0
-  let researchAttempt: { identity: string | null; skillFileId: string; requestKey: string } | null = null
+  const trialAttempts = new Map<string, { identity: string | null; requestKey: string }>()
   async function refreshTrials() {
     if (getAccess().status !== 'founder') { trials.value = []; return }
     const identity = accessIdentity(getAccess()), trialEpoch = epoch
@@ -69,50 +89,85 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
         || !(row.trialId === null || typeof row.trialId === 'string') || ![null, 'active', 'passed', 'failed', 'canceled'].includes(row.status))) {
         trials.value = []; return
       }
-      trials.value = result.map(({ publicResearch: candidate, ...row }) => {
+      trials.value = result.map(({ publicResearch: candidate, publicRetail: retailCandidate, ordinary: ordinaryCandidate, ...row }) => {
         const research = row.agentId === 'AG-RES-002' ? publicResearchTrial(candidate) : undefined
-        return research ? { ...row, publicResearch: research } : row
+        const retail = row.agentId === 'AG-RES-002' ? retailTrial(retailCandidate) : undefined
+        const ordinary = ordinaryTrial(ordinaryCandidate)
+        return { ...row, ...(research ? { publicResearch: research } : {}), ...(retail ? { publicRetail: retail } : {}), ...(ordinary ? { ordinary } : {}) }
       }) as HqTrialPresentation[]
     } catch {
       if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trials.value = []
     }
   }
   async function trialCommand(command: HqTrialCommand) {
+    if (command.action === 'clear-trial-feedback') {
+      trialFeedbackEpoch += 1; trialMessage.value = ''; trialMessageAgentId.value = null; return
+    }
     if (getAccess().status !== 'founder' || trialPending.value || disposed) return
-    const identity = accessIdentity(getAccess()), trialEpoch = epoch
+    const identity = accessIdentity(getAccess()), trialEpoch = epoch, feedbackEpoch = trialFeedbackEpoch
     const research = trials.value.find(row => row.agentId === 'AG-RES-002')?.publicResearch
-    if (command.action === 'start-public-research' && (!research?.eligible || research.qualified || research.status === 'active'
-      || research.skillFileId !== command.skillFileId || research.reviewComplete && research.bindingCurrent && !research.receiptIssued)) return
-    if (command.action === 'qualify-public-research' && (!research?.reviewComplete || !research.bindingCurrent
-      || research.receiptIssued || research.qualified || research.trialId !== command.trialId)) return
+    const retail = trials.value.find(row => row.agentId === 'AG-RES-002')?.publicRetail
+    const ordinary = command.action === 'start-skill-trial' ? trials.value.find(row => row.agentId === command.agentId)?.ordinary : undefined
+    const subject = command.action === 'start-skill-trial' ? command.agentId
+      : command.action === 'qualify' ? command.agentId ?? trials.value.find(row => row.trialId === command.trialId || row.ordinary?.trialId === command.trialId)?.agentId ?? null
+        : 'AG-RES-002'
+    const canStart = (trial: HqPublicResearchTrialPresentation | undefined, skill: string) => trial?.eligible && !trial.qualified
+      && trial.status !== 'active' && trial.skillFileId === skill && !(trial.reviewComplete && trial.bindingCurrent && !trial.receiptIssued)
+    if (command.action === 'start-public-research' && !canStart(research, command.skillFileId)) return
+    if (command.action === 'start-public-retail' && (!canStart(retail, command.skillFileId) || !retail?.categories.includes(command.category))) return
+    if (command.action === 'start-skill-trial' && (!canStart(ordinary, command.skillFileId) || !ordinary?.reviewerReady)) return
+    const canQualify = (trial: HqPublicResearchTrialPresentation | undefined, id: string) => trial?.reviewComplete && trial.bindingCurrent
+      && !trial.receiptIssued && !trial.qualified && trial.trialId === id
+    if (command.action === 'qualify-public-research' && !canQualify(research, command.trialId)) return
+    if (command.action === 'qualify-public-retail' && !canQualify(retail, command.trialId)) return
+    if (command.action === 'qualify' && command.agentId) {
+      const trial = trials.value.find(row => row.agentId === command.agentId)?.ordinary
+      if (!canQualify(trial, command.trialId) || !trial?.reviewerReady) return
+    }
     const ownedTrial = ++trialSequence
-    trialPending.value = true; trialMessage.value = ''
+    trialPending.value = true; trialMessage.value = ''; trialMessageAgentId.value = subject
+    const feedback = (message: string) => {
+      if (feedbackEpoch === trialFeedbackEpoch) { trialMessageAgentId.value = subject; trialMessage.value = message }
+    }
+    let attemptKey: string | null = null
     try {
       let path = '/api/hq/trials', body: Record<string, string>
-      if (command.action === 'start-public-research') {
-        if (!researchAttempt || researchAttempt.identity !== identity || researchAttempt.skillFileId !== command.skillFileId)
-          researchAttempt = { identity, skillFileId: command.skillFileId, requestKey: crypto.randomUUID() }
-        path = '/api/hq/research-trials'; body = { skillFileId: command.skillFileId, requestKey: researchAttempt.requestKey }
+      if (command.action === 'start-public-research' || command.action === 'start-public-retail' || command.action === 'start-skill-trial') {
+        attemptKey = JSON.stringify([subject,command.action,command.skillFileId,command.action === 'start-public-retail' ? command.category : null])
+        let attempt = trialAttempts.get(attemptKey)
+        if (!attempt || attempt.identity !== identity) {
+          if (trialAttempts.size >= 24 || typeof crypto.randomUUID !== 'function') throw Error('trial-attempt-unavailable')
+          attempt = { identity, requestKey: crypto.randomUUID() }; trialAttempts.set(attemptKey, attempt)
+        }
+        path = command.action === 'start-public-research' ? '/api/hq/research-trials'
+          : command.action === 'start-public-retail' ? '/api/hq/retail-trials'
+            : command.agentId === 'AG-HR-003' ? '/api/hq/evaluator-trials' : '/api/hq/trials/start'
+        body = { skillFileId: command.skillFileId, requestKey: attempt.requestKey,
+          ...(command.action === 'start-public-retail' ? { category: command.category } : {}),
+          ...(command.action === 'start-skill-trial' && command.agentId !== 'AG-HR-003' ? { agentId: command.agentId } : {}) }
       } else {
         if (command.action === 'qualify-public-research') path = '/api/hq/research-trials/qualification'
+        if (command.action === 'qualify-public-retail') path = '/api/hq/retail-trials/qualification'
         body = { trialId: command.trialId }
       }
       const result = await $fetch<{ accepted?: boolean; trialId?: string; status?: string }>(path, { method: 'POST',
         headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' }, credentials: 'same-origin', retry: 0, timeout: 45_000, body })
       if (disposed || getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
-      if (result?.accepted !== true || command.action === 'start-public-research' && typeof result.trialId !== 'string') throw Error('trial-unconfirmed')
-      if (command.action === 'start-public-research') {
-        researchAttempt = null
-        trialMessage.value = result.status === 'failed' || result.status === 'canceled'
+      if (result?.accepted !== true || attemptKey !== null && typeof result.trialId !== 'string') throw Error('trial-unconfirmed')
+      if (attemptKey !== null) {
+        trialAttempts.delete(attemptKey)
+        feedback(result.status === 'failed' || result.status === 'canceled'
           ? 'The existing start request ended without qualification. Its evidence is preserved; no new trial was submitted.'
-          : 'Public Research trial request confirmed. Follow its actual progress in Tasks; this does not grant qualification.'
-      } else trialMessage.value = command.action === 'qualify-public-research'
-        ? 'Public Research qualification recorded for the current binding.'
-        : 'Skill qualification recorded. All assigned skills and canonical Active lifecycle are required.'
+          : command.action === 'start-public-research' ? 'Public Research trial request confirmed. Follow its actual progress in Tasks; this does not grant qualification.'
+            : command.action === 'start-public-retail' ? 'Public Retail trial request confirmed. Its actual category and source observations remain distinct from unexercised categories; starting does not grant qualification.'
+              : 'Assigned-skill trial request confirmed. Follow its actual manager and independent review in Tasks; starting does not grant qualification.')
+      } else feedback(command.action === 'qualify-public-research' ? 'Public Research qualification recorded for the current binding.'
+        : command.action === 'qualify-public-retail' ? 'Public Retail qualification recorded for the current approved finite policy; source examples remain limited to actual observations.'
+          : 'Skill qualification recorded. All assigned skills and canonical Active lifecycle are required.')
       await Promise.all([refresh(), refreshTrials()])
     } catch {
       if (!disposed && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch)
-        trialMessage.value = 'Trial action unconfirmed. Refresh before retrying; an uncertain start keeps the same request identity.'
+        feedback('Trial action unconfirmed. Refresh before retrying; an uncertain start keeps the same request identity.')
     } finally {
       if (!disposed && ownedTrial === trialSequence && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity) trialPending.value = false
     }
@@ -181,7 +236,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     const reason = messageReason.value
     const error = reason && copy ? copy[reason] ?? (reason === 'unavailable' ? copy.unavailable : copy.sendFailed) : undefined
     return {
-      trials: trials.value, trialPending: trialPending.value, trialMessage: trialMessage.value,
+      trials: trials.value, trialPending: trialPending.value, trialMessage: trialMessage.value, trialMessageAgentId: trialMessageAgentId.value,
       status: status.value, pending: pending.value, refreshing: refreshing.value, sending: sending.value,
       workActivity: state ? hqWorkActivity(state, runtimeOnline.value, clock.value) : [],
       observations: state?.observations,
@@ -309,11 +364,11 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   function invalidate(clearAttempts: boolean, reason: MessageReason | null = null) {
     epoch += 1; controller?.abort(); controller = null; inFlight = null
     refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; snapshot.value = null
-    trialSequence += 1; trials.value = []; trialMessage.value = ''; trialPending.value = false
+    trialSequence += 1; trialFeedbackEpoch += 1; trials.value = []; trialMessage.value = ''; trialMessageAgentId.value = null; trialPending.value = false
     status.value = 'unavailable'; messageReason.value = reason
     if (freshnessTimer !== null) clearTimeout(freshnessTimer)
     freshnessTimer = null
-    if (clearAttempts) { attempts.clear(); researchAttempt = null }
+    if (clearAttempts) { attempts.clear(); trialAttempts.clear() }
   }
 
   function scheduleFreshness() {

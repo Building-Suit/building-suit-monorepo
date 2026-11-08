@@ -8,7 +8,7 @@ import { Readable } from 'node:stream'
 import { EventEmitter } from 'node:events'
 import { createHash } from 'node:crypto'
 import { spawn } from 'node:child_process'
-import { DISCOVERY_MCP_TOOL, DISCOVERY_MCP_POLICY, DISCOVERY_QUERY, DISCOVERY_OBJECTIVE,
+import { DISCOVERY_MCP_TOOL, DISCOVERY_MCP_POLICY, DISCOVERY_RETAIL_POLICY, DISCOVERY_RETAIL_CATEGORIES, discoveryRetailPlan, DISCOVERY_QUERY, DISCOVERY_OBJECTIVE,
   discoveryResultSources, createDiscoveryMcpServer, runFixedDiscovery, discoveryPublicAddress, discoveryPinnedPost, discoveryMcpConfig, researchDiscoveryTrialAllowed, workerExecutionBlock } from './departmentWorkflow.mjs'
 const hash=value=>createHash('sha256').update(value).digest('hex')
 const sample='Title: Synthetic public business\nURL: https://example.com/official\nPublished: N/A\nAuthor: N/A\nHighlights:\nGenerated literal business service evidence.'
@@ -188,6 +188,82 @@ test('actual stdio process imports safely and restarts cannot replay a reserved 
  const server=createDiscoveryMcpServer({budgetFile:path,upstream:async()=>({content:[]})});await init(server);await server.handle(call(2))
  const script=new URL('./departmentWorkflow.mjs',import.meta.url).pathname
  const child=spawn(process.execPath,[script,'--public-discovery-mcp',path],{env:{},stdio:['pipe','pipe','pipe']});t.after(()=>{if(child.exitCode===null)child.kill('SIGKILL')})
+ let stdout='',stderr='';child.stdout.on('data',x=>{stdout+=x});child.stderr.on('data',x=>{stderr+=x})
+ child.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-03-26'}})+'\n'+JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n'+JSON.stringify(call(2))+'\n')
+ const end=Date.now()+3000
+ while(!stdout.includes('discovery-budget-exhausted')&&Date.now()<end)await new Promise(r=>setTimeout(r,10))
+ assert.ok(stdout.includes('discovery-budget-exhausted'));assert.equal(stderr,'');child.stdin.end()
+ await new Promise(resolve=>child.once('exit',resolve))
+})
+
+function retailJob(category='clothing') {
+ const agent={id:'AG-RES-002',modelTier:'T1_WORKER',departmentKey:'research-market-intelligence',managerId:'AG-RES-001',managerModelTier:'T2_HEAD',headAuthorization:true,model:'gpt-6.1-terra',lifecycle:'Active',profileFileId:'profile_fixture_01',skillFileIds:['skill_fixture_01']}
+ agent.qualification={status:'qualified',scope:'bounded-drafting-v1',bindingDigest:'a'.repeat(64),evidenceId:'receipt_fixture_01',profileFileId:agent.profileFileId,modelTier:agent.modelTier,managerId:agent.managerId,departmentKey:agent.departmentKey,skillFileIds:agent.skillFileIds}
+ return {id:'retail-job',agent_id:agent.id,context:{mode:'task-work',agent,task:{id:'retail-task',attempt:0},publicDiscoveryPermit:{version:1,policyId:DISCOVERY_RETAIL_POLICY,category,jobId:'retail-job',agentId:agent.id,bindingDigest:'a'.repeat(64)}}}
+}
+const retailPaths={nodePath:'/trusted/node',modulePath:'/trusted/departmentWorkflow.mjs',budgetFile:'/trusted/ephemeral/exa-discovery-budget',executionModel:'gpt-6.1-terra'}
+for(const category of ['clothing','footwear','homewares'])test('frozen retail '+category+' mapping sends one fixed public search and records its policy',async()=>{
+ const plan=discoveryRetailPlan(category),f=protocolFixture();let searches=0
+ assert.deepEqual(DISCOVERY_RETAIL_CATEGORIES,['clothing','footwear','homewares'])
+ assert.equal(plan.query,`Official websites of ${category} stores in New Cairo, Egypt`)
+ assert.equal(plan.objective,`Find up to three public official business websites with literal page evidence of their New Cairo location and ${category} stores. Exclude personal profiles, social networks, directories and inferred contact details.`)
+ const result=await runFixedDiscovery({policyId:DISCOVERY_RETAIL_POLICY,category,post:async(url,body,session,signal)=>{
+  const request=JSON.parse(body)
+  if(request.method!=='tools/call')return f.post(url,body,session,signal)
+  searches++;assert.deepEqual(request.params,{name:'web_search_exa',arguments:{query:plan.query,objective:plan.objective,numResults:3}})
+  return response(sse(3,{content:[{type:'text',text:sample}]}))
+ }})
+ assert.equal(searches,1);assert.equal(result.content[0].text,sample)
+ assert.equal(result.structuredContent.policyId,DISCOVERY_RETAIL_POLICY);assert.equal(result.structuredContent.category,category)
+ const config=discoveryMcpConfig(retailJob(category),retailPaths)
+ assert.deepEqual(config.args,['--preserve-symlinks-main','/trusted/departmentWorkflow.mjs','--public-retail-discovery-mcp',category,retailPaths.budgetFile])
+})
+test('retail host policy/category cannot be freeform or changed through tool arguments',async t=>{
+ let calls=0
+ for(const category of [undefined,null,'salons','Clothing','clothing private text',{},'https://public.org/']) {
+  assert.equal(discoveryRetailPlan(category),null)
+  await assert.rejects(runFixedDiscovery({policyId:DISCOVERY_RETAIL_POLICY,category,post:async()=>{calls++}}),/discovery-policy-invalid/)
+  const invalid=retailJob();invalid.context.publicDiscoveryPermit.category=category
+  assert.equal(discoveryMcpConfig(invalid,retailPaths),null)
+ }
+ await assert.rejects(runFixedDiscovery({policyId:'other',post:async()=>{calls++}}),/discovery-policy-invalid/)
+ assert.equal(calls,0)
+ const server=createDiscoveryMcpServer({policyId:DISCOVERY_RETAIL_POLICY,category:'clothing',budgetFile:await budget(t),upstream:async options=>{calls++;assert.equal(options.category,'clothing');assert.equal(options.policyId,DISCOVERY_RETAIL_POLICY);return {content:[]}}})
+ await init(server)
+ assert.equal((await server.handle({...call(2),params:{name:DISCOVERY_MCP_TOOL,arguments:{category:'footwear'}}})).error.code,-32602)
+ assert.equal(calls,0);await server.handle(call(3));assert.equal(calls,1)
+})
+test('retail original work and supervised trial need matching frozen category and exact bindings',()=>{
+ const job=retailJob();assert.ok(discoveryMcpConfig(job,retailPaths))
+ for(const mutate of [j=>{j.context.publicDiscoveryPermit.extra='private'},j=>{j.context.task.attempt=1},j=>{j.context.publicDiscoveryPermit.bindingDigest='b'.repeat(64)},j=>{j.context.publicDiscoveryPermit.policyId=DISCOVERY_MCP_POLICY},j=>{j.context.agent.headAuthorization=false}]){
+  const changed=structuredClone(job);mutate(changed);assert.equal(discoveryMcpConfig(changed,retailPaths),null)
+ }
+ const trial=structuredClone(job);trial.context.mode='worker-trial';delete trial.context.agent.qualification
+ trial.context.supervisedTrial={scope:'public-retail-tool-trial-v1',status:'active',toolPolicyId:DISCOVERY_RETAIL_POLICY,category:'clothing',agentId:job.agent_id,taskId:job.context.task.id,managerId:job.context.agent.managerId,skillFileId:'skill_fixture_01',bindingDigest:'c'.repeat(64),expiresAt:new Date(Date.now()+60000).toISOString(),externalActionsAllowed:false,publishingAllowed:false}
+ trial.context.publicDiscoveryPermit.bindingDigest='c'.repeat(64)
+ assert.equal(researchDiscoveryTrialAllowed(trial),true);assert.equal(workerExecutionBlock(trial),null);assert.ok(discoveryMcpConfig(trial,retailPaths))
+ const start=structuredClone(trial);start.context.mode='trial-start';assert.equal(workerExecutionBlock(start),null);assert.equal(discoveryMcpConfig(start,retailPaths),null)
+ for(const mutate of [j=>{j.context.supervisedTrial.category='footwear'},j=>{j.context.supervisedTrial.category='other'},j=>{j.context.supervisedTrial.scope='public-research-tool-trial-v1'},j=>{j.context.supervisedTrial.toolPolicyId=DISCOVERY_MCP_POLICY}]){
+  const changed=structuredClone(trial);mutate(changed);assert.equal(discoveryMcpConfig(changed,retailPaths),null)
+ }
+})
+test('evaluator skill trial is restricted to Iris under Amaya and frozen independent Steve review without MCP',()=>{
+ const job=retailJob();job.agent_id='AG-HR-003';job.context.mode='worker-trial'
+ Object.assign(job.context.agent,{id:job.agent_id,managerId:'AG-HR-001',departmentKey:'hr-agent-development'})
+ delete job.context.agent.qualification;delete job.context.publicDiscoveryPermit
+ job.context.supervisedTrial={scope:'evaluator-skill-trial-v1',status:'active',agentId:job.agent_id,taskId:job.context.task.id,managerId:'AG-HR-001',skillFileId:'skill_fixture_01',bindingDigest:'c'.repeat(64),reviewerId:'AG-CEO-001',reviewerBindingDigest:'d'.repeat(64),expiresAt:new Date(Date.now()+60000).toISOString(),externalActionsAllowed:false,publishingAllowed:false}
+ assert.equal(workerExecutionBlock(job),null);assert.equal(discoveryMcpConfig(job,retailPaths),null)
+ const start=structuredClone(job);start.context.mode='trial-start';assert.equal(workerExecutionBlock(start),null)
+ for(const mutate of [j=>{j.agent_id='AG-HR-002';j.context.agent.id=j.agent_id;j.context.supervisedTrial.agentId=j.agent_id},j=>{j.context.agent.managerId='AG-RES-001';j.context.supervisedTrial.managerId='AG-RES-001'},j=>{j.context.supervisedTrial.reviewerId=job.agent_id},j=>{j.context.supervisedTrial.reviewerBindingDigest='bad'},j=>{j.context.supervisedTrial.bindingDigest='bad'},j=>{j.context.supervisedTrial.externalActionsAllowed=true},j=>{j.context.supervisedTrial.expiresAt='2000-01-01T00:00:00Z'}]){
+  const changed=structuredClone(job);mutate(changed);assert.equal(workerExecutionBlock(changed),'trial-authorization-required');assert.equal(discoveryMcpConfig(changed,retailPaths),null)
+ }
+})
+test('actual retail stdio entry retains the atomic restart budget without a network call',async t=>{
+ const path=await budget(t),server=createDiscoveryMcpServer({policyId:DISCOVERY_RETAIL_POLICY,category:'footwear',budgetFile:path,upstream:async()=>({content:[]})})
+ await init(server);await server.handle(call(2))
+ const script=new URL('./departmentWorkflow.mjs',import.meta.url).pathname
+ const child=spawn(process.execPath,[script,'--public-retail-discovery-mcp','footwear',path],{env:{},stdio:['pipe','pipe','pipe']})
+ t.after(()=>{if(child.exitCode===null)child.kill('SIGKILL')})
  let stdout='',stderr='';child.stdout.on('data',x=>{stdout+=x});child.stderr.on('data',x=>{stderr+=x})
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-03-26'}})+'\n'+JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n'+JSON.stringify(call(2))+'\n')
  const end=Date.now()+3000

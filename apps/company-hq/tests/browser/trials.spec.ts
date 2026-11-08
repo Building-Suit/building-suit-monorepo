@@ -28,7 +28,7 @@ test('founder reviews existing trial proof without a direct trial start', async 
   Object.assign(row, { trialId, status: 'passed', reviewComplete: true, eligible: false })
   await fixture.publish(fixture.snapshot())
   await panel.getByRole('button', { name: 'Approve qualification', exact: true }).click()
-  await expect(page.getByRole('dialog')).toContainText('Canonical Active lifecycle is still required')
+  await expect(page.getByRole('dialog')).toContainText('All assigned skills and canonical Active lifecycle remain required')
   await page.getByRole('dialog').getByRole('button', { name: 'Approve qualification', exact: true }).click()
   await expect(panel.getByText('Skill qualification recorded; remaining assigned skills require trials', { exact: true })).toBeVisible()
   expect(submitted).toEqual([{ trialId }])
