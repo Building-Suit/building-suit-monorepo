@@ -1,10 +1,9 @@
 import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import { provideHqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
-import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot } from '#shared/types/agents'
+import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot, type HqBusinessTask } from '#shared/types/agents'
 import { hqCosmeticIdle, hqObservationFresh, hqObservedActivity } from '../utils/hqAgentPresence'
 import { parseHqTaskPage } from '#shared/types/taskBrowser'
-import type { HqBusinessTask } from '#shared/types/agents'
 import { hqWorkActivity } from '../utils/hqWorkActivity'
 
 export interface HqAgentMessages {
