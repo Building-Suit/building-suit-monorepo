@@ -1,0 +1,23 @@
+{
+  "id": "hq-qualification-query-budget-20261108",
+  "task": "HQ-QUALIFICATION-QUERY-BUDGET-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261108054818_hq_qualification_query_budget.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "tooling/hq-agent-host/QUALIFICATION-QUERY-BUDGET.md",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs"
+  ],
+  "reason": "Bound current qualification query planning and repeated evaluations while preserving exact per-skill source, host execution, independent review and lifecycle gates; no timeout, authority, transport or lease changes."
+}

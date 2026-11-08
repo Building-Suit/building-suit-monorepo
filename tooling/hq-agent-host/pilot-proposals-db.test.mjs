@@ -876,7 +876,8 @@ async function passSkillTrial(h,skill,agentId='AG-HR-002',managerId='AG-HR-001')
 }
 
 const evidenceMigration='20261108030332_hq_task_evidence_context.sql'
-async function installTaskEvidence(h) {
+const qualificationBudgetMigration='20261108054818_hq_qualification_query_budget.sql'
+async function installTaskEvidence(h,withBudget=true) {
  await h.db.exec('reset role')
  await h.db.exec("update hq_private.brain_files set source_version='1' where source_version is null")
  for(const file of ['20261105171608_hq_office_observations.sql','20261107133124_hq_worker_status_compatibility.sql'])await h.db.exec(await readFile(new URL(file,root),'utf8'))
@@ -884,7 +885,86 @@ async function installTaskEvidence(h) {
  const before=(await h.db.query("select 'hq_private.worker_claim_before_meetings(uuid,integer)'::regprocedure::oid oid")).rows[0].oid
  await h.db.exec(await readFile(new URL(evidenceMigration,root),'utf8'))
  assert.equal((await h.db.query("select 'hq_private.worker_claim_before_meetings(uuid,integer)'::regprocedure::oid oid")).rows[0].oid,before)
+  if(withBudget)await h.db.exec(await readFile(new URL(qualificationBudgetMigration,root),'utf8'))
 }
+
+async function qualificationBudgetFixture(skillCount=2) {
+ const skills=Array.from({length:skillCount},(_,i)=>'synthetic_budget_skill_'+String(i+1).padStart(2,'0')),author='AG-RES-099',manager='AG-RES-001'
+ const {h,configured}=await trialSetup(skills,true,author,manager)
+ await installTaskEvidence(h,false)
+ await h.db.exec('reset role')
+ for(let n=1;n<=7;n++){
+  const id='AG-RES-09'+n,profile='synthetic_budget_profile_'+n
+  await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+   values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic worker.md','text/markdown','1',false,true)`,[profile])
+  configured.push({...configured.find(a=>a.id===author),id,name:'Synthetic Research Worker '+n,profileFileId:profile,skillFileIds:[skills[0]]})
+ }
+ await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
+ for(const agent of configured.filter(a=>a.id.startsWith('AG-RES-09')))
+  for(const skill of agent.skillFileIds)await passSkillTrial(h,skill,agent.id,manager)
+ await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id.startsWith('AG-RES-09')?{...a,lifecycle:'Active; bounded drafting only'}:a))])
+ await h.db.exec('reset role')
+ // Generated unrelated history/source rows reproduce a populated catalog without
+ // fabricating any qualification receipt or mutating an immutable proof.
+ await h.db.exec(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+  select 'synthetic_budget_history_'||n,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Historical source.md','text/markdown','1',false,true from generate_series(1,500)n`)
+ await h.db.exec('analyze hq_private.brain_files; analyze hq_private.agent_roster; analyze hq_private.workforce_qualification_receipts; analyze public.hq_agent_jobs; analyze public.hq_task_artifacts')
+ return {h,configured,author,manager,skills}
+}
+
+test('qualification query budget keeps the ten-skill ceiling and requires every actual current proof',async()=>{
+ const {h,author,skills}=await qualificationBudgetFixture(10);try{
+  await h.db.exec(await readFile(new URL(qualificationBudgetMigration,root),'utf8'))
+  assert.equal((await h.db.query('select jsonb_array_length(skill_file_ids)::int n from hq_private.agent_roster where id=$1',[author])).rows[0].n,10)
+  assert.equal((await h.db.query('select hq_private.workforce_agent_qualified($1) ok',[author])).rows[0].ok,true)
+  const current=(await h.db.query('select hq_private.workforce_qualification_context($1) context',[author])).rows[0].context
+  assert.deepEqual(current.skillFileIds,skills)
+  await h.db.query('update hq_private.brain_files set source_version=\'2\' where file_id=$1',[skills[9]])
+  assert.equal((await h.db.query('select hq_private.workforce_agent_qualified($1) ok',[author])).rows[0].ok,false)
+  assert.equal((await h.db.query('select hq_private.workforce_qualification_context($1) context',[author])).rows[0].context,null)
+ }finally{await h.db.close()}
+})
+
+test('qualification query budget preserves real per-skill proof and current claim context across a populated roster',async()=>{
+ const {h,author,manager,skills}=await qualificationBudgetFixture();try{
+  const before=(await h.db.query(`select id,hq_private.workforce_agent_qualified(id) qualified,hq_private.workforce_qualification_context(id) qualification
+   from hq_private.agent_roster where enabled order by id`)).rows
+  assert.equal(before.length,18);assert.equal(before.filter(a=>a.qualified).length,8)
+  const oid=(await h.db.query("select 'hq_private.workforce_skill_evidence_valid(text,text)'::regprocedure::oid oid")).rows[0].oid
+  await h.db.exec(await readFile(new URL(qualificationBudgetMigration,root),'utf8'))
+  assert.equal((await h.db.query("select 'hq_private.workforce_skill_evidence_valid(text,text)'::regprocedure::oid oid")).rows[0].oid,oid)
+  assert.deepEqual((await h.db.query(`select id,hq_private.workforce_agent_qualified(id) qualified,hq_private.workforce_qualification_context(id) qualification
+   from hq_private.agent_roster where enabled order by id`)).rows,before)
+  for(const [table,id,column,value] of [['hq_private.brain_files','synthetic_research_profile','source_version','2'],
+   ['hq_private.brain_files',skills[1],'source_version','2'],['hq_private.brain_files','synthetic_research_profile','in_scope',false],
+   ['hq_private.brain_files','synthetic_research_profile','trashed',true],['hq_private.agent_roster',author,'model','gpt-6-luna'],
+   ['hq_private.agent_roster',author,'effort','high'],['hq_private.agent_roster',author,'enabled',false],
+   ['hq_private.agent_roster',author,'lifecycle','trial pending'],['hq_private.agent_roster',manager,'model_tier','T1_WORKER']]){
+   const key=table.endsWith('brain_files')?'file_id':'id'
+   const saved=(await h.db.query(`select ${column} as value from ${table} where ${key}=$1`,[id])).rows[0].value
+   if(column==='trashed')await h.db.query('update hq_private.brain_files set in_scope=false where file_id=$1',[id])
+   await h.db.query(`update ${table} set ${column}=$1 where ${key}=$2`,[value,id])
+   assert.equal((await h.db.query('select hq_private.workforce_agent_qualified($1) ok',[author])).rows[0].ok,false,table+'.'+column)
+   await h.db.query(`update ${table} set ${column}=$1 where ${key}=$2`,[saved,id])
+   if(column==='trashed')await h.db.query('update hq_private.brain_files set in_scope=true where file_id=$1',[id])
+  }
+  assert.equal((await h.db.query('select hq_private.workforce_agent_qualified($1) ok',[author])).rows[0].ok,true)
+  await h.as('founder');await h.rpc('hq_create_task',['Synthetic budget regression','Prepare one internal draft.','Return a bounded draft using current proof.',manager,randomUUID()])
+  let j=await h.claim();await h.finish(j,{assigneeId:manager,reason:'Head scopes one internal draft.',message:'@Employee 4 please scope.'})
+  j=await h.claim();await h.finish(j,{message:'@Synthetic Research Worker prepare the bounded draft.',delegateId:author})
+  j=await h.claim();await h.finish(j,{message:'I will preserve current source and evidence bindings.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(j.context.assignee.qualified,true)
+  assert.deepEqual(j.context.assignee.qualification,before.find(a=>a.id===author).qualification)
+  await h.finish(j,'Synthetic bounded draft.')
+  j=await h.claim();assert.equal(j.context.mode,'head-review')
+  assert.deepEqual(j.context.artifact.authorQualification,j.context.assignee.qualification)
+  assert.equal(j.context.artifact.authorQualified,true)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query(`select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace,
+   lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+   where n.nspname='hq_private' and p.proname in ('workforce_skill_evidence_valid','task_evidence_context') and acl.privilege_type='EXECUTE' and acl.grantee<>p.proowner`)).rows[0].n,0)
+ }finally{await h.db.close()}
+})
 test('ordinary repair retains original artifact/job/digest receipts and current subject qualification through actual claims',async()=>{
  const skill='synthetic_evidence_skill',author='AG-RES-099',manager='AG-RES-001',{h,configured}=await trialSetup([skill],true,author,manager);try{
   await installTaskEvidence(h)
