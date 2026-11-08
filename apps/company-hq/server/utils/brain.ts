@@ -207,7 +207,7 @@ function noteSummary(file: DriveFile, folder: VerifiedFolder): BrainNoteSummary 
   }
 }
 
-async function scanBrain(config: GoogleBrainConfig, requestedId?: string): Promise<ScanResult> {
+async function scanBrain(config: GoogleBrainConfig, requestedId?: string, expectedPath?: string): Promise<ScanResult> {
   const folders = new Map<string, VerifiedFolder>()
   const files: IndexedNote[] = []
   const unavailable = (reason: NonNullable<BrainIndex['reason']>): ScanResult => ({ index: unavailableIndex(reason), reader: null, folders: new Map(), files: [] })
@@ -261,9 +261,13 @@ async function scanBrain(config: GoogleBrainConfig, requestedId?: string): Promi
           if (file.mimeType === FOLDER_MIME) {
             if (!eligibleName(file.name, true) || folders.has(file.id)) continue
             if (folder.depth >= MAX_DEPTH) { partial = true; continue }
+            const path = folder.path ? `${folder.path}/${file.name}` : file.name
+            // A server-pinned note needs only its rooted path. Do not enumerate
+            // unrelated subtrees; the ordinary index/read path stays unchanged.
+            if (expectedPath !== undefined && !expectedPath.startsWith(`${path}/`)) continue
             const child: VerifiedFolder = {
               id: file.id, name: file.name, parentId: folder.id, depth: folder.depth + 1,
-              path: folder.path ? `${folder.path}/${file.name}` : file.name,
+              path,
             }
             folders.set(child.id, child)
             queue.push(child)
@@ -271,6 +275,7 @@ async function scanBrain(config: GoogleBrainConfig, requestedId?: string): Promi
           }
           // Shortcuts and native/binary Drive objects never enter the note index.
           if (!NOTE_MIMES.has(file.mimeType) || !eligibleName(file.name, false)) continue
+          if (expectedPath !== undefined && (folder.path ? `${folder.path}/${file.name}` : file.name) !== expectedPath) continue
           const summary = noteSummary(file, folder)
           if (!summary) { partial = true; continue }
           if (indexedIds.has(file.id)) continue
@@ -336,15 +341,15 @@ async function currentNote(reader: DriveReader, note: IndexedNote, folders: Map<
   return noteSummary(file, parent)
 }
 
-export async function readBrainNote(config: GoogleBrainConfig, id: string | undefined): Promise<BrainNote> {
+export async function readBrainNote(config: GoogleBrainConfig, id: string | undefined, expectedPath?: string): Promise<BrainNote> {
   const notFound = () => createError({ statusCode: 404, statusMessage: 'Brain note unavailable' })
   if (!id || !/^[A-Za-z0-9_-]{43}$/.test(id)) throw notFound()
-  const scan = await scanBrain(config, id)
-  const note = scan.files.find(file => file.summary.id === id)
+  const scan = await scanBrain(config, id, expectedPath)
+  const note = scan.files.find(file => file.summary.id === id && (expectedPath === undefined || file.summary.path === expectedPath))
   if (!scan.reader || !note) throw notFound()
   try {
     const before = await currentNote(scan.reader, note, scan.folders)
-    if (!before) throw notFound()
+    if (!before || expectedPath !== undefined && before.path !== expectedPath) throw notFound()
     const content = await scan.reader.markdown(note.fileId)
     // Discard content if its cloud version or approved parent chain changed
     // during download; the next refresh can discover the new current version.

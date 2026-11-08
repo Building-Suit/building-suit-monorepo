@@ -1,0 +1,13 @@
+{
+  "id": "hq-pinned-registry-read-20261108",
+  "task": "HQ-PINNED-REGISTRY-READ-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/server/utils/brain.ts",
+    "apps/company-hq/server/utils/officeRoster.ts",
+    "apps/company-hq/tests/unit/brain-pinned-read.test.mjs"
+  ],
+  "reason": "Restrict the fresh server-pinned Office Registry scan to its rooted path while retaining file identity, ancestry, permission, media and version checks. Avoid enumerating unrelated Brain subtrees without caching, reducing freshness or changing full index and ordinary note reads."
+}

@@ -20,7 +20,7 @@ export async function withOfficeRoster(snapshot: HqCompanySnapshot, config: Goog
     ...(department.nameAr ? { nameAr: department.nameAr } : {}),
   })) }
   try {
-    const note = await readBrainNote(config, REGISTRY_ID)
+    const note = await readBrainNote(config, REGISTRY_ID, 'Company/Agent Registry.md')
     if (note.path !== 'Company/Agent Registry.md') throw new Error('Unexpected roster source')
     const assignments = new Map<string, { id: string; name: string }[]>()
     const seen = new Set<string>()

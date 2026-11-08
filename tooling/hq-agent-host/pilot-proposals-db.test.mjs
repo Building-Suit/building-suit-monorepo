@@ -1800,6 +1800,97 @@ async function qualifyDiscoveryForScope(h,skill,claim) {
  review=await claim();await h.finish(review,'The generated public tool scope exercise was independently reviewed.')
  assert.equal(await claim(),null);await h.as('founder');await h.rpc('hq_issue_public_research_qualification',[trial.trialId])
 }
+
+const researchStatusMigration='20261108180216_hq_public_research_trial_status.sql'
+async function installResearchStatus(h) {
+ await h.db.exec('reset role')
+ await h.db.exec(await readFile(new URL(researchStatusMigration,root),'utf8'))
+}
+async function researchStatus(h) {
+ await h.as('founder')
+ return (await h.rpc('hq_workforce_trial_status')).find(row=>row.agentId==='AG-RES-002').publicResearch
+}
+test('public research status preserves legacy rows and founder authorization, and distinguishes ordinary qualification',async()=>{
+ const skill='synthetic_existing_research_skill'
+ const {h,configured}=await trialSetup([skill],true,'AG-RES-002','AG-RES-001')
+ try{
+  await passSkillTrial(h,skill,'AG-RES-002','AG-RES-001')
+  await installTaskEvidence(h);await h.db.exec('reset role');await h.db.exec(await readFile(new URL(publicDiscoveryMigration,root),'utf8'))
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-RES-002'?{...a,lifecycle:'Active / Qualified'}:a))])
+  await h.as('founder');const before=await h.rpc('hq_workforce_trial_status')
+  await installResearchStatus(h);await h.as('founder');const after=await h.rpc('hq_workforce_trial_status')
+  assert.deepEqual(after.map(row=>{const ordinary={...row};delete ordinary.publicResearch;return ordinary}),before)
+  assert.equal(after.filter(row=>'publicResearch' in row).length,1)
+  assert.deepEqual(await researchStatus(h),{skillFileId:skill,eligible:true,qualified:false,trialId:null,status:null,
+   receiptIssued:false,reviewComplete:false,bindingCurrent:false,taskId:null})
+  await h.db.exec("reset role;begin;update hq_private.workforce_trials set status='active' where agent_id='AG-RES-002'")
+  assert.equal((await researchStatus(h)).eligible,false,'an active ordinary trial also blocks a new tool trial')
+  await h.db.exec('rollback;reset role')
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_workforce_trial_status'),/HQ_FOUNDER_REQUIRED/)
+  await assert.rejects(()=>h.db.query('select hq_private.workforce_trial_status_before_public_research()'),/permission denied/)
+  await h.db.exec('reset role;set role anon');await assert.rejects(()=>h.rpc('hq_workforce_trial_status'),/permission denied|HQ_FOUNDER_REQUIRED/)
+  await h.as('founder');await h.db.exec('reset role')
+  await h.db.query('delete from auth.sessions where id=$1',[session]);await h.as('founder')
+  await assert.rejects(()=>h.rpc('hq_workforce_trial_status'),/HQ_FOUNDER_REQUIRED/)
+ }finally{await h.db.close()}
+})
+test('public research status follows actual active, independently reviewed, qualified and stale binding states',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  await installResearchStatus(h)
+  assert.equal((await researchStatus(h)).eligible,true)
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim)
+  let status=await researchStatus(h)
+  assert.equal(status.status,'active');assert.equal(status.trialId,trial.trialId);assert.equal(status.taskId,trial.taskId)
+  assert.equal(status.eligible,false);assert.equal(status.bindingCurrent,true);assert.equal(status.reviewComplete,false)
+  const output=await publicDiscoveryOutput(j)
+  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
+  let review=await claim();await h.finish(review,{accepted:true,summary:'Head checked generated real-path fixture.',artifactDigest:review.context.artifact.digest})
+  assert.equal((await researchStatus(h)).reviewComplete,false,'head approval alone is insufficient')
+  review=await claim();await h.finish(review,{accepted:true,summary:'Independent evaluator checked same artifact.',artifactDigest:review.context.artifact.digest})
+  assert.equal((await researchStatus(h)).reviewComplete,false,'independent review without report is insufficient')
+  review=await claim();await h.finish(review,'Generated bounded evaluation report.')
+  status=await researchStatus(h)
+  assert.equal(status.status,'passed');assert.equal(status.reviewComplete,true);assert.equal(status.qualified,false);assert.equal(status.receiptIssued,false)
+  await h.db.exec('reset role;begin');await h.db.query("update hq_private.brain_files set source_version='2' where file_id='profile_source_3'")
+  status=await researchStatus(h);assert.equal(status.bindingCurrent,false);assert.equal(status.reviewComplete,false)
+  await h.db.exec('rollback;reset role')
+  await h.as('founder');await h.rpc('hq_issue_public_research_qualification',[trial.trialId])
+  status=await researchStatus(h);assert.equal(status.qualified,true);assert.equal(status.receiptIssued,true);assert.equal(status.eligible,false)
+  await h.db.exec('reset role');await h.db.query("update hq_private.brain_files set source_version='2' where file_id=$1",[skill])
+  status=await researchStatus(h);assert.equal(status.bindingCurrent,false);assert.equal(status.reviewComplete,false);assert.equal(status.qualified,false)
+  assert.equal(status.receiptIssued,true,'historical receipt remains visible without current qualification')
+ }finally{await h.db.close()}
+})
+test('public research status exposes failure without qualification and blocks missing canonical setup',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  await installResearchStatus(h)
+  for(const update of ["update hq_private.brain_files set source_version=null where file_id='synthetic_research_profile'",
+   "update hq_private.brain_files set trashed=true,in_scope=false where file_id='synthetic_public_skill'",
+   "update hq_private.agent_roster set enabled=false where id='AG-RES-001'",
+   "update hq_private.agent_roster set lifecycle='paused' where id='AG-RES-001'",
+   "update hq_private.agent_roster set enabled=false where id='AG-HR-003'",
+   "update hq_private.agent_roster set lifecycle='paused' where id='AG-HR-003'",
+   "update hq_private.brain_files set in_scope=false where file_id='profile_source_3'",
+   "update hq_private.agent_roster set lifecycle='paused' where id='AG-RES-002'"]){
+   await h.db.exec('reset role;begin');await h.db.exec(update);assert.equal((await researchStatus(h)).eligible,false)
+   await h.db.exec('rollback;reset role')
+  }
+  const {j}=await publicDiscoveryWork(h,skill,claim);let failure
+  await fake([],async config=>{try{await invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000))}catch(error){failure=error}},
+   {cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,nullEffort:true}})
+  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:codeOf(failure),evidence:[],
+   modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:failure.modelExecutionEvidence})
+  const status=await researchStatus(h)
+  assert.equal(status.status,'failed');assert.equal(status.reviewComplete,false);assert.equal(status.receiptIssued,false);assert.equal(status.qualified,false)
+  await h.as('founder');const canceled=await h.rpc('hq_begin_public_research_trial',[skill,randomUUID()])
+  await h.rpc('hq_cancel_task',[canceled.taskId])
+  const afterCancel=await researchStatus(h)
+  assert.equal(afterCancel.trialId,canceled.trialId);assert.equal(afterCancel.status,'canceled');assert.equal(afterCancel.reviewComplete,false)
+ }finally{await h.db.close()}
+})
 async function originalDiscoveryAck(h,claim,chat=false) {
  const brief='Supplied-context drafting fixture; marker profile_source_1. Do not perform public discovery unless explicitly scoped.'
  await h.as('founder')
