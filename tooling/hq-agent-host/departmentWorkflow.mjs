@@ -377,7 +377,7 @@ export function discoveryResultSources(text) {
       && links[0].index>titles[0].index && links[0].index<highlights[0].index,'discovery-source-unavailable')
     const url=discoverySourceUrl(links[0][1]),excerpt=block.slice(highlights[0].index+highlights[0][0].length).trim()
     mcpNeed(url && excerpt.length>0 && Buffer.byteLength(excerpt)<=4096,'discovery-source-unavailable')
-    if(url==='https://thebarber-eg.com/en' || seen.has(url))continue
+    if(['thebarber-eg.com','www.thebarber-eg.com'].includes(new URL(url).hostname.replace(/\.$/,'')) || seen.has(url))continue
     seen.add(url);sources.push({url,title:titles[0][1],excerpt})
   }
   mcpNeed(sources.length>0,'discovery-source-unavailable')

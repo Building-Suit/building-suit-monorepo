@@ -74,6 +74,17 @@ test('known prior public source is excluded locally without changing upstream qu
  assert.equal(result.content[0].text,text);assert.deepEqual(result.structuredContent.sourceUrls,['https://newbusiness.org/'])
  await assert.rejects(withResults(block('https://thebarber-eg.com/en')),/discovery-source-unavailable/)
 })
+test('known business hostname variants are excluded locally regardless of path or query',async()=>{
+ for(const url of ['https://thebarber-eg.com/en/','https://thebarber-eg.com/ar','https://www.thebarber-eg.com/','https://THEBARBER-EG.COM/en?language=en','https://www.thebarber-eg.com/ar/?page=2','https://thebarber-eg.com./en','https://www.thebarber-eg.com./ar/']){
+  const text=[block(url),block('https://newbusiness.org/')].join('\n\n')
+  const result=await withResults(text)
+  assert.equal(result.content[0].text,text);assert.equal(result.structuredContent.literalTextSha256,hash(text))
+  assert.deepEqual(result.structuredContent.sourceUrls,['https://newbusiness.org/'])
+  await assert.rejects(withResults(block(url)),/discovery-source-unavailable/)
+ }
+ const distinct='https://thebarber-eg.com.other.org/en'
+ assert.deepEqual(discoveryResultSources(block(distinct)).map(source=>source.url),[distinct])
+})
 test('each source must be complete bounded and public even when duplicate or excluded',async()=>{
  const valid=block('https://business.org/')
  for(const bad of [block('http://public.org/'),block('https://127.0.0.1/'),block('https://private.local/'),block('https://public.org/?token=secret'),block('https://public.org/'+ 'x'.repeat(500)),block('https://public.org/','x'.repeat(241)),block('https://public.org/','Public','x'.repeat(4097)),block('https://public.org/','Public',''),valid+'\nURL: https://other.org/',block('https://thebarber-eg.com/en','Public','x'.repeat(4097)), 'URL: https://public.org/\nHighlights:\nNo title','Title:   \nURL: https://public.org/\nHighlights:\nLiteral evidence.','Title: Public\nHighlights:\nURL: https://public.org/']) {
