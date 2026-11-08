@@ -1580,7 +1580,8 @@ test('public discovery real worker output → atomic MCP receipt → Nadia → i
   assert.equal((await h.db.query('select count(*)::int n from hq_private.native_tool_receipts where job_id=$1',[j.id])).rows[0].n,0)
   await h.as('founder');await h.rpc('hq_create_task',['Generated public research task','Internal public discovery only. Generated fixture marker profile_source_1.','Use real fixed tool receipt; no outreach.',null,randomUUID()])
   let normal=await claim();assert.equal(normal.context.mode,'task-route');await h.finish(normal,{assigneeId:'AG-RES-001',reason:'Research scopes the public task.',message:'@Employee 4 supervise.'})
-  normal=await claim();await h.finish(normal,{message:'@Synthetic Research Worker prepare the bounded evidence packet.',delegateId:'AG-RES-002'})
+  normal=await claim();assert.equal(normal.context.roster.find(a=>a.id==='AG-RES-002').publicDiscoveryQualified,true)
+  await delivery(h,{job:{id:normal.id,lease_token:normal.lease_token},phase:'finished',reply:JSON.stringify({message:'@Synthetic Research Worker prepare the bounded evidence packet.',delegateId:'AG-RES-002',publicDiscoveryPolicy:'exa-public-business-discovery-v1'}),error:null,evidence:[],modelBindingEvidence:null,modelExecutionEvidence:null})
   normal=await claim();await h.finish(normal,{message:'I will prepare only the approved internal evidence packet.'})
   assert.equal(await h.claim(),null,'old ordinary clients cannot lease now-MCP-required task-work')
   normal=await claim();assert.equal(normal.context.mode,'task-work');assert.equal(normal.context.publicDiscoveryPermit.agentId,'AG-RES-002')
@@ -1787,5 +1788,111 @@ test('public discovery successful MCP evidence survives later failed AppServer t
   assert.equal((await h.db.query('select status from hq_private.workforce_trials where id=$1',[trial.trialId])).rows[0].status,'failed')
   assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
   await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_research_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+ }finally{await h.db.close()}
+})
+
+async function qualifyDiscoveryForScope(h,skill,claim) {
+ const {trial,j}=await publicDiscoveryWork(h,skill,claim),output=await publicDiscoveryOutput(j)
+ await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+  modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
+ let review=await claim();await h.finish(review,{accepted:true,summary:'Head checked generated scope fixture evidence.',artifactDigest:review.context.artifact.digest})
+ review=await claim();await h.finish(review,{accepted:true,summary:'Independent evaluator checked the same fixture artifact.',artifactDigest:review.context.artifact.digest})
+ review=await claim();await h.finish(review,'The generated public tool scope exercise was independently reviewed.')
+ assert.equal(await claim(),null);await h.as('founder');await h.rpc('hq_issue_public_research_qualification',[trial.trialId])
+}
+async function originalDiscoveryAck(h,claim,chat=false) {
+ const brief='Supplied-context drafting fixture; marker profile_source_1. Do not perform public discovery unless explicitly scoped.'
+ await h.as('founder')
+ if(chat)await h.rpc('hq_send_ceo_message',['Generated internal task intake.',randomUUID()])
+ else await h.rpc('hq_create_task',['Generated task-scope fixture',brief,'Return a bounded internal draft only.',null,randomUUID()])
+ let j=await claim()
+ if(chat){assert.equal(j.context.mode,'conversation-intake');await h.finish(j,{message:'@Employee 4 scope the bounded internal request.',task:{title:'Generated Chat task',brief,acceptance:'Return a bounded internal draft only.',assigneeId:'AG-RES-001'}})}
+ else {assert.equal(j.context.mode,'task-route');await h.finish(j,{assigneeId:'AG-RES-001',reason:'Research scopes the internal task.',message:'@Employee 4 scope.'})}
+ j=await claim();assert.equal(j.context.mode,'task-ack');assert.equal(j.context.task.attempt,0)
+ assert.equal(j.context.roster.find(a=>a.id==='AG-RES-002').publicDiscoveryQualified,true)
+ return j
+}
+const discoverySelection={message:'@Synthetic Research Worker perform the fixed public discovery needed for this task.',delegateId:'AG-RES-002',publicDiscoveryPolicy:'exa-public-business-discovery-v1'}
+const selectionEntry=(j,body=discoverySelection)=>({job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:JSON.stringify(body),error:null,evidence:[],modelBindingEvidence:null,modelExecutionEvidence:null})
+
+test('public discovery task scope is explicit: absent selection preserves ordinary old/new claims, while selected scope is immutable and repair cannot opt in',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  await qualifyDiscoveryForScope(h,skill,claim)
+  for(const useOld of [true,false]){
+   const ack=await originalDiscoveryAck(h,claim,useOld)
+   await h.finish(ack,{message:'@Synthetic Research Worker draft from supplied context only.',delegateId:'AG-RES-002'})
+   let j=await h.claim();assert.equal(j.context.mode,'task-start');assert.equal(j.context.publicDiscoveryPermit,undefined)
+   await h.finish(j,{message:'I will draft from supplied context only.'})
+   j=await(useOld?h.claim():claim());assert.equal(j.context.mode,'task-work');assert.equal(j.context.publicDiscoveryPermit,undefined)
+   assert.equal(workerExecutionBlock(j),null);assert.equal(webAllowed(j),true,'existing native capability remains unchanged; no MCP requirement is inferred')
+   const output=await fake([{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},
+    {type:'item.completed',item:{type:'agent_message',text:'Generated supplied-context-only draft.'}},{type:'turn.completed'}],
+    config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)))
+   assert.deepEqual(output.evidence,[])
+   await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:[],modelBindingEvidence:null,modelExecutionEvidence:output.modelExecutionEvidence})
+   await h.db.exec('reset role');assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_tasks where task_id=$1',[ack.context.task.id])).rows[0].n,0)
+   await h.as('founder');await h.rpc('hq_cancel_task',[ack.context.task.id])
+  }
+  const ack=await originalDiscoveryAck(h,claim,true),entry=selectionEntry(ack)
+  const accepted=await delivery(h,entry);assert.equal(accepted.publicDiscoveryPolicyAccepted,true)
+  await h.db.exec('reset role')
+  const policy=(await h.db.query('select * from hq_private.public_discovery_tasks where task_id=$1',[ack.context.task.id])).rows[0]
+  assert.equal(policy.agent_id,'AG-RES-002');assert.equal(policy.trial_id,null)
+  assert.equal((await h.db.query('select count(*)::int n from public.hq_agent_jobs where depends_on=$1 and kind=$2',[ack.id,'task-start'])).rows[0].n,1)
+  await h.db.exec('begin');await h.db.query("update hq_private.brain_files set source_version='2' where file_id='synthetic_research_profile'")
+  assert.equal((await delivery(h,entry)).publicDiscoveryPolicyAccepted,true,'lost ACK confirms existing selection without reauthorizing after drift')
+  assert.equal(await claim(),null,'fresh work remains blocked by current qualification drift')
+  await h.db.exec('rollback;reset role')
+  await assert.rejects(()=>h.db.query('update hq_private.public_discovery_tasks set binding_digest=$1 where task_id=$2',['f'.repeat(64),ack.context.task.id]),/immutable/i)
+  assert.equal(await h.claim(),null,'legacy clients cannot lease an explicitly enrolled child')
+  let j=await claim();assert.equal(j.context.mode,'task-start');await h.finish(j,{message:'I will perform only the selected discovery.'})
+  j=await claim();assert.equal(j.context.publicDiscoveryPermit.policyId,'exa-public-business-discovery-v1')
+  const output=await publicDiscoveryOutput(j)
+  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:null,modelExecutionEvidence:output.modelExecutionEvidence})
+  let review=await claim();assert.equal(review.agent_id,'AG-RES-001');await h.finish(review,{accepted:true,summary:'Head checked the original bounded source evidence.',artifactDigest:review.context.artifact.digest})
+  review=await claim();assert.equal(review.agent_id,'AG-CEO-001');await h.finish(review,{accepted:false,summary:'Repair the interpretation only; no further retrieval.',artifactDigest:review.context.artifact.digest})
+  const repair=await claim();assert.equal(repair.context.mode,'task-ack');assert.equal(repair.context.task.attempt,1)
+  assert.equal(repair.context.roster.find(a=>a.id==='AG-RES-002')?.publicDiscoveryQualified,undefined)
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_finish_v4',[repair.id,repair.lease_token,worker,JSON.stringify(discoverySelection),null,'[]',null,null]),/HQ_DISCOVERY_SELECTION_INVALID/)
+  await h.db.exec('reset role');assert.equal((await h.db.query('select binding_digest from hq_private.public_discovery_tasks where task_id=$1',[ack.context.task.id])).rows[0].binding_digest,policy.binding_digest)
+ }finally{await h.db.close()}
+})
+
+test('public discovery selection rejects hostile ACK fields atomically, and stale selection settles blocked without ordinary downgrade',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  await qualifyDiscoveryForScope(h,skill,claim)
+  const ack=await originalDiscoveryAck(h,claim),entry=selectionEntry(ack)
+  const finish=async body=>{await h.as('worker');return h.rpc('hq_worker_finish_v4',[ack.id,ack.lease_token,worker,JSON.stringify(body),null,'[]',null,null])}
+  for(const mutate of [body=>{body.publicDiscoveryPolicy=null},body=>{body.publicDiscoveryPolicy='unknown-policy'},body=>{body.delegateId='AG-HR-002'},body=>{body.newPermission=true}]){
+   const body=structuredClone(discoverySelection);mutate(body);await assert.rejects(()=>finish(body),/HQ_DISCOVERY_SELECTION_INVALID/)
+  }
+  for(const change of ["agent_id='AG-HR-001'",'attempt=1']){
+   await h.db.exec('reset role;begin');await h.db.query('update public.hq_agent_jobs set '+change+' where id=$1',[ack.id])
+   await assert.rejects(()=>finish(discoverySelection),/HQ_DISCOVERY_SELECTION_INVALID/)
+   await h.db.exec('rollback;reset role')
+  }
+  for(const endpoint of ['hq_worker_finish','hq_worker_finish_v2','hq_worker_finish_v3']){
+   await h.as('worker');const args=[ack.id,ack.lease_token,worker,entry.reply,null,...(endpoint==='hq_worker_finish'?[]:['[]']),...(endpoint==='hq_worker_finish_v3'?[null]:[])]
+   await assert.rejects(()=>h.rpc(endpoint,args),/HQ_DISCOVERY_ATOMIC_FINISH_REQUIRED/)
+  }
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[ack.id])).rows[0].status,'working')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_tasks where task_id=$1',[ack.context.task.id])).rows[0].n,0)
+  await h.db.exec("begin;update hq_private.agent_roster set lifecycle='paused' where id='AG-RES-001'")
+  assert.equal((await delivery(h,entry)).publicDiscoveryPolicyAccepted,false,'a revoked head cannot authorize fresh tool scope')
+  assert.equal((await delivery(h,entry)).publicDiscoveryPolicyAccepted,false)
+  await h.db.exec('rollback;reset role')
+  await h.db.query("update hq_private.brain_files set source_version='2' where file_id='synthetic_research_profile'")
+  const result=await delivery(h,entry);assert.equal(result.publicDiscoveryPolicyAccepted,false)
+  assert.equal((await delivery(h,entry)).publicDiscoveryPolicyAccepted,false,'stale finished journal remains idempotently settled')
+  await h.db.exec('reset role')
+  const row=(await h.db.query('select status,error from public.hq_business_tasks where id=$1',[ack.context.task.id])).rows[0]
+  assert.equal(row.status,'blocked');assert.equal(row.error,'public-discovery-binding-stale')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_tasks where task_id=$1',[ack.context.task.id])).rows[0].n,0)
+  assert.equal((await h.db.query("select count(*)::int n from public.hq_agent_jobs where task_id=$1 and kind in ('task-start','task-work')",[ack.context.task.id])).rows[0].n,0)
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_finish_v4',[ack.id,ack.lease_token,worker,entry.reply.replace('this task','another task'),null,'[]',null,null]),/HQ_DISCOVERY_DELIVERY_CONFLICT/)
  }finally{await h.db.close()}
 })

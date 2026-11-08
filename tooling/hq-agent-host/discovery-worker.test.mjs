@@ -3,7 +3,7 @@ import test from 'node:test'
 import {fake} from './test-cli.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
-import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,stageInstructions,invokeCodex,failedToolEvidence} from './worker.mjs'
+import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,stageInstructions,invokeCodex,failedToolEvidence,validateTaskAckOutput} from './worker.mjs'
 const hash=x=>createHash('sha256').update(x).digest('hex')
 const fixture=(excerpt='Literal public business location.')=>{
  const text='Title: Public business\nURL: https://business.org/\nHighlights:\n'+excerpt
@@ -96,4 +96,16 @@ test('validated retrieval survives later model failure only as failed durable ev
  let saved
  await deliverWorkerEntry({workerId:'worker',rpc:async(name,input)=>{assert.equal(input.p_error,'provider-capacity');assert.equal(input.p_reply,'');assert.equal(input.p_evidence.length,1);return{accepted:true,publicDiscoveryReceiptAccepted:true}},write:async value=>{saved=value}}, {version:3,job:{id:job.id,lease_token:'lease'},phase:'finished',reply:'',error:failure.code,evidence:failedToolEvidence(failure),modelExecutionEvidence:failure.modelExecutionEvidence})
  assert.equal(saved.phase,'delivered');assert.deepEqual(saved.evidence,[])
+})
+
+test('only an explicit eligible original Nadia handoff selects the fixed policy; omission preserves normal drafting',()=>{
+ const job={agent_id:'AG-RES-001',context:{mode:'task-ack',task:{attempt:0},roster:[{id:'AG-RES-002',name:'Synthetic Research Worker',managerId:'AG-RES-001',publicDiscoveryQualified:true}]}}
+ const body={message:'@Synthetic Research Worker: prepare the scoped public packet.',delegateId:'AG-RES-002'}
+ assert.doesNotThrow(()=>validateTaskAckOutput(job,JSON.stringify(body)))
+ body.publicDiscoveryPolicy='exa-public-business-discovery-v1';assert.doesNotThrow(()=>validateTaskAckOutput(job,JSON.stringify(body)))
+ assert.throws(()=>validateTaskAckOutput(job,JSON.stringify({...body,reason:'Generated extra field'})),/task-ack-research-policy-invalid/)
+ assert.match(stageInstructions(job),/Omit the field for supplied-context-only drafting, unrelated locations/)
+ for(const mutate of [j=>{j.context.task.attempt=1},j=>{j.context.roster[0].publicDiscoveryQualified=false},j=>{j.context.supervisedTrial={id:'trial'}},j=>{j.agent_id='AG-HR-001';j.context.roster[0].managerId=j.agent_id}]){const bad=structuredClone(job);mutate(bad);assert.throws(()=>validateTaskAckOutput(bad,JSON.stringify(body)),/task-ack-research-policy-invalid/)}
+ for(const value of [null,false,'unknown'])assert.throws(()=>validateTaskAckOutput(job,JSON.stringify({...body,publicDiscoveryPolicy:value})),/task-ack-research-policy-invalid/)
+ const unchanged=structuredClone(job);unchanged.context.roster[0].publicDiscoveryQualified=false;assert.doesNotMatch(stageInstructions(unchanged),/optional JSON field/);delete body.publicDiscoveryPolicy;assert.doesNotThrow(()=>validateTaskAckOutput(unchanged,JSON.stringify(body)))
 })

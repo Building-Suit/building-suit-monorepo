@@ -259,9 +259,9 @@
     },
     {
       "file": "20261108153026_hq_public_discovery_mcp.sql",
-      "bytes": 44829,
-      "md5": "d1685d87365001aaf0292906a6c8a75b",
-      "sha256": "aa5362ddc833d4f68bfea9126b82714baa4ed4e7b14cb73e1fc7101c0fb30d5a",
+      "bytes": 48287,
+      "md5": "fc1592730aae01e684a8c12bd8f9b8aa",
+      "sha256": "426465892d36dedb1c769c697ab6e949b8ac46bad0d6a2f0536da6da79924f06",
       "phase": "public-discovery-mcp-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261108153026_hq_public_discovery_mcp.sql"
