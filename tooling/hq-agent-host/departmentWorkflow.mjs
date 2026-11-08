@@ -191,7 +191,7 @@ export function workerExecutionBlock(job) {
   if (['worker-trial','trial-start'].includes(job.context.mode)) {
     if (tier !== 'T1_WORKER' || !agent || agent.id !== job.agent_id || !agent.profileFileId
       || agent.managerModelTier !== 'T2_HEAD' || agent.headAuthorization !== true
-      || !(supervisedTrialAllowed(job, agent) || researchDiscoveryTrialAllowed(job))) return 'trial-authorization-required'
+      || !(supervisedTrialAllowed(job, agent) || researchDiscoveryTrialAllowed(job) || repositoryTrialAllowed(job))) return 'trial-authorization-required'
     return null
   }
   if (tier !== 'T1_WORKER') return 'staffing-required'
@@ -535,4 +535,257 @@ if(process.argv.length===4 && process.argv[2]==='--public-discovery-mcp'
 if(process.argv.length===5 && process.argv[2]==='--public-retail-discovery-mcp'
   && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   serveDiscoveryMcp({policyId:DISCOVERY_RETAIL_POLICY,category:process.argv[3],budgetFile:process.argv[4]}).catch(()=>{process.exitCode=1})
+}
+
+// Anonymous, finite-manifest repository inspection. Never a generic GitHub client.
+export const PUBLIC_REPOSITORY_POLICY='hq-public-github-read-v1'
+export const PUBLIC_REPOSITORY_TOOL='read_public_repository_bundle'
+export const PUBLIC_REPOSITORY_BOOTSTRAP="import {pathToFileURL} from 'node:url';import {realpathSync} from 'node:fs';const [modulePath,selection,budget]=process.argv.slice(1);for(const key of Object.keys(process.env))delete process.env[key];process.env.LANG='C.UTF-8';process.env.TZ='UTC';const source=realpathSync(modulePath);process.argv=[process.execPath,source,'--public-repository-mcp',selection,budget];await import(pathToFileURL(source).href)"
+const freezeRepository=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freezeRepository(child);Object.freeze(value)}return value}
+export const PUBLIC_REPOSITORY_MANIFEST=freezeRepository({version:1,repository:{id:1376504404,fullName:'Building-Suit/building-suit-monorepo'},presets:[{id:'hq-worker-boundary-v1',lane:'source',files:[{path:'tooling/hq-agent-host/worker.mjs',windows:[[1,80],[540,619]]},{path:'tooling/hq-agent-host/departmentWorkflow.mjs',windows:[[1,80],[229,308]]}]},{id:'hq-ci-config-v1',lane:'ci',files:[{path:'.github/workflows/ci.yml',windows:[[1,80],[81,160]]},{path:'package.json',windows:[[1,80]]}]}]})
+export const PUBLIC_REPOSITORY_MANIFEST_DIGEST=mcpHash(JSON.stringify(PUBLIC_REPOSITORY_MANIFEST))
+const repositoryPrefix='/repos/Building-Suit/building-suit-monorepo'
+const gitSha=value=>typeof value==='string'&&/^[a-f0-9]{40}$/.test(value)
+const repoUuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value)
+export function repositorySelectionValid(selection){
+ return Boolean(exactKeys(selection,['version','preset','mode','sha','pullRequestNumber'])&&selection.version===1
+  &&PUBLIC_REPOSITORY_MANIFEST.presets.some(preset=>preset.id===selection.preset)&&gitSha(selection.sha)
+  &&['snapshot','stg','approved-pr'].includes(selection.mode)
+  &&(selection.mode==='approved-pr'?Number.isSafeInteger(selection.pullRequestNumber)&&selection.pullRequestNumber>0:selection.pullRequestNumber===null))
+}
+const repositoryLaneAllowed=(agentId,selection)=>selection?.preset==='hq-worker-boundary-v1'
+ ?['AG-DEV-002','AG-DEV-003'].includes(agentId):selection?.preset==='hq-ci-config-v1'&&agentId==='AG-DEV-004'
+const repositoryBudgetValid=path=>typeof path==='string'&&isAbsolute(path)&&resolve(path)===path
+ &&/^public-repository-[a-f0-9-]{36}\.budget$/.test(basename(path))&&repoUuid(basename(path).slice(18,-7))
+export function repositoryTrialAllowed(job){
+ const agent=job?.context?.agent,trial=job?.context?.supervisedTrial,permit=job?.context?.publicRepositoryPermit
+ return ['trial-start','worker-trial'].includes(job?.context?.mode)&&Boolean(agent)&&typeof job.agent_id==='string'&&agent.id===job.agent_id
+  &&agent.modelTier==='T1_WORKER'&&agent.model===T1_WORKER_MODEL&&agent.departmentKey==='development-maintenance'
+  &&agent.managerId==='AG-DEV-001'&&agent.managerModelTier==='T2_HEAD'&&agent.headAuthorization===true&&Boolean(agent.profileFileId)
+  &&hasCurrentQualification(agent,agent.qualification)&&trial?.bindingDigest===agent.qualification.bindingDigest
+  &&trial.reviewerId==='AG-HR-003'&&trial.reviewerId!==agent.id&&trial.reviewerId!==agent.managerId&&/^[a-f0-9]{64}$/.test(trial.reviewerBindingDigest||'')
+  &&trial?.scope==='public-repository-read-trial-v1'&&trial.toolPolicyId===PUBLIC_REPOSITORY_POLICY&&trial.status==='active'
+  &&trial.agentId===job.agent_id&&trial.taskId===job.context.task?.id&&trial.managerId===agent.managerId
+  &&trial.externalActionsAllowed===false&&trial.publishingAllowed===false&&(agent.skillFileIds||[]).includes(trial.skillFileId)
+  &&/^[a-f0-9]{64}$/.test(trial.bindingDigest||'')&&Date.parse(trial.expiresAt||'')>Date.now()
+  &&repositorySelectionValid(job.context.mode==='trial-start'?trial.repositorySelection:permit?.selection)
+  &&repositoryLaneAllowed(job.agent_id,job.context.mode==='trial-start'?trial.repositorySelection:permit.selection)
+}
+export function repositoryMcpConfig(job,{nodePath,modulePath,budgetFile,executionModel}={}){
+ const agent=job?.context?.agent,permit=job?.context?.publicRepositoryPermit,trial=repositoryTrialAllowed(job)
+ if(!agent||!['task-work','worker-trial'].includes(job.context?.mode)||agent.id!==job.agent_id
+  ||!repositorySelectionValid(permit?.selection)||!repositoryLaneAllowed(job.agent_id,permit.selection)
+  ||agent.departmentKey!=='development-maintenance'||job.context.task?.attempt!==0||executionModel!==agent.model
+  ||workerExecutionBlock(job)!==null||Object.hasOwn(job.context,'meetingResponse')
+  ||!exactKeys(permit,['version','policyId','jobId','agentId','bindingDigest','selection','reservationId','manifestDigest','expiresAt'])
+  ||permit.version!==1||permit.policyId!==PUBLIC_REPOSITORY_POLICY||permit.jobId!==job.id||permit.agentId!==job.agent_id
+  ||permit.manifestDigest!==PUBLIC_REPOSITORY_MANIFEST_DIGEST||!repoUuid(permit.reservationId)||Date.parse(permit.expiresAt||'')<=Date.now()||!Number.isFinite(Date.parse(permit.expiresAt||''))
+  ||permit.bindingDigest!==(trial?job.context.supervisedTrial.bindingDigest:agent.qualification?.bindingDigest)
+  ||!isAbsolute(nodePath||'')||!isAbsolute(modulePath||'')||!modulePath.endsWith('/departmentWorkflow.mjs')
+  ||!repositoryBudgetValid(budgetFile)||basename(budgetFile)!==`public-repository-${permit.reservationId}.budget`)return null
+ return{command:nodePath,args:['--preserve-symlinks-main','--input-type=module','--eval',PUBLIC_REPOSITORY_BOOTSTRAP,modulePath,Buffer.from(JSON.stringify(permit.selection)).toString('base64url'),budgetFile],enabled:true,required:true,startup_timeout_sec:10,tool_timeout_sec:45,enabled_tools:[PUBLIC_REPOSITORY_TOOL]}
+}
+async function reserveRepositoryBudget(path){
+ mcpNeed(repositoryBudgetValid(path),'repository-budget-invalid')
+ const info=await lstat(dirname(path));mcpNeed(info.isDirectory()&&!info.isSymbolicLink()&&info.uid===process.getuid()&&(info.mode&0o077)===0,'repository-budget-invalid')
+ const file=await open(path,'wx',0o600);try{await file.writeFile('reserved-before-public-github-get\n');await file.sync()}finally{await file.close()}
+ const directory=await open(dirname(path),'r');try{await directory.sync()}finally{await directory.close()}
+}
+/** Only the fixed API origin is reachable; API-provided URLs are never followed. */
+export async function repositoryPinnedGet(path,signal,{resolveDns=dnsLookup,request=httpsRequest}={}){
+ mcpNeed(typeof path==='string'&&path.startsWith(repositoryPrefix)&&/^(?:|\/git\/(?:commits|trees|blobs)\/[a-f0-9]{40}|\/git\/ref\/heads\/stg|\/pulls\/[1-9][0-9]*|\/actions\/runs\?head_sha=[a-f0-9]{40}&per_page=20|\/commits\/[a-f0-9]{40}\/check-runs\?per_page=20|\/actions\/runs\/[1-9][0-9]*\/attempts\/[1-9][0-9]*\/jobs\?per_page=3)$/.test(path.slice(repositoryPrefix.length)),'repository-path-invalid')
+ const answers=await withAbort(resolveDns('api.github.com',{all:true,verbatim:true}),signal)
+ mcpNeed(Array.isArray(answers)&&answers.length>0&&answers.length<=8&&answers.every(row=>[4,6].includes(row.family)&&isIP(row.address)===row.family&&discoveryPublicAddress(row.address)),'repository-dns-rejected')
+ const address=answers.find(row=>row.family===4)||answers[0];signal.throwIfAborted()
+ return new Promise((done,fail)=>{
+  const req=request({protocol:'https:',hostname:'api.github.com',port:443,path,method:'GET',servername:'api.github.com',rejectUnauthorized:true,agent:false,signal,
+   headers:{Accept:'application/vnd.github+json','Accept-Encoding':'identity','X-GitHub-Api-Version':'2022-11-28','User-Agent':'Building-Suit-HQ-Public-Repository/1.0'},
+   lookup:(hostname,options,callback)=>{if(hostname!=='api.github.com'){callback(new Error('repository-dns-rejected'));return}if(options?.all)callback(null,[address]);else callback(null,address.address,address.family)},
+  },response=>{if(discoveryIpKey(response.socket.remoteAddress)!==discoveryIpKey(address.address)){response.destroy();fail(new Error('repository-peer-rejected'));return}done(response)})
+  req.once('error',fail);req.end()
+ })
+}
+const repositoryIdentity=row=>row&&row.id===1376504404&&row.full_name==='Building-Suit/building-suit-monorepo'&&row.private===false&&(row.visibility===undefined||row.visibility==='public')
+const repoControl=text=>[...text].some(character=>{const code=character.codePointAt(0);return code<32&&![9,10,13].includes(code)})
+const repoSensitive=text=>/-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(?:ghp_|github_pat_|sb_secret_)[A-Za-z0-9_]{12,}|\bAKIA[A-Z0-9]{16}\b|\bBearer\s+[A-Za-z0-9._~-]{20,}|\b(?:password|api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret)\s*[:=]\s*["'][A-Za-z0-9_./+=-]{16,}/i.test(text)
+const boundedRepoText=(value,max)=>{let result='',bytes=0;for(const char of value){const next=Buffer.byteLength(char);if(bytes+next>max)break;result+=char;bytes+=next}return result}
+export async function readPublicRepository({selection,signal,get=repositoryPinnedGet,now=()=>new Date()}={}){
+ mcpNeed(repositorySelectionValid(selection),'repository-selection-invalid')
+ selection=freezeRepository(JSON.parse(JSON.stringify(selection)))
+ const preset=PUBLIC_REPOSITORY_MANIFEST.presets.find(row=>row.id===selection.preset)
+ const deadline=AbortSignal.any([AbortSignal.timeout(40000),...(signal?[signal]:[])]);let attempts=0,bytesRead=0,treesRead=0
+ async function json(path,optional=false){
+  mcpNeed(++attempts<=12,'repository-request-limit');deadline.throwIfAborted()
+  const requestSignal=AbortSignal.any([deadline,AbortSignal.timeout(8000)])
+  const response=await withAbort(get(path,requestSignal),requestSignal)
+  try{
+   mcpNeed(response.statusCode!==403,'repository-access-denied');mcpNeed(response.statusCode!==429,'repository-rate-limited')
+   if(optional&&response.statusCode===404)return{unavailable:404}
+   mcpNeed(response.statusCode===200&&/^application\/json(?:\s*;.*)?$/i.test(response.headers['content-type']||''),'repository-response-invalid')
+   mcpNeed(!response.headers['content-encoding']||response.headers['content-encoding']==='identity','repository-compression-rejected')
+   mcpNeed(!response.headers.location&&!(response.statusCode>=300&&response.statusCode<400),'repository-redirect-rejected')
+   const declared=response.headers['content-length'];mcpNeed(declared===undefined||/^\d+$/.test(declared)&&Number(declared)<=262144,'repository-json-too-large')
+   let size=0;const chunks=[]
+   await withAbort((async()=>{for await(const chunk of response){requestSignal.throwIfAborted();size+=chunk.byteLength;bytesRead+=chunk.byteLength;mcpNeed(size<=262144&&bytesRead<=1048576,'repository-byte-limit');chunks.push(Buffer.from(chunk))}})(),requestSignal)
+   requestSignal.throwIfAborted()
+   let value;try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)))}catch{throw Object.assign(new Error('repository-json-invalid'),{discoveryCode:'repository-json-invalid'})}
+   return value
+  }finally{response.destroy()}
+ }
+ mcpNeed(repositoryIdentity(await json(repositoryPrefix)),'repository-identity-invalid')
+ if(selection.mode==='stg'){
+  const ref=await json(repositoryPrefix+'/git/ref/heads/stg');mcpNeed(ref.ref==='refs/heads/stg'&&ref.object?.type==='commit'&&ref.object.sha===selection.sha,'repository-ref-drift')
+ }else if(selection.mode==='approved-pr'){
+  const pr=await json(repositoryPrefix+'/pulls/'+selection.pullRequestNumber)
+  mcpNeed(pr.number===selection.pullRequestNumber&&repositoryIdentity(pr.base?.repo)&&repositoryIdentity(pr.head?.repo)&&pr.base.ref==='stg'&&pr.head.sha===selection.sha,'repository-pr-drift')
+ }
+ const commit=await json(repositoryPrefix+'/git/commits/'+selection.sha)
+ mcpNeed(commit.sha===selection.sha&&gitSha(commit.tree?.sha),'repository-commit-invalid')
+ const resolvedSha=commit.sha,revisionObservedAt=now().toISOString()
+ const treeCache=new Map()
+ async function tree(sha){
+  if(treeCache.has(sha))return treeCache.get(sha)
+  mcpNeed(++treesRead<=8,'repository-tree-limit')
+  const data=await json(repositoryPrefix+'/git/trees/'+sha)
+  mcpNeed(data.sha===sha&&data.truncated===false&&Array.isArray(data.tree)&&data.tree.length<=4096,'repository-tree-invalid')
+  const seen=new Set()
+  for(const entry of data.tree){mcpNeed(typeof entry.path==='string'&&entry.path.length>0&&entry.path.length<=255&&!/[/\\]/.test(entry.path)&&!repoControl(entry.path)&&!seen.has(entry.path)&&gitSha(entry.sha),'repository-tree-invalid');seen.add(entry.path)}
+  treeCache.set(sha,data.tree);return data.tree
+ }
+ const files=[];let excerptBytes=0
+ const windowShare=Math.floor(20480/preset.files.reduce((count,file)=>count+file.windows.length,0))
+ for(const spec of preset.files){
+  let sha=commit.tree.sha;const parts=spec.path.split('/');let entry
+  for(let n=0;n<parts.length;n++){
+   entry=(await tree(sha)).find(row=>row.path===parts[n]);mcpNeed(entry,'repository-file-missing')
+   if(n<parts.length-1){mcpNeed(entry.type==='tree'&&entry.mode==='040000','repository-mode-invalid');sha=entry.sha}
+   else mcpNeed(entry.type==='blob'&&entry.mode==='100644','repository-mode-invalid')
+  }
+  const blob=await json(repositoryPrefix+'/git/blobs/'+entry.sha)
+  mcpNeed(blob.sha===entry.sha&&blob.encoding==='base64'&&Number.isSafeInteger(blob.size)&&blob.size>0&&blob.size<=131072&&typeof blob.content==='string','repository-blob-invalid')
+  const encoded=blob.content.replace(/\n/g,'');mcpNeed(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded),'repository-base64-invalid')
+  const raw=Buffer.from(encoded,'base64');mcpNeed(raw.length===blob.size&&raw.toString('base64')===encoded&&createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${raw.length}\0`),raw])).digest('hex')===entry.sha,'repository-blob-integrity')
+  let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(raw)}catch{throw Object.assign(new Error('repository-utf8-invalid'),{discoveryCode:'repository-utf8-invalid'})}
+  mcpNeed(!repoControl(text)&&!repoSensitive(text)&&!text.startsWith('version https://git-lfs.github.com/spec/v1'),'repository-content-rejected')
+  const lines=text.split('\n'),windows=[]
+  for(const[start,end]of spec.windows){const full=lines.slice(start-1,end).join('\n'),excerpt=boundedRepoText(full,Math.min(windowShare,Math.max(0,20480-excerptBytes)));excerptBytes+=Buffer.byteLength(excerpt);windows.push({start,end,text:excerpt,sha256:mcpHash(excerpt),truncated:excerpt!==full})}
+  files.push({path:spec.path,blobSha:entry.sha,bytes:raw.length,sha256:mcpHash(raw),windows})
+ }
+ const ci={state:preset.lane==='ci'?'observed':'not-requested',runs:[],checks:[],jobs:[],unknownReasons:[]}
+ if(preset.lane==='ci'){
+  const runs=await json(repositoryPrefix+'/actions/runs?head_sha='+selection.sha+'&per_page=20',true)
+  const checks=await json(repositoryPrefix+'/commits/'+selection.sha+'/check-runs?per_page=20',true)
+  const nameValid=value=>typeof value==='string'&&value.trim().length>0&&Buffer.byteLength(value)<=160&&!repoControl(value)&&!repoSensitive(value)
+  const dateValid=(value,nullable=false)=>nullable&&value===null||typeof value==='string'&&value.length<=40&&Number.isFinite(Date.parse(value))
+  const statusValid=row=>typeof row.status==='string'&&/^[a-z_]{1,40}$/.test(row.status)&&(row.conclusion===null||typeof row.conclusion==='string'&&/^[a-z_]{1,40}$/.test(row.conclusion))
+  for(const[key,data,arrayKey]of[['runs',runs,'workflow_runs'],['checks',checks,'check_runs']]){
+   if(data.unavailable){ci.state='unavailable';ci.unknownReasons.push(key+'-http-'+data.unavailable);continue}
+   mcpNeed(Array.isArray(data[arrayKey])&&data[arrayKey].length<=20&&Number.isSafeInteger(data.total_count)&&data.total_count>=data[arrayKey].length,'repository-ci-invalid')
+   if(data.total_count>data[arrayKey].length)ci.unknownReasons.push(key+'-window-only')
+   for(const row of data[arrayKey]){
+    mcpNeed(Number.isSafeInteger(row.id)&&row.id>0&&row.head_sha===selection.sha&&statusValid(row),'repository-ci-invalid')
+    if(key==='runs'){
+     mcpNeed(repositoryIdentity(row.repository)&&Number.isSafeInteger(row.run_attempt)&&row.run_attempt>0,'repository-ci-invalid')
+     if(row.path!=='.github/workflows/ci.yml'){if(!ci.unknownReasons.includes('other-workflow-omitted'))ci.unknownReasons.push('other-workflow-omitted');continue}
+     mcpNeed(nameValid(row.name)&&dateValid(row.created_at)&&dateValid(row.updated_at),'repository-ci-invalid')
+     if(ci.runs.length>=2){if(!ci.unknownReasons.includes('runs-window-only'))ci.unknownReasons.push('runs-window-only');continue}
+     ci.runs.push({id:row.id,attempt:row.run_attempt,name:row.name,status:row.status,conclusion:row.conclusion,createdAt:row.created_at,updatedAt:row.updated_at})
+    }else{
+     mcpNeed(nameValid(row.name)&&dateValid(row.started_at,true)&&dateValid(row.completed_at,true),'repository-ci-invalid')
+     if(ci.checks.length>=3){if(!ci.unknownReasons.includes('checks-window-only'))ci.unknownReasons.push('checks-window-only');continue}
+     ci.checks.push({id:row.id,name:row.name,status:row.status,conclusion:row.conclusion,startedAt:row.started_at,completedAt:row.completed_at})
+    }
+   }
+  }
+  for(const run of ci.runs){
+   const jobs=await json(repositoryPrefix+'/actions/runs/'+run.id+'/attempts/'+run.attempt+'/jobs?per_page=3',true)
+   if(jobs.unavailable){ci.state='unavailable';ci.unknownReasons.push('jobs-http-'+jobs.unavailable);continue}
+   mcpNeed(Array.isArray(jobs.jobs)&&jobs.jobs.length<=3&&Number.isSafeInteger(jobs.total_count)&&jobs.total_count>=jobs.jobs.length,'repository-ci-invalid')
+   if(jobs.total_count>jobs.jobs.length)ci.unknownReasons.push('jobs-window-only')
+   for(const row of jobs.jobs){
+    mcpNeed(Number.isSafeInteger(row.id)&&row.id>0&&row.run_id===run.id&&(row.run_attempt===undefined||row.run_attempt===run.attempt)&&row.head_sha===selection.sha&&statusValid(row)&&nameValid(row.name)&&dateValid(row.started_at,true)&&dateValid(row.completed_at,true),'repository-ci-invalid')
+    ci.jobs.push({id:row.id,runId:run.id,attempt:run.attempt,name:row.name,status:row.status,conclusion:row.conclusion,startedAt:row.started_at,completedAt:row.completed_at})
+   }
+  }
+ }
+ deadline.throwIfAborted()
+ const bundle={version:1,repositoryId:1376504404,repositoryFullName:'Building-Suit/building-suit-monorepo',manifestDigest:PUBLIC_REPOSITORY_MANIFEST_DIGEST,selection,resolvedSha,revisionObservedAt,observedAt:now().toISOString(),requestAttempts:attempts,bytesRead,files,ci,partial:true,authentication:'none',codeExecuted:false,writesPerformed:false,testedSourceSha:'unknown',executedByThisEmployee:false,requiredChecksVerified:false}
+ const text=JSON.stringify(bundle)
+ const structuredContent={version:1,kind:'mcp-public-github-read',policyId:PUBLIC_REPOSITORY_POLICY,repositoryId:1376504404,manifestDigest:PUBLIC_REPOSITORY_MANIFEST_DIGEST,selection,observedAt:bundle.observedAt,bundleSha256:mcpHash(text),bundleBytes:Buffer.byteLength(text)}
+ const result={content:[{type:'text',text}],structuredContent};mcpNeed(Buffer.byteLength(JSON.stringify(result))<=32768,'repository-result-limit');repositoryToolResult(result);return result
+}
+export function createRepositoryMcpServer({selection,budgetFile,upstream=readPublicRepository}={}){
+ mcpNeed(repositorySelectionValid(selection)&&repositoryBudgetValid(budgetFile),'repository-selection-invalid')
+ selection=freezeRepository(JSON.parse(JSON.stringify(selection)))
+ let initialized=false,ready=false,consumed=false;const controller=new AbortController()
+ return{stop:()=>controller.abort(),async handle(message){
+  const id=message?.id,error=(code,text)=>({jsonrpc:'2.0',id:id??null,error:{code,message:text}})
+  if(!message||message.jsonrpc!=='2.0'||typeof message.method!=='string'||id!==undefined&&!(typeof id==='string'&&id.length<=80||Number.isSafeInteger(id)))return error(-32600,'Invalid MCP request')
+  if(id===undefined){if(message.method==='notifications/initialized'&&initialized)ready=true;if(message.method==='notifications/cancelled')controller.abort();return null}
+  if(message.method==='initialize'){if(initialized||!MCP_VERSIONS.has(message.params?.protocolVersion))return error(-32602,'Unsupported initialization');initialized=true;return{jsonrpc:'2.0',id,result:{protocolVersion:message.params.protocolVersion,capabilities:{tools:{}},serverInfo:{name:'hq-public-repository-reader',version:'1.0.0'}}}}
+  if(!ready)return error(-32000,'MCP initialization required')
+  if(message.method==='ping')return{jsonrpc:'2.0',id,result:{}}
+  if(message.method==='tools/list')return{jsonrpc:'2.0',id,result:{tools:[{name:PUBLIC_REPOSITORY_TOOL,description:'Read one fixed public repository source/CI manifest at the host-approved immutable snapshot. No arguments, credentials, execution or writes.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true,idempotentHint:false}}]}}
+  if(message.method!=='tools/call')return error(-32601,'Method unavailable')
+  if(message.params?.name!==PUBLIC_REPOSITORY_TOOL||message.params.arguments!==undefined&&!exactKeys(message.params.arguments,[])||Object.keys(message.params).some(key=>!['name','arguments','_meta'].includes(key)))return error(-32602,'Tool takes no arguments')
+  if(consumed)return{jsonrpc:'2.0',id,result:{isError:true,content:[{type:'text',text:'repository-budget-exhausted'}]}}
+  consumed=true
+  try{await reserveRepositoryBudget(budgetFile);return{jsonrpc:'2.0',id,result:await upstream({selection,signal:controller.signal})}}
+  catch(error){return{jsonrpc:'2.0',id,result:{isError:true,content:[{type:'text',text:error.code==='EEXIST'?'repository-budget-exhausted':['repository-access-denied','repository-rate-limited'].includes(error.discoveryCode)?error.discoveryCode:'repository-unavailable-no-retry'}]}}}
+ }}
+}
+async function serveRepositoryMcp(selection,budgetFile){
+ const server=createRepositoryMcpServer({selection,budgetFile});let buffer='',bytes=0,messages=0
+ const decoder=new TextDecoder('utf-8',{fatal:true}),write=value=>{if(value)process.stdout.write(JSON.stringify(value)+'\n')}
+ try{for await(const chunk of process.stdin){bytes+=chunk.byteLength;mcpNeed(bytes<=65536,'repository-input-limit');buffer+=decoder.decode(chunk,{stream:true});mcpNeed(Buffer.byteLength(buffer)<=8192,'repository-input-limit');let index
+  while((index=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,index);buffer=buffer.slice(index+1);mcpNeed(++messages<=40,'repository-input-limit');let message;try{message=JSON.parse(line)}catch{write({jsonrpc:'2.0',id:null,error:{code:-32700,message:'Invalid JSON'}});continue}void server.handle(message).then(write).catch(()=>write({jsonrpc:'2.0',id:message?.id??null,error:{code:-32603,message:'MCP unavailable'}}))}
+ }}finally{server.stop()}
+}
+if(process.argv.length===5&&process.argv[2]==='--public-repository-mcp'&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+ Promise.resolve().then(()=>{const encoded=process.argv[3];mcpNeed(/^[A-Za-z0-9_-]{1,1000}$/.test(encoded),'repository-selection-invalid');const raw=Buffer.from(encoded,'base64url');mcpNeed(raw.toString('base64url')===encoded,'repository-selection-invalid');return serveRepositoryMcp(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw)),process.argv[4])}).catch(()=>{process.exitCode=1})
+}
+/** Validate the actual typed MCP result, never a model's repository narrative. */
+export function repositoryToolResult(result){
+ const metadata=result?.structuredContent??result?.structured_content,content=result?.content
+ mcpNeed(result?.isError!==true&&exactKeys(metadata,['version','kind','policyId','repositoryId','manifestDigest','selection','observedAt','bundleSha256','bundleBytes'])
+  &&metadata.version===1&&metadata.kind==='mcp-public-github-read'&&metadata.policyId===PUBLIC_REPOSITORY_POLICY&&metadata.repositoryId===1376504404
+  &&metadata.manifestDigest===PUBLIC_REPOSITORY_MANIFEST_DIGEST&&repositorySelectionValid(metadata.selection)
+  &&typeof metadata.observedAt==='string'&&Number.isFinite(Date.parse(metadata.observedAt))
+  &&Array.isArray(content)&&content.length===1&&content[0]?.type==='text'&&typeof content[0].text==='string'
+  &&Buffer.byteLength(JSON.stringify(result))<=32768,'repository-result-invalid')
+ if(result.structuredContent&&result.structured_content)mcpNeed(JSON.stringify(result.structuredContent)===JSON.stringify(result.structured_content),'repository-result-invalid')
+ const text=content[0].text
+ mcpNeed(metadata.bundleBytes===Buffer.byteLength(text)&&metadata.bundleSha256===mcpHash(text)&&!repoSensitive(text),'repository-result-invalid')
+ let bundle;try{bundle=JSON.parse(text)}catch{throw Object.assign(new Error('repository-result-invalid'),{discoveryCode:'repository-result-invalid'})}
+ mcpNeed(exactKeys(bundle,['version','repositoryId','repositoryFullName','manifestDigest','selection','resolvedSha','revisionObservedAt','observedAt','requestAttempts','bytesRead','files','ci','partial','authentication','codeExecuted','writesPerformed','testedSourceSha','executedByThisEmployee','requiredChecksVerified'])
+  &&bundle.version===1&&bundle.repositoryId===1376504404&&bundle.repositoryFullName==='Building-Suit/building-suit-monorepo'
+  &&bundle.manifestDigest===metadata.manifestDigest&&JSON.stringify(bundle.selection)===JSON.stringify(metadata.selection)&&bundle.observedAt===metadata.observedAt
+  &&bundle.resolvedSha===bundle.selection.sha&&typeof bundle.revisionObservedAt==='string'&&Number.isFinite(Date.parse(bundle.revisionObservedAt))
+  &&Date.parse(bundle.revisionObservedAt)<=Date.parse(bundle.observedAt)&&Date.parse(bundle.observedAt)-Date.parse(bundle.revisionObservedAt)<=40000
+  &&Number.isSafeInteger(bundle.requestAttempts)&&bundle.requestAttempts>0&&bundle.requestAttempts<=12&&Number.isSafeInteger(bundle.bytesRead)&&bundle.bytesRead>0&&bundle.bytesRead<=1048576
+  &&bundle.partial===true&&bundle.authentication==='none'&&bundle.codeExecuted===false&&bundle.writesPerformed===false&&bundle.testedSourceSha==='unknown'&&bundle.executedByThisEmployee===false&&bundle.requiredChecksVerified===false,'repository-result-invalid')
+ const preset=PUBLIC_REPOSITORY_MANIFEST.presets.find(row=>row.id===bundle.selection.preset);let excerptBytes=0
+ const windowShare=Math.floor(20480/preset.files.reduce((count,file)=>count+file.windows.length,0))
+ mcpNeed(Array.isArray(bundle.files)&&bundle.files.length===preset.files.length,'repository-result-invalid')
+ for(let n=0;n<preset.files.length;n++){
+  const file=bundle.files[n],spec=preset.files[n]
+  mcpNeed(exactKeys(file,['path','blobSha','bytes','sha256','windows'])&&file.path===spec.path&&gitSha(file.blobSha)&&/^[a-f0-9]{64}$/.test(file.sha256||'')&&Number.isSafeInteger(file.bytes)&&file.bytes>0&&file.bytes<=131072&&Array.isArray(file.windows)&&file.windows.length===spec.windows.length,'repository-result-invalid')
+  for(let w=0;w<spec.windows.length;w++){
+   const window=file.windows[w],[start,end]=spec.windows[w]
+   mcpNeed(exactKeys(window,['start','end','text','sha256','truncated'])&&window.start===start&&window.end===end&&typeof window.text==='string'&&Buffer.byteLength(window.text)<=windowShare&&!repoControl(window.text)&&!repoSensitive(window.text)&&mcpHash(window.text)===window.sha256&&typeof window.truncated==='boolean','repository-result-invalid')
+   excerptBytes+=Buffer.byteLength(window.text);mcpNeed(excerptBytes<=20480,'repository-result-invalid')
+  }
+ }
+ const ci=bundle.ci
+ mcpNeed(exactKeys(ci,['state','runs','checks','jobs','unknownReasons'])&&['observed','unavailable','not-requested'].includes(ci.state)&&Array.isArray(ci.runs)&&ci.runs.length<=2&&Array.isArray(ci.checks)&&ci.checks.length<=3&&Array.isArray(ci.jobs)&&ci.jobs.length<=6&&Array.isArray(ci.unknownReasons)&&ci.unknownReasons.length<=6,'repository-result-invalid')
+ mcpNeed(ci.unknownReasons.every(value=>['runs-http-404','checks-http-404','jobs-http-404','runs-window-only','checks-window-only','jobs-window-only','other-workflow-omitted'].includes(value)),'repository-result-invalid')
+ if(preset.lane==='source')mcpNeed(ci.state==='not-requested'&&ci.runs.length===0&&ci.checks.length===0&&ci.jobs.length===0&&ci.unknownReasons.length===0,'repository-result-invalid')
+ for(const[key,entries]of[['runs',ci.runs],['checks',ci.checks],['jobs',ci.jobs]])for(const row of entries){
+  const keys=key==='runs'?['id','attempt','name','status','conclusion','createdAt','updatedAt']:key==='jobs'?['id','runId','attempt','name','status','conclusion','startedAt','completedAt']:['id','name','status','conclusion','startedAt','completedAt']
+  mcpNeed(exactKeys(row,keys)&&Number.isSafeInteger(row.id)&&row.id>0&&typeof row.name==='string'&&row.name.trim().length>0&&Buffer.byteLength(row.name)<=160&&!repoControl(row.name)&&!repoSensitive(row.name)
+   &&(key==='checks'||Number.isSafeInteger(row.attempt)&&row.attempt>0)&&(key!=='jobs'||ci.runs.some(run=>run.id===row.runId&&run.attempt===row.attempt))
+   &&typeof row.status==='string'&&/^[a-z_]{1,40}$/.test(row.status)&&(row.conclusion===null||typeof row.conclusion==='string'&&/^[a-z_]{1,40}$/.test(row.conclusion)),'repository-result-invalid')
+  for(const field of key==='runs'?['createdAt','updatedAt']:['startedAt','completedAt'])mcpNeed(key!=='runs'&&row[field]===null||typeof row[field]==='string'&&row[field].length<=40&&Number.isFinite(Date.parse(row[field])),'repository-result-invalid')
+ }
+ return bundle
 }

@@ -14,6 +14,27 @@ function text(value: unknown, max: number): value is string {
 }
 function id(value: unknown) { return typeof value === 'string' && UUID.test(value) }
 
+/** One fixed public repository, server-owned presets; no paths, URLs or queries. */
+export async function hqRepositoryTrialBody(event: H3Event) {
+  const body = await boundedBody(event, 2048)
+  const qualify = exact(body, ['action','trialId'])
+  if (qualify?.action === 'qualify' && id(qualify.trialId)) return { action: 'qualify' as const, trialId: String(qualify.trialId) }
+  const start = exact(body, ['action','agentId','bundleId','requestKey'])
+  const agent = (value: unknown) => typeof value === 'string' && ['AG-DEV-002','AG-DEV-003','AG-DEV-004'].includes(value)
+  if (start?.action === 'start' && agent(start.agentId) && id(start.bundleId) && id(start.requestKey))
+    return { action: 'start' as const, agentId: String(start.agentId), bundleId: String(start.bundleId), requestKey: String(start.requestKey) }
+  const freeze = exact(body, ['action','agentId','preset','mode','sha','pullRequestNumber','predecessorArtifactId','requestKey'])
+  if (freeze?.action === 'freeze' && agent(freeze.agentId)
+    && freeze.preset === (freeze.agentId === 'AG-DEV-004' ? 'hq-ci-config-v1' : 'hq-worker-boundary-v1')
+    && typeof freeze.mode === 'string' && ['snapshot','stg','approved-pr'].includes(freeze.mode)
+    && typeof freeze.sha === 'string' && /^[0-9a-f]{40}$/.test(freeze.sha)
+    && (freeze.mode === 'approved-pr' ? Number.isSafeInteger(freeze.pullRequestNumber) && Number(freeze.pullRequestNumber) > 0 && Number(freeze.pullRequestNumber) <= 2147483647 : freeze.pullRequestNumber === null)
+    && (freeze.agentId === 'AG-DEV-003' ? id(freeze.predecessorArtifactId) : freeze.predecessorArtifactId === null)
+    && id(freeze.requestKey)) return { action: 'freeze' as const, agentId: String(freeze.agentId), preset: String(freeze.preset), mode: freeze.mode,
+      sha: freeze.sha, pullRequestNumber: freeze.pullRequestNumber as number | null, predecessorArtifactId: freeze.predecessorArtifactId as string | null, requestKey: String(freeze.requestKey) }
+  throw createError({ statusCode: 400, statusMessage: 'HQ repository trial unavailable' })
+}
+
 export async function hqStaffingDecisionBody(event: H3Event): Promise<{ planId: string; digest: string; decision: 'approved' | 'rejected'; resumeOriginal: boolean; requestKey: string }> {
   const entry = exact(await boundedBody(event, 2048), ['planId', 'digest', 'decision', 'resumeOriginal', 'requestKey'])
   if (!entry || !id(entry.planId) || !id(entry.requestKey) || typeof entry.digest !== 'string' || !/^[0-9a-f]{64}$/.test(entry.digest)

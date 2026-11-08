@@ -444,6 +444,7 @@
     "./utils/hqAvatarRenderer": "./src/utils/hqAvatarRenderer.ts",
     "./utils/hqSceneMatrices": "./src/utils/hqSceneMatrices.ts",
     "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",
+    "./organisms/BsHqRepositoryTrial": "./src/organisms/BsHqRepositoryTrial.vue",
     "./organisms/BsHqStaffingPlans": "./src/organisms/BsHqStaffingPlans.vue",
     "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue",
     "./organisms/BsHqPlanBoard": "./src/organisms/BsHqPlanBoard.vue",

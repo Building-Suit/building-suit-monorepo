@@ -14,6 +14,7 @@ import BsHqTaskBrowser from '../organisms/BsHqTaskBrowser.vue'
 import BsHqWorkforce from '../organisms/BsHqWorkforce.vue'
 import BsTabs from '../molecules/BsTabs.vue'
 import BsHqStaffingPlans from '../organisms/BsHqStaffingPlans.vue'
+import BsHqRepositoryTrial from '../organisms/BsHqRepositoryTrial.vue'
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
@@ -24,6 +25,7 @@ import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from '../utils/hologramPresentationGeom
 const confirmation = useConfirmation()
 const taskSource = useHqTaskBrowserSource()
 const trialConfirming = ref(false)
+let repositoryConfirmationEpoch = 0
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
@@ -38,6 +40,9 @@ function chooseRetailCategory(value: unknown) {
 const selectedResearchTrial = computed(() => selectedAgent.value?.id === 'AG-RES-002' ? selectedTrial.value?.publicResearch : undefined)
 const publicTrialIsLatest = computed(() => Boolean(selectedResearchTrial.value?.trialId && selectedResearchTrial.value.trialId === selectedTrial.value?.trialId))
 async function trialAction(command: HqTrialCommand) {
+  if (command.action === 'freeze-repository' || command.action === 'start-repository' || command.action === 'qualify-repository') {
+    await repositoryAction(command); return
+  }
   if (command.action === 'clear-trial-feedback' || trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
   const agentId = selectedAgent.value?.id
   trialConfirming.value = true
@@ -66,6 +71,26 @@ async function trialAction(command: HqTrialCommand) {
         && (!('bindingCurrent' in current) || current.bindingCurrent)
         && (!ordinary || !selectedOrdinaryTrial.value || selectedOrdinaryTrial.value.reviewerReady)
     if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgent.value?.id === agentId && !props.agents?.trialPending) emit('trialCommand', command)
+  } finally { trialConfirming.value = false }
+}
+async function repositoryAction(command: Extract<HqTrialCommand, { action: 'freeze-repository' | 'start-repository' | 'qualify-repository' }>) {
+  if (trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder' || selectedAgent.value?.id !== command.agentId) return
+  const current = selectedTrial.value?.repository, before = JSON.stringify(current), confirmationEpoch = repositoryConfirmationEpoch
+  if (!current) return
+  trialConfirming.value = true
+  try {
+    const freeze = command.action === 'freeze-repository', start = command.action === 'start-repository'
+    const accepted = await confirmation.ask({ title: freeze ? 'Freeze public repository bundle' : start ? 'Start repository trial' : 'Approve repository qualification',
+      message: freeze ? `Approve the fixed ${command.preset} public repository bundle at commit ${command.sha}? The server verifies its mode and immutable source; no work or qualification is granted by freezing.`
+        : start ? 'Start the bounded trial using this exact frozen bundle? Adam scopes it first, then the same immutable evidence receives independent review. No writes or general browsing are permitted.'
+          : 'Record repository qualification from the current bound host evidence and independent reviews? Ordinary qualification and canonical Active lifecycle remain required.',
+      confirmLabel: freeze ? 'Freeze bundle' : start ? 'Start trial' : 'Approve qualification', cancelLabel: 'Cancel' })
+    const latest = selectedTrial.value?.repository
+    const valid = latest && JSON.stringify(latest) === before && latest.reviewerReady && (command.action === 'freeze-repository'
+      ? latest.freezeEligible && latest.preset === command.preset
+      : command.action === 'start-repository' ? latest.eligible && latest.bindingCurrent && latest.bundleId === command.bundleId && !latest.qualified && latest.status !== 'active'
+        : latest.reviewComplete && latest.bindingCurrent && latest.trialId === command.trialId && !latest.receiptIssued && !latest.qualified)
+    if (accepted && valid && confirmationEpoch === repositoryConfirmationEpoch && !trialDisposed && props.access?.status === 'founder' && selectedAgent.value?.id === command.agentId && !props.agents?.trialPending) emit('trialCommand',command)
   } finally { trialConfirming.value = false }
 }
 
@@ -146,6 +171,7 @@ const selectedAgent = computed(() => teamVisible.value
   ? (founderAccess.value.status === 'founder' ? agentsState.value.agents.find(agent => agent.id === teamAgentId.value) ?? null : null)
   : selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null)
 watch(() => selectedAgent.value?.id, () => emit('trialCommand', { action: 'clear-trial-feedback' }))
+watch([() => props.access?.status, () => props.access?.user?.displayName, () => selectedAgent.value?.id], () => { repositoryConfirmationEpoch += 1 }, { flush: 'sync' })
 const selectedNote = computed(() => recordDetail.value?.kind === 'note' && props.brain?.selectedId === recordDetail.value.id ? props.brain?.note : null)
 const recordTitle = computed(() => {
   const record = recordDetail.value
@@ -566,6 +592,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
           </section>
           <p v-if="!selectedOrdinaryTrial && !publicTrialIsLatest && selectedRetailTrial?.trialId !== selectedTrial.trialId" role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? selectedTrial.skillFileId ? 'Skill qualification recorded; remaining assigned skills require trials' : 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
           <BsButton v-if="!selectedOrdinaryTrial && !publicTrialIsLatest && selectedRetailTrial?.trialId !== selectedTrial.trialId && selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
+          <BsHqRepositoryTrial v-if="selectedTrial.repository" :key="selectedAgent.id" :agent-id="selectedAgent.id" :trial="selectedTrial.repository" :pending="trialConfirming || Boolean(agentsState.trialPending)" @command="trialAction" />
           <p v-if="agentsState.trialMessage && agentsState.trialMessageAgentId === selectedAgent.id" role="status">{{ agentsState.trialMessage }}</p>
         </template>
         </div>
