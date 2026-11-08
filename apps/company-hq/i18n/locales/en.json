@@ -259,6 +259,16 @@
             "lesson-extract": "Preparing a learning proposal",
             "lesson-review": "Reviewing the learning proposal"
           }
+        },
+        "cancellation": {
+          "action": "Cancel task",
+          "title": "Cancel this task?",
+          "message": "Only the task below will be canceled. Its queued work will stop and any active trial will close. Existing drafts and review history will remain. This does not approve or qualify the work.",
+          "keep": "Keep task",
+          "pending": "Canceling task…",
+          "canceled": "Task cancellation confirmed. Existing drafts and review history are preserved.",
+          "unconfirmed": "Cancellation is unconfirmed. Refresh the task before trying again. No retry was sent automatically.",
+          "unavailable": "This task cannot be canceled right now. Refresh its status and check your founder access."
         }
       },
       "connections": {
