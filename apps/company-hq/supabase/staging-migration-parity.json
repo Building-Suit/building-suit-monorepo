@@ -265,6 +265,15 @@
       "phase": "public-discovery-mcp-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261108153026_hq_public_discovery_mcp.sql"
+    },
+    {
+      "file": "20261108180216_hq_public_research_trial_status.sql",
+      "bytes": 6858,
+      "md5": "26615bd8501e9dac222005d1094be1e5",
+      "sha256": "353ab6e3a6ed6bd94c114a642c67fa1d585afa3f7bee440ac173cdccbbb169cc",
+      "phase": "public-research-status-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261108180216_hq_public_research_trial_status.sql"
     }
   ]
 }

@@ -1,4 +1,17 @@
+export interface HqPublicResearchTrialPresentation {
+  skillFileId: string | null
+  eligible: boolean
+  qualified: boolean
+  trialId: string | null
+  taskId: string | null
+  status: 'active' | 'passed' | 'failed' | 'canceled' | null
+  receiptIssued: boolean
+  reviewComplete: boolean
+  bindingCurrent: boolean
+}
+
 export interface HqTrialPresentation {
+  publicResearch?: HqPublicResearchTrialPresentation
   agentId: string
   skillFileId: string | null
   eligible: boolean
@@ -8,7 +21,8 @@ export interface HqTrialPresentation {
   receiptIssued: boolean
   reviewComplete: boolean
 }
-export type HqTrialCommand = { action: 'qualify'; trialId: string }
+export type HqTrialCommand = { action: 'qualify' | 'qualify-public-research'; trialId: string }
+  | { action: 'start-public-research'; skillFileId: string }
 
 export interface HqAgentAvatar {
   body: 'female' | 'male'
