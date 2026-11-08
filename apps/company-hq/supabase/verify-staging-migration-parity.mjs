@@ -17,6 +17,8 @@ const failures = []
 // never asserts a hosted migration or authorizes deployment/merge.
 const compatibility = pending.filter(row => row.phase === 'worker-status-compatibility')
 const staffing = pending.filter(row => row.phase === 'staffing-approval-review-only')
+const taskEvidence = pending.filter(row => row.phase === 'task-evidence-context-review-only')
+if (taskEvidence.length > 1 || taskEvidence.some(row => row.file !== '20261108030332_hq_task_evidence_context.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'tooling/hq-agent-host/proposed-migrations/hq_task_evidence_context.sql')) failures.push('unknown task evidence context source')
 if (staffing.length > 1 || staffing.some(row => row.file !== '20261107231929_hq_staffing_approval_workflow.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown staffing preparation source')
 const trialContext = pending.filter(row => row.phase === 'trial-context-review-only')
 if (trialContext.length > 1 || trialContext.some(row => row.file !== '20261107201336_hq_supervised_trial_context_packet.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown trial context source')
@@ -56,7 +58,7 @@ const contract2Sources = [
   }
 ]
 if (phase1.length !== 1 || phase1.some(row => row.status !== 'approved-source-not-deployed' || !/^\d{14}_hq_worker_admission_fence\.sql$/.test(row.file))) failures.push('approved phase-1 fence inventory changed')
-if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length + resume.length + trialContext.length + staffing.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length + resume.length + trialContext.length + staffing.length + taskEvidence.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
 for (const [index,row] of phase2.entries()) {
   if (row.status !== 'source-only-live-approval-required' || row.file !== contract2Sources[index].file || row.proposal !== contract2Sources[index].proposal) failures.push('contract-2 source/order differs from reviewed proposals')
 }
@@ -76,7 +78,7 @@ for (const expected of pending) {
   if (expected.phase === 'admission-resume-review-only') continue
   const proposal = readFileSync(path.join(root, expected.proposal))
   const canonical = readFileSync(path.join(migrationsDir, expected.file))
-  if (['contract2-review-only', 'trial-delivery-review-only', 'trial-skills-review-only', 'worker-status-compatibility', 'trial-context-review-only', 'staffing-approval-review-only'].includes(expected.phase)) {
+  if (['contract2-review-only', 'trial-delivery-review-only', 'trial-skills-review-only', 'worker-status-compatibility', 'trial-context-review-only', 'staffing-approval-review-only', 'task-evidence-context-review-only'].includes(expected.phase)) {
     if (!canonical.equals(proposal)) failures.push('contract-2 canonical SQL differs from tested proposal')
     continue
   }
