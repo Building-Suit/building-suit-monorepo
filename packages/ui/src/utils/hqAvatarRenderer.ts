@@ -9,9 +9,12 @@ const parents = [-1, 0, 1, 1, 3, 4, 1, 6, 7, 0, 9, 10, 0, 12, 13]
 const attributes = ['POSITION', 'NORMAL', 'TEXCOORD_0', 'JOINTS_0', 'WEIGHTS_0'] as const
 const attributeSizes = [3, 3, 2, 4, 4]
 
-interface AvatarParts {
+interface AvatarRig {
   height: number
   pivots: Point[]
+}
+
+interface StudioAvatarParts extends AvatarRig {
   body: number
   bodyMasks: number[]
   skin: number[]
@@ -22,6 +25,8 @@ interface AvatarParts {
   clothes: number[]
   shoes: number[]
 }
+
+type AvatarParts = StudioAvatarParts | (AvatarRig & { minifigure: { meshes: number[]; height: number }[] })
 
 interface AvatarGlb {
   extras: { hqAvatar: AvatarParts }
@@ -129,6 +134,7 @@ async function loadPack(gl: WebGLRenderingContext, blob: Blob, signal: AbortSign
   const document = JSON.parse(new TextDecoder().decode(new Uint8Array(data, 20, jsonLength))) as AvatarGlb
   const { hqAvatar: parts } = document.extras
   if (parts.pivots.length !== parents.length || !Number.isFinite(parts.height) || parts.height <= 0) throw new Error('Invalid avatar rig')
+  if ('minifigure' in parts && (!Array.isArray(parts.minifigure) || !parts.minifigure.length)) throw new Error('Invalid minifigure collection')
   const contents = (index: number) => {
     const view = document.bufferViews[index]!
     return new Uint8Array(data, 28 + jsonLength + view.byteOffset, view.byteLength)
@@ -237,12 +243,14 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
           void loadPack(gl, asset, controller.signal).then(loaded => {
             if (controller.signal.aborted) deletePack(gl, loaded.buffers, loaded.textures)
             else { packs.set(appearance.body, loaded); onReady() }
-          }).catch(() => { /* The scene keeps its neutral placeholder if the asset is unavailable. */ })
+          }).catch(() => { /* The nameplate stays visible if the asset is unavailable. */ })
         }
         return null
       }
       const { parts } = pack
       const { pivots } = parts
+      // The roster's stable appearance slot selects a complete minifigure look.
+      const minifigure = 'minifigure' in parts ? parts.minifigure[appearance.hairstyle % parts.minifigure.length] : undefined
       const targetYaw = pose.yaw + (pose.mode === 'fishing' || pose.mode === 'lounging' ? 0 : Math.PI)
       const target = {
         walk: Number(pose.mode === 'walking' && !reduced), work: Number(pose.mode === 'working'),
@@ -265,13 +273,13 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
       const breath = reduced ? 0 : Math.sin(idleTime * 2.1 + offset)
       const seated = work + lounge
       const height = HQ_AGENT_RIG.height * HQ_AGENT_CHARACTER_SCALE * (appearance.body === 'female' ? 0.96 : 1)
-      const scale = height / parts.height
+      const scale = height / (minifigure?.height ?? parts.height)
       const hipHeight = (pivots[9]![1] + pivots[12]![1]) * .5 * scale
       const y = pose.y + Math.abs(stride) * .018 + breath * .004 - seated * (hipHeight - HQ_AGENT_RIG.hipY + .08)
       model(pose.x, y, pose.z, 0, 0, motion.yaw, scale, root)
       bend(pivots, 0, 0, stride * .035)
       bend(pivots, 1, lounge * -.35 + work * .11 + breath * .012, stride * -.022, stride * .07)
-      const headWidth = .94 + (appearance.seed >>> 28) * .008
+      const headWidth = minifigure ? 1 : .94 + (appearance.seed >>> 28) * .008
       bend(pivots, 2, lounge * .22 - work * .12 + breath * .016, 0, breath * .045 * (1 - seated), headWidth)
 
       for (const [side, shoulder, hip] of [[1, 3, 9], [-1, 6, 12]] as const) {
@@ -280,18 +288,19 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
         const swing = stride * side
         const armDrop = -Math.atan2(pivots[elbow]![0] - pivots[shoulder]![0], pivots[shoulder]![1] - pivots[elbow]![1]) + side * .09
         const typing = reduced ? 0 : Math.sin(idleTime * 10 + offset + side * 1.7) * .055
-        bend(pivots, shoulder, swing * .33 * armSwing - work * .41 - fish * .39 + lounge * .13, armDrop + side * (.08 * work + .10 * lounge))
-        bend(pivots, elbow, -.12 - work * (.35 + typing) - fish * (.46 + breath * .03) - lounge * .23 - Math.max(0, swing) * .20)
-        bend(pivots, wrist, work * (.16 + typing * .7))
-        bend(pivots, hip, -swing * .35 - work * 1.46 - lounge * 1.15, side * (.08 * seated))
+        const armPitch = swing * .33 * armSwing - work * .41 - fish * .39 + lounge * .13
+        bend(pivots, shoulder, minifigure ? armPitch - work * (.28 + typing) - fish * .20 : armPitch,
+          minifigure ? 0 : armDrop + side * (.08 * work + .10 * lounge))
+        // The molded arms swing at the shoulders and the hands stay in their sockets.
+        bend(pivots, elbow, minifigure ? 0 : -.12 - work * (.35 + typing) - fish * (.46 + breath * .03) - lounge * .23 - Math.max(0, swing) * .20)
+        bend(pivots, wrist, minifigure ? 0 : work * (.16 + typing * .7))
+        bend(pivots, hip, -swing * .35 - work * 1.46 - lounge * 1.15, minifigure ? 0 : side * (.08 * seated))
         bend(pivots, hip + 1, Math.max(0, -swing) * .57 + work * 1.44 + lounge * .62)
         bend(pivots, hip + 2, swing * .15 - lounge * .18 - Math.max(0, -swing) * .20)
       }
 
       const seed = appearance.seed
-      const outfit = seed % parts.clothes.length, shoes = (seed >>> 6) % parts.shoes.length
-      const hair = parts.hair[appearance.hairstyle % parts.hair.length]!
-      const hairTint = hairTints[(seed >>> 13) % hairTints.length]!
+      const coatTint = clothesTints[(seed >>> 8) % clothesTints.length]!
       gl.useProgram(program)
       gl.disable(gl.CULL_FACE)
       gl.depthMask(true)
@@ -301,12 +310,19 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
       gl.uniformMatrix4fv(uniforms.model, false, root)
       gl.uniformMatrix4fv(uniforms.joints, false, palette)
       for (const location of locations) gl.enableVertexAttribArray(location)
-      mesh(pack, parts.body, untinted, parts.skin[(seed >>> 3) % parts.skin.length], parts.bodyMasks[outfit * parts.shoes.length + shoes])
-      mesh(pack, parts.clothes[outfit]!, clothesTints[(seed >>> 8) % clothesTints.length]!)
-      mesh(pack, parts.shoes[shoes]!, untinted)
-      mesh(pack, parts.eyes, untinted, parts.eyeMaterials[(seed >>> 18) % parts.eyeMaterials.length])
-      mesh(pack, parts.brows[(seed >>> 23) % parts.brows.length]!, hairTint)
-      mesh(pack, hair, hairTint)
+      if (minifigure) {
+        for (const id of minifigure.meshes) mesh(pack, id, untinted)
+      } else if ('body' in parts) {
+        const outfit = seed % parts.clothes.length, shoes = (seed >>> 6) % parts.shoes.length
+        const hair = parts.hair[appearance.hairstyle % parts.hair.length]!
+        const hairTint = hairTints[(seed >>> 13) % hairTints.length]!
+        mesh(pack, parts.body, untinted, parts.skin[(seed >>> 3) % parts.skin.length], parts.bodyMasks[outfit * parts.shoes.length + shoes])
+        mesh(pack, parts.clothes[outfit]!, coatTint)
+        mesh(pack, parts.shoes[shoes]!, untinted)
+        mesh(pack, parts.eyes, untinted, parts.eyeMaterials[(seed >>> 18) % parts.eyeMaterials.length])
+        mesh(pack, parts.brows[(seed >>> 23) % parts.brows.length]!, hairTint)
+        mesh(pack, hair, hairTint)
+      }
       for (const location of locations) gl.disableVertexAttribArray(location)
 
       if (pose.mode === 'fishing') {

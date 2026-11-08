@@ -14,7 +14,7 @@ export function useHqAvatarAssets(roster: () => readonly HqAgentPresentation[]) 
         const body = agent.avatar?.body
         if (!body || requested.has(body) || !(agent.activity === 'working' || agent.activity === 'idle' || agent.cosmeticIdle)) continue
         requested.add(body)
-        void fetch(`/avatars/hq-${body}.glb`, { signal: pending.signal })
+        void fetch(`/avatars/hq-lego-${body}.glb`, { signal: pending.signal })
           .then(response => {
             if (!response.ok) throw new Error('Avatar pack unavailable')
             return response.blob()
@@ -22,7 +22,7 @@ export function useHqAvatarAssets(roster: () => readonly HqAgentPresentation[]) 
           .then(blob => {
             if (!pending.signal.aborted) assets.value = { ...assets.value, [body]: blob }
           })
-          .catch(() => { /* A missing asset leaves the scene placeholder available. */ })
+          .catch(() => { /* A missing asset leaves the employee nameplate available. */ })
       }
     }, { immediate: true })
   })

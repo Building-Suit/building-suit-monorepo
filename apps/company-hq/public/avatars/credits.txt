@@ -1,5 +1,13 @@
 Building Suit HQ avatar packs
 
+LEGO minifigures assembled from the LDraw Official Parts Library
+LDraw contributors, named in the GLB asset metadata
+CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+https://library.ldraw.org/
+https://library.ldraw.org/library/updates/complete.zip
+
+The LDraw parts were assembled, recolored, rigged, and converted to glTF.
+
 MakeHuman system assets, base morph targets, and default rig
 MakeHuman Community
 CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
