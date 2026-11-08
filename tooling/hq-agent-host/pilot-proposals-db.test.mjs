@@ -2,11 +2,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises'
+import { spawn, spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
-import { maintenanceGate, checkApiContract, REQUIRED_RPCS } from './maintenance.mjs'
+import { maintenanceGate, checkApiContract, checkStaffingContract, REQUIRED_RPCS } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
+import { validateStaffingProfileDraft } from './workforceRoster.mjs'
 import { fake } from './test-cli.mjs'
+import { checkApiContract as releasedContract } from './fixtures/maintenance-contract2-030f66ee.mjs'
 import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, validateTaskAckOutput, webAllowed } from './worker.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
@@ -1072,5 +1078,242 @@ test('activation source refuses existing working jobs without clearing the hold'
   await assert.rejects(()=>h.db.exec(sql),/HQ_ACTIVATION_WORK_UNSETTLED/)
   await h.db.exec('rollback')
   assert.deepEqual((await h.db.query('select paused,generation from hq_private.worker_admission_pauses')).rows,[{paused:true,generation:1}])
+ }finally{await h.db.close()}
+})
+
+async function staffingFixture() {
+ const h=await setup(true,true,true,true,true)
+ try {
+
+  await h.db.exec('reset role')
+  await h.db.exec("update hq_private.brain_files set source_version='1',parent_ids=array['1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'],name=file_id||'.md';")
+  await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+    values('staffing_dev_profile','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['staffing_dev_folder'],'Synthetic profile.md','text/markdown','1',false,true),
+    ('staffing_dev_skill','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['staffing_skills_folder'],'Synthetic skill.md','text/markdown','2',false,true),
+    ('staffing_model_policy','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'],'Workforce Operating Rules.md','text/markdown','1',false,true)`)
+  await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+    values('staffing_departments','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'],'Departments','application/vnd.google-apps.folder','1',false,true),
+    ('staffing_dev_folder','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['staffing_departments'],'Development','application/vnd.google-apps.folder','1',false,true),
+    ('staffing_skills_folder','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',array['staffing_dev_folder'],'Skills','application/vnd.google-apps.folder','1',false,true)`)
+  const pending=[...roster,{id:'AG-DEV-050',name:'Synthetic pending worker',role:'Worker',departmentKey:'development-maintenance',
+    profileFileId:'staffing_dev_profile',skillFileIds:['staffing_dev_skill'],lifecycle:'configured trial pending',model:'gpt-6.1-terra',effort:'medium',managerId:'AG-DEV-001',modelTier:'T1_WORKER'}]
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(pending)])
+  await h.db.exec('reset role');await h.db.exec(await readFile(new URL('20261107231929_hq_staffing_approval_workflow.sql',root),'utf8'))
+  return h
+ } catch(error) { await h.db.close(); throw error }
+}
+const syntheticHirePlan=()=>({agentId:'AG-DEV-099',name:'Synthetic hire',managerId:'AG-DEV-001',profileDraft:'---\nemployee_id: AG-DEV-099\nreports_to: AG-DEV-001\n---\n# Synthetic worker\nInternal bounded drafting only.\n## 5. Assigned skills\n- [[Departments/Development/Skills/Synthetic skill]]\n',
+ skills:[{fileId:'staffing_dev_skill',sourceVersion:'2'}],trialCriteria:'Each assigned skill needs actual execution, manager and independent same-artifact review.',resumeOriginal:true})
+async function staffingGap(h) {
+ await h.as('founder')
+ const title='Synthetic gap '+randomUUID().slice(0,8)
+ const snapshot=await h.rpc('hq_create_task',[title,'One internal development draft.','Draft only.','AG-DEV-001',randomUUID()])
+ const source=snapshot.tasks.find(t=>t.title===title)
+ let job=await h.claim();await delivery(h,staffingEntry(job,JSON.stringify({assigneeId:'AG-DEV-001',reason:'The existing head owns this internal request.',message:'@Employee 9 scope the internal draft.'})))
+ job=await h.claim();await delivery(h,staffingEntry(job,'','staffing-required'))
+ await h.as('worker');return{source,job:(await h.rpc('hq_worker_staffing_claim',[worker])).job}
+}
+const staffingEntry=(job,reply,error=null)=>({job:{id:job.id,lease_token:job.lease_token},phase:'finished',reply,error,evidence:[]})
+
+test('dedicated Amaya plan → actual worker delivery → Steve review → one founder decision stops at unavailable writer',async()=>{
+ const h=await staffingFixture();try{
+  await h.as('worker')
+  const status=await h.rpc('hq_worker_release_status',[worker]);assert.equal(releasedContract(status),2);checkStaffingContract(status)
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_staffing_snapshot'),/HQ_FOUNDER_REQUIRED/)
+  await h.as('founder')
+  const snapshot=await h.rpc('hq_create_task',['Synthetic staffing gap','One internal development draft.','Draft only.','AG-DEV-001',randomUUID()])
+  const source=snapshot.tasks.find(t=>t.title==='Synthetic staffing gap')
+  let j=await h.claim();await delivery(h,staffingEntry(j,JSON.stringify({assigneeId:'AG-DEV-001',reason:'Same-department head must scope it.',message:'@Employee 9 scope the internal draft.'})))
+  j=await h.claim();assert.equal(j.agent_id,'AG-DEV-001');await delivery(h,staffingEntry(j,'','staffing-required'))
+  assert.equal(await h.claim(),null,'old ordinary consumer must not claim dedicated staffing stages')
+  await h.as('worker');j=(await h.rpc('hq_worker_staffing_claim',[worker])).job
+  assert.equal(j.agent_id,'AG-HR-001');assert.equal(j.context.mode,'staffing-plan');validateJob(j)
+  const proposal=syntheticHirePlan()
+  const output=await fake([{type:'item.completed',item:{type:'agent_message',text:JSON.stringify(proposal)}},{type:'turn.completed'}],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)))
+  assert.equal(validateStaffingProfileDraft(JSON.parse(output.reply),j.context.staffing.departmentKey,await h.rpc('hq_worker_roster_sources',[worker])),true)
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,modelExecutionEvidence:output.modelExecutionEvidence}
+  await delivery(h,entry);await delivery(h,entry)
+  j=(await h.rpc('hq_worker_staffing_claim',[worker])).job;assert.equal(j.agent_id,'AG-CEO-001');assert.equal(j.context.mode,'staffing-review');validateJob(j)
+  const reviewEntry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:JSON.stringify({accepted:true,summary:'Independent check of the exact bounded staffing plan.',artifactDigest:j.context.artifact.digest}),error:null,evidence:[]}
+  await delivery(h,reviewEntry)
+  await h.as('founder');let staffing=await h.rpc('hq_staffing_snapshot')
+  const row=staffing.workflows[0];assert.equal(row.status,'approval-required');assert.equal(row.plan.agentId,proposal.agentId)
+  assert.equal(row.plan.modelPolicy.model,'gpt-6.1-terra');assert.equal(row.plan.reviewerId,'AG-HR-003')
+  const key=randomUUID(),args=[row.planId,row.digest,'approved',true,key]
+  const decision=await h.rpc('hq_decide_staffing_plan',args)
+  assert.equal(decision.workflows[0].status,'publication-blocked');assert.equal(decision.workflows[0].blocker,'canonical-writer-setup-required')
+  assert.deepEqual(await h.rpc('hq_decide_staffing_plan',args),decision)
+  await assert.rejects(()=>h.rpc('hq_decide_staffing_plan',[row.planId,row.digest,'rejected',false,key]),/HQ_REQUEST_KEY_REUSED/)
+  await assert.rejects(()=>h.rpc('hq_decide_staffing_plan',[row.planId,row.digest,'approved',true,randomUUID()]),/HQ_STAFFING_DECISION_CONFLICT/)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.agent_roster')).rows[0].n,11)
+  assert.equal((await h.db.query('select status from public.hq_business_tasks where id=$1',[source.id])).rows[0].status,'blocked')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.staffing_decisions')).rows[0].n,1)
+  await assert.rejects(()=>h.db.exec("update hq_private.staffing_plans set digest=repeat('a',64)"),/IMMUTABLE/)
+ }finally{await h.db.close()}
+})
+
+test('staffing malformed model JSON settles durably, preserves failed history and never replays inference',async()=>{
+ const h=await staffingFixture();try{
+  for(const reply of ['[]',String.raw`{"profileDraft":"\u0000"}`,'1e1000000','not JSON']){
+   const {job}=await staffingGap(h);assert.equal(job.context.mode,'staffing-plan')
+   let invocations=0
+   const output=await fake([{type:'item.completed',item:{type:'agent_message',text:reply}},{type:'turn.completed'}],async config=>{invocations++;return invokeCodex({...config,id:worker},job,[],AbortSignal.timeout(5000))})
+   const entry=staffingEntry(job,output.reply);let written
+   await delivery(h,entry,value=>{written=value});await delivery(h,entry)
+   assert.equal(invocations,1);assert.equal(written.phase,'delivered');assert.equal(written.reply,'')
+   await h.db.exec('reset role')
+   const row=(await h.db.query('select status,error from public.hq_agent_jobs where id=$1',[job.id])).rows[0]
+   assert.deepEqual(row,{status:'blocked',error:'staffing-plan-invalid'})
+  }
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.staffing_plans')).rows[0].n,0)
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.workforce_qualification_receipts')).rows[0].n,0)
+ }finally{await h.db.close()}
+})
+
+test('staffing input drift and cancellation cannot attach a late result, approve changed scope or retain a working lease',async()=>{
+ const h=await staffingFixture();try{
+  const cases=[
+   {change:async source=>h.db.query("update public.hq_business_tasks set brief='Changed scope' where id=$1",[source.id]),restore:()=>{}},
+   {change:async source=>h.db.query('update public.hq_business_tasks set error=null where id=$1',[source.id]),restore:()=>{},expected:'staffing-source-task-unavailable'},
+   ...['profile_source_9','profile_source_3','staffing_model_policy','staffing_dev_skill'].map(id=>({
+    change:()=>h.db.query("update hq_private.brain_files set source_version='3' where file_id=$1",[id]),
+    restore:()=>h.db.query('update hq_private.brain_files set source_version=$1 where file_id=$2',[id==='staffing_dev_skill'?'2':'1',id]),
+   })),
+  ]
+  for(const item of cases){
+   const {source,job}=await staffingGap(h);assert.ok(job)
+   await h.db.exec('reset role');await item.change(source)
+   let delivered;await delivery(h,staffingEntry(job,JSON.stringify(syntheticHirePlan())),value=>{delivered=value})
+   assert.equal(delivered.phase,'delivered')
+   await h.db.exec('reset role')
+   assert.deepEqual((await h.db.query('select status,error from public.hq_agent_jobs where id=$1',[job.id])).rows[0],{status:'blocked',error:item.expected??'staffing-binding-stale'})
+   await item.restore()
+  }
+  const {source,job}=await staffingGap(h)
+  await h.as('founder');await h.rpc('hq_cancel_task',[source.id])
+  const entry=staffingEntry(job,JSON.stringify(syntheticHirePlan()))
+  assert.equal((await delivery(h,entry)).discarded,true);assert.equal((await delivery(h,entry)).discarded,true)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query("select count(*)::int n from public.hq_agent_jobs where task_id=$1 and status='working'",[job.context.task.id])).rows[0].n,0)
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.staffing_plans')).rows[0].n,0)
+ }finally{await h.db.close()}
+})
+
+test('staffing proof is separate from the exact released ordinary proof and direct old admissions cannot obtain a new-kind lease',async()=>{
+ const h=await staffingFixture();try{
+  await h.as('worker');let status=await h.rpc('hq_worker_release_status',[worker]);assert.equal(releasedContract(status),2);checkStaffingContract(status)
+  await h.db.exec('reset role');await h.db.exec('revoke execute on function hq_private.worker_staffing_claim(uuid) from authenticated')
+  await h.as('worker');status=await h.rpc('hq_worker_release_status',[worker]);assert.equal(releasedContract(status),2)
+  assert.throws(()=>checkStaffingContract(status),/schema-incompatible/)
+  await h.db.exec('reset role');await h.db.exec('grant execute on function hq_private.worker_staffing_claim(uuid) to authenticated')
+  const {job}=await staffingGap(h)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.staffing_claim_fences')).rows[0].n,0)
+  // New claims require an exact one-use transaction row, even if a stale
+  // selector or an owner fixture attempts a working transition directly.
+  await h.db.query("update public.hq_agent_jobs set status='blocked',error='worker-interrupted',completed_at=clock_timestamp() where id=$1",[job.id])
+  const syntheticId=randomUUID()
+  await h.db.query(`insert into public.hq_agent_jobs(id,conversation_id,founder_message_id,founder_user_id,agent_id,request_key,kind,task_id,attempt)
+    select $1,conversation_id,founder_message_id,founder_user_id,agent_id,request_key,'staffing-plan',task_id,1 from public.hq_agent_jobs where id=$2`,[syntheticId,job.id])
+  const result=await h.db.query("update public.hq_agent_jobs set status='working',worker_id=$1,lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '300 seconds',started_at=clock_timestamp() where id=$2 returning id",[worker,syntheticId])
+  assert.deepEqual(result.rows,[])
+  assert.deepEqual((await h.db.query('select status,lease_token from public.hq_agent_jobs where id=$1',[syntheticId])).rows[0],{status:'queued',lease_token:null})
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_worker_staffing_claim',[worker]),/HQ_WORKER_REQUIRED/)
+  await h.as('worker');await assert.rejects(()=>h.db.query('select * from hq_private.staffing_claim_fences'),/permission denied/)
+ }finally{await h.db.close()}
+})
+
+/** Run the exact released five modules over IPC against the disposable DB.
+ * No TCP/WebSocket/provider/model access, real credentials or runtime hotpatch. */
+async function releasedRecovery(h,job,phase,reply='') {
+ const directory=await mkdtemp(join(tmpdir(),'hq-released-recovery-')),state=join(directory,'state')
+ const {mkdir}=await import('node:fs/promises');await mkdir(state,{mode:0o700})
+ const baseline='030f66ee127c7a5821745fac7c8f63a1c7631ed4'
+ for(const name of ['worker.mjs','maintenance.mjs','departmentWorkflow.mjs','workforceRoster.mjs','brainPublisher.mjs']){
+  const result=spawnSync('git',['show',baseline+':tooling/hq-agent-host/'+name],{cwd:fileURLToPath(new URL('../../',import.meta.url)),encoding:'utf8',maxBuffer:1048576})
+  assert.equal(result.status,0,result.stderr);await writeFile(join(directory,name),result.stdout,{mode:0o600})
+ }
+ const target=join(state,job.id+'.json')
+ await writeFile(target,JSON.stringify({version:3,project:'https://dpruoncalmwicrqhqelu.supabase.co',worker_id:worker,
+  job:{id:job.id,lease_token:job.lease_token},phase,reply,error:null,evidence:[],modelBindingEvidence:null,modelExecutionEvidence:null}),{mode:0o600})
+ await writeFile(join(directory,'recovery.mjs'),`
+import {start} from './worker.mjs';
+const waiting=new Map();let sequence=0;
+process.on('message',m=>{const p=waiting.get(m.id);if(p){waiting.delete(m.id);m.error?p.reject(new Error(m.error)):p.resolve(m.value)}});
+const api={access:async()=> 'synthetic-access',onToken(){},stop(){},rpc(name,args){return new Promise((resolve,reject)=>{const id=++sequence;waiting.set(id,{resolve,reject});process.send({id,name,args})})}};
+globalThis.WebSocket=class extends EventTarget{static OPEN=1;readyState=1;constructor(){super();setTimeout(()=>this.dispatchEvent(new Event('open')),5)}close(){this.readyState=3}send(raw){const f=JSON.parse(raw);if(f.event==='phx_join')setTimeout(()=>{for(const value of [{topic:f.topic,ref:f.ref,event:'phx_reply',payload:{status:'ok'}},{topic:f.topic,event:'system',payload:{status:'ok',extension:'system',message:'Replication connection established'}}])this.dispatchEvent(new MessageEvent('message',{data:JSON.stringify(value)}))},5)}};
+await start({api,roster:{sync:async()=>({count:11})},brain:async()=>{process.send({forbidden:true});throw Error('inference-must-not-replay')},invoke:async()=>{process.send({forbidden:true});throw Error('inference-must-not-replay')}});
+`,{mode:0o600})
+ const child=spawn(process.execPath,[join(directory,'recovery.mjs')],{stdio:['ignore','pipe','pipe','ipc'],env:{PATH:process.env.PATH,LANG:'C.UTF-8',
+  HQ_SUPABASE_URL:'https://dpruoncalmwicrqhqelu.supabase.co',HQ_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fixture',HQ_WORKER_ID:worker,
+  HQ_WORKER_EMAIL:'worker@example.invalid',HQ_WORKER_PASSWORD:'x'.repeat(24),HQ_WORKER_STATE_DIR:state}})
+ let output='',errorOutput='',forbidden=0;const calls=[];const requests=new Set()
+ child.stdout.on('data',v=>{output+=v});child.stderr.on('data',v=>{errorOutput+=v})
+ child.on('message',message=>{if(message.forbidden){forbidden++;return}const request=(async()=>{
+  try{
+   assert.ok(['hq_worker_presence','hq_worker_claim','hq_worker_finish_v4','hq_worker_release_status'].includes(message.name),message.name)
+   calls.push(message.name);await h.as('worker')
+   const value=await h.rpc(message.name,Object.values(message.args).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))
+   if(child.connected)child.send({id:message.id,value})
+  }catch(error){if(child.connected)child.send({id:message.id,error:error.message})}
+ })();requests.add(request);void request.finally(()=>requests.delete(request))})
+ const exit=new Promise(resolve=>child.once('exit',(code,signal)=>resolve({code,signal})))
+ try{
+  let journal
+  for(let count=0;count<200;count++){
+   journal=JSON.parse(await readFile(target,'utf8'))
+   if(journal.phase==='delivered'&&calls.includes('hq_worker_claim'))break
+   if(child.exitCode!==null)break
+   await new Promise(done=>setTimeout(done,25))
+  }
+  assert.equal(journal.phase,'delivered',output+errorOutput)
+  child.kill('SIGTERM')
+  let deadline
+  const result=await Promise.race([exit,new Promise((_,reject)=>{deadline=setTimeout(()=>reject(Error('released-recovery-stop-timeout')),3000)})]).finally(()=>clearTimeout(deadline))
+  await Promise.all([...requests]);assert.equal(forbidden,0)
+  assert.equal(result.code,0,output+errorOutput)
+  assert.equal(journal.reply,'');assert.equal(journal.error,null)
+  assert.equal(calls.filter(name=>name==='hq_worker_finish_v4').length,phase==='delivered'?0:1)
+  assert.doesNotMatch(output+errorOutput,/inference-must-not-replay/)
+  return journal
+ }finally{if(child.exitCode===null){child.kill('SIGKILL');await exit}await rm(directory,{recursive:true,force:true})}
+}
+
+test('exact released worker recovers finished/started staffing journals through unchanged v4 and skips delivered records',async()=>{
+ const h=await staffingFixture();try{
+  const {job}=await staffingGap(h)
+  await releasedRecovery(h,job,'finished',JSON.stringify(syntheticHirePlan()))
+  await h.as('worker');const review=(await h.rpc('hq_worker_staffing_claim',[worker])).job
+  assert.equal(review.context.mode,'staffing-review')
+  await releasedRecovery(h,review,'started')
+  await h.db.exec('reset role')
+  assert.deepEqual((await h.db.query('select status,error from public.hq_agent_jobs where id=$1',[review.id])).rows[0],{status:'blocked',error:'worker-interrupted'})
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.staffing_plans')).rows[0].n,0)
+  await releasedRecovery(h,review,'delivered')
+ }finally{await h.db.close()}
+})
+
+test('staffing reviewer binding rejects self-review and drift while preserving genuinely reviewed legacy receipts',async()=>{
+ const skill='staffing_legacy_skill',{h,configured}=await trialSetup([skill]);try{
+  await h.db.exec('reset role');await h.db.exec("update hq_private.brain_files set source_version='1'")
+  const legacy=await passSkillTrial(h,skill)
+  await h.db.exec('reset role')
+  const before=(await h.db.query('select receipt_id,binding_digest,host_execution_id from hq_private.workforce_qualification_receipts')).rows
+  for(const file of ['20261105171608_hq_office_observations.sql','20261107133124_hq_worker_status_compatibility.sql','20261107231929_hq_staffing_approval_workflow.sql'])await h.db.exec(await readFile(new URL(file,root),'utf8'))
+  assert.equal((await h.db.query("select hq_private.workforce_skill_evidence_valid('AG-HR-002',$1) ok",[skill])).rows[0].ok,true)
+  await h.as('founder');await h.rpc('hq_issue_workforce_qualification',[legacy.trialId])
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-HR-003'?{...a,skillFileIds:[skill]}:a))])
+  await h.db.exec('reset role');const count=(await h.db.query('select count(*)::int n from public.hq_business_tasks')).rows[0].n
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_begin_supervised_worker_trial',['AG-HR-003',skill,randomUUID()]),/HQ_TRIAL_REVIEWER_UNAVAILABLE/)
+  await h.db.exec('reset role');assert.equal((await h.db.query('select count(*)::int n from public.hq_business_tasks')).rows[0].n,count)
+  await h.as('founder');const fresh=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+  await h.db.exec('reset role');await h.db.exec("update hq_private.brain_files set source_version='2' where file_id='profile_source_3'")
+  assert.equal(await h.claim(),null)
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_workforce_qualification',[fresh.trialId]),/HQ_TRIAL_REVIEWER_UNAVAILABLE/)
+  await h.db.exec('reset role')
+  assert.deepEqual((await h.db.query('select receipt_id,binding_digest,host_execution_id from hq_private.workforce_qualification_receipts')).rows,before)
+  assert.equal((await h.db.query("select hq_private.workforce_skill_evidence_valid('AG-HR-002',$1) ok",[skill])).rows[0].ok,true)
  }finally{await h.db.close()}
 })

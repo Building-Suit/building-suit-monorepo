@@ -37,7 +37,7 @@ export interface HqAgentJob {
   startedAt: string | null
   completedAt: string | null
   error: string | null
-  kind?: 'conversation-hr' | 'conversation-ceo' | 'conversation-intake' | 'task-route' | 'task-ack' | 'task-start' | 'task-work' | 'head-review' | 'ceo-review' | 'task-report' | 'lesson-extract' | 'lesson-review'
+  kind?: 'conversation-hr' | 'conversation-ceo' | 'conversation-intake' | 'task-route' | 'task-ack' | 'task-start' | 'task-work' | 'head-review' | 'ceo-review' | 'task-report' | 'lesson-extract' | 'lesson-review' | 'staffing-plan' | 'staffing-review'
   founderMessageId?: string | null
   recoveryOf?: string | null
 }
@@ -141,7 +141,7 @@ export function parseHqAgentSnapshot(value: unknown): HqAgentSnapshot | null {
     if (!entry || !id(entry.id) || seenJobs.has(String(entry.id)) || !agent(entry.agentId) || !['queued', 'working', 'completed', 'blocked'].includes(String(entry.status))
       || !date(entry.createdAt) || !nullable(entry.startedAt, date) || !nullable(entry.completedAt, date)
       || !(entry.error === null || typeof entry.error === 'string' && /^[a-z-]{1,80}$/.test(entry.error))) return null
-    if (entry.kind !== undefined && !['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'task-work', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review'].includes(String(entry.kind))) return null
+    if (entry.kind !== undefined && !['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'task-work', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review', 'staffing-plan', 'staffing-review'].includes(String(entry.kind))) return null
     if (entry.founderMessageId !== undefined && !nullable(entry.founderMessageId, id)) return null
     if (entry.recoveryOf !== undefined && !nullable(entry.recoveryOf, id)) return null
     seenJobs.add(String(entry.id))

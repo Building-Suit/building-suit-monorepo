@@ -56,3 +56,14 @@ test('presentation negotiation cannot hide malformed data or leaked worker autho
     assert.throws(() => hqAgentSnapshot(input, request), error => error.statusCode === 503)
   }
 })
+
+test('staffing kinds require explicit capability while old tabs retain ordinary progress and status', () => {
+  const input = snapshot(); input.jobs[0].kind = 'staffing-plan'
+  const legacy = hqAgentSnapshot(input, event('1'))
+  assert.equal(legacy.jobs[0].kind, undefined)
+  assert.equal(legacy.jobs[0].status, input.jobs[0].status)
+  assert.equal(legacy.jobs[0].founderMessageId, input.jobs[0].founderMessageId)
+  const capable = event('1'); capable.headers.set('x-hq-staffing', '1'); capable.node.req.headers['x-hq-staffing'] = '1'
+  assert.equal(hqAgentSnapshot(input, capable).jobs[0].kind, 'staffing-plan')
+  assert.equal(input.jobs[0].kind, 'staffing-plan')
+})

@@ -6,7 +6,7 @@ import { connect } from 'node:net'
 import { mkdtemp, copyFile, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { REQUIRED_RPCS } from './maintenance.mjs'
+import { REQUIRED_RPCS, STAFFING_RPCS } from './maintenance.mjs'
 
 const pause = ms => new Promise(done => setTimeout(done, ms))
 async function until(check) {
@@ -21,10 +21,11 @@ async function fixture(t, extra = {}) {
   await writeFile(join(root, 'manifest.json'), JSON.stringify({ sha }))
   await copyFile(new URL('workforceRoster.mjs', import.meta.url), join(root, 'workforceRoster.mjs'))
   await writeFile(join(root, 'brainPublisher.mjs'), 'export const createBrainPublisher = () => ({})')
+  const staffingApi = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:STAFFING_RPCS}
   const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
-const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}
+const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}, staffingApi = ${JSON.stringify(staffingApi)}
 let activeJobs = 0, taskAckDelivered = false
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
@@ -33,11 +34,12 @@ globalThis.fetch = async (url, options = {}) => {
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
     throw Error('privileged-openapi-must-not-be-requested')
-  } else if (url.endsWith('/hq_worker_release_status')) { body = {api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
+  } else if (url.endsWith('/hq_worker_release_status')) { body = {staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
   else if (url.endsWith('/hq_worker_pending_lessons')) body = []
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
   else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(process.env.FIXTURE_TASK_ACK){if(receipt.p_reply!==''||receipt.p_error!=='task-ack-mention-required')throw Error('task-ack-failure-missing');await appendFile(root+'/ack-receipt.json',JSON.stringify(receipt));taskAckDelivered=true}else{if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence))} await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
+  else if (url.endsWith('/hq_worker_staffing_claim')) { await appendFile(root + '/events', 'staffing-dispatch\\n'); if(process.env.FIXTURE_STAFFING_CLAIM_DELAY)while(!await exists(root+'/settle-staffing'))await wait(10); if(process.env.FIXTURE_STAFFING_CLAIM_ERROR){status=503;body={}}else body={job:null} }
   else if (url.endsWith('/hq_worker_claim')) {
     await appendFile(root + '/events', 'claim\\n')
     if (process.env.FIXTURE_CLAIM_ERROR) { status = 503; body = {} }
@@ -229,4 +231,23 @@ test('candidate without atomic trial delivery capability stays paused before any
   assert.equal((await f.control('status')).ready, false)
   assert.equal((await f.control('resume')).error, 'maintenance-unavailable')
   assert.equal(await f.events(), '')
+})
+
+
+test('staffing claims share the real drain barrier and an uncertain staffing outcome poisons admission',async t=>{
+ const f=await fixture(t,{FIXTURE_STAFFING_CLAIM_DELAY:'1'})
+ await writeFile(join(f.root,'settle'),'')
+ await f.control('resume')
+ await until(async()=>(await f.events()).includes('staffing-dispatch'))
+ await f.control('drain');assert.equal((await f.control('status')).busy,1)
+ await writeFile(join(f.root,'settle-staffing'),'')
+ await until(async()=>(await f.control('status')).busy===0)
+ assert.equal(await f.events(),'claim\nstaffing-dispatch\n')
+ assert.equal((await f.control('status')).paused,true)
+ const failed=await fixture(t,{FIXTURE_STAFFING_CLAIM_ERROR:'1'})
+ await writeFile(join(failed.root,'settle'),'');await failed.control('resume')
+ await until(async()=>(await failed.control('status')).uncertain===true)
+ assert.equal((await failed.control('status')).paused,true)
+ assert.match(await readFile(join(failed.state,'maintenance-uncertain'),'utf8'),/reconcile/)
+ assert.equal(await failed.events(),'claim\nstaffing-dispatch\n')
 })

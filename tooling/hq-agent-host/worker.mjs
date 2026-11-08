@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createServer } from 'node:net'
-import { maintenanceGate, checkApiContract } from './maintenance.mjs'
+import { maintenanceGate, checkApiContract, checkStaffingContract } from './maintenance.mjs'
 /** Private, sequential HQ queue consumer. No inbound listener or idle work polling. */
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
@@ -10,7 +10,7 @@ import { homedir, tmpdir } from 'node:os'
 import { delimiter, isAbsolute, join, resolve } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { createWorkforceRoster, managerForAgent, modelTierForAgent } from './workforceRoster.mjs'
+import { createWorkforceRoster, managerForAgent, modelTierForAgent, validateStaffingProfileDraft } from './workforceRoster.mjs'
 import { createBrainPublisher } from './brainPublisher.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 
@@ -282,7 +282,7 @@ function meetingResponse(job) {
 }
 
 export function validateJob(job) {
-  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'trial-start', 'task-work', 'worker-trial', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review']
+  const modes = ['conversation-hr', 'conversation-ceo', 'conversation-intake', 'task-route', 'task-ack', 'task-start', 'trial-start', 'task-work', 'worker-trial', 'head-review', 'ceo-review', 'task-report', 'lesson-extract', 'lesson-review', 'staffing-plan', 'staffing-review']
   requireValue(record(job) && UUID.test(job.id) && UUID.test(job.conversation_id)
     && /^AG-[A-Z]+-[0-9]{3}$/.test(job.agent_id) && UUID.test(job.lease_token)
     && typeof job.prompt === 'string' && job.prompt.trim() && Buffer.byteLength(job.prompt) <= 32_000
@@ -291,6 +291,9 @@ export function validateJob(job) {
   requireValue(agent?.id === job.agent_id && modes.includes(job.context.mode)
     && /^gpt-[A-Za-z0-9.-]{1,70}$/.test(agent.model || '') && ['minimal', 'low', 'medium', 'high', 'xhigh'].includes(agent.effort)
     && DRIVE_ID.test(agent.profileFileId || ''), 'invalid-job-role')
+  if (job.context.mode === 'staffing-plan') requireValue(job.agent_id === 'AG-HR-001' && agent.modelTier === 'T2_HEAD' && record(job.context.staffing), 'invalid-job-role')
+  if (job.context.mode === 'staffing-review') requireValue(job.agent_id === 'AG-CEO-001' && agent.modelTier === 'T3_EXEC'
+    && record(job.context.staffing) && UUID.test(job.context.artifact?.id || '') && /^[0-9a-f]{64}$/.test(job.context.artifact?.digest || ''), 'invalid-job-role')
   if (job.context.mode === 'conversation-ceo') {
     requireValue(job.agent_id === 'AG-CEO-001' && job.context.predecessor?.agentId === 'AG-HR-001'
       && job.context.predecessor?.kind === 'conversation-hr' && typeof job.context.predecessor.text === 'string'
@@ -316,6 +319,8 @@ export function validateJob(job) {
 }
 
 export function stageInstructions(job) {
+  if (job.context.mode === 'staffing-plan') return 'As Amaya, prepare the single concrete T1 hire proposal in context.task.brief for Steve to review independently. Use only the existing department, manager, canonical skills and current model policy supplied in context.staffing and current_brain. Return the exact bounded JSON requested in that brief. Include the complete proposed profile. Do not invent source revisions, permissions, tools, departments or completed actions. The founder has not approved the hire. Canonical publication is unavailable until explicit writer setup; no hire, qualification, activation or task resumption has occurred. Incorporate any exact prior Steve correction. No external tools or actions are permitted.'
+  if (job.context.mode === 'staffing-review') return 'As Steve, independently review the exact Amaya staffing proposal in context.artifact against the original task, existing department and current canonical skills/model policies. Require a complete bounded T1 profile, per-skill actual supervised trial, same-artifact manager and independent review, and no broadened tools, external actions, spending or authority. Return ONLY JSON {"accepted":boolean,"summary":"specific findings/corrections, nonempty and at most 8000 UTF-8 bytes","artifactDigest":"the unchanged context.artifact.digest"}. Approval here only prepares a proposal for the founder; it is not the founder decision or proof of a completed hire. No external tools or actions are permitted.'
   if (meetingResponse(job)) {
     return `Respond to the founder as the actual named employee ${job.context.agent.name} (${job.agent_id}), using your supplied current role profile and this meeting context. This is conversation only, not research, task execution, delegation or approval. Return ONLY JSON {"message":"your concise actual reply","task":null}. Answer from supplied context, distinguish uncertainty and ask for clarification when the meeting context requires it. Do not inspect external sources, create work, impersonate another employee or claim unobserved actions. Configuration does not establish research qualification. Keep message at most 4000 characters in the founder language.`
   }
@@ -941,6 +946,7 @@ export async function start(adapters = {}) {
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
     checkApiContract(status)
+    checkStaffingContract(status)
     return status
   }
   if (process.argv.includes('--release-preflight')) {
@@ -1071,6 +1077,14 @@ export async function start(adapters = {}) {
       } catch { log('skill-observation-unavailable') }
       controller.signal.throwIfAborted()
       const output = await invoke(config, job, documents, controller.signal)
+      if (job.context.mode === 'staffing-plan') {
+        let proposal
+        try { proposal = JSON.parse(output.reply) } catch { throw problem('staffing-profile-invalid') }
+        const sources = await api.rpc('hq_worker_roster_sources', { p_worker_id: config.id })
+        controller.signal.throwIfAborted()
+        try { validateStaffingProfileDraft(proposal, job.context.staffing.departmentKey, sources) }
+        catch { throw problem('staffing-profile-invalid') }
+      }
       validateTaskAckOutput(job, output.reply)
       entry.reply = output.reply; entry.evidence = output.evidence; entry.modelBindingEvidence = output.modelBindingEvidence
       entry.modelExecutionEvidence = output.modelExecutionEvidence
@@ -1105,7 +1119,15 @@ export async function start(adapters = {}) {
       if (rosterDirty) { rosterDirty = false; await roster.sync(config.id, AbortSignal.timeout(180_000)) }
       if (!gate.snapshot().paused) await publishLessons()
       while (connected && !stopping && !gate.snapshot().paused) {
-        const result = await api.rpc('hq_worker_claim', workerClaimInput(config.id))
+        // Preserve ordinary queue ordering/expired-lease cleanup. Only an idle,
+        // still-admitting drain may begin a separate staffing claim.
+        let result = await api.rpc('hq_worker_claim', workerClaimInput(config.id))
+        requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
+        if (!result.job && !stopping && !gate.snapshot().paused) {
+          const staffing = await api.rpc('hq_worker_staffing_claim', { p_worker_id: config.id })
+          requireValue(record(staffing) && Object.hasOwn(staffing, 'job'), 'invalid-claim')
+          if (staffing.job) result = staffing
+        }
         requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
         if (!result.job) { wakeOnce(result.next_wake_at); break }
         await work(result.job)

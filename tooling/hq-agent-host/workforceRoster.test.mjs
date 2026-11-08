@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { generateKeyPairSync } from 'node:crypto'
 import { brainReader } from './worker.mjs'
-import { BRAIN_ROOT, createWorkforceRoster } from './workforceRoster.mjs'
+import { BRAIN_ROOT, createWorkforceRoster, validateStaffingProfileDraft } from './workforceRoster.mjs'
 import { assessDepartmentCapacity, workerExecutionBlock } from './departmentWorkflow.mjs'
 
 const profiles = [
@@ -50,6 +50,21 @@ function fixture(change = () => {}) {
   }
   return { roster: createWorkforceRoster(adapters), calls, adapters, files, documents, paths }
 }
+
+test('unpublished staffing profiles use the existing identity and exact in-department assignment parser without publication', () => {
+  const f = fixture(), path = 'Departments/Development/Skills/assigned/SKILL.md'
+  const profileDraft = '---\nemployee_id: AG-DEV-099\nreports_to: AG-DEV-001\n---\n# Synthetic profile\n## 5. Assigned skills\n- [[Departments/Development/Skills/assigned/SKILL]]\n'
+  const proposal = { agentId: 'AG-DEV-099', name: 'Synthetic worker', managerId: 'AG-DEV-001', profileDraft, skills: [{ fileId: f.paths.get(path), sourceVersion: '1' }] }
+  assert.equal(validateStaffingProfileDraft(proposal, 'development-maintenance', { rootId: BRAIN_ROOT, files: f.files }), true)
+  for (const changed of [
+    { ...proposal, agentId: 'AG-SOC-099' }, { ...proposal, managerId: 'AG-HR-001' },
+    { ...proposal, profileDraft: profileDraft.replace('reports_to: AG-DEV-001', 'reports_to: AG-SOC-001') },
+    { ...proposal, skills: [] }, { ...proposal, profileDraft: profileDraft.replace('Development/Skills', 'Social/Skills') },
+    { ...proposal, profileDraft: profileDraft + '\n' + 'x'.repeat(16000) },
+    { ...proposal, profileDraft: profileDraft.replace('employee_id: AG-DEV-099', 'employee_id: AG-DEV-099\nemployee_id: AG-DEV-098') },
+  ]) assert.throws(() => validateStaffingProfileDraft(changed, 'development-maintenance', { rootId: BRAIN_ROOT, files: f.files }))
+  assert.equal(f.calls.length, 0)
+})
 
 test('cloud registry binds all ten identities, current models, exact skills and lifecycle without inventing qualification', async () => {
   const { roster, calls } = fixture()
