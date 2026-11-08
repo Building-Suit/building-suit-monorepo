@@ -40,6 +40,7 @@ create trigger hq_public_discovery_receipt_immutable before update or delete on 
 create table hq_private.public_discovery_deliveries (
   job_id uuid primary key references public.hq_agent_jobs(id),
   input_digest text not null check(input_digest ~ '^[0-9a-f]{64}$'),
+  job_result_digest text not null check(job_result_digest ~ '^[0-9a-f]{64}$'),
   result jsonb not null check(jsonb_typeof(result)='object' and octet_length(result::text)<=4096)
 );
 alter table hq_private.public_discovery_deliveries enable row level security;
@@ -93,13 +94,6 @@ revoke all on hq_private.public_discovery_claim_requests from public,anon,authen
 create function hq_private.public_discovery_requires_client(p_job public.hq_agent_jobs) returns boolean
 language sql stable security definer set search_path='' as $$
   select exists(select 1 from hq_private.public_discovery_tasks where task_id=p_job.task_id)
-    or (p_job.agent_id='AG-RES-002' and p_job.kind='task-work' and p_job.attempt=0
-      and not exists(select 1 from hq_private.workforce_trials where task_id=p_job.task_id)
-      -- Capability enrollment is durable evidence existence, not a cached grant.
-      -- Full current qualification is still revalidated in context construction.
-      and exists(select 1 from hq_private.workforce_qualification_receipts q
-        join hq_private.workforce_trials t on t.id=q.trial_id and t.purpose='public-research-tool-trial-v1'
-        where q.agent_id=p_job.agent_id))
 $$;
 revoke all on function hq_private.public_discovery_requires_client(public.hq_agent_jobs) from public,anon,authenticated,service_role;
 -- Old ordinary clients skip new tool-required work BEFORE leasing. The trigger
@@ -120,11 +114,6 @@ begin
   if not exists(select 1 from hq_private.public_discovery_claim_requests cr
     where cr.transaction_id=txid_current() and cr.worker_id=new.worker_id) then
     raise exception 'HQ_DISCOVERY_CLIENT_REQUIRED' using errcode='55000'; end if;
-  if new.kind='task-work' and new.agent_id='AG-RES-002' and new.attempt=0
-    and not exists(select 1 from hq_private.public_discovery_tasks where task_id=new.task_id) then
-    insert into hq_private.public_discovery_tasks(task_id,agent_id,binding_digest)
-      values(new.task_id,new.agent_id,hq_private.workforce_agent_binding_digest(new.agent_id));
-  end if;
   return new;
 end $$;
 revoke all on function hq_private.guard_public_discovery_claim() from public,anon,authenticated,service_role;
@@ -141,25 +130,36 @@ revoke all on function hq_private.workforce_enrich_claim_before_public_discovery
 create or replace function hq_private.workforce_enrich_claim(v jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare result jsonb:=hq_private.workforce_enrich_claim_before_public_discovery(v); j public.hq_agent_jobs;
-  policy hq_private.public_discovery_tasks; t hq_private.workforce_trials; context jsonb; binding text;
+  policy hq_private.public_discovery_tasks; t hq_private.workforce_trials; context jsonb; binding text; discovery_qualified boolean;
 begin
   if result->'job' is null or result->'job'='null'::jsonb then return result; end if;
   select * into j from public.hq_agent_jobs where id=(result->'job'->>'id')::uuid;
+  context:=result->'job'->'context';
+  if jsonb_typeof(context->'task')='object' then context:=jsonb_set(context,'{task,attempt}',to_jsonb(j.attempt),true); end if;
+  if j.kind='task-ack' and j.agent_id='AG-RES-001' and j.attempt=0
+    and not exists(select 1 from hq_private.workforce_trials where task_id=j.task_id) then
+    discovery_qualified:=hq_private.public_discovery_qualified('AG-RES-002');
+    context:=jsonb_set(context,'{roster}',coalesce((select jsonb_agg(case when entry->>'id'='AG-RES-002'
+      then entry||jsonb_build_object('publicDiscoveryQualified',discovery_qualified) else entry end order by ordinal)
+      from jsonb_array_elements(coalesce(context->'roster','[]'::jsonb)) with ordinality r(entry,ordinal)),'[]'::jsonb));
+  end if;
+  result:=jsonb_set(result,'{job,context}',context);
   select * into policy from hq_private.public_discovery_tasks where task_id=j.task_id;
   if policy.task_id is null then return result; end if;
-  context:=result->'job'->'context';
   if policy.trial_id is not null then
     select * into t from hq_private.workforce_trials where id=policy.trial_id;
     context:=jsonb_set(context,'{supervisedTrial}',coalesce(context->'supervisedTrial','{}'::jsonb)||jsonb_build_object(
       'scope','public-research-tool-trial-v1','toolPolicyId','exa-public-business-discovery-v1'));
   end if;
-  if j.agent_id='AG-RES-002' and j.kind='task-work' then
+  if j.agent_id='AG-RES-002' and j.kind in ('task-start','task-work') then
     binding:=hq_private.workforce_agent_binding_digest(j.agent_id);
     if binding is distinct from policy.binding_digest or (policy.trial_id is null and not hq_private.public_discovery_qualified(j.agent_id))
       or (policy.trial_id is not null and (t.status<>'active' or t.expires_at<=clock_timestamp() or t.binding_digest is distinct from binding)) then
       return hq_private.workforce_block_claim(j,'public-discovery-binding-stale'); end if;
-    context:=context||jsonb_build_object('publicDiscoveryPermit',jsonb_build_object('version',1,
-      'policyId','exa-public-business-discovery-v1','jobId',j.id,'agentId',j.agent_id,'bindingDigest',binding));
+    if j.kind='task-work' then
+      context:=context||jsonb_build_object('publicDiscoveryPermit',jsonb_build_object('version',1,
+        'policyId','exa-public-business-discovery-v1','jobId',j.id,'agentId',j.agent_id,'bindingDigest',binding));
+    end if;
   end if;
   context:=jsonb_set(context,'{task,attempt}',to_jsonb(j.attempt),true);
   context:=context||jsonb_build_object('publicDiscoveryEvidence',coalesce((select jsonb_agg(jsonb_build_object(
@@ -331,6 +331,15 @@ revoke all on function hq_private.public_discovery_invocation_valid(jsonb) from 
 -- A legacy finish v2/v3 cannot bypass atomic MCP proof ingestion after a new
 -- capable client leased the job. Only authenticated, lease-checked v4 creates
 -- this private transaction-local authorization, removed before returning.
+create function hq_private.public_discovery_policy_selected(p_reply text) returns boolean
+language plpgsql immutable set search_path='' as $$
+declare body jsonb;
+begin
+  body:=p_reply::jsonb;
+  return coalesce(jsonb_typeof(body)='object' and body ? 'publicDiscoveryPolicy',false);
+exception when others then return false;
+end $$;
+revoke all on function hq_private.public_discovery_policy_selected(text) from public,anon,authenticated,service_role;
 create table hq_private.public_discovery_finish_requests (
   job_id uuid primary key references public.hq_agent_jobs(id),
   worker_id uuid not null references hq_private.agent_workers(worker_id), transaction_id bigint not null
@@ -342,8 +351,10 @@ begin
   at:=position('if v_job.result_digest is not null then' in d);
   if at=0 then raise exception 'HQ_DISCOVERY_LEGACY_FINISH_SOURCE_MISMATCH'; end if;
   d:=substring(d from 1 for at-1)||$guard$
-  if exists(select 1 from hq_private.public_discovery_tasks p join public.hq_agent_jobs j on j.task_id=p.task_id
+  if (exists(select 1 from hq_private.public_discovery_tasks p join public.hq_agent_jobs j on j.task_id=p.task_id
     where j.id=p_job_id and j.kind='task-work' and j.agent_id=p.agent_id)
+    or exists(select 1 from public.hq_agent_jobs j where j.id=p_job_id and j.kind='task-ack'
+      and hq_private.public_discovery_policy_selected(p_reply)))
     and not exists(select 1 from hq_private.public_discovery_finish_requests f
       where f.job_id=p_job_id and f.worker_id=p_worker_id and f.transaction_id=txid_current()) then
     raise exception 'HQ_DISCOVERY_ATOMIC_FINISH_REQUIRED' using errcode='55000'; end if;
@@ -389,7 +400,8 @@ create or replace function hq_private.worker_finish_v4(p_job_id uuid,p_lease_tok
 language plpgsql security definer set search_path='' as $$
 declare j public.hq_agent_jobs; t hq_private.workforce_trials; policy hq_private.public_discovery_tasks;
   a public.hq_task_artifacts; old_receipt hq_private.public_discovery_receipts; prior_delivery hq_private.public_discovery_deliveries;
-  input_digest text; result jsonb; mcp jsonb; native jsonb; receipt uuid;
+  input_digest text; result jsonb; mcp jsonb; native jsonb; receipt uuid; ack_body jsonb;
+  selecting boolean:=false; selection_binding text; finish_reply text:=p_reply; finish_error text:=p_error;
 begin
   if hq_private.agent_worker_uid(p_worker_id) is null then raise exception 'HQ_WORKER_REQUIRED' using errcode='42501'; end if;
   perform pg_advisory_xact_lock(hashtextextended('hq-agent-queue',0));
@@ -401,9 +413,38 @@ begin
   select * into prior_delivery from hq_private.public_discovery_deliveries where job_id=j.id;
   if found then
     if prior_delivery.input_digest is distinct from input_digest or j.status not in ('completed','blocked')
-      or j.result_digest is distinct from encode(extensions.digest(jsonb_build_array(p_reply,p_error)::text,'sha256'),'hex') then
+      or j.result_digest is distinct from prior_delivery.job_result_digest then
       raise exception 'HQ_DISCOVERY_DELIVERY_CONFLICT' using errcode='PT409'; end if;
     return prior_delivery.result;
+  end if;
+  if p_error is null and j.kind in ('task-ack','task-start','task-route','conversation-intake') then
+    begin ack_body:=p_reply::jsonb; exception when others then ack_body:=null; end;
+    if jsonb_typeof(ack_body)='object' and ack_body ? 'publicDiscoveryPolicy' then
+      if j.kind<>'task-ack' or j.agent_id<>'AG-RES-001' or j.attempt<>0
+        or exists(select 1 from hq_private.workforce_trials where task_id=j.task_id)
+        or policy.task_id is not null
+        or ack_body->'publicDiscoveryPolicy' is distinct from '"exa-public-business-discovery-v1"'::jsonb
+        or ack_body->'delegateId' is distinct from '"AG-RES-002"'::jsonb
+        or (select count(*) from jsonb_object_keys(ack_body))<>3
+        or exists(select 1 from jsonb_object_keys(ack_body) k where k not in ('message','delegateId','publicDiscoveryPolicy'))
+        or not exists(select 1 from public.hq_agent_jobs parent where parent.id=j.depends_on and parent.task_id=j.task_id
+          and parent.founder_user_id=j.founder_user_id and parent.conversation_id=j.conversation_id
+          and parent.founder_message_id=j.founder_message_id and parent.agent_id='AG-CEO-001'
+          and parent.kind in ('task-route','conversation-intake') and parent.status='completed') then
+        raise exception 'HQ_DISCOVERY_SELECTION_INVALID' using errcode='22023'; end if;
+      selecting:=true;
+      select hq_private.workforce_agent_binding_digest(candidate.id) into selection_binding
+        from hq_private.agent_roster candidate join hq_private.agent_roster head on head.id=candidate.manager_id
+        where candidate.id='AG-RES-002' and candidate.enabled and candidate.model_tier='T1_WORKER' and candidate.manager_id=j.agent_id
+          and candidate.department_key='research-market-intelligence' and head.enabled and head.model_tier='T2_HEAD'
+          and head.department_key=candidate.department_key and hq_private.workforce_agent_assignable(head.id)
+          and hq_private.public_discovery_qualified(candidate.id);
+      if selection_binding is null then
+        -- A once-valid scoped reply can settle as BLOCKED after source drift.
+        -- Never downgrade it silently into an ordinary task or strand replay.
+        finish_reply:=''; finish_error:='public-discovery-binding-stale';
+      end if;
+    end if;
   end if;
   if jsonb_typeof(p_evidence) is distinct from 'array' or octet_length(p_evidence::text)>40000 then raise exception 'HQ_DISCOVERY_EVIDENCE_INVALID' using errcode='22023'; end if;
   if (select count(*) from jsonb_array_elements(p_evidence) e where e->>'tool'='mcp')>1 then raise exception 'HQ_DISCOVERY_EVIDENCE_INVALID' using errcode='22023'; end if;
@@ -413,15 +454,16 @@ begin
   if policy.task_id is not null and j.agent_id=policy.agent_id and j.kind='task-work' and j.attempt=0 and p_error is null and mcp is null then
     raise exception 'HQ_DISCOVERY_EVIDENCE_REQUIRED' using errcode='22023'; end if;
   if policy.task_id is not null and native<>'[]'::jsonb then raise exception 'HQ_DISCOVERY_NATIVE_EVIDENCE_FORBIDDEN' using errcode='22023'; end if;
-  if policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id then
+  if selecting or (policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id) then
     insert into hq_private.public_discovery_finish_requests values(j.id,p_worker_id,txid_current()); end if;
   if policy.trial_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id then
     select * into t from hq_private.workforce_trials where id=policy.trial_id;
     if p_error is null and p_trial_evidence is null then raise exception 'HQ_TRIAL_HOST_EXECUTION_REQUIRED' using errcode='22023'; end if;
     result:=hq_private.worker_finish_v3(p_job_id,p_lease_token,p_worker_id,p_reply,p_error,native,p_model_evidence);
   else
-    result:=hq_private.worker_finish_v4_before_public_discovery(p_job_id,p_lease_token,p_worker_id,p_reply,p_error,native,p_model_evidence,p_trial_evidence);
+    result:=hq_private.worker_finish_v4_before_public_discovery(p_job_id,p_lease_token,p_worker_id,finish_reply,finish_error,native,p_model_evidence,p_trial_evidence);
   end if;
+  select * into j from public.hq_agent_jobs where id=p_job_id;
   if coalesce((result->>'discarded')::boolean,false) then
     delete from hq_private.public_discovery_finish_requests where job_id=j.id and transaction_id=txid_current();
     -- Retain actual tool observations as BLOCKED job evidence only; canceled
@@ -431,11 +473,15 @@ begin
         values(j.id,j.task_id,null,null,j.agent_id,policy.binding_digest,mcp,'blocked');
       result:=result||jsonb_build_object('publicDiscoveryReceiptAccepted',true);
     end if;
-    if policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id then
-      insert into hq_private.public_discovery_deliveries values(j.id,input_digest,result); end if;
+    if selecting or (policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id) then
+      insert into hq_private.public_discovery_deliveries values(j.id,input_digest,j.result_digest,result); end if;
     return result; end if;
+  if selecting and j.status='completed' then
+    insert into hq_private.public_discovery_tasks(task_id,agent_id,binding_digest)
+      values(j.task_id,'AG-RES-002',selection_binding);
+    result:=result||jsonb_build_object('publicDiscoveryPolicyAccepted',true);
+  elsif selecting then result:=result||jsonb_build_object('publicDiscoveryPolicyAccepted',false); end if;
   select * into a from public.hq_task_artifacts where job_id=j.id;
-  select * into j from public.hq_agent_jobs where id=p_job_id;
   if mcp is not null then
     select * into old_receipt from hq_private.public_discovery_receipts where job_id=j.id;
     if found then
@@ -453,8 +499,8 @@ begin
     result:=result||jsonb_build_object('trialReceiptAccepted',true,'trialReceiptId',receipt);
   end if;
   delete from hq_private.public_discovery_finish_requests where job_id=j.id and transaction_id=txid_current();
-  if policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id then
-    insert into hq_private.public_discovery_deliveries values(j.id,input_digest,result); end if;
+  if selecting or (policy.task_id is not null and j.kind='task-work' and j.agent_id=policy.agent_id) then
+    insert into hq_private.public_discovery_deliveries values(j.id,input_digest,j.result_digest,result); end if;
   return result;
 end $$;
 

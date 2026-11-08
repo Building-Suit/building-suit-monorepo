@@ -254,3 +254,9 @@ Returned count, novelty, authority and freshness are not guaranteed. The
 historical one-result smoke proves only the observed format; actual cap-three
 behavior must be established in the affected live qualification. Whole-page
 verification remains a separate bounded capability, not an implied guarantee.
+
+Ordinary tasks select this policy explicitly in Nadia's original lease-bound
+`task-ack` reply using `publicDiscoveryPolicy`. The server must confirm Karim's
+current qualification and freeze the task enrollment atomically. An omitted field
+leaves existing ordinary drafting/native behavior unchanged; qualification alone
+does not enroll unrelated work. Repairs cannot enable or change the scope.
