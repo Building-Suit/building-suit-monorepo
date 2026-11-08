@@ -1,0 +1,9 @@
+{
+  "id": "hq-team-chart-navigation-20261108",
+  "task": "HQ-TEAM-CHART-NAVIGATION-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui/src/utils/hqOrgChart.ts", "packages/ui/src/organisms/BsHqTeamChart.vue", "packages/ui/src/templates/BsHqLayoutPage.vue", "packages/ui/src/types/hqAgentsPresentation.ts", "packages/ux/src/composables/usePanZoomViewport.ts", "packages/ux/src/index.ts"],
+  "reason": "Private HQ Team chart improves label contrast and department spacing and adds independent drag pan, zoom, fit and recenter. Employee activation retains the original sidebar. Local source only; browser verification and publication unrun."
+}

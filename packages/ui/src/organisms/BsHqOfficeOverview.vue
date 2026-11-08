@@ -35,7 +35,7 @@ const metrics = computed(() => [
         <div v-if="agent.departmentName"><dt>{{ copy.department }}</dt><dd dir="auto">{{ agent.departmentName }}</dd></div>
         <div><dt>{{ copy.model }}</dt><dd><bdi>{{ agent.model ?? '—' }}<span v-if="agent.effort"> · {{ agent.effort }}</span></bdi></dd></div>
         <div><dt>{{ copy.manager }}</dt><dd><bdi>{{ agent.managerName ?? agent.managerId ?? '—' }}</bdi></dd></div>
-        <div v-if="agent.profileUrl"><dt>{{ copy.profile }}</dt><dd><BsLink :to="agent.profileUrl" external target="_blank">{{ agent.name }}</BsLink></dd></div>
+        <div v-if="agent.profileUrl"><dt>{{ copy.profile }}</dt><dd><BsButton as="a" variant="secondary" size="sm" :href="agent.profileUrl" target="_blank" rel="noopener noreferrer">{{ agent.name }}</BsButton></dd></div>
       </template>
     </dl>
     <section class="bs-hq-office__section">

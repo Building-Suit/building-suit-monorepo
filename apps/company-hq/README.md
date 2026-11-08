@@ -1,5 +1,21 @@
 # Building Suit HQ workspace
 
+## Chat is the entry point for new HQ work — 8 November 2026
+
+The founder directs new tasks, plans and work requests through Chat. The
+Tasks views show existing work and results without a manual creation or
+follow-up form. The live meeting room retains conversation and existing
+records; direct research, plan drafting and dispatch approval are disabled.
+Agent details can record reviewed qualifications but cannot launch trials.
+Existing company and staffing proposal decisions remain available. The
+synthetic meeting fixture retains its isolated demonstration commands.
+
+The local HQ application no longer exposes the direct task creation POST.
+This source change does not modify hosted database permissions or worker
+capabilities, and does not introduce new Chat capabilities. Tests and
+browser verification remain unrun. See the
+[task browser record](../../docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md).
+
 The [English real meeting room follow-up](../../docs/work-packages/company-hq/HQ-LIVE-MEETING-ROOM-20261106.md) supersedes the earlier Arabic-first demonstration delivery. From the repository root, run `node apps/company-hq/scripts/meeting-start.mjs`, open `http://127.0.0.1:3101` and sign in with the existing HQ account. The interface stays English; on-device speech detects Arabic or English per utterance without a language picker. Model preparation (~80MB plus runtime) and microphone capture require separate explicit actions. Read the live-room guide for the applied staging schema, existing Oracle worker SSH upgrade, actual test evidence and speech-quality limits. Research/execution qualification remains separate from conversation.
 
 The separate `meeting-preview.mjs` launcher is internal synthetic verification infrastructure. The original [meeting checkpoint](../../docs/work-packages/company-hq/HQ-MULTILINGUAL-MEETINGS-20261105.md) preserves its dated evidence; it is not the current product startup.

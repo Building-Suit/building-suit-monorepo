@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { HqDepartmentOffice, HqLayoutContent, HqStaffingCopy, HqStaffingPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
-import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent, HqStaffingCopy, HqStaffingPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent, HqTaskBrowserCopy, HqTaskPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 const { locale } = useI18n()
 const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
 // Illustrative presentation fixtures only; never projected into the private HQ.
@@ -97,6 +98,14 @@ const content = computed<HqLayoutContent>(() => ({
   },
   companyPlans: {
     title: c('Company plans', 'خطط الشركة'),
+    board: {
+      discussion: c('Pending discussion', 'بانتظار النقاش'),
+      preparation: c('In preparation', 'قيد الإعداد'),
+      blocked: c('Blocked', 'متوقفة'),
+      done: c('Done', 'منتهية'),
+      empty: c('No notes in this column.', 'لا توجد ملاحظات في هذا العمود.'),
+      description: c('Open a note to see the proposal and its current status. Done means the decision is closed.', 'افتح ملاحظة للاطلاع على المقترح وحالته. تعني «منتهية» أن القرار قد حُسم.'),
+    },
     executiveLabel: c('CEO workspace', 'مساحة المدير التنفيذي'),
     loginTitle: c('Founder login', 'دخول المؤسس'),
     loginDescription: c('Use the founder email approved for HQ. Create your login, confirm your email, then sign in.', 'استخدم بريد المؤسس المعتمد للمقر. أنشئ حساب الدخول، ثم أكّد بريدك الإلكتروني وسجّل الدخول.'),
@@ -132,6 +141,7 @@ const content = computed<HqLayoutContent>(() => ({
   },
   companyBrain: {
     title: c("Company Brain", "معرفة الشركة"),
+    notesTabLabel: c('Notes', 'الملاحظات'),
     openLabel: c("Open Company Brain", "فتح معرفة الشركة"),
     loadingLabel: c("Reading Brain…", "جارٍ قراءة المعرفة…"),
     connectedLabel: c("Cloud Brain connected", "معرفة الشركة السحابية متصلة"),
@@ -207,6 +217,28 @@ const chatContent = computed<HqAgentsContent>(() => ({
   systemLabel: c('System', 'النظام'),
   locale: locale.value,
 }))
+// Public catalogue-only summaries; no private API or task execution.
+const taskBrowserCopy: HqTaskBrowserCopy = {
+  all: 'All', running: 'Running', waiting: 'Waiting', done: 'Done', owner: 'Owner',
+  empty: 'No tasks.', loading: 'Loading tasks…', unavailable: 'Tasks unavailable.', retry: 'Retry', partial: 'Limited recent snapshot.',
+}
+const sampleTaskBrowser: HqTaskBrowserSource = {
+  async load(request) {
+    const count = request.group === 'running' ? 7 : request.group === 'waiting' ? 18 : 42
+    return { counts: { running: 7, waiting: 18, done: 42 }, items: Array.from({ length: Math.max(0, Math.min(request.limit, count - request.offset)) }, (_, index): HqTaskPresentation => ({
+      id: `sample-${request.group}-${request.offset + index}`, title: `Illustrative ${request.group} task ${request.offset + index + 1}`,
+      brief: '', acceptance: '', assigneeId: 'sample-agent', assigneeName: 'Sample owner', statusLabel: taskBrowserCopy[request.group],
+      state: request.group === 'running' ? 'active' : request.group === 'waiting' ? 'pending' : 'complete',
+      createdAt: '2026-11-08T00:00:00Z', deliverable: '', reviews: [],
+    })) }
+  },
+  async detail() { return null },
+}
+const teamSample: HqAgentsPresentation = { ...chatPresentation, status: 'connected', agents: [
+  { id: 'sample-ceo', name: 'Sample executive', role: 'ceo', roleLabel: 'CEO', departmentId: null, departmentName: 'Executive', deskIndex: null, activity: 'unknown' },
+  { id: 'sample-lead', name: 'Sample team lead', role: 'agent', roleLabel: 'Team lead', managerId: 'sample-ceo', departmentId: 'sample-dept', departmentName: 'Sample department', deskIndex: null, activity: 'unknown' },
+  { id: 'sample-specialist', name: 'Sample specialist', role: 'agent', roleLabel: 'Specialist', managerId: 'sample-lead', departmentId: 'sample-dept', departmentName: 'Sample department', deskIndex: null, activity: 'unknown' },
+] }
 const workforceSection = ref<'tasks' | 'team' | 'learning'>('tasks')
 function chooseWorkforceSection(value: string) { if (value === 'tasks' || value === 'team' || value === 'learning') workforceSection.value = value }
 const workforceContent = computed<HqWorkforceContent>(() => ({
@@ -236,27 +268,10 @@ const workforceContent = computed<HqWorkforceContent>(() => ({
       'lesson-review': c("Reviewing the learning proposal", "مراجعة مقترح التعلّم"),
     },
   },
-  followup: {
-    title: c("Result ready · choose the next action", "النتيجة جاهزة · اختر الإجراء التالي"),
-    explanation: c("This deliverable is completed. Follow-up work has not started merely because the result was accepted. Review and authorize a separate, scoped task below.", "اكتملت هذه النتيجة. قبولها لا يعني بدء تنفيذ الأعمال التالية. راجع مهمة تالية محددة واعتمدها أدناه."),
-    action: c("Review next task", "مراجعة المهمة التالية"),
-    source: c("Based on completed task", "بناءً على المهمة المكتملة"),
-    scope: c("Next action to authorize", "الإجراء التالي المراد اعتماده"),
-    scopeHint: c("Copy the concrete step from the result and add the needed context. This task receives your instructions below, not the full previous document automatically.", "انسخ الخطوة المحددة من النتيجة وأضف سياقها اللازم. تتلقى المهمة التعليمات أدناه ولا يُنقل المستند السابق كاملًا تلقائيًا."),
-    criteria: c("Required result and evidence", "النتيجة المطلوبة وأدلتها"),
-    submit: c("Approve and queue this task", "اعتماد هذه المهمة وإضافتها للانتظار"),
-    cancel: c("Cancel next task", "إلغاء المهمة التالية"),
-    titlePrefix: c("Next step:", "الخطوة التالية:"),
-    briefPrefix: c("Founder-authorized follow-up to this completed task (reference only; execute only the explicit instructions below):", "متابعة معتمدة من المؤسس لهذه المهمة المكتملة (مرجع فقط؛ نفّذ التعليمات الصريحة أدناه فقط):"),
-    acceptance: c("Deliver the specified result with actual evidence. Keep the $0 additional-spend limit and current role/tool permissions. Report missing prerequisites and the next remedy; do not claim unperformed actions.", "سلّم النتيجة المحددة بأدلة فعلية. التزم بعدم الإنفاق الإضافي وبصلاحيات الدور والأدوات الحالية. وضّح المتطلبات الناقصة والخطوة العلاجية، ولا تدّعِ تنفيذ ما لم يحدث."),
-    supported: c("Approval queues a real task for Steve to assign. The current host supports planning, drafting and permitted native research; it cannot publish campaigns, contact customers, install software or deploy products. Approval does not add those capabilities.", "ينشئ الاعتماد مهمة فعلية ليسندها ستيف. يدعم المضيف الحالي التخطيط والصياغة والبحث المسموح؛ ولا ينشر حملات أو يتواصل مع العملاء أو يثبّت برامج أو ينشر منتجات. لا يضيف الاعتماد هذه القدرات."),
-    completed: c("Completed", "اكتملت"),
-    updated: c("The source result changed. Cancel and review its current version before approving.", "تغيّرت النتيجة المصدر. ألغِ الخطوة وراجع الإصدار الحالي قبل الاعتماد."),
-  },
+  completedLabel: c('Completed', 'مكتملة'),
   chatLabel: c('Chat', 'المحادثة'), tasksLabel: c('Tasks', 'المهام'), teamLabel: c('Team', 'الفريق'), learningLabel: c('Learning', 'التعلّم'),
-  newTaskLabel: c('Create a task', 'إنشاء مهمة'), assigneeLabel: c('Assigned to', 'المكلّف'), autoAssignLabel: c('Steve — choose an employee', 'ستيف — اختيار الموظف'),
-  titleLabel: c('Title', 'العنوان'), briefLabel: c('Task brief', 'وصف المهمة'), acceptanceLabel: c('Acceptance criteria', 'معايير القبول'),
-  createLabel: c('Create task', 'إنشاء المهمة'), creatingLabel: c('Creating…', 'جارٍ الإنشاء…'), emptyTasksLabel: c('No tasks yet.', 'لا توجد مهام بعد.'),
+  briefLabel: c('Task brief', 'وصف المهمة'), acceptanceLabel: c('Acceptance criteria', 'معايير القبول'),
+  emptyTasksLabel: c('No tasks yet.', 'لا توجد مهام بعد.'),
   emptyTeamLabel: c('The team registry is unavailable.', 'سجل الفريق غير متاح.'), emptyLessonsLabel: c('No learning receipts yet.', 'لا توجد إيصالات تعلّم بعد.'),
   departmentLabel: c('Department', 'القسم'), lifecycleLabel: c('Employment', 'الحالة الوظيفية'), connectionLabel: c('Connection', 'الاتصال'),
   configuredNotice: c('A configured employee is separate from an active worker connection.', 'إعداد ملف الموظف يختلف عن اتصال عامل نشط.'),
@@ -265,11 +280,22 @@ const workforceContent = computed<HqWorkforceContent>(() => ({
   backLabel: c('Back to tasks', 'العودة إلى المهام'), refreshLabel: c('Refresh', 'تحديث'), reviewedLabel: c('Reviewed', 'المراجعة'), publishedLabel: c('Published', 'النشر'), receiptLabel: c('Publication receipt', 'إيصال النشر'),
   loadingLabel: c('Loading HQ work…', 'جارٍ تحميل أعمال المقر…'), unavailableLabel: c('This catalogue has no private workforce connection.', 'لا يتصل هذا الكتالوج بالفريق الخاص.'),
 }))
+const catalogueTeamContent = computed<HqLayoutContent>(() => ({ ...content.value, agents: { ...chatContent.value, workforce: workforceContent.value } }))
+const plansExample = computed<HqCompanyPlansPresentation>(() => ({
+  status: 'ready', pending: false,
+  plans: [{
+    id: 'catalogue-plan', revision: 1, status: 'ready', legacy: false,
+    title: c('Sample onboarding plan', 'خطة تأهيل توضيحية'),
+    summary: c('Review the proposed customer onboarding milestones.', 'راجع مراحل تأهيل العملاء المقترحة.'),
+    body: c('Example plan for the component catalogue.', 'خطة توضيحية لكتالوج المكونات.'),
+    departments: [], hiring: [], skills: [], hrReview: null, ceoReview: null, createdAt: '2026-11-08',
+  }],
+}))
 </script>
 
 <template>
   <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Independent organic office islands use deterministic spline curves around actual furniture bounds. Existing desk-row dimensions and all office anchors remain fixed; the executive island has its own subtle curves with the original gold rim. Picking, walking exits and minimap share the same outlines. These illustrative offices and desk counts are catalogue fixtures, with no cloud, Auth or approval connection. Existing furniture, camera, lighting and office panels are preserved.', 'تستخدم جزر المكاتب المستقلة منحنيات عضوية ثابتة حول حدود الأثاث الفعلية. تبقى أبعاد صفوف المكاتب ومواقعها ثابتة، وتتميز جزيرة المدير التنفيذي بمنحنيات خاصة مع الحد الذهبي الأصلي. يشترك التحديد ومخارج المشي والخريطة في الحدود نفسها. هذه المكاتب والأعداد أمثلة للكتالوج دون اتصال بالسحابة أو المصادقة أو الاعتماد. يبقى الأثاث والكاميرا والإضاءة واللوحات كما هي.')">
-    <BsHqLayoutPage :content="content" :departments="organicDepartments" />
+    <BsHqLayoutPage :content="catalogueTeamContent" :departments="organicDepartments" :agents="teamSample" :access="{ status: 'founder', pending: false }" :company-plans="plansExample" :staffing="staffingExample" :staffing-copy="staffingCopy" />
     <BsHqStaffingPlans :presentation="staffingExample" :copy="staffingCopy" :founder="true" />
     <BsContentSection title="Supervised qualification" description="The authenticated employee inspector accepts typed trial status and semantic start/qualification commands. Starting a trial requires explicit confirmation. Qualification requires immutable host-returned execution evidence plus department-head and independent HR review. Pending staff remain blocked until their canonical lifecycle is Active. This catalogue queues no work." />
   </BsContentSection>
@@ -279,7 +305,8 @@ const workforceContent = computed<HqWorkforceContent>(() => ({
     <BsHqCeoChat :presentation="chatPresentation" :content="chatContent" />
   </BsContentSection>
   <BsContentSection :title="c('HQ tasks, team and learning', 'مهام المقر والفريق والتعلّم')" :description="c('Result-first tasks, observed worker stages and explicit scoped follow-up approval use shared typed views. Elapsed time is not a completion estimate. This unavailable catalogue projection creates no live task or worker/Brain connection.', 'تعرض الواجهات المشتركة النتيجة أولًا ومراحل العامل الفعلية واعتماد مهمة متابعة محددة. الوقت المنقضي ليس تقديرًا للإنجاز. بيانات المثال غير متاحة ولا تُنشئ مهام فعلية أو تتصل بعامل أو بذاكرة الشركة.')">
-    <BsTabs :model-value="workforceSection" :tabs="[{ value: 'tasks', label: workforceContent.tasksLabel }, { value: 'team', label: workforceContent.teamLabel }, { value: 'learning', label: workforceContent.learningLabel }]" :label="workforceContent.teamLabel" @update:model-value="chooseWorkforceSection" />
+    <BsTabs variant="hq" :model-value="workforceSection" :tabs="[{ value: 'tasks', label: workforceContent.tasksLabel }, { value: 'team', label: workforceContent.teamLabel }, { value: 'learning', label: workforceContent.learningLabel }]" :label="workforceContent.teamLabel" @update:model-value="chooseWorkforceSection" />
+    <BsHqTaskBrowser :source="sampleTaskBrowser" :copy="taskBrowserCopy" :agents="[{ id: 'sample-agent', name: 'Sample owner', role: 'agent', roleLabel: 'Illustrative role', departmentId: null, departmentName: 'Sample department', deskIndex: null, activity: 'unknown' }]" show-owner :locale="locale" />
     <BsHqWorkforce :section="workforceSection" :presentation="chatPresentation" :content="workforceContent" :locale="locale" />
   </BsContentSection>
 </template>

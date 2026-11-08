@@ -2,8 +2,8 @@
 import { onScopeDispose, ref, watch } from 'vue'
 import type { HqStaffingCopy, HqStaffingDecision, HqStaffingPresentation } from '../types/hqLayoutPresentation'
 
-const props = defineProps<{ presentation: HqStaffingPresentation; copy: HqStaffingCopy; founder: boolean }>()
-const emit = defineEmits<{ decision: [decision: HqStaffingDecision]; refresh: []; cancel: [sourceTaskId: string] }>()
+const props = defineProps<{ presentation: HqStaffingPresentation; copy: HqStaffingCopy; founder: boolean; separateDetails?: boolean; selectedWorkflowId?: string }>()
+const emit = defineEmits<{ decision: [decision: HqStaffingDecision]; refresh: []; openWorkflow: [id: string]; cancel: [sourceTaskId: string] }>()
 const confirmation = useConfirmation()
 const confirming = ref(false)
 const resume = ref<Record<string, boolean>>({})
@@ -50,18 +50,18 @@ async function stop(id: string) {
 
 <template>
   <section v-if="founder" class="bs-hq-staffing" :aria-label="copy.title" :aria-busy="presentation.pending || confirming">
-    <h2>{{ copy.title }}</h2>
+    <h2 v-if="!selectedWorkflowId">{{ copy.title }}</h2>
     <p>{{ copy.writerBoundary }}</p>
     <p v-if="(presentation.totalCount ?? 0) > presentation.workflows.length">{{ copy.limited }} {{ presentation.workflows.length }}/{{ presentation.totalCount }}</p>
-    <BsButton type="button" variant="secondary" :disabled="presentation.pending || confirming" @click="emit('refresh')">{{ copy.refresh }}</BsButton>
+    <BsButton type="button" :disabled="presentation.pending || confirming" @click="emit('refresh')" variant="icon" :aria-label="copy.refresh" :title="copy.refresh"><BsIcon name="refresh" :size="18" /></BsButton>
     <p v-if="presentation.message || conflict" role="status">{{ conflict ? copy.conflict : presentation.message }}</p>
     <p v-if="presentation.status === 'unavailable'">{{ copy.unavailable }}</p>
     <p v-else-if="presentation.status === 'ready' && !presentation.workflows.length">{{ copy.empty }}</p>
-    <article v-for="row in presentation.workflows" :key="row.id">
-      <h3>{{ row.plan ? `${row.plan.name} · ${row.plan.agentId}` : row.statusLabel }}</h3>
+    <article v-for="row in (selectedWorkflowId ? presentation.workflows.filter(item => item.id === selectedWorkflowId) : presentation.workflows)" :key="row.id">
+      <BsButton v-if="separateDetails && !selectedWorkflowId" variant="tile" align="start" @click="emit('openWorkflow', row.id)">{{ row.plan ? `${row.plan.name} · ${row.plan.agentId}` : row.statusLabel }}</BsButton><h3 v-else>{{ row.plan ? `${row.plan.name} · ${row.plan.agentId}` : row.statusLabel }}</h3>
       <p role="status">{{ row.statusLabel }} · {{ row.blockerLabel }}</p>
       <p>{{ copy.source }}: <bdi>{{ row.sourceTaskId }}</bdi></p>
-      <template v-if="row.plan">
+      <template v-if="row.plan && (!separateDetails || selectedWorkflowId)">
         <details><summary>{{ copy.source }}: {{ row.plan.originalTask.title }}</summary>
           <p dir="auto">{{ row.plan.originalTask.brief }}</p><p dir="auto">{{ row.plan.originalTask.acceptance }}</p>
         </details>
@@ -80,7 +80,7 @@ async function stop(id: string) {
             <BsButton type="button" variant="secondary" :disabled="presentation.pending || confirming" @click="decide(row.id, 'rejected')">{{ copy.reject }}</BsButton></div>
         </template>
       </template>
-      <BsButton v-if="!['canceled','rejected'].includes(row.status)" type="button" variant="secondary" :disabled="presentation.pending || confirming" @click="stop(row.id)">{{ copy.stop }}</BsButton>
+      <BsButton v-if="(!separateDetails || selectedWorkflowId) && !['canceled','rejected'].includes(row.status)" type="button" variant="secondary" :disabled="presentation.pending || confirming" @click="stop(row.id)">{{ copy.stop }}</BsButton>
     </article>
   </section>
 </template>

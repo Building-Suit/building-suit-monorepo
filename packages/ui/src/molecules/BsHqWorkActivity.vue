@@ -23,7 +23,7 @@ function elapsed(item: HqWorkActivity): string {
       <li v-for="item in items" :key="item.id" :data-state="item.state">
         <div class="bs-hq-activity__line"><strong dir="auto">{{ item.agentName }}</strong><span>{{ copy[item.state] }}</span></div>
         <p>{{ copy.stages[item.stage] ?? copy.stage }}</p>
-        <BsButton v-if="item.taskId" variant="text" size="sm" @click="emit('openTask', item.taskId)">{{ copy.openTask }}<template v-if="item.taskTitle"> · {{ item.taskTitle }}</template></BsButton>
+        <BsButton v-if="item.taskId" variant="secondary" size="sm" @click="emit('openTask', item.taskId)">{{ copy.openTask }}<template v-if="item.taskTitle"> · {{ item.taskTitle }}</template></BsButton>
         <p v-else-if="item.taskTitle" dir="auto">{{ item.taskTitle }}</p>
         <small>{{ item.state === 'queued' ? copy.waiting : copy.elapsed }} <bdi>{{ elapsed(item) }}</bdi></small>
       </li>

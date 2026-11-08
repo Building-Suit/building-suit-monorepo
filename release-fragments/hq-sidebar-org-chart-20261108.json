@@ -1,0 +1,9 @@
+{
+  "id": "hq-sidebar-org-chart-20261108",
+  "task": "HQ-SIDEBAR-ORG-CHART-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue", "docs/shared/ui-ownership-manifest.json", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ sidebar interaction follow-up: three-card task previews, matching tab styling, fixed headers and tabs, labeled refresh icons and visibly bordered navigation actions. Record selections preserve the source panel and open wider details. Team opens a large modal org chart with department backdrops and employee inspection. Local source only; hosted changes and browser verification unrun."
+}

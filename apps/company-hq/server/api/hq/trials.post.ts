@@ -7,8 +7,5 @@ export default defineEventHandler(async event => {
   const config = useRuntimeConfig(event)
   const { accessToken } = await requireHqFounder(event, config)
   const body = await hqTrialBody(event)
-  if ('trialId' in body) return hqRpc<unknown>(config, accessToken, 'hq_issue_workforce_qualification', { p_trial_id: body.trialId })
-  return hqRpc<unknown>(config, accessToken, 'hq_begin_supervised_worker_trial', {
-    p_agent_id: body.agentId, p_skill_file_id: body.skillFileId, p_request_key: body.requestKey,
-  })
+  return hqRpc<unknown>(config, accessToken, 'hq_issue_workforce_qualification', { p_trial_id: body.trialId })
 })

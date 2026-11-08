@@ -1,5 +1,43 @@
 # Company HQ
 
+## Sidebar and Team navigation — 8 November 2026
+
+All previews up to three tasks per status without an inner scroller. Status
+tabs load the full scoped list in windows. HQ tabs use the header style, sidebar
+headers stay in place, and record buttons open the wider detail panel while
+preserving the originating list. Refresh is an accessible icon action.
+Team opens a full-width Org Chart panel that enters from the top at the same
+height as the HQ sidebars. Department backdrops mark group membership, and
+reporting lines follow actual manager IDs. Employee cards open the original
+HQ employee sidebar. These are local source changes; browser
+acceptance remains unrun.
+
+## Chat is the entry point for new HQ work — 8 November 2026
+
+The founder directs new tasks, plans and work requests through Chat. The
+Tasks views show existing work and results without a manual creation or
+follow-up form. The live meeting room retains conversation and existing
+records; direct research, plan drafting and dispatch approval are disabled.
+Agent details can record reviewed qualifications but cannot launch trials.
+Existing company and staffing proposal decisions remain available. The
+synthetic meeting fixture retains its isolated demonstration commands.
+
+The local HQ application no longer exposes the direct task creation POST.
+This source change does not modify hosted database permissions or worker
+capabilities, and does not introduce new Chat capabilities. Tests and
+browser verification remain unrun. See the
+[task browser record](../../docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md).
+
+## Task browser — 8 November 2026
+
+Office Tasks and header Tasks now share All/Running/Waiting/Done source UI,
+with three-card All previews, lazy bounded scroll windows and owner/role/department
+labels on header cards. The founder requested direct primary-checkout edits.
+Migration `20261108041146_hq_task_browser.sql` is prepared but unapplied; until
+repository-driven rollout, the local UI labels the bounded snapshot incomplete
+and hides unverified totals. No tests/runtime/visual acceptance or publication
+is claimed. See [task browser record](../../docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md).
+
 ## English meeting room and automatic speech — 6 November 2026
 
 The founder requires English interface text throughout HQ. Arabic and English are speech/content languages, detected per utterance without a user language picker. Preserve Arabic content with automatic text direction. The user rejects a demonstration as the meeting product: the real room must use existing founder Auth, HQ database and actual worker replies. Internal synthetic fixtures remain test infrastructure. Genuine multilingual ASR requires verified language detection; an unset browser/Transformers language is not evidence of automatic recognition. Do not claim within-utterance code-switch accuracy, real microphone acceptance or a deployed worker without actual evidence. The founder will run the prepared SSH worker upgrade using their existing access; do not copy credentials or create another worker. Research/execution qualification remains separate from conversational availability.
