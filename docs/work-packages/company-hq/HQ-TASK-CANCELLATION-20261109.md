@@ -43,3 +43,13 @@ prove hosted session availability or execute the founder's pending cancellation.
 
 Required exact-head CI, browser acceptance and the staging integration/provider
 gates remain pending. No merge-readiness or deployment claim is made.
+
+## Targeted CI browser acceptance
+
+The existing review job now reuses its installed dependencies and Chromium to
+build HQ and run only the four mocked cancellation browser cases when HQ, shared
+UI/UX/layer/assets, dependency or workflow inputs change. Unrelated changes skip
+that step. Failure traces are retained. Existing gates, permissions, ten-minute
+review timeout and publication conditions are unchanged. This runs in the normal
+GitHub runner, not through a workaround to the cloud executor's socket restriction.
+Actual browser success must be observed on the new commit before merge readiness.
