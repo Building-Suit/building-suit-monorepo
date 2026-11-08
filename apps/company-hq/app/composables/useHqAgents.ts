@@ -1,4 +1,4 @@
-import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation, HqPublicResearchTrialPresentation, HqOrdinaryTrialPresentation, HqRetailTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation, HqPublicResearchTrialPresentation, HqOrdinaryTrialPresentation, HqRetailTrialPresentation, HqRepositoryTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import { provideHqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot, type HqBusinessTask } from '#shared/types/agents'
@@ -62,6 +62,28 @@ function responseStatus(error: unknown): number | undefined {
   return typeof status === 'number' ? status : undefined
 }
 
+function repositoryTrial(value: unknown, agentId: string): HqRepositoryTrialPresentation | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !['AG-DEV-002','AG-DEV-003','AG-DEV-004'].includes(agentId)) return
+  const row = value as Record<string, unknown>
+  const keys = ['preset','skillFileId','freezeEligible','eligible','qualified','reviewerReady','bundleId','sha','mode','pullRequestNumber','predecessorArtifactId','expiresAt','trialId','taskId','status','bindingCurrent','receiptIssued','reviewComplete','budgetRemaining']
+  const uuid = (v: unknown) => v === null || typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+  if (Object.keys(row).length !== keys.length || keys.some(key => !Object.hasOwn(row,key))
+    || row.preset !== (agentId === 'AG-DEV-004' ? 'hq-ci-config-v1' : 'hq-worker-boundary-v1')
+    || !(row.skillFileId === null || typeof row.skillFileId === 'string' && /^[A-Za-z0-9_-]{8,200}$/.test(row.skillFileId))
+    || ['freezeEligible','eligible','qualified','reviewerReady','bindingCurrent','receiptIssued','reviewComplete'].some(key => typeof row[key] !== 'boolean')
+    || !['bundleId','trialId','taskId','predecessorArtifactId'].every(key => uuid(row[key]))
+    || !(row.sha === null || typeof row.sha === 'string' && /^[0-9a-f]{40}$/.test(row.sha))
+    || ![null,'snapshot','stg','approved-pr'].includes(row.mode as string | null)
+    || !(row.pullRequestNumber === null || Number.isSafeInteger(row.pullRequestNumber) && Number(row.pullRequestNumber) > 0 && Number(row.pullRequestNumber) <= 2147483647)
+    || !(row.expiresAt === null || typeof row.expiresAt === 'string' && row.expiresAt.length <= 64 && Number.isFinite(Date.parse(row.expiresAt)))
+    || ![null,'active','passed','failed','canceled'].includes(row.status as string | null)
+    || !Number.isInteger(row.budgetRemaining) || Number(row.budgetRemaining) < 0 || Number(row.budgetRemaining) > 40) return
+  if (row.bundleId === null ? [row.sha,row.mode,row.pullRequestNumber,row.predecessorArtifactId,row.expiresAt].some(v => v !== null)
+    : row.sha === null || row.mode === null || row.expiresAt === null || (row.mode === 'approved-pr' ? row.pullRequestNumber === null : row.pullRequestNumber !== null)
+      || (agentId === 'AG-DEV-003' ? row.predecessorArtifactId === null : row.predecessorArtifactId !== null)) return
+  return { ...row } as unknown as HqRepositoryTrialPresentation
+}
+
 // Preserve PostgreSQL's sub-millisecond stage order when the JavaScript Date
 // values tie. Recovery lineage is still resolved before chronological order.
 function timestampRemainder(value: string): string {
@@ -89,11 +111,12 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
         || !(row.trialId === null || typeof row.trialId === 'string') || ![null, 'active', 'passed', 'failed', 'canceled'].includes(row.status))) {
         trials.value = []; return
       }
-      trials.value = result.map(({ publicResearch: candidate, publicRetail: retailCandidate, ordinary: ordinaryCandidate, ...row }) => {
+      trials.value = result.map(({ publicResearch: candidate, publicRetail: retailCandidate, ordinary: ordinaryCandidate, repository: repositoryCandidate, ...row }) => {
         const research = row.agentId === 'AG-RES-002' ? publicResearchTrial(candidate) : undefined
         const retail = row.agentId === 'AG-RES-002' ? retailTrial(retailCandidate) : undefined
         const ordinary = ordinaryTrial(ordinaryCandidate)
-        return { ...row, ...(research ? { publicResearch: research } : {}), ...(retail ? { publicRetail: retail } : {}), ...(ordinary ? { ordinary } : {}) }
+        const repository = repositoryTrial(repositoryCandidate, row.agentId)
+        return { ...row, ...(research ? { publicResearch: research } : {}), ...(retail ? { publicRetail: retail } : {}), ...(ordinary ? { ordinary } : {}), ...(repository ? { repository } : {}) }
       }) as HqTrialPresentation[]
     } catch {
       if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trials.value = []
@@ -104,6 +127,9 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       trialFeedbackEpoch += 1; trialMessage.value = ''; trialMessageAgentId.value = null; return
     }
     if (getAccess().status !== 'founder' || trialPending.value || disposed) return
+    if (command.action === 'freeze-repository' || command.action === 'start-repository' || command.action === 'qualify-repository') {
+      await repositoryCommand(command); return
+    }
     const identity = accessIdentity(getAccess()), trialEpoch = epoch, feedbackEpoch = trialFeedbackEpoch
     const research = trials.value.find(row => row.agentId === 'AG-RES-002')?.publicResearch
     const retail = trials.value.find(row => row.agentId === 'AG-RES-002')?.publicRetail
@@ -168,6 +194,49 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     } catch {
       if (!disposed && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch)
         feedback('Trial action unconfirmed. Refresh before retrying; an uncertain start keeps the same request identity.')
+    } finally {
+      if (!disposed && ownedTrial === trialSequence && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity) trialPending.value = false
+    }
+  }
+  async function repositoryCommand(command: Extract<HqTrialCommand, { action: 'freeze-repository' | 'start-repository' | 'qualify-repository' }>) {
+    const current = trials.value.find(row => row.agentId === command.agentId)?.repository
+    if (!current || !current.reviewerReady) return
+    if (command.action === 'freeze-repository' && (!current.freezeEligible || command.preset !== current.preset)) return
+    if (command.action === 'start-repository' && (!current.eligible || !current.bindingCurrent || current.bundleId !== command.bundleId || current.status === 'active' || current.qualified)) return
+    if (command.action === 'qualify-repository' && (!current.reviewComplete || !current.bindingCurrent || current.receiptIssued || current.qualified || current.trialId !== command.trialId)) return
+    const identity = accessIdentity(getAccess()), trialEpoch = epoch, feedbackEpoch = trialFeedbackEpoch, ownedTrial = ++trialSequence
+    trialPending.value = true; trialMessage.value = ''; trialMessageAgentId.value = command.agentId
+    const { action, ...input } = command
+    const attemptKey = action === 'qualify-repository' ? null : JSON.stringify([action,input])
+    try {
+      let body: Record<string, unknown> = action === 'qualify-repository' ? { action: 'qualify', trialId: command.trialId } : {}
+      if (attemptKey !== null) {
+        let attempt = trialAttempts.get(attemptKey)
+        if (!attempt || attempt.identity !== identity) {
+          if (trialAttempts.size >= 24 || typeof crypto.randomUUID !== 'function') throw Error('trial-attempt-unavailable')
+          attempt = { identity, requestKey: crypto.randomUUID() }; trialAttempts.set(attemptKey, attempt)
+        }
+        body = { ...input, action: action === 'freeze-repository' ? 'freeze' : 'start', requestKey: attempt.requestKey }
+      }
+      const result = await $fetch<{ accepted?: boolean; bundleId?: string; trialId?: string }>('/api/hq/repository-trials', {
+        method: 'POST', headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' }, credentials: 'same-origin', retry: 0, timeout: 45_000, body,
+      })
+      if (disposed || getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
+      const uuid = (value: unknown) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+      if (result?.accepted !== true || action === 'freeze-repository' && !uuid(result.bundleId) || action === 'start-repository' && !uuid(result.trialId)) throw Error('trial-unconfirmed')
+      if (attemptKey !== null) trialAttempts.delete(attemptKey)
+      if (feedbackEpoch === trialFeedbackEpoch) {
+        trialMessageAgentId.value = command.agentId
+        trialMessage.value = action === 'freeze-repository' ? 'Public repository snapshot frozen. Review the bound commit before starting; freezing does not grant qualification.'
+          : action === 'start-repository' ? 'Repository trial request confirmed. Adam scopes the frozen bundle; independent review and separate qualification are required.'
+            : 'Repository qualification recorded for the current immutable binding. Ordinary skill and lifecycle requirements still apply.'
+      }
+      await Promise.all([refresh(),refreshTrials()])
+    } catch {
+      if (!disposed && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch && feedbackEpoch === trialFeedbackEpoch) {
+        trialMessageAgentId.value = command.agentId
+        trialMessage.value = 'Repository action unconfirmed. Refresh before retrying; an uncertain freeze or start keeps the same request identity.'
+      }
     } finally {
       if (!disposed && ownedTrial === trialSequence && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity) trialPending.value = false
     }

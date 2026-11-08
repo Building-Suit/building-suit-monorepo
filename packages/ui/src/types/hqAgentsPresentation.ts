@@ -22,6 +22,7 @@ export interface HqRetailTrialPresentation extends HqPublicResearchTrialPresenta
   setupRequired: boolean
 }
 export interface HqTrialPresentation {
+  repository?: HqRepositoryTrialPresentation
   ordinary?: HqOrdinaryTrialPresentation
   publicRetail?: HqRetailTrialPresentation
   publicResearch?: HqPublicResearchTrialPresentation
@@ -35,10 +36,37 @@ export interface HqTrialPresentation {
   reviewComplete: boolean
 }
 export type HqTrialCommand = { action: 'qualify' | 'qualify-public-research' | 'qualify-public-retail'; trialId: string; agentId?: string }
+  | { action: 'freeze-repository'; agentId: string; preset: HqRepositoryPreset; mode: HqRepositoryMode; sha: string; pullRequestNumber: number | null; predecessorArtifactId: string | null }
+  | { action: 'start-repository'; agentId: string; bundleId: string }
+  | { action: 'qualify-repository'; agentId: string; trialId: string }
   | { action: 'start-public-research'; skillFileId: string }
   | { action: 'start-skill-trial'; agentId: string; skillFileId: string }
   | { action: 'start-public-retail'; skillFileId: string; category: HqRetailCategory }
   | { action: 'clear-trial-feedback' }
+
+export type HqRepositoryPreset = 'hq-worker-boundary-v1' | 'hq-ci-config-v1'
+export type HqRepositoryMode = 'snapshot' | 'stg' | 'approved-pr'
+export interface HqRepositoryTrialPresentation {
+  preset: HqRepositoryPreset
+  skillFileId: string | null
+  freezeEligible: boolean
+  eligible: boolean
+  qualified: boolean
+  reviewerReady: boolean
+  bundleId: string | null
+  sha: string | null
+  mode: HqRepositoryMode | null
+  pullRequestNumber: number | null
+  predecessorArtifactId: string | null
+  expiresAt: string | null
+  trialId: string | null
+  taskId: string | null
+  status: 'active' | 'passed' | 'failed' | 'canceled' | null
+  bindingCurrent: boolean
+  receiptIssued: boolean
+  reviewComplete: boolean
+  budgetRemaining: number
+}
 
 export interface HqAgentAvatar {
   body: 'female' | 'male'

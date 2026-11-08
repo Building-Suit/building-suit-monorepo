@@ -292,6 +292,15 @@
       "phase": "public-retail-discovery-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261108200632_hq_public_retail_discovery.sql"
+    },
+    {
+      "file": "20261108212105_hq_public_repository_read.sql",
+      "bytes": 76021,
+      "md5": "ad73737b37d3415644cd29ea97e9465e",
+      "sha256": "0cc85cf310b1bb8fcbe6ac1d8a395a2872886b289e436a510acd0008a161195a",
+      "phase": "public-repository-read-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261108212105_hq_public_repository_read.sql"
     }
   ]
 }

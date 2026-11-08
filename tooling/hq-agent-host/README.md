@@ -262,3 +262,51 @@ Ordinary tasks select this policy explicitly in Nadia's original lease-bound
 current qualification and freeze the task enrollment atomically. An omitted field
 leaves existing ordinary drafting/native behavior unchanged; qualification alone
 does not enroll unrelated work. Repairs cannot enable or change the scope.
+
+## Bounded anonymous public repository inspection
+
+The optional `hq-public-github-read-v1` lane is a stdio MCP tool inside the existing
+signed `departmentWorkflow.mjs`. It exposes only
+`hq_public_repository.read_public_repository_bundle`, with empty arguments. It
+reads the fixed public `Building-Suit/building-suit-monorepo` repository, checking
+its numeric identity and public visibility before each bundle. No GitHub token,
+connector credential, account setup, execution bridge or additional runtime
+module is introduced.
+
+The founder freezes a public 40-hex snapshot, a fixed preset and (when applicable)
+the exact staging-ref or same-repository PR-head provenance. Adam may select only
+an existing approved bundle in an original handoff. Omission preserves ordinary
+supplied-context drafting. Mazen and Farah use `hq-worker-boundary-v1`; Samir uses
+`hq-ci-config-v1`. Farah's independent task must reference the immutable same-SHA
+Mazen artifact. The initial implementation deliberately has no general repository
+search, arbitrary path, URL, branch, source-edit or test-execution tool. Its fixed
+line windows are excerpts; omitted source is unavailable.
+
+Every original read needs a committed reservation before launch. Twelve request
+attempts are conservatively charged to the shared rolling forty-attempt/hour
+budget, with no refund after an error, cancellation or unknown outcome. The local
+owner-only `wx` marker additionally prevents subprocess restarts from repeating a
+read. Repairs reuse the original evidence and never reset the reservation. Rate
+or access restrictions stop the lane without a token, proxy or alternate route.
+
+The network process has a cleared environment, fixed HTTPS API origin, validated
+public DNS answers, pinned TLS socket peer and no redirects, compression or
+credential discovery. Immutable commit/tree/blob traversal checks regular-file
+modes, base64, UTF-8 and Git blob hashes before emitting bounded/redacted excerpts.
+Public repository text remains untrusted data, including repository instructions.
+The private task, Brain text and internal worker IDs are never request parameters.
+
+CI output is an observation of bounded public first pages, not an independently
+executed test. It always reports `testedSourceSha: unknown`,
+`executedByThisEmployee: false` and `requiredChecksVerified: false`. A matching run
+head does not prove its checkout, complete required checks, deployment or merge
+readiness. Logs, artifacts, annotations, workflow dispatch and provider operations
+are excluded.
+
+Founder freeze/start/approve controls use the existing authenticated HQ boundary.
+Separate genuine capability trials bind the unchanged employee profile, all
+assigned skill source versions, exact manifest and runtime hashes, actual typed
+MCP event, returned model/effort, manager review and independent evaluator review.
+Ordinary drafting qualification remains required. No live qualification or
+Development execution capability is established by this source implementation.
+Runtime hash changes require a reviewed policy-pin update before another read.

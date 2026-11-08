@@ -24,7 +24,7 @@ async function fixture(t,initial=state(),setup={}) {
     useHqLiveEvents:()=>({subscribe(){},subscribePresence(){},invalidate(){}}),
     $fetch:(url,options={})=>{
       if(options.method==='POST'){const request={...deferred(),url,options};posts.push(request);return request.promise}
-      if(url==='/api/hq/trials')return Promise.resolve([{...row(current),agentId:setup.agentId??'AG-RES-002',...(setup.ordinary?{ordinary:setup.ordinary}:{}),...(setup.retail?{publicRetail:setup.retail}:{})}])
+      if(url==='/api/hq/trials')return Promise.resolve([{...row(current),agentId:setup.agentId??'AG-RES-002',...(setup.ordinary?{ordinary:setup.ordinary}:{}),...(setup.retail?{publicRetail:setup.retail}:{}),...(setup.repository?{repository:setup.repository}:{})}])
       assert.equal(url,'/api/hq/agents');return heldRead ? heldRead.promise : Promise.resolve(snapshot())
     }}
   for(const [key,value]of Object.entries(globals)){descriptors.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,writable:true,value})}
@@ -122,4 +122,41 @@ test('changing employee clears completed feedback and suppresses late old feedba
  call=f.result.trialCommand(start);await flush();await f.result.trialCommand({action:'clear-trial-feedback'})
  assert.equal(f.result.agents.value.trialPending,true);f.posts[1].reject(Error('late old reply'));await call
  assert.equal(f.result.agents.value.trialMessage,'');assert.equal(f.result.agents.value.trialPending,false)
+})
+
+const bundleId='33333333-3333-4333-8333-333333333333'
+const repositoryState=extra=>({preset:'hq-worker-boundary-v1',skillFileId,freezeEligible:true,eligible:true,qualified:false,reviewerReady:true,
+ bundleId,sha:'a'.repeat(40),mode:'snapshot',pullRequestNumber:null,predecessorArtifactId:null,expiresAt:'2030-01-01T00:00:00Z',
+ trialId:null,taskId:null,status:null,bindingCurrent:true,receiptIssued:false,reviewComplete:false,budgetRemaining:40,...extra})
+const repoStart={action:'start-repository',agentId:'AG-DEV-002',bundleId}
+const repoFreeze={action:'freeze-repository',agentId:'AG-DEV-002',preset:'hq-worker-boundary-v1',mode:'snapshot',sha:'a'.repeat(40),pullRequestNumber:null,predecessorArtifactId:null}
+test('repository freeze and start use fixed route and retain uncertain request identities without retries',async t=>{
+ const f=await fixture(t,state(),{agentId:'AG-DEV-002',repository:repositoryState()})
+ for(const command of [repoFreeze,repoStart]){
+  let call=f.result.trialCommand(command);await flush();const first=f.posts.at(-1)
+  assert.equal(first.url,'/api/hq/repository-trials');assert.equal(first.options.retry,0);assert.equal(first.options.credentials,'same-origin')
+  assert.equal(first.options.body.action,command.action==='freeze-repository'?'freeze':'start')
+  const count=f.posts.length;await f.result.trialCommand(command);assert.equal(f.posts.length,count)
+  first.reject(Error('generated uncertain transport'));await call;assert.equal(f.posts.length,count)
+  call=f.result.trialCommand(command);await flush();assert.equal(f.posts.at(-1).options.body.requestKey,first.options.body.requestKey)
+  f.posts.at(-1).resolve({accepted:true,bundleId,trialId});await call
+ }
+ assert.equal(f.posts[2].options.body.bundleId,bundleId)
+ assert.equal(f.result.agents.value.trials[0].repository.qualified,false)
+})
+for(const change of [{eligible:false},{bindingCurrent:false},{reviewerReady:false},{status:'active'},{bundleId:null,sha:null,mode:null,expiresAt:null},{qualified:true},{preset:'arbitrary'},{budgetRemaining:41},{extraAuthority:true}])test(`repository start fails closed ${JSON.stringify(change)}`,async t=>{
+ const f=await fixture(t,state(),{agentId:'AG-DEV-002',repository:repositoryState(change)})
+ await f.result.trialCommand(repoStart);assert.equal(f.posts.length,0)
+})
+test('repository qualification uses only exact reviewed current trial and never ordinary endpoint',async t=>{
+ const f=await fixture(t,state(),{agentId:'AG-DEV-002',repository:repositoryState({trialId,status:'passed',reviewComplete:true})})
+ await f.result.trialCommand({action:'qualify-repository',agentId:'AG-DEV-002',trialId:bundleId});assert.equal(f.posts.length,0)
+ const call=f.result.trialCommand({action:'qualify-repository',agentId:'AG-DEV-002',trialId});await flush()
+ assert.deepEqual(f.posts[0].options.body,{action:'qualify',trialId});f.posts[0].resolve({accepted:true});await call
+ assert.match(f.result.agents.value.trialMessage,/Ordinary skill and lifecycle/)
+})
+for(const end of ['logout','dispose','selection'])test(`repository ${end} suppresses late feedback`,async t=>{
+ const f=await fixture(t,state(),{agentId:'AG-DEV-002',repository:repositoryState()}),call=f.result.trialCommand(repoStart);await flush()
+ if(end==='logout')f.access.value={status:'anonymous'};else if(end==='dispose')f.dispose();else await f.result.trialCommand({action:'clear-trial-feedback'})
+ f.posts[0].resolve({accepted:true,trialId});await call;assert.equal(f.result.agents.value.trialMessage,'')
 })
