@@ -3,6 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { connect } from 'node:net'
+import { createHash, generateKeyPairSync, randomUUID } from 'node:crypto'
 import { mkdtemp, copyFile, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -20,22 +21,41 @@ async function fixture(t, extra = {}) {
   const sha = 'a'.repeat(40)
   await writeFile(join(root, 'manifest.json'), JSON.stringify({ sha }))
   await copyFile(new URL('workforceRoster.mjs', import.meta.url), join(root, 'workforceRoster.mjs'))
-  await writeFile(join(root, 'brainPublisher.mjs'), 'export const createBrainPublisher = () => ({})')
+  if(extra.FIXTURE_LEARNING)await copyFile(new URL('brainPublisher.mjs',import.meta.url),join(root,'brainPublisher.mjs'))
+  else await writeFile(join(root, 'brainPublisher.mjs'), 'export const createBrainPublisher = () => ({})')
+  const lesson={id:randomUUID(),source_type:'task',source_id:randomUUID(),source_digest:'a'.repeat(64),summary:'Synthetic fixture',body:'Generated learning only.'}
+  lesson.digest=createHash('sha256').update(lesson.source_type+lesson.source_id+lesson.body).digest('hex')
+  const googleKey=extra.FIXTURE_LEARNING?generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs8',format:'pem'}):''
   const staffingApi = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:STAFFING_RPCS}
   const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
 const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}, staffingApi = ${JSON.stringify(staffingApi)}
 let activeJobs = 0, taskAckDelivered = false
+const lesson=${JSON.stringify(lesson)}, brainRoot='1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'
+const learningBase='---\\nid: BRAIN-HQ-REVIEWED-LEARNING\\n---\\n# HQ Reviewed Learning\\n<!-- hq-learning-entries -->\\n'
+let learningText=learningBase,learningVersion=1,learningMedia=0,learningAck=0
 const exists = async path => { try { await access(path); return true } catch { return false } }
 const wait = ms => new Promise(done => setTimeout(done, ms))
 globalThis.fetch = async (url, options = {}) => {
   let body = true, status = 200
+  if(url==='https://oauth2.googleapis.com/token')return Response.json({access_token:'synthetic-google',expires_in:3600})
+  if(url.startsWith('https://www.googleapis.com/')){
+    const parsed=new URL(url),id=parsed.pathname.split('/').at(-1)
+    if(options.method==='PUT'){learningText=String(options.body);learningVersion++;await appendFile(root+'/events','learning-put\\n');return Response.json({id})}
+    if(parsed.searchParams.get('alt')==='media'){
+      if(learningVersion>1){learningMedia++;await appendFile(root+'/events','learning-readback\\n')}
+      return new Response(learningVersion>1 && (process.env.FIXTURE_LEARNING==='persistent' || learningMedia===1)?learningBase:learningText)
+    }
+    if(parsed.pathname.includes('/v2/'))return Response.json({id,title:'HQ Reviewed Learning.md',mimeType:'text/markdown',labels:{trashed:false},version:String(learningVersion),etag:'"v'+learningVersion+'"'})
+    return Response.json(id==='synthetic_learning_file'?{id,name:'HQ Reviewed Learning.md',mimeType:'text/markdown',trashed:false,ownedByMe:false,capabilities:{canEdit:true},parents:[brainRoot],version:String(learningVersion)}:{id,mimeType:'application/vnd.google-apps.folder',trashed:false,parents:[],version:'1'})
+  }
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
     throw Error('privileged-openapi-must-not-be-requested')
   } else if (url.endsWith('/hq_worker_release_status')) { body = {staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
-  else if (url.endsWith('/hq_worker_pending_lessons')) body = []
+  else if (url.endsWith('/hq_worker_pending_lessons')) body = process.env.FIXTURE_LEARNING && !learningAck ? [lesson] : []
+  else if(url.endsWith('/hq_worker_publish_lesson')){learningAck++;await appendFile(root+'/events','learning-ack\\n');body={accepted:true}}
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
   else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(process.env.FIXTURE_TASK_ACK){if(receipt.p_reply!==''||receipt.p_error!=='task-ack-mention-required')throw Error('task-ack-failure-missing');await appendFile(root+'/ack-receipt.json',JSON.stringify(receipt));taskAckDelivered=true}else{if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence))} await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
@@ -89,6 +109,7 @@ await start(adapters)
 `)
   const state = join(root, 'state')
   const env = { PATH: process.env.PATH, HQ_RELEASE_MANAGED: '1', HQ_WORKER_STATE_DIR: state,
+    HQ_BRAIN_GOOGLE_CLIENT_EMAIL:'synthetic@example.invalid',HQ_BRAIN_GOOGLE_PRIVATE_KEY:googleKey,HQ_BRAIN_ROOT_FOLDER_ID:'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8',HQ_BRAIN_LEARNING_FILE_ID:extra.FIXTURE_LEARNING?'synthetic_learning_file':'',
     HQ_SUPABASE_URL: 'https://dpruoncalmwicrqhqelu.supabase.co', HQ_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
     HQ_WORKER_ID: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', HQ_WORKER_EMAIL: 'fixture@example.invalid', HQ_WORKER_PASSWORD: 'fixture-password-never-real-12345', ...extra }
   const child = spawn(process.execPath, [join(root, 'entry.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -250,4 +271,15 @@ test('staffing claims share the real drain barrier and an uncertain staffing out
  assert.equal((await failed.control('status')).paused,true)
  assert.match(await readFile(join(failed.state,'maintenance-uncertain'),'utf8'),/reconcile/)
  assert.equal(await failed.events(),'claim\nstaffing-dispatch\n')
+})
+
+for(const mode of ['converges','persistent'])test('actual worker learning '+mode+' acknowledges only after complete read verification',async t=>{
+ const f=await fixture(t,{FIXTURE_LEARNING:mode})
+ await f.control('resume')
+ await until(async()=>mode==='persistent'?(await f.control('status')).uncertain:(await f.events()).includes('learning-ack'))
+ const events=await f.events()
+ assert.equal(events.split('learning-put\n').length-1,1)
+ assert.equal(events.split('learning-readback\n').length-1,mode==='persistent'?3:2)
+ assert.equal(events.split('learning-ack\n').length-1,mode==='persistent'?0:1)
+ if(mode!=='persistent')assert.ok(events.lastIndexOf('learning-readback')<events.indexOf('learning-ack'))
 })
