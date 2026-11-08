@@ -1,6 +1,8 @@
 import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
-import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
+import type { HqAvatarAssets, HqDepartmentOffice } from '../types/hqLayoutPresentation'
+import { createHqAvatarRenderer } from './hqAvatarRenderer.ts'
+import { identity, matrixProduct, model } from './hqSceneMatrices.ts'
 import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
 import type { OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
@@ -278,15 +280,6 @@ void main() {
   gl_FragColor = vec4(color, alpha);
 }`
 
-function identity(): Matrix { return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]) }
-function model(x = 0, y = 0, z = 0, tilt = 0, turn = 0, spin = 0, scale = 1, result = identity()): Matrix {
-  const cx = Math.cos(tilt), sx = Math.sin(tilt), cy = Math.cos(spin), sy = Math.sin(spin), cz = Math.cos(turn), sz = Math.sin(turn)
-  result[0] = (cy * cz + sy * sx * sz) * scale; result[1] = cx * sz * scale; result[2] = (-sy * cz + cy * sx * sz) * scale; result[3] = 0
-  result[4] = (-cy * sz + sy * sx * cz) * scale; result[5] = cx * cz * scale; result[6] = (sy * sz + cy * sx * cz) * scale; result[7] = 0
-  result[8] = sy * cx * scale; result[9] = -sx * scale; result[10] = cy * cx * scale; result[11] = 0
-  result[12] = x; result[13] = y; result[14] = z; result[15] = 1
-  return result
-}
 function dot(a: Vector, b: Vector): number { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] }
 function normalize(a: Vector): Vector { const length = Math.hypot(...a) || 1; return [a[0] / length, a[1] / length, a[2] / length] }
 function cross(a: Vector, b: Vector): Vector { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]] }
@@ -397,13 +390,19 @@ function constructionStage(age: number, start: number, end: number): number {
   const progress = Math.max(0, Math.min(1, (age - start) / (end - start)))
   return progress * progress * (3 - 2 * progress)
 }
-function matrixProduct(first: Matrix, second: Matrix, result: Matrix = new Float32Array(16)): Matrix {
-  for (let column = 0; column < 4; column++) for (let row = 0; row < 4; row++) {
-    let value = 0
-    for (let index = 0; index < 4; index++) value += first[index * 4 + row]! * second[column * 4 + index]!
-    result[column * 4 + row] = value
+function avatarInView(matrix: Matrix, { x, y, z }: HqAgentPose) {
+  // A loose sphere covers the standing model, seated limbs and fishing rod.
+  // Test the four side planes before submitting skinned meshes at close zoom.
+  for (let axis = 0; axis < 2; axis++) {
+    for (const sign of [-1, 1]) {
+      const a = matrix[3]! + sign * matrix[axis]!
+      const b = matrix[7]! + sign * matrix[axis + 4]!
+      const c = matrix[11]! + sign * matrix[axis + 8]!
+      const d = matrix[15]! + sign * matrix[axis + 12]!
+      if (a * x + b * (y + .6) + c * z + d < -1.7 * Math.hypot(a, b, c)) return false
+    }
   }
-  return result
+  return true
 }
 function tube(path: Vector[], radius: number, sides = 6): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
@@ -562,8 +561,8 @@ function brainNerves(): Geometry {
   return merge(...nerves)
 }
 
-/** Pure presentation renderer: local geometry, no network, assets or product state. */
-export function createHologramRenderer(canvas: HTMLCanvasElement, palette: HologramPalette): HologramRenderer | null {
+/** Presentation renderer for local geometry and supplied avatar assets. */
+export function createHologramRenderer(canvas: HTMLCanvasElement, palette: HologramPalette, avatarAssets?: () => HqAvatarAssets | undefined, onAvatarReady = () => {}): HologramRenderer | null {
   let context: WebGLRenderingContext | null
   try { context = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false, powerPreference: 'low-power' }) }
   catch { return null }
@@ -575,6 +574,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
   let terrainMaterial: HologramTerrainMaterial | null = null
   let islandMaterial: NaturalIslandMaterial | null = null
   let shoreEffects: IslandShoreEffects | null = null
+  let avatars: ReturnType<typeof createHqAvatarRenderer> = null
   try {
     function compile(kind: number, source: string) {
       const shader = gl!.createShader(kind)
@@ -589,6 +589,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentShader))
     gl.linkProgram(program)
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Hologram renderer unavailable')
+    if (avatarAssets) avatars = createHqAvatarRenderer(gl, avatarAssets, onAvatarReady)
     gl.useProgram(program)
     const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal'), coastAttribute = gl.getAttribLocation(program, 'aCoast')
     const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uWaterPhaseA', 'uWaterPhaseB', 'uWaterRipplePhase', 'uWaterDrift', 'uWaterPixelScale', 'uWaterDebug', 'uShoreImpact[0]', 'uShoreNormal[0]', 'uShoreMotion[0]', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uBrainLight', 'uBrainLightStrength', 'uRoomLight', 'uRoomLightStrength', 'uTerrainMap', 'uTerrainScale', 'uIslandMap', 'uIslandScale', 'uIslandSoil', 'uIslandMoss'].map(name => [name, gl.getUniformLocation(program!, name)]))
@@ -871,17 +872,30 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       }
       gl!.uniform1f(uniforms.uRoomLightStrength!, 0)
     }
-    function drawAgent(pose: HqAgentPose, agent: HqAgentCharacter, reducedMotion: boolean) {
+    function drawAgent(pose: HqAgentPose, agent: HqAgentCharacter, reducedMotion: boolean, seconds: number) {
       if (!pose.visible) return
       if (pose.mode === 'working' && agent.role !== 'ceo') {
         const entry = agent.departmentId && officeEntries.get(agent.departmentId)
         if (!entry || constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock) < 1.8) return
       }
+      if (agent.avatar && avatars && viewProjection) {
+        if (!avatarInView(viewProjection, pose)) return
+        const avatar = avatars.draw(agent.avatar, pose, viewProjection, seconds, reducedMotion)
+        if (avatar) {
+          gl!.useProgram(program)
+          visibleAgentAnchors.set(agent.id, [pose.x, avatar.labelY, pose.z])
+          if (avatar.rod) {
+            drawMesh(characterMeshes.rod, beachWoodColor, 0, 1, avatar.rod)
+            drawMesh(fishingLine, palette.silver, 0, 1, avatar.rod)
+          }
+          return
+        }
+      }
       const rig = HQ_AGENT_RIG
       const characterScale = HQ_AGENT_CHARACTER_SCALE
       const working = pose.mode === 'working', lounging = pose.mode === 'lounging', fishing = pose.mode === 'fishing'
       const walking = pose.mode === 'walking' && !reducedMotion
-      const swing = walking ? Math.sin(pose.phase) * 0.48 : 0
+      const swing = walking ? Math.sin(pose.phase) * 0.48 * pose.gait.strideScale : 0
       const breath = reducedMotion ? 0 : Math.sin(pose.phase) * 0.007
       const lean = lounging ? 0.55 : working ? 0.045 : 0
       const bob = walking ? Math.abs(Math.sin(pose.phase)) * 0.018 : breath
@@ -921,7 +935,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         matrixProduct(working ? agentKneeModel : agentLimbModel, agentLocalModel, agentAnkleModel)
         drawMesh(shoe, palette.coal, 0, 1, agentAnkleModel)
         const typing = reducedMotion ? 0 : Math.sin(pose.phase * 3.2 + side * 1.7) * 0.055
-        const armTilt = working ? 1.34 + typing : fishing ? (left ? 0.86 : 1.02) + breath : lounging ? 0.18 : -swing * side * 0.75
+        const armTilt = working ? 1.34 + typing : fishing ? (left ? 0.86 : 1.02) + breath : lounging ? 0.18 : -swing * side * 0.75 * pose.gait.armSwing
         model(side * rig.shoulderX, rig.shoulderY, 0, armTilt, side * 0.05, 0, 1, agentLocalModel)
         matrixProduct(agentRootModel, agentLocalModel, agentLimbModel)
         drawMesh(left ? characterMeshes.leftArm : characterMeshes.rightArm, clothes, 0, 1, agentLimbModel)
@@ -1050,6 +1064,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         visibleAgentAnchors.clear()
         const agentPoses = agentMotion.update(officeLayout, agentRoster, constructionClock, Boolean(layout.reducedMotion))
         const agentById = new Map(agentRoster.map(agent => [agent.id, agent]))
+        avatars?.retain(agentById)
         brainLightPower = 0.86 + reveal * 0.26
         const float = Math.sin(time * 0.9) * 0.028, beat = 1 + Math.sin(time * 2.15) * 0.006, orbHeight = HQ_ORB_CENTER_Y + float
         const shakeX = Math.sin(time * 31) * excited * 0.005, shakeY = Math.sin(time * 37) * excited * 0.004
@@ -1081,7 +1096,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
           for (const pose of agentPoses) {
             const agent = agentById.get(pose.id)
-            if (agent) drawAgent(pose, agent, Boolean(layout.reducedMotion))
+            if (agent) drawAgent(pose, agent, Boolean(layout.reducedMotion), seconds)
           }
           drawMesh(geometry.base, palette.navyDeep, 8)
           drawMesh(geometry.bevel, palette.steelGray, 8)
@@ -1162,6 +1177,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         viewProjection = null
         officeEntries.clear(); firstSeen.clear(); visibleAgentAnchors.clear()
         agentMotion.reset()
+        avatars?.dispose(); avatars = null
         shoreEffects?.dispose(); shoreEffects = null
         effects?.dispose(); effects = null
         terrainMaterial?.dispose(); terrainMaterial = null
@@ -1173,6 +1189,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
   }
   catch {
+    avatars?.dispose()
     shoreEffects?.dispose()
     effects?.dispose()
     terrainMaterial?.dispose()
