@@ -248,6 +248,7 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    assert.deepEqual(status.researchApi.rpcs,{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']})
    assert.deepEqual(status.roleApi.rpcs,{hq_worker_role_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']})
    assert.equal(checkRepositoryContract(status),true)
+   assert.equal((await scalar(h,"select has_function_privilege('authenticated','hq_private.guard_repository_claim()','EXECUTE') allowed")).allowed,false)
    for(const table of ['repository_bundles','repository_reservations','repository_receipts','repository_qualifications'])assert.equal(await count(h,table),0)
    await h.as('worker');await assert.rejects(()=>h.rpc('hq_freeze_repository_bundle',['AG-DEV-002',sourcePreset,'snapshot',sourceSha,null,null,randomUUID()]),/HQ_FOUNDER_REQUIRED/)
   })

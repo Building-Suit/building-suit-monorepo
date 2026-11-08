@@ -787,7 +787,7 @@ do $$ declare f record;
 begin
  for f in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  where n.nspname='hq_private' and (p.proname like 'repository_%' or p.proname in ('freeze_repository_bundle','begin_repository_trial','begin_repository_trial_base','issue_repository_qualification','worker_repository_claim',
- 'worker_finish_v4_before_repository','workforce_enrich_claim_before_repository','workforce_trial_status_before_repository','worker_release_status_before_repository')) loop
+ 'worker_finish_v4_before_repository','workforce_enrich_claim_before_repository','workforce_trial_status_before_repository','worker_release_status_before_repository','guard_repository_claim')) loop
  execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);end loop;
 end $$;
 revoke all on function public.hq_freeze_repository_bundle(text,text,text,text,integer,uuid,uuid),public.hq_begin_repository_trial(text,uuid,uuid),public.hq_issue_repository_qualification(uuid),public.hq_worker_repository_claim(uuid,integer,integer) from public,anon,authenticated,service_role;

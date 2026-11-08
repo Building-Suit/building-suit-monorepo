@@ -295,9 +295,9 @@
     },
     {
       "file": "20261108212105_hq_public_repository_read.sql",
-      "bytes": 75996,
-      "md5": "3a16d157df7061d3e7900c6e08241f58",
-      "sha256": "3f70ac557984e177116436258d11614bf27e5d12c57ee9aaae5865d214cf11ec",
+      "bytes": 76021,
+      "md5": "ad73737b37d3415644cd29ea97e9465e",
+      "sha256": "0cc85cf310b1bb8fcbe6ac1d8a395a2872886b289e436a510acd0008a161195a",
       "phase": "public-repository-read-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261108212105_hq_public_repository_read.sql"
