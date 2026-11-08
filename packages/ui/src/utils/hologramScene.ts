@@ -878,9 +878,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         const entry = agent.departmentId && officeEntries.get(agent.departmentId)
         if (!entry || constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock) < 1.8) return
       }
-      if (agent.avatar && avatars && viewProjection) {
+      if (agent.avatar && avatarAssets && viewProjection) {
         if (!avatarInView(viewProjection, pose)) return
-        const avatar = avatars.draw(agent.avatar, pose, viewProjection, seconds, reducedMotion)
+        const avatar = avatars?.draw(agent.avatar, pose, viewProjection, seconds, reducedMotion)
         if (avatar) {
           gl!.useProgram(program)
           visibleAgentAnchors.set(agent.id, [pose.x, avatar.labelY, pose.z])
@@ -904,8 +904,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const facing = pose.yaw + (lounging || fishing ? Math.PI : 0)
       const rise = lounging ? -0.09 : working ? -0.08 : 0
       const seatAnchor = working || lounging ? (rig.hipY * characterScale - HQ_AGENT_RIG.hipY) * Math.cos(lean) : 0
-      model(pose.x, pose.y + rise + bob - seatAnchor, pose.z, lean, 0, facing, characterScale, agentRootModel)
       visibleAgentAnchors.set(agent.id, [pose.x, pose.y + rise + bob - seatAnchor + rig.height * characterScale + 0.18, pose.z])
+      // Mapped avatars use their nameplate while the pack downloads and decodes.
+      if (agent.avatar && avatarAssets) return
+      model(pose.x, pose.y + rise + bob - seatAnchor, pose.z, lean, 0, facing, characterScale, agentRootModel)
       const clothes = agent.role === 'ceo' ? palette.navy : agent.role === 'hr' ? agentHrClothesColor : agentClothesColor
       drawMesh(characterMeshes.body, agentSkinColor, 0, 1, agentRootModel)
       drawMesh(characterMeshes.head, agentSkinColor, 0, 1, agentRootModel)

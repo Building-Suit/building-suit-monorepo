@@ -1,0 +1,16 @@
+{
+  "id": "hq-lego-avatars-20261108",
+  "task": "HQ-LEGO-AVATARS-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/composables/useHqAvatarAssets.ts",
+    "apps/company-hq/public/avatars",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hqAvatarRenderer.ts",
+    "tooling/hq-character-lego.py",
+    "tooling/hq-minifigures.py"
+  ],
+  "reason": "Use eighteen distinct rigged LDraw minifigure looks by default in private Company HQ, with nine stable roster slots per body preset. Show employee nameplates while the packs load, keeping the previous procedural figures out of the loading transition. Record source credits and include the reproducible pack exporter."
+}
