@@ -78,7 +78,7 @@ export interface HqAgentsPresentation {
   workActivity?: readonly HqWorkActivity[]
   runtimeOnline: boolean
   lastRuntimeSeenAt?: string
-  taskBrowser?: HqTaskBrowserAdapter
+  taskBrowserRevision?: number
   tasks?: readonly HqTaskPresentation[]
   runningTasks?: readonly HqTaskPresentation[]
   officeTasks?: readonly HqTaskPresentation[]
@@ -250,11 +250,6 @@ export interface HqTaskBrowserPage {
   counts: Record<HqTaskGroup, number>
   /** A legacy snapshot is incomplete; its counts must not be shown as totals. */
   partial?: boolean
-}
-export interface HqTaskBrowserAdapter {
-  revision: number
-  load: (request: HqTaskBrowserRequest, signal: AbortSignal) => Promise<HqTaskBrowserPage>
-  detail: (id: string, signal: AbortSignal) => Promise<HqTaskPresentation | null>
 }
 export interface HqTaskBrowserCopy {
   all: string; running: string; waiting: string; done: string

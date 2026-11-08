@@ -18,9 +18,11 @@ import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
+import { useHqTaskBrowserSource } from '../utils/hqTaskBrowserSource'
 import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from '../utils/hologramPresentationGeometry.ts'
 
 const confirmation = useConfirmation()
+const taskSource = useHqTaskBrowserSource()
 const trialConfirming = ref(false)
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
@@ -485,7 +487,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
               <BsHqOfficeOverview :agents="selectedWorkplaceAgents" :observations="officeRosterKnown ? agentsState.observations : undefined" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" @select-agent="openAgent" />
             </template>
             <section v-else-if="officeSection === 'tasks'" class="bs-hq-layout__office-tasks">
-              <BsHqTaskBrowser v-if="agentsState.status === 'connected' && agentsState.taskBrowser && content.agents?.workforce?.taskBrowser && officeRosterKnown" :key="selectedWorkplace.id" :adapter="agentsState.taskBrowser" :copy="content.agents.workforce.taskBrowser" :agents="agentsState.agents" :office-id="selectedWorkplace.executive ? 'executive' : selectedWorkplace.id" :locale="content.agents.locale" @select="openRecord('task', $event.id, $event.title)" />
+              <BsHqTaskBrowser v-if="agentsState.status === 'connected' && taskSource && content.agents?.workforce?.taskBrowser && officeRosterKnown" :key="selectedWorkplace.id" :source="taskSource" :revision="agentsState.taskBrowserRevision" :copy="content.agents.workforce.taskBrowser" :agents="agentsState.agents" :office-id="selectedWorkplace.executive ? 'executive' : selectedWorkplace.id" :locale="content.agents.locale" @select="openRecord('task', $event.id, $event.title)" />
               <p v-else role="status">{{ officeCopy.unavailable }}</p>
             </section>
             <!-- Calendar and Settings intentionally remain empty, selectable panels. -->

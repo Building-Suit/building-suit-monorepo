@@ -464,6 +464,8 @@
     "./utils/hologramTerrainMaterial": "./src/utils/hologramTerrainMaterial.ts",
     "./utils/hqAgentCharacters": "./src/utils/hqAgentCharacters.ts",
     "./utils/hqIslandGeometry": "./src/utils/hqIslandGeometry.ts",
+    "./utils/hqOrgChart": "./src/utils/hqOrgChart.ts",
+    "./utils/hqTaskBrowserSource": "./src/utils/hqTaskBrowserSource.ts",
     "./utils/hqSteveCharacter": "./src/utils/hqSteveCharacter.ts",
     "./utils/islandShoreEffects": "./src/utils/islandShoreEffects.ts",
     "./utils/islandShoreInteraction": "./src/utils/islandShoreInteraction.ts",

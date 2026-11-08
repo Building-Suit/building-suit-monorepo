@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent, HqStaffingCopy, HqStaffingPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
-import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent, HqTaskBrowserAdapter, HqTaskBrowserCopy, HqTaskPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent, HqTaskBrowserCopy, HqTaskPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 const { locale } = useI18n()
 const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
 // Illustrative presentation fixtures only; never projected into the private HQ.
@@ -221,8 +222,7 @@ const taskBrowserCopy: HqTaskBrowserCopy = {
   all: 'All', running: 'Running', waiting: 'Waiting', done: 'Done', owner: 'Owner',
   empty: 'No tasks.', loading: 'Loading tasks…', unavailable: 'Tasks unavailable.', retry: 'Retry', partial: 'Limited recent snapshot.',
 }
-const sampleTaskBrowser: HqTaskBrowserAdapter = {
-  revision: 0,
+const sampleTaskBrowser: HqTaskBrowserSource = {
   async load(request) {
     const count = request.group === 'running' ? 7 : request.group === 'waiting' ? 18 : 42
     return { counts: { running: 7, waiting: 18, done: 42 }, items: Array.from({ length: Math.max(0, Math.min(request.limit, count - request.offset)) }, (_, index): HqTaskPresentation => ({
@@ -306,7 +306,7 @@ const plansExample = computed<HqCompanyPlansPresentation>(() => ({
   </BsContentSection>
   <BsContentSection :title="c('HQ tasks, team and learning', 'مهام المقر والفريق والتعلّم')" :description="c('Result-first tasks, observed worker stages and explicit scoped follow-up approval use shared typed views. Elapsed time is not a completion estimate. This unavailable catalogue projection creates no live task or worker/Brain connection.', 'تعرض الواجهات المشتركة النتيجة أولًا ومراحل العامل الفعلية واعتماد مهمة متابعة محددة. الوقت المنقضي ليس تقديرًا للإنجاز. بيانات المثال غير متاحة ولا تُنشئ مهام فعلية أو تتصل بعامل أو بذاكرة الشركة.')">
     <BsTabs variant="hq" :model-value="workforceSection" :tabs="[{ value: 'tasks', label: workforceContent.tasksLabel }, { value: 'team', label: workforceContent.teamLabel }, { value: 'learning', label: workforceContent.learningLabel }]" :label="workforceContent.teamLabel" @update:model-value="chooseWorkforceSection" />
-    <BsHqTaskBrowser :adapter="sampleTaskBrowser" :copy="taskBrowserCopy" :agents="[{ id: 'sample-agent', name: 'Sample owner', role: 'agent', roleLabel: 'Illustrative role', departmentId: null, departmentName: 'Sample department', deskIndex: null, activity: 'unknown' }]" show-owner :locale="locale" />
+    <BsHqTaskBrowser :source="sampleTaskBrowser" :copy="taskBrowserCopy" :agents="[{ id: 'sample-agent', name: 'Sample owner', role: 'agent', roleLabel: 'Illustrative role', departmentId: null, departmentName: 'Sample department', deskIndex: null, activity: 'unknown' }]" show-owner :locale="locale" />
     <BsHqWorkforce :section="workforceSection" :presentation="chatPresentation" :content="workforceContent" :locale="locale" />
   </BsContentSection>
 </template>

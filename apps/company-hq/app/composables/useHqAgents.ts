@@ -1,5 +1,6 @@
 import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
+import { provideHqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot } from '#shared/types/agents'
 import { hqCosmeticIdle, hqObservationFresh, hqObservedActivity } from '../utils/hqAgentPresence'
 import { parseHqTaskPage } from '#shared/types/taskBrowser'
@@ -39,6 +40,7 @@ function timestampRemainder(value: string): string {
 /** Founder-scoped event-driven message state. Runtime presence never invents employee work. */
 export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messages?: () => HqAgentMessages) {
   const live = useHqLiveEvents()
+  provideHqTaskBrowserSource({ load: loadTaskPage, detail: loadTaskDetail })
   const trials = shallowRef<readonly HqTrialPresentation[]>([])
   const trialPending = ref(false), trialMessage = ref('')
   async function refreshTrials() {
@@ -167,7 +169,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
           lifecycleLabel: copy?.lifecycle?.(record.lifecycle ?? 'unknown') ?? record.lifecycle,
           connectionLabel: copy?.connection?.(connection) ?? connection }
       }),
-      taskBrowser: { revision: taskBrowserRevision, load: loadTaskPage, detail: loadTaskDetail },
+      taskBrowserRevision,
       tasks: (state?.tasks ?? []).map(projectTask),
       lessons: (state?.lessons ?? []).map(lesson => ({
         id: lesson.id, status: lesson.status, sourceId: lesson.sourceId, title: lesson.summary, text: lesson.body, agentName: state?.agents.find(agent => agent.id === lesson.agentId)?.name ?? lesson.agentId,

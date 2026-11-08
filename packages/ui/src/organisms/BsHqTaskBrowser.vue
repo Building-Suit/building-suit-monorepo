@@ -2,8 +2,9 @@
 import { computed, ref, useId, watch } from 'vue'
 import BsTabs from '../molecules/BsTabs.vue'
 import BsHqTaskWindow from '../molecules/BsHqTaskWindow.vue'
-import type { HqAgentPresentation, HqTaskBrowserAdapter, HqTaskBrowserCopy, HqTaskGroup, HqTaskPresentation } from '../types/hqAgentsPresentation'
-const props = defineProps<{ adapter: HqTaskBrowserAdapter; copy: HqTaskBrowserCopy; agents: readonly HqAgentPresentation[]; officeId?: string | null; showOwner?: boolean; locale?: string }>()
+import type { HqAgentPresentation, HqTaskBrowserCopy, HqTaskGroup, HqTaskPresentation } from '../types/hqAgentsPresentation'
+import type { HqTaskBrowserSource } from '../utils/hqTaskBrowserSource'
+const props = defineProps<{ source: HqTaskBrowserSource; revision?: number; copy: HqTaskBrowserCopy; agents: readonly HqAgentPresentation[]; officeId?: string | null; showOwner?: boolean; locale?: string }>()
 const emit = defineEmits<{ select: [task: HqTaskPresentation] }>()
 const tab = ref<'all' | HqTaskGroup>('all')
 const counts = ref<Record<HqTaskGroup, number> | null>(null)
@@ -13,7 +14,7 @@ const tabs = computed(() => ['all', ...groups].map(value => ({ value, label: pro
   ...(counts.value ? { count: value === 'all' ? counts.value.running + counts.value.waiting + counts.value.done : counts.value[value as HqTaskGroup] } : {}),
 })))
 const visibleGroups = computed(() => tab.value === 'all' ? groups : [tab.value])
-watch(() => [props.officeId, props.adapter.revision], () => { counts.value = null })
+watch(() => [props.officeId, props.revision], () => { counts.value = null })
 function choose(value: string) { if (value === 'all' || groups.includes(value as HqTaskGroup)) tab.value = value as typeof tab.value }
 </script>
 <template>
@@ -22,7 +23,7 @@ function choose(value: string) { if (value === 'all' || groups.includes(value as
     <div :id="`${id}-panel`" role="tabpanel" :aria-labelledby="`${id}-${tab}`">
       <section v-for="group in visibleGroups" :key="`${officeId}:${group}:${tab === 'all'}`" class="bs-hq-task-browser__group">
         <h3 v-if="tab === 'all'">{{ copy[group] }} <span v-if="counts">{{ counts[group] }}</span></h3>
-        <BsHqTaskWindow :adapter="adapter" :copy="copy" :group="group" :office-id="officeId ?? null" :compact="tab === 'all'" :agents="agents" :show-owner="showOwner" :locale="locale" @counts="counts = $event" @select="emit('select', $event)" />
+        <BsHqTaskWindow :source="source" :revision="revision" :copy="copy" :group="group" :office-id="officeId ?? null" :compact="tab === 'all'" :agents="agents" :show-owner="showOwner" :locale="locale" @counts="counts = $event" @select="emit('select', $event)" />
       </section>
     </div>
   </section>

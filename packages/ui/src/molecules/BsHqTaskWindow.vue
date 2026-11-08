@@ -2,17 +2,18 @@
 import { computed, ref, watch } from 'vue'
 import { useWindowedList } from '@building-suit/ux'
 import BsButton from '../atoms/BsButton.vue'
-import type { HqAgentPresentation, HqTaskBrowserAdapter, HqTaskBrowserCopy, HqTaskGroup, HqTaskPresentation } from '../types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqTaskBrowserCopy, HqTaskGroup, HqTaskPresentation } from '../types/hqAgentsPresentation'
+import type { HqTaskBrowserSource } from '../utils/hqTaskBrowserSource'
 
-const props = defineProps<{ adapter: HqTaskBrowserAdapter; group: HqTaskGroup; officeId: string | null; compact: boolean; copy: HqTaskBrowserCopy; agents: readonly HqAgentPresentation[]; showOwner?: boolean; locale?: string }>()
+const props = defineProps<{ source: HqTaskBrowserSource; revision?: number; group: HqTaskGroup; officeId: string | null; compact: boolean; copy: HqTaskBrowserCopy; agents: readonly HqAgentPresentation[]; showOwner?: boolean; locale?: string }>()
 const emit = defineEmits<{ select: [task: HqTaskPresentation]; counts: [counts: Record<HqTaskGroup, number> | null] }>()
 const region = ref<HTMLElement | null>(null)
 const partial = ref(false)
-const key = computed(() => JSON.stringify([props.officeId, props.group, props.adapter.revision]))
+const key = computed(() => JSON.stringify([props.officeId, props.group, props.revision]))
 const { items, offset, total, pending, failed, before, after, scroll, reload } = useWindowedList<HqTaskPresentation>({
   key: () => key.value, enabled: () => true, size: () => props.compact ? 3 : 12, rowHeight: 160,
   load: async (start, limit, signal) => {
-    const page = await props.adapter.load({ group: props.group, officeId: props.officeId, offset: start, limit }, signal)
+    const page = await props.source.load({ group: props.group, officeId: props.officeId, offset: start, limit }, signal)
     if (signal.aborted) throw new Error('Task window superseded')
     partial.value = Boolean(page.partial)
     emit('counts', page.partial ? null : page.counts)
