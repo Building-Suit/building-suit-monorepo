@@ -196,3 +196,67 @@ Actual job state transitions still emit application invalidations, while lease/t
 A founder intake failed before model invocation when the mandatory Working Agreement grew past the previous 48,000-byte document limit. The new 128,000-byte allowance accommodates the complete governing document while retaining the same total Brain budget and all source/authorization fences. Eleven mocked-worker checks pass, including the full 50 KB agreement, exact per-document and aggregate boundaries, chunked/no-Content-Length responses, UTF-8 byte accounting, 18-source scope, root ancestry and version-change rejection. These are synthetic read tests with no private Brain reads, hosted writes or real inference.
 
 The failed job and delivery journal must remain preserved. This source change adds no automatic retries, new queue reservation or recovery endpoint and performs no deployment. Any separately authorized recovery must use a fresh job identity with a reviewed link to the original pre-inference failure; it cannot clear the old journal or requeue its delivered identity.
+
+## Restricted public Research discovery MCP
+
+The candidate `exa-public-business-discovery-v1` policy adds a real local stdio
+MCP server inside `departmentWorkflow.mjs`; it does not add a sixth signed module.
+Only the current, independently qualified Research pilot can receive a
+job/binding-scoped permit from the research-capable claim endpoint. Older claims
+cannot lease the new-purpose trial or permitted work. The original contract-2
+11-RPC proof remains unchanged; `researchApi` and `publicDiscovery` are separate
+required capabilities for this runtime.
+
+`public_business_discovery` accepts no arguments. Its query, objective and three-result
+budget are fixed in host code. Model/task/Brain text and model-selected
+URLs cannot enter the upstream request. The server reserves and syncs its private
+one-shot budget before any upstream initialization; errors, redirects, repair
+turns and fallback models cannot repeat the discovery dispatch. No account,
+secret, cookie, authorization header or proxy override is used. Access and rate
+limit failures stop the operation. Anonymous service limits are not guaranteed.
+
+Typed completed MCP events preserve literal returned highlights with source URL,
+observation time and hashes. These are partial, untrusted excerpts, not full-page
+or freshness verification. Agent narrative is not retrieval evidence. Whole-page
+fetching is not implemented by this policy; enabling it needs a separately
+bounded tool/URL contract, actual response validation and affected qualification.
+
+The founder-only research-trial endpoints begin the fixed supervised purpose and
+issue qualification only after real bound host/tool evidence, manager review and
+independent review. Source installation, synthetic tests and the existing ordinary
+qualification do not establish this new tool qualification. Profile/skill revision
+drift invalidates the binding. Corrections retain original artifact provenance
+and use their own empty-tool host attestation. Failed evidence stays failed.
+Canonical profile publication and a genuine live trial are separate operational
+steps; this source change performs neither.
+
+Exa usage is subject to its terms and privacy policy, including its disclosed use
+of query data for service/model improvement. This policy sends only the approved
+generic public business/location criteria. It authorizes no outreach, contact,
+spending, credentials, general browsing or changes to other employees' tools.
+
+Auditable pilot transmission (host constants, never model arguments):
+
+```json
+{
+  "tool": "web_search_exa",
+  "query": "Official websites of barbershops and hair salons in New Cairo, Egypt",
+  "objective": "Find up to three public official business websites with literal page evidence of their New Cairo location and barber or hair salon services. Exclude personal profiles, social networks, directories and inferred contact details.",
+  "numResults": 3
+}
+```
+
+The cap is three result blocks from one search call. Every block is validated,
+including duplicates and excluded sources. Canonical public URLs are deduplicated
+locally, and the known prior public source is excluded locally without sending an
+internal prospect list upstream. At least one eligible source is required.
+Returned count, novelty, authority and freshness are not guaranteed. The
+historical one-result smoke proves only the observed format; actual cap-three
+behavior must be established in the affected live qualification. Whole-page
+verification remains a separate bounded capability, not an implied guarantee.
+
+Ordinary tasks select this policy explicitly in Nadia's original lease-bound
+`task-ack` reply using `publicDiscoveryPolicy`. The server must confirm Karim's
+current qualification and freeze the task enrollment atomically. An omitted field
+leaves existing ordinary drafting/native behavior unchanged; qualification alone
+does not enroll unrelated work. Repairs cannot enable or change the scope.

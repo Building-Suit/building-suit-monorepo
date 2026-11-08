@@ -40,7 +40,7 @@ globalThis.fetch=async url=>{
  let body,kind
  if(url.includes('/auth/')){kind='auth';body={access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}}
  else if(url.endsWith('/rest/v1/')){return new Response(JSON.stringify({error:'api-key',category:'privileged-key-required'}),{status:401})}
- else if(url.endsWith('/hq_worker_release_status')){kind='status';body={api,staffingApi,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
+ else if(url.endsWith('/hq_worker_release_status')){kind='status';body={researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},api,staffingApi,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
  else throw Error('unexpected-fixture-request')
  await appendFile(log,kind+'\\n');return new Response(JSON.stringify(body))
 }
