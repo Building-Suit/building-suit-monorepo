@@ -53,14 +53,14 @@ globalThis.fetch = async (url, options = {}) => {
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
     throw Error('privileged-openapi-must-not-be-requested')
-  } else if (url.endsWith('/hq_worker_release_status')) { body = {staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
+  } else if (url.endsWith('/hq_worker_release_status')) { body = {researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
   else if (url.endsWith('/hq_worker_pending_lessons')) body = process.env.FIXTURE_LEARNING && !learningAck ? [lesson] : []
   else if(url.endsWith('/hq_worker_publish_lesson')){learningAck++;await appendFile(root+'/events','learning-ack\\n');body={accepted:true}}
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
   else if (url.endsWith('/hq_worker_finish_v4')) { const receipt = JSON.parse(options.body); if(process.env.FIXTURE_TASK_ACK){if(receipt.p_reply!==''||receipt.p_error!=='task-ack-mention-required')throw Error('task-ack-failure-missing');await appendFile(root+'/ack-receipt.json',JSON.stringify(receipt));taskAckDelivered=true}else{if(!receipt.p_model_evidence || receipt.p_model_evidence.selectedModel !== 'gpt-6-astra') throw Error('model-evidence-missing'); await appendFile(root + '/receipt.json', JSON.stringify(receipt.p_model_evidence))} await appendFile(root + '/events', 'delivery\\n'); body = {accepted:true}; activeJobs = 0 }
   else if (url.endsWith('/hq_worker_skill_context')) body = true
   else if (url.endsWith('/hq_worker_staffing_claim')) { await appendFile(root + '/events', 'staffing-dispatch\\n'); if(process.env.FIXTURE_STAFFING_CLAIM_DELAY)while(!await exists(root+'/settle-staffing'))await wait(10); if(process.env.FIXTURE_STAFFING_CLAIM_ERROR){status=503;body={}}else body={job:null} }
-  else if (url.endsWith('/hq_worker_claim')) {
+  else if (url.endsWith('/hq_worker_research_claim')) {
     await appendFile(root + '/events', 'claim\\n')
     if (process.env.FIXTURE_CLAIM_ERROR) { status = 503; body = {} }
     else if (process.env.FIXTURE_TASK_ACK && taskAckDelivered) body = {job:null}

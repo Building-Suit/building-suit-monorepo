@@ -82,3 +82,11 @@ export async function hqTrialBody(event: H3Event): Promise<{ trialId: string }> 
   if (qualification && id(qualification.trialId)) return { trialId: String(qualification.trialId) }
   throw createError({ statusCode: 400, statusMessage: 'HQ trial qualification unavailable' })
 }
+
+/** Fixed Research policy trial; no caller-supplied agent, model, URL or tool config. */
+export async function hqPublicResearchTrialBody(event: H3Event): Promise<{ skillFileId: string; requestKey: string }> {
+  const entry = exact(await boundedBody(event, 2048), ['skillFileId', 'requestKey'])
+  if (!entry || typeof entry.skillFileId !== 'string' || !/^[A-Za-z0-9_-]{8,200}$/.test(entry.skillFileId)
+    || !id(entry.requestKey)) throw createError({ statusCode: 400, statusMessage: 'HQ research trial unavailable' })
+  return { skillFileId: entry.skillFileId, requestKey: String(entry.requestKey) }
+}

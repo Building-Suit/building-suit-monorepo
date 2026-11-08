@@ -7,13 +7,13 @@ import { spawn, spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { maintenanceGate, checkApiContract, checkStaffingContract, REQUIRED_RPCS } from './maintenance.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { validateStaffingProfileDraft } from './workforceRoster.mjs'
 import { fake } from './test-cli.mjs'
 import { checkApiContract as releasedContract } from './fixtures/maintenance-contract2-030f66ee.mjs'
-import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, validateTaskAckOutput, webAllowed } from './worker.mjs'
+import { deliverWorkerEntry, invokeCodex, codeOf, validateJob, validateTaskAckOutput, webAllowed, failedToolEvidence } from './worker.mjs'
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))
 const { PGlite } = require('@electric-sql/pglite')
 const root = new URL('../../apps/company-hq/supabase/migrations/', import.meta.url)
@@ -877,6 +877,7 @@ async function passSkillTrial(h,skill,agentId='AG-HR-002',managerId='AG-HR-001')
 
 const evidenceMigration='20261108030332_hq_task_evidence_context.sql'
 const qualificationBudgetMigration='20261108054818_hq_qualification_query_budget.sql'
+const publicDiscoveryMigration='20261108153026_hq_public_discovery_mcp.sql'
 async function installTaskEvidence(h,withBudget=true) {
  await h.db.exec('reset role')
  await h.db.exec("update hq_private.brain_files set source_version='1' where source_version is null")
@@ -1491,5 +1492,300 @@ test('staffing reviewer binding rejects self-review and drift while preserving g
   await h.db.exec('reset role')
   assert.deepEqual((await h.db.query('select receipt_id,binding_digest,host_execution_id from hq_private.workforce_qualification_receipts')).rows,before)
   assert.equal((await h.db.query("select hq_private.workforce_skill_evidence_valid('AG-HR-002',$1) ok",[skill])).rows[0].ok,true)
+ }finally{await h.db.close()}
+})
+
+test('public discovery canonical migration compiles additively with exact legacy API proof and no seeded authority',async()=>{
+ const {h}=await trialSetup(['synthetic_public_skill'],true,'AG-RES-002','AG-RES-001')
+ try{
+  await installTaskEvidence(h)
+  await h.db.exec('reset role');await h.db.exec(await readFile(new URL(publicDiscoveryMigration,root),'utf8'))
+  await h.as('worker');const status=await h.rpc('hq_worker_release_status',[worker])
+  assert.deepEqual(status.api.rpcs,REQUIRED_RPCS);assert.equal(releasedContract(status),2)
+  assert.deepEqual(status.researchApi.rpcs,{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']})
+  await assert.rejects(()=>h.rpc('hq_begin_public_research_trial',['synthetic_public_skill',randomUUID()]),/HQ_FOUNDER_REQUIRED/)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_receipts')).rows[0].n,0)
+  assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+ }finally{await h.db.close()}
+})
+
+async function publicDiscoverySetup() {
+ const skill='synthetic_public_skill'
+ const {h,configured}=await trialSetup([skill],true,'AG-RES-002','AG-RES-001')
+ await installTaskEvidence(h)
+ await h.db.exec('reset role');await h.db.exec(await readFile(new URL(publicDiscoveryMigration,root),'utf8'))
+ await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-RES-002'?{...a,lifecycle:'Active / Qualified'}:a))])
+ const claim=async()=>{await h.as('worker');return(await h.rpc('hq_worker_research_claim',[worker,300,1])).job}
+ return {h,skill,claim}
+}
+async function publicDiscoveryWork(h,skill,claim) {
+ await h.as('founder');const trial=await h.rpc('hq_begin_public_research_trial',[skill,randomUUID()])
+ assert.equal(await h.claim(),null,'legacy clients cannot lease any new-purpose stage')
+ let j=await claim();assert.equal(j.context.mode,'task-route');assert.equal(j.context.supervisedTrial.scope,'public-research-tool-trial-v1');assert.match(j.context.task.brief,/Founder-approved public Research tool exercise/);assert.match(j.context.task.acceptance,/Nadia.*Iris/)
+ await h.finish(j,{assigneeId:'AG-RES-001',reason:'Research head scopes the approved tool evaluation.',message:'@Employee 4 supervise.'})
+ j=await claim();assert.equal(j.context.mode,'task-ack');assert.ok(j.context.roster.some(a=>a.id==='AG-RES-002'))
+ await h.finish(j,{message:'@Synthetic Research Worker complete only the approved tool evaluation.',delegateId:'AG-RES-002'})
+ j=await claim();assert.equal(j.context.mode,'trial-start');await h.finish(j,{message:'I will evaluate the fixed public tool and evidence only.'})
+ j=await claim();assert.equal(j.context.mode,'worker-trial');assert.equal(j.context.publicDiscoveryPermit.bindingDigest,j.context.supervisedTrial.bindingDigest)
+ return {trial,j}
+}
+async function publicDiscoveryOutput(j,sourceCount=1,appServerOverrides={}) {
+ const urls=Array.from({length:sourceCount},(_,index)=>'https://salon'+index+'.example.com/services')
+ const text=urls.map((url,index)=>'Title: Synthetic public business '+index+'\nURL: '+url+'\nHighlights:\nGenerated public service evidence only.').join('\n\n')
+ const hash=value=>createHash('sha256').update(value).digest('hex')
+ const metadata={version:1,kind:'mcp-exa-public-discovery',policyId:'exa-public-business-discovery-v1',observedAt:new Date().toISOString(),rawResultSha256:hash('synthetic upstream fixture'),rawResultBytes:26,
+  sourceUrls:urls,literalTextSha256:hash(text),partial:true,wholePageVerified:false}
+ const item={type:'mcpToolCall',id:'synthetic_mcp_call',server:'hq_public_discovery',tool:'public_business_discovery',arguments:{},status:'completed',result:{content:[{type:'text',text}],structuredContent:metadata},error:null}
+ if(j.context.mode!=='worker-trial'){
+  const execItem={...item,type:'mcp_tool_call',result:{content:item.result.content,structured_content:metadata}}
+  return fake([{type:'thread.started',thread_id:randomUUID()},{type:'turn.started'},{type:'item.completed',item:execItem},
+   {type:'item.completed',item:{type:'agent_message',text:'Generated bounded public research artifact.'}},{type:'turn.completed'}],
+   config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)))
+ }
+ return fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,events:[{method:'item/completed',params:{item}}],turnItems:[item],...appServerOverrides}})
+}
+test('public discovery real worker output → atomic MCP receipt → Nadia → independent Iris → current qualification',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim)
+  const output=await publicDiscoveryOutput(j,3)
+  assert.equal(output.evidence[0].sources.length,3)
+  assert.equal(output.evidence[0].tool,'mcp');assert.ok(output.modelBindingEvidence.publicDiscoveryPolicy)
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence}
+  const delivered=await delivery(h,entry)
+  assert.equal(delivered.publicDiscoveryReceiptAccepted,true);assert.equal(delivered.trialReceiptAccepted,true)
+  assert.equal((await delivery(h,entry)).publicDiscoveryReceiptAccepted,true,'durable replay is idempotent')
+  let review=await claim();assert.equal(review.context.mode,'head-review');assert.equal(review.agent_id,'AG-RES-001')
+  assert.equal(review.context.publicDiscoveryEvidence[0].jobId,j.id)
+  await h.finish(review,{accepted:true,summary:'Head checked the actual selected skill artifact and original tool excerpt.',artifactDigest:review.context.artifact.digest})
+  review=await claim();assert.equal(review.agent_id,'AG-HR-003');await h.finish(review,{accepted:true,summary:'Independent evaluator checked the same artifact and real tool receipt.',artifactDigest:review.context.artifact.digest})
+  review=await claim();assert.equal(review.context.mode,'task-report');await h.finish(review,'The bounded public tool evaluation was independently reviewed; no outreach occurred.')
+  assert.equal(await claim(),null)
+  await h.as('founder');await h.rpc('hq_issue_public_research_qualification',[trial.trialId])
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,true)
+  for(const file of ['synthetic_research_profile',skill]){
+   await h.db.exec('begin');await h.db.query("update hq_private.brain_files set source_version='2' where file_id=$1",[file])
+   assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+   assert.equal((await delivery(h,entry)).publicDiscoveryReceiptAccepted,true,'lost acknowledgment replay survives later source drift without granting current qualification')
+   await h.db.exec('rollback;reset role')
+  }
+  await h.as('worker');const conflicting=structuredClone(output.modelBindingEvidence);conflicting.workerSourceDigest='f'.repeat(64)
+  await assert.rejects(()=>h.rpc('hq_worker_finish_v4',[j.id,j.lease_token,worker,output.reply,null,JSON.stringify(output.evidence),JSON.stringify(output.modelExecutionEvidence),JSON.stringify(conflicting)]),/HQ_DISCOVERY_DELIVERY_CONFLICT/)
+  await h.db.exec('reset role')
+  const receipt=(await h.db.query('select * from hq_private.public_discovery_receipts')).rows[0]
+  assert.equal(receipt.job_id,j.id);assert.equal(receipt.outcome,'completed');assert.equal(receipt.evidence.tool,'mcp')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.native_tool_receipts where job_id=$1',[j.id])).rows[0].n,0)
+  await h.as('founder');await h.rpc('hq_create_task',['Generated public research task','Internal public discovery only. Generated fixture marker profile_source_1.','Use real fixed tool receipt; no outreach.',null,randomUUID()])
+  let normal=await claim();assert.equal(normal.context.mode,'task-route');await h.finish(normal,{assigneeId:'AG-RES-001',reason:'Research scopes the public task.',message:'@Employee 4 supervise.'})
+  normal=await claim();await h.finish(normal,{message:'@Synthetic Research Worker prepare the bounded evidence packet.',delegateId:'AG-RES-002'})
+  normal=await claim();await h.finish(normal,{message:'I will prepare only the approved internal evidence packet.'})
+  assert.equal(await h.claim(),null,'old ordinary clients cannot lease now-MCP-required task-work')
+  normal=await claim();assert.equal(normal.context.mode,'task-work');assert.equal(normal.context.publicDiscoveryPermit.agentId,'AG-RES-002')
+  const normalOutput=await publicDiscoveryOutput(normal)
+  assert.equal((await delivery(h,{job:{id:normal.id,lease_token:normal.lease_token},phase:'finished',reply:normalOutput.reply,error:null,evidence:normalOutput.evidence,
+   modelBindingEvidence:null,modelExecutionEvidence:normalOutput.modelExecutionEvidence})).publicDiscoveryReceiptAccepted,true)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.native_tool_receipts where job_id=$1',[normal.id])).rows[0].n,0)
+
+ }finally{await h.db.close()}
+})
+
+test('public discovery rejects forged scope, mixed evidence and unsafe host policy atomically before completion',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim),output=await publicDiscoveryOutput(j)
+  const finish=async(evidence=output.evidence,proof=output.modelBindingEvidence)=>{
+   await h.as('worker');return h.rpc('hq_worker_finish_v4',[j.id,j.lease_token,worker,output.reply,null,JSON.stringify(evidence),JSON.stringify(output.modelExecutionEvidence),JSON.stringify(proof)])
+  }
+  for(const mutate of [
+   e=>{e.jobId=randomUUID()},e=>{e.agentId='AG-HR-002'},e=>{e.bindingDigest='f'.repeat(64)},
+   e=>{e.policyId='unapproved'},e=>{e.sources[0].excerpt+='changed'},e=>{e.wholePageVerified=true},
+   e=>{e.sources[0].url='https://localhost/private'},e=>{e.sources[0].url='https://example.com/?token=synthetic'},
+   e=>{e.session='synthetic-sensitive'},e=>{e.rawResultBytes=32769},e=>{e.sources.push(e.sources[0])},
+   e=>{e.sources=Array.from({length:4},(_,index)=>({...e.sources[0],url:'https://salon'+index+'.example.com/'}))},
+  ]){
+   const evidence=structuredClone(output.evidence);mutate(evidence[0]);await assert.rejects(()=>finish(evidence),/HQ_DISCOVERY_EVIDENCE_INVALID/)
+  }
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_finish',[j.id,j.lease_token,worker,output.reply,null]),/HQ_DISCOVERY_ATOMIC_FINISH_REQUIRED/)
+  await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_finish_v2',[j.id,j.lease_token,worker,output.reply,null,'[]']),/HQ_DISCOVERY_ATOMIC_FINISH_REQUIRED/)
+  await assert.rejects(()=>h.rpc('hq_worker_finish_v3',[j.id,j.lease_token,worker,output.reply,null,'[]',JSON.stringify(output.modelExecutionEvidence)]),/HQ_DISCOVERY_ATOMIC_FINISH_REQUIRED/)
+  await assert.rejects(()=>finish([]),/HQ_DISCOVERY_EVIDENCE_REQUIRED/)
+  await assert.rejects(()=>finish([...output.evidence,output.evidence[0]]),/HQ_DISCOVERY_EVIDENCE_INVALID/)
+  await assert.rejects(()=>finish([...output.evidence,{tool:'web_search'}]),/HQ_DISCOVERY_NATIVE_EVIDENCE_FORBIDDEN/)
+  for(const mutate of [
+   p=>{p.invocation.protocol.threadStart.params.config.mcp_servers={}},
+   p=>{p.invocation.protocol.threadStart.params.config.mcp_servers.hq_public_discovery.env={SECRET:'synthetic'}},
+   p=>{p.invocation.protocol.threadStart.params.config.mcp_servers.hq_public_discovery.enabled_tools=['unapproved']},
+   p=>{p.publicDiscoveryPolicy.budget='unbounded'},p=>{p.publicDiscoveryPolicy.moduleSha256='wrong'},
+  ]){
+   const proof=structuredClone(output.modelBindingEvidence);mutate(proof);await assert.rejects(()=>finish(output.evidence,proof),/HQ_TRIAL_HOST_EXECUTION_EVIDENCE_INVALID/)
+  }
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[j.id])).rows[0].status,'working')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_receipts')).rows[0].n,0)
+  assert.equal((await h.db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_research_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+ }finally{await h.db.close()}
+})
+
+for(const scenario of ['cli-probe','pre-turn','missing-tool'])test('public discovery '+scenario+' failure settles durably and cannot qualify or replay inference',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim);let failure
+  await fake([],async config=>{try{await invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000))}catch(error){failure=error}},
+   {cliVersion:'codex-cli 0.160.0',versionProbe:scenario==='cli-probe'?{exitCode:1}:{},appServer:{publicDiscovery:true,...(scenario==='pre-turn'?{nullEffort:true}:{})}})
+  assert.equal(codeOf(failure),scenario==='cli-probe'?'provider-cli-version-invalid':scenario==='pre-turn'?'provider-model-resolution-invalid':'provider-mcp-evidence-required');assert.equal(failure.modelBindingEvidence.turnsStarted,scenario==='missing-tool'?1:0)
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:codeOf(failure),evidence:[],
+   modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:failure.modelExecutionEvidence}
+  let written;const gate=maintenanceGate();await gate.run(()=>delivery(h,entry,value=>{written=value}))
+  assert.equal(written.phase,'delivered');assert.equal(gate.snapshot().uncertain,false)
+  assert.equal((await delivery(h,entry)).trialReceiptAccepted,true)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select outcome from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows[0].outcome,'failed')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_receipts')).rows[0].n,0)
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_research_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+ }finally{await h.db.close()}
+})
+
+test('public discovery repair uses its own no-tool host proof and original same-trial tool artifact lineage',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim),output=await publicDiscoveryOutput(j)
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence}
+  await delivery(h,entry)
+  let review=await claim();await h.finish(review,{accepted:false,summary:'Repair the artifact interpretation using the original literal tool evidence.',artifactDigest:review.context.artifact.digest})
+  review=await claim();assert.equal(review.context.mode,'trial-start');assert.equal(review.context.task.attempt,1)
+  await h.finish(review,{message:'I will repair only the interpretation from original evidence.'})
+  const repair=await claim();assert.equal(repair.context.mode,'worker-trial');assert.equal(repair.context.task.attempt,1)
+  assert.equal(repair.context.publicDiscoveryEvidence[0].jobId,j.id)
+  const fixed=await fake([],config=>invokeCodex({...config,id:worker},repair,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
+  assert.deepEqual(fixed.evidence,[]);assert.deepEqual(fixed.modelBindingEvidence.invocation.protocol.threadStart.params.config.mcp_servers,{})
+  await delivery(h,{job:{id:repair.id,lease_token:repair.lease_token},phase:'finished',reply:fixed.reply,error:null,evidence:[],
+   modelBindingEvidence:fixed.modelBindingEvidence,modelExecutionEvidence:fixed.modelExecutionEvidence})
+  review=await claim();assert.equal(review.context.mode,'head-review');await h.finish(review,{accepted:true,summary:'Head checked the repaired artifact against original source evidence.',artifactDigest:review.context.artifact.digest})
+  review=await claim();assert.equal(review.agent_id,'AG-HR-003');await h.finish(review,{accepted:true,summary:'Independent review accepts the exact repaired artifact.',artifactDigest:review.context.artifact.digest})
+  review=await claim();await h.finish(review,'The repaired artifact and its original public-tool provenance were reviewed.')
+  assert.equal(await claim(),null)
+  await h.as('founder');await h.rpc('hq_issue_public_research_qualification',[trial.trialId])
+  await h.db.exec('reset role')
+  const artifacts=(await h.db.query('select artifact_id,job_id from hq_private.public_discovery_receipts')).rows
+  assert.equal(artifacts.length,1);assert.equal(artifacts[0].job_id,j.id);assert.notEqual(artifacts[0].job_id,repair.id)
+  const accepted=(await h.db.query('select artifact_id from hq_private.workforce_trials where id=$1',[trial.trialId])).rows[0].artifact_id
+  assert.notEqual(accepted,artifacts[0].artifact_id)
+  const valid=()=>h.db.query('select hq_private.public_discovery_trial_source_valid($1,$2) q',[trial.trialId,accepted])
+  assert.equal((await valid()).rows[0].q,true)
+  assert.equal((await h.db.query('select hq_private.public_discovery_trial_source_valid($1,$2) q',[randomUUID(),accepted])).rows[0].q,false)
+  for(const change of [
+   "update hq_private.brain_files set source_version='2' where file_id='synthetic_research_profile'",
+   "update hq_private.agent_roster set model='gpt-6-luna' where id='AG-RES-002'",
+   "update hq_private.workforce_trials set status='failed' where id='"+trial.trialId+"'",
+  ]){
+   await h.db.exec('begin;'+change)
+   // Failed trials can retain truthful original proof, but never qualification.
+   if(!change.includes("status='failed'"))assert.equal((await valid()).rows[0].q,false)
+   assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+   await h.db.exec('rollback')
+  }
+ }finally{await h.db.close()}
+})
+
+test('public discovery new-purpose enrollment accepts already ordinarily qualified Active pilot without grandfathering tool proof',async()=>{
+ const skill='synthetic_existing_research_skill'
+ const {h,configured}=await trialSetup([skill],true,'AG-RES-002','AG-RES-001')
+ try{
+  await passSkillTrial(h,skill,'AG-RES-002','AG-RES-001')
+  await installTaskEvidence(h)
+  await h.db.exec('reset role');await h.db.exec(await readFile(new URL(publicDiscoveryMigration,root),'utf8'))
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-RES-002'?{...a,lifecycle:'Active / Qualified'}:a))])
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query("select hq_private.workforce_agent_qualified('AG-RES-002') q")).rows[0].q,true)
+  assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+  await h.as('founder');const key=randomUUID(),trial=await h.rpc('hq_begin_public_research_trial',[skill,key])
+  assert.equal((await h.rpc('hq_begin_public_research_trial',[skill,key])).trialId,trial.trialId)
+  await assert.rejects(()=>h.rpc('hq_begin_public_research_trial',['different_skill',key]),/HQ_TRIAL_REQUEST_KEY_REUSED/)
+  await assert.rejects(()=>h.rpc('hq_begin_public_research_trial',[null,key]),/HQ_TRIAL_NOT_ELIGIBLE/)
+  await assert.rejects(()=>h.rpc('hq_issue_public_research_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_receipts')).rows[0].n,0)
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.public_discovery_claim_requests')).rows[0].n,0)
+ }finally{await h.db.close()}
+})
+
+test('public discovery cached legacy claim is fenced, ordinary chat remains usable, and new API grants fail closed',async()=>{
+ const skill='synthetic_claim_fence_skill',{h}=await trialSetup([skill],true,'AG-RES-002','AG-RES-001')
+ try{
+  await installTaskEvidence(h);await h.db.exec('reset role')
+  const old=(await h.db.query("select pg_get_functiondef('hq_private.worker_claim_before_meetings(uuid,integer)'::regprocedure) d")).rows[0].d
+  const copied=old.replace('FUNCTION hq_private.worker_claim_before_meetings(', 'FUNCTION hq_private.cached_legacy_discovery_fixture(')
+  assert.notEqual(copied,old);await h.db.exec(copied+'; grant execute on function hq_private.cached_legacy_discovery_fixture(uuid,integer) to authenticated')
+  await h.db.exec(await readFile(new URL(publicDiscoveryMigration,root),'utf8'))
+  await h.as('founder');const trial=await h.rpc('hq_begin_public_research_trial',[skill,randomUUID()])
+  await assert.rejects(()=>h.rpc('hq_worker_research_claim',[worker,300,1]),/HQ_WORKER_REQUIRED/)
+  await h.as('worker');await assert.rejects(()=>h.db.query('select hq_private.cached_legacy_discovery_fixture($1,300)',[worker]),/HQ_DISCOVERY_CLIENT_REQUIRED/)
+  assert.equal(await h.claim(),null)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query("select count(*)::int n from public.hq_agent_jobs where task_id=$1 and (worker_id is not null or lease_token is not null or status<>'queued')",[trial.taskId])).rows[0].n,0)
+  await h.as('founder');await h.rpc('hq_send_ceo_message',['Generated ordinary conversation only.',randomUUID()])
+  const ordinary=await h.claim();assert.equal(ordinary.context.mode,'conversation-intake');assert.equal(ordinary.context.publicDiscoveryPermit,undefined)
+  await h.db.exec('reset role')
+  for(const change of [
+   'revoke execute on function public.hq_worker_research_claim(uuid,integer,integer) from authenticated',
+   'revoke execute on function hq_private.worker_research_claim(uuid,integer,integer) from authenticated',
+   'create function public.hq_worker_research_claim(p_worker_id text,p_lease_seconds integer,p_meeting_protocol integer) returns jsonb language sql as $$select null::jsonb$$',
+  ]){
+   await h.db.exec('begin;'+change);await h.as('worker');const status=await h.rpc('hq_worker_release_status',[worker])
+   assert.deepEqual(status.api.rpcs,REQUIRED_RPCS);assert.equal(status.researchApi,null)
+   await h.db.exec('rollback;reset role')
+  }
+  await h.db.exec('set role anon');await assert.rejects(()=>h.rpc('hq_worker_research_claim',[worker,300,1]),/permission denied/)
+ }finally{await h.db.close()}
+})
+
+test('public discovery cancellation discards work and retains blocked tool observation without qualification',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim),output=await publicDiscoveryOutput(j)
+  await h.as('founder');await h.rpc('hq_cancel_task',[trial.taskId])
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
+   modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence}
+  const result=await delivery(h,entry);assert.equal(result.discarded,true);assert.equal(result.publicDiscoveryReceiptAccepted,true)
+  assert.equal((await delivery(h,entry)).discarded,true)
+  await h.db.exec('reset role')
+  const receipt=(await h.db.query('select artifact_id,outcome from hq_private.public_discovery_receipts where job_id=$1',[j.id])).rows[0]
+  assert.equal(receipt.artifact_id,null);assert.equal(receipt.outcome,'blocked')
+  assert.equal((await h.db.query('select count(*)::int n from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows[0].n,0)
+  assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+  assert.equal((await h.db.query('select status from public.hq_business_tasks where id=$1',[trial.taskId])).rows[0].status,'canceled')
+ }finally{await h.db.close()}
+})
+
+test('public discovery successful MCP evidence survives later failed AppServer turn into durable blocked receipt only',async()=>{
+ const {h,skill,claim}=await publicDiscoverySetup()
+ try{
+  const {trial,j}=await publicDiscoveryWork(h,skill,claim);let failure
+  try{await publicDiscoveryOutput(j,1,{turnStatus:'failed'})}catch(error){failure=error}
+  assert.ok(failure);assert.equal(failure.modelBindingEvidence.outcome,'failed')
+  const evidence=failedToolEvidence(failure)
+  assert.equal(evidence.length,1);assert.equal(evidence[0].tool,'mcp');assert.equal(evidence[0].jobId,j.id)
+  const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:codeOf(failure),evidence,
+   modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:failure.modelExecutionEvidence}
+  let written;const result=await delivery(h,entry,value=>{written=value})
+  assert.equal(result.publicDiscoveryReceiptAccepted,true);assert.equal(result.trialReceiptAccepted,true)
+  assert.equal(written.phase,'delivered');assert.deepEqual(written.evidence,[])
+  assert.equal((await delivery(h,entry)).publicDiscoveryReceiptAccepted,true)
+  await h.db.exec('reset role')
+  const receipt=(await h.db.query('select outcome,artifact_id,evidence from hq_private.public_discovery_receipts where job_id=$1',[j.id])).rows[0]
+  assert.equal(receipt.outcome,'blocked');assert.equal(receipt.artifact_id,null)
+  assert.equal(receipt.evidence.rawResultSha256,evidence[0].rawResultSha256)
+  assert.equal((await h.db.query('select count(*)::int n from public.hq_task_artifacts where job_id=$1',[j.id])).rows[0].n,0)
+  assert.equal((await h.db.query('select outcome from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows[0].outcome,'failed')
+  assert.equal((await h.db.query('select status from public.hq_agent_jobs where id=$1',[j.id])).rows[0].status,'blocked')
+  assert.equal((await h.db.query('select status from hq_private.workforce_trials where id=$1',[trial.trialId])).rows[0].status,'failed')
+  assert.equal((await h.db.query("select hq_private.public_discovery_qualified('AG-RES-002') q")).rows[0].q,false)
+  await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_research_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
  }finally{await h.db.close()}
 })

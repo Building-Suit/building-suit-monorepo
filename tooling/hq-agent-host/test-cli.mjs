@@ -12,10 +12,12 @@ if(args[0]==='--version'){await new Promise(done=>setTimeout(done,${JSON.stringi
 if(args[0]==='app-server'){
  const lines=readline.createInterface({input:process.stdin,crlfDelay:Infinity});let start=null,threadId='018f0000-0000-7000-8000-000000000001',turnId='018f0000-0000-7000-8000-000000000002',done=false;
  const send=x=>process.stdout.write(JSON.stringify(x)+'\\n');
- const validArgs=args.includes('--stdio')&&args.includes('--strict-config')&&args.includes('--disable')&&args.includes('shell_tool')&&args.includes('mcp_servers={}');
+ const publicDiscovery=${JSON.stringify(appServer.publicDiscovery===true)};
+ const validArgs=args.includes('--stdio')&&args.includes('--strict-config')&&args.includes('--disable')&&args.includes('shell_tool')&&(publicDiscovery?args.some(value=>value.startsWith('mcp_servers={hq_public_discovery=')):args.includes('mcp_servers={}'));
  if(!validArgs||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY)process.exit(77);
  lines.on('line',raw=>{const req=JSON.parse(raw);if(req.method==='initialize'){send({id:req.id,result:{userAgent:${JSON.stringify(cliVersion)}}});return}if(req.method==='initialized')return;
- if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||Object.keys(start.config?.mcp_servers??{}).length!==0||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-terra'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
+ if(req.method==='thread/start'){start=req.params;if(start.approvalPolicy!=='never'||start.sandbox!=='read-only'||start.ephemeral!==true||start.config?.web_search!=='disabled'||(publicDiscovery?Object.keys(start.config?.mcp_servers??{}).join(',')!=='hq_public_discovery':Object.keys(start.config?.mcp_servers??{}).length!==0)||start.config?.agents?.enabled!==false||start.model!=='gpt-6.1-terra'||start.modelProvider!=='openai'||start.developerInstructions!=='')process.exit(78);
+ if(publicDiscovery){const server=start.config.mcp_servers.hq_public_discovery;if(Object.keys(server).sort().join(',')!=='args,command,enabled,enabled_tools,required,startup_timeout_sec,tool_timeout_sec'||server.enabled!==true||server.required!==true||server.enabled_tools.join(',')!=='public_business_discovery'||server.args[0]!=='--preserve-symlinks-main'||server.args[2]!=='--public-discovery-mcp'||server.args[3]!==start.cwd+'/exa-discovery-budget')process.exit(81)}
  if(${JSON.stringify(appServer.missingSettings===true)}){send({id:req.id,result:{thread:{id:threadId,model:start.model,modelProvider:start.modelProvider}}});return}
  const t={id:threadId};const resolution={model:start.model,modelProvider:start.modelProvider,reasoningEffort:start.config.model_reasoning_effort};
  if(${JSON.stringify(appServer.nestedSettings===true)})Object.assign(t,resolution);
