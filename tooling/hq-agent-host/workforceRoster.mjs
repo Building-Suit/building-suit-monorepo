@@ -183,6 +183,30 @@ function assignedSkills(profile, profilePath, index) {
   return [...ids]
 }
 
+/** Read-only validation of an unpublished proposal using the same canonical
+ * skill parser as roster sync. The path below supplies department scope only;
+ * it is not a file, a reserved slot, or evidence of canonical publication. */
+export function validateStaffingProfileDraft(proposal, departmentKey, source) {
+  const head = records.find(([id, , department]) => id === proposal?.managerId && department === departmentKey
+    && !['AG-CEO-001','AG-HR-001'].includes(id))
+  requireValue(head && typeof proposal.profileDraft === 'string' && Buffer.byteLength(proposal.profileDraft) <= 16000
+    && typeof proposal.name === 'string' && /^[\p{L}\p{M}][\p{L}\p{M} .'-]{0,79}$/u.test(proposal.name)
+    && /^AG-[A-Z]+-[0-9]{3}$/.test(proposal.agentId || '')
+    && proposal.agentId.split('-')[1] === head[0].split('-')[1], 'staffing-profile-invalid')
+  const frontmatter = proposal.profileDraft.match(/^---\s*\n([\s\S]*?)\n---\s*$/m)?.[1] || ''
+  requireValue(frontmatter.match(/^employee_id:\s*([A-Z0-9-]+)\s*$/m)?.[1] === proposal.agentId
+    && frontmatter.match(/^reports_to:\s*([A-Z0-9-]+)\s*$/m)?.[1] === proposal.managerId
+    && [...frontmatter.matchAll(/^employee_id:/gm)].length === 1 && [...frontmatter.matchAll(/^reports_to:/gm)].length === 1,
+  'staffing-profile-invalid')
+  const path = head[1].split('/').slice(0, -1).join('/') + '/Unpublished proposal.md'
+  const assigned = assignedSkills(proposal.profileDraft, path, indexFiles(source)).sort()
+  requireValue(Array.isArray(proposal.skills) && proposal.skills.length > 0 && proposal.skills.length <= 10,
+    'staffing-profile-invalid')
+  const expected = proposal.skills.map(skill => skill?.fileId).sort()
+  requireValue(JSON.stringify(assigned) === JSON.stringify(expected), 'staffing-profile-invalid')
+  return true
+}
+
 export function createWorkforceRoster({ readBrain, rpc }) {
   requireValue(typeof readBrain === 'function' && typeof rpc === 'function', 'roster-adapters-required')
   return {

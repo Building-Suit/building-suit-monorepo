@@ -763,6 +763,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       ".github/workflows/doctor-disposable.yml",
       ".github/workflows/ci.yml",
       "README.md",
@@ -876,6 +877,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
       "docs/work-packages/doctor-suit/authentication-evidence.md",
@@ -913,6 +915,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
       "docs/work-packages/doctor-suit/onboarding-evidence.md",
@@ -947,6 +950,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
       "docs/work-packages/doctor-suit/locations-evidence.md",
@@ -983,6 +987,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
       "docs/work-packages/doctor-suit/delegation-evidence.md",
@@ -1019,6 +1024,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
       "docs/work-packages/doctor-suit/delegation-evidence.md",
@@ -1051,6 +1057,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/patients-evidence.md"
     ],
     "reason": "Add the synthetic Doctor patient directory with scoped server search/pagination, separate opaque identities and practice relationships, entered-unverified recorded fields, explicit duplicate review, retry-safe optimistic corrections and preserved archive history. New shared presentation is additive; existing public consumers retain their behavior. No patient Auth account, cross-practice merge or clinical/identity claim is introduced.",
@@ -1105,6 +1112,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/documents-evidence.md",
       "docs/work-packages/doctor-suit/implementation-tracker.md"
     ],
@@ -1133,6 +1141,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/availability-evidence.md",
       "docs/work-packages/doctor-suit/implementation-tracker.md"
     ],
@@ -1161,6 +1170,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/appointments-evidence.md",
       "docs/work-packages/doctor-suit/implementation-tracker.md",
       "pnpm-lock.yaml"
@@ -1310,6 +1320,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/audit-evidence.md",
       "docs/work-packages/doctor-suit/implementation-tracker.md",
       "release-changes/items.json"
@@ -1368,6 +1379,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/preview-handoff.md",
       "docs/work-packages/doctor-suit/implementation-tracker.md",
       "docs/work-packages/doctor-suit/implementation-history.md",
@@ -2135,6 +2147,7 @@
       "packages/ux",
       "apps/building-suit-docs",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "release-changes/items.json"
     ],
     "reason": "Maintain shared inline-settings presentation, scoped draft and navigation controllers, explicit exports, catalogue examples and release provenance. The existing Shop settings template is the only operational consumer changed by this task; Website editors and other product activation remain unchanged.",
@@ -2211,6 +2224,7 @@
       "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
       "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
       "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
       "package.json",
@@ -2261,6 +2275,7 @@
       "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
       "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
       "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
       "package.json",
@@ -2310,6 +2325,7 @@
       "packages/ui/package.json",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "apps/building-suit-docs/app/pages/components.vue",
       "apps/doctor-suit/mobile/doctor",
       "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
@@ -2523,6 +2539,7 @@
       "tooling/database",
       "release-changes/items.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "packages/ui",
       "apps/building-suit-docs/app/pages/components.vue",
       ".github/workflows/shop-measurement-disposable.yml"
@@ -2931,6 +2948,7 @@
       "apps/shop-suit/docs/electrical-supply",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database/test-shop-measurement-local.mjs",
       "release-changes/items.json"
     ],
@@ -3242,6 +3260,7 @@
       "apps/shop-suit/docs/electrical-supply",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database/test-shop-measurement-local.mjs",
       "release-changes/items.json"
     ],
@@ -3316,6 +3335,7 @@
       "apps/shop-suit/docs/electrical-supply",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database/test-shop-measurement-local.mjs",
       "release-changes/items.json"
     ],
@@ -3726,6 +3746,7 @@
       "packages/ui",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database",
       ".github/workflows/shop-measurement-disposable.yml",
       "release-changes/items.json"
@@ -3807,6 +3828,7 @@
       "packages/ui",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database/test-shop-measurement-local.mjs",
       "release-changes/items.json"
     ],
@@ -3966,6 +3988,7 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database",
       ".github/workflows/shop-measurement-disposable.yml",
       "release-changes/items.json"
@@ -4048,6 +4071,7 @@
       "packages/ui",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "tooling/database",
       ".github/workflows/shop-measurement-disposable.yml",
       "release-changes/items.json"
@@ -5237,6 +5261,7 @@
       "docs/architecture/environments.json",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
       "docs/shared/ui-ownership.md",
       "docs/shared/zero-native-ui-convergence-report.md",
       "docs/work-packages/company-hq",
@@ -6000,5 +6025,32 @@
       "release-changes/items.json"
     ],
     "reason": "Align task-ack generation/local structural checks with existing message/delegation constraints and retain allowlisted diagnostic codes after durable cleanup without payloads, retries, larger limits or changed trial context."
+  },
+  {
+    "id": "hq-staffing-approval-workflow-20261108",
+    "task": "HQ-STAFFING-APPROVAL-WORKFLOW-20261108",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/",
+      "packages/ui/src/organisms/BsHqStaffingPlans.vue",
+      "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "packages/ui/src/types/hqLayoutPresentation.ts",
+      "packages/ui/package.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
+      "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+      "tooling/hq-agent-host/",
+      "release-changes/items.json"
+    ],
+    "reason": "Prepare exact staffing proposals through bounded HR/CEO stages and one immutable founder decision, with visible unavailable canonical publication, scoped proof/continuation gates, and legacy claim/API/journal compatibility; no canonical writer or live hire is enabled."
   }
 ]

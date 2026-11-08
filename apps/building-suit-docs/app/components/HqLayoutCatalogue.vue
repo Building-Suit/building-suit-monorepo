@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqDepartmentOffice, HqLayoutContent, HqStaffingCopy, HqStaffingPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent } from '@building-suit/ui/types/hqAgentsPresentation'
 const { locale } = useI18n()
 const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
@@ -8,6 +8,21 @@ const organicDepartments = computed<HqDepartmentOffice[]>(() => [1, 2, 3, 4, 5, 
   id: `catalogue-organic-${index}`, name: c(`Sample office ${index + 1} · ${count} desks`, `مكتب توضيحي ${index + 1} · ${count} مكاتب`),
   approvedAt: '2026-11-05', agents: Array.from({ length: count }, (_, desk) => ({ id: `catalogue-${index}-${desk}`, name: c(`Sample agent ${desk + 1}`, `وكيل توضيحي ${desk + 1}`) })),
 })))
+// Synthetic unavailable-publisher projection. No credentials, writes or work.
+const staffingCopy: HqStaffingCopy = {
+  stop: 'Cancel task and hire workflow', stopConfirmation: 'Cancel the original task and stop this hire workflow? Existing history is preserved.',
+  title: 'Staffing proposals', empty: 'No staffing gaps need a proposal.', refresh: 'Refresh staffing', unavailable: 'Staffing unavailable',
+  profile: 'Complete proposed profile', skills: 'Exact skills and source revisions', manager: 'Manager and department', reviewer: 'Independent reviewer',
+  model: 'Model, effort and policy revision', trial: 'Supervised trials and review', source: 'Original task', approve: 'Approve this hire plan', reject: 'Reject plan',
+  resume: 'Continue the unchanged original task only after real qualification and activation.', cancel: 'Cancel',
+  confirmation: 'Record this exact plan decision?', conflict: 'Refresh the changed plan.', limited: 'Active records are shown first.',
+  writerBoundary: 'Canonical publication is not configured. An approval is retained while the writer setup gate remains closed.',
+}
+const staffingExample: HqStaffingPresentation = { status: 'ready', pending: false, workflows: [{
+  id: 'catalogue-workflow', sourceTaskId: 'catalogue-original-task', status: 'publication-blocked', statusLabel: 'Approved · publication blocked',
+  blocker: 'canonical-writer-setup-required', blockerLabel: 'Owner-backed writer setup and verified conditional media writes are required',
+  planId: null, digest: null, plan: null,
+}] }
 const content = computed<HqLayoutContent>(() => ({
   brandName: 'Building Suit',
   brandSuffix: 'HQ',
@@ -255,6 +270,7 @@ const workforceContent = computed<HqWorkforceContent>(() => ({
 <template>
   <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Independent organic office islands use deterministic spline curves around actual furniture bounds. Existing desk-row dimensions and all office anchors remain fixed; the executive island has its own subtle curves with the original gold rim. Picking, walking exits and minimap share the same outlines. These illustrative offices and desk counts are catalogue fixtures, with no cloud, Auth or approval connection. Existing furniture, camera, lighting and office panels are preserved.', 'تستخدم جزر المكاتب المستقلة منحنيات عضوية ثابتة حول حدود الأثاث الفعلية. تبقى أبعاد صفوف المكاتب ومواقعها ثابتة، وتتميز جزيرة المدير التنفيذي بمنحنيات خاصة مع الحد الذهبي الأصلي. يشترك التحديد ومخارج المشي والخريطة في الحدود نفسها. هذه المكاتب والأعداد أمثلة للكتالوج دون اتصال بالسحابة أو المصادقة أو الاعتماد. يبقى الأثاث والكاميرا والإضاءة واللوحات كما هي.')">
     <BsHqLayoutPage :content="content" :departments="organicDepartments" />
+    <BsHqStaffingPlans :presentation="staffingExample" :copy="staffingCopy" :founder="true" />
     <BsContentSection title="Supervised qualification" description="The authenticated employee inspector accepts typed trial status and semantic start/qualification commands. Starting a trial requires explicit confirmation. Qualification requires immutable host-returned execution evidence plus department-head and independent HR review. Pending staff remain blocked until their canonical lifecycle is Active. This catalogue queues no work." />
   </BsContentSection>
   <BsContentSection :title="c('HQ office inspector', 'لوحة المكتب')" :description="c('Office clicks open Overview, Running Tasks and empty Calendar/Settings tabs. Metrics, tool bindings, recorded skill-load shares and agent drill-down use typed observations. Desktop agent details occupy about 40% of the viewport; narrow screens retain the office behind the detail panel. This catalogue has no private telemetry.', 'يفتح المكتب تبويبات النظرة العامة والمهام الجارية والتقويم والإعدادات الفارغة. تعتمد المؤشرات والأدوات ونسب تحميل المهارات وتفاصيل الوكيل على مشاهدات موثّقة. تشغل التفاصيل نحو ٤٠٪ من الشاشة الكبيرة وتبقى لوحة المكتب محفوظة خلفها على الشاشات الضيقة. لا يتصل هذا المثال بالقياسات الخاصة.')" />

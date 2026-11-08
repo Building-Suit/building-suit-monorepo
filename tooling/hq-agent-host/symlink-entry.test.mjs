@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createHash, randomUUID } from 'node:crypto'
-import { REQUIRED_RPCS } from './maintenance.mjs'
+import { REQUIRED_RPCS, STAFFING_RPCS } from './maintenance.mjs'
 import { fake } from './test-cli.mjs'
 const run = promisify(execFile), pause = ms => new Promise(done => setTimeout(done, ms))
 const files = ['worker.mjs', 'maintenance.mjs', 'departmentWorkflow.mjs', 'workforceRoster.mjs', 'brainPublisher.mjs']
@@ -30,16 +30,17 @@ async function setup(t) {
     await writeFile(join(directory,'manifest.json'),JSON.stringify({format:1,sha,files:contents}))
   }
   for (const [link,sha] of [['current',a],['candidate',b]]) await symlink('releases/'+sha,join(root,link),'dir')
+  const staffingApi = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:STAFFING_RPCS}
   const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   const preload = join(root,'fixture.mjs')
   await writeFile(preload,`
 import {appendFile} from 'node:fs/promises'
-const api=${JSON.stringify(api)},log=${JSON.stringify(join(root,'calls'))}
+const api=${JSON.stringify(api)},staffingApi=${JSON.stringify(staffingApi)},log=${JSON.stringify(join(root,'calls'))}
 globalThis.fetch=async url=>{
  let body,kind
  if(url.includes('/auth/')){kind='auth';body={access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}}
  else if(url.endsWith('/rest/v1/')){return new Response(JSON.stringify({error:'api-key',category:'privileged-key-required'}),{status:401})}
- else if(url.endsWith('/hq_worker_release_status')){kind='status';body={api,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
+ else if(url.endsWith('/hq_worker_release_status')){kind='status';body={api,staffingApi,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
  else throw Error('unexpected-fixture-request')
  await appendFile(log,kind+'\\n');return new Response(JSON.stringify(body))
 }

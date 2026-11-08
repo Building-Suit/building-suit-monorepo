@@ -1,4 +1,46 @@
 import type { HqAgentsContent } from './hqAgentsPresentation'
+
+export interface HqStaffingDecision {
+  planId: string
+  digest: string
+  decision: 'approved' | 'rejected'
+  resumeOriginal: boolean
+}
+export interface HqStaffingPlan {
+  originalTask: { title: string; brief: string; acceptance: string }
+  agentId: string
+  name: string
+  departmentKey: string
+  managerId: string
+  reviewerId: string
+  profileDraft: string
+  skills: readonly { fileId: string; sourceVersion: string }[]
+  modelPolicy: { model: string; effort: string; sourceVersion: string }
+  trialCriteria: string
+  resumeOriginal: boolean
+}
+export interface HqStaffingPresentation {
+  totalCount?: number
+  status: 'loading' | 'ready' | 'unavailable'
+  pending: boolean
+  message?: string
+  workflows: readonly {
+    id: string
+    sourceTaskId: string
+    status: string
+    statusLabel: string
+    blocker: string
+    blockerLabel: string
+    planId: string | null
+    digest: string | null
+    plan: HqStaffingPlan | null
+  }[]
+}
+export interface HqStaffingCopy {
+  title: string; empty: string; refresh: string; unavailable: string; profile: string; skills: string
+  manager: string; reviewer: string; model: string; trial: string; source: string; approve: string; reject: string
+  resume: string; cancel: string; confirmation: string; conflict: string; writerBoundary: string; limited: string; stop: string; stopConfirmation: string
+}
 /** HQ presentation copy. Product adapters own access and data retrieval. */
 export interface HqLayoutContent {
   brandName: string

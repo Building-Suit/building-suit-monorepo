@@ -40,3 +40,14 @@ export function checkApiContract(status) {
   }
   return 2
 }
+
+export const STAFFING_RPCS = { hq_worker_staffing_claim: ['p_worker_id'] }
+export function checkStaffingContract(status) {
+  const api = status?.staffingApi
+  const rpcs = STAFFING_RPCS
+  if (api?.version !== 1 || api.role !== 'authenticated' || api.schemaUsage !== true || api.execute !== true
+    || !api.rpcs || Object.keys(api.rpcs).length !== Object.keys(STAFFING_RPCS).length) throw Error('schema-incompatible')
+  for (const [name, args] of Object.entries(rpcs)) {
+    if (!Array.isArray(api.rpcs[name]) || JSON.stringify(api.rpcs[name]) !== JSON.stringify(args)) throw Error('schema-incompatible')
+  }
+}

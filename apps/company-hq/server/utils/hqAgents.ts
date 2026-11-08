@@ -14,13 +14,32 @@ function text(value: unknown, max: number): value is string {
 }
 function id(value: unknown) { return typeof value === 'string' && UUID.test(value) }
 
+export async function hqStaffingDecisionBody(event: H3Event): Promise<{ planId: string; digest: string; decision: 'approved' | 'rejected'; resumeOriginal: boolean; requestKey: string }> {
+  const entry = exact(await boundedBody(event, 2048), ['planId', 'digest', 'decision', 'resumeOriginal', 'requestKey'])
+  if (!entry || !id(entry.planId) || !id(entry.requestKey) || typeof entry.digest !== 'string' || !/^[0-9a-f]{64}$/.test(entry.digest)
+    || !['approved','rejected'].includes(String(entry.decision)) || typeof entry.resumeOriginal !== 'boolean'
+    || entry.decision === 'rejected' && entry.resumeOriginal) throw createError({ statusCode: 400, statusMessage: 'HQ staffing decision unavailable' })
+  return { planId: String(entry.planId), digest: entry.digest, decision: entry.decision as 'approved' | 'rejected',
+    resumeOriginal: entry.resumeOriginal, requestKey: String(entry.requestKey) }
+}
+
 /** Explicit projection prevents private worker identities/leases from leaking through the BFF. */
 export function hqAgentSnapshot(value: unknown, event?: H3Event): HqAgentSnapshot {
   const snapshot = parseHqAgentSnapshot(value)
   if (!snapshot) throw createError({ statusCode: 503, statusMessage: 'HQ agents unavailable' })
   // Older open tabs validate exact job keys. Negotiate presentation metadata
   // so a rollout cannot invalidate their snapshots or interrupt their drafts.
-  if (event && getHeader(event, 'x-hq-chat-progress') === '1') return snapshot
+  if (event && getHeader(event, 'x-hq-chat-progress') === '1') {
+    if (getHeader(event, 'x-hq-staffing') === '1') return snapshot
+    // Existing tabs know the ordinary kind enum. Preserve their job/status
+    // projection without sending a new kind they cannot parse.
+    return { ...snapshot, jobs: snapshot.jobs.map(job => {
+      if (!['staffing-plan','staffing-review'].includes(job.kind ?? '')) return job
+      const compatible = { ...job }
+      delete compatible.kind
+      return compatible
+    }) }
+  }
   return { ...snapshot, jobs: snapshot.jobs.map(job => ({ id: job.id, agentId: job.agentId, status: job.status,
     createdAt: job.createdAt, startedAt: job.startedAt, completedAt: job.completedAt, error: job.error })) }
 }

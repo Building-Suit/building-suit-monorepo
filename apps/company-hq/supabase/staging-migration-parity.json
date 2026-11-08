@@ -221,6 +221,15 @@
       "sha256": "9679765b70d28943ed9b98817c4d3a9286d4624fc5b411a37c489593dad52c6c",
       "status": "source-only-live-approval-required",
       "phase": "trial-context-review-only"
+    },
+    {
+      "file": "20261107231929_hq_staffing_approval_workflow.sql",
+      "proposal": "apps/company-hq/supabase/migrations/20261107231929_hq_staffing_approval_workflow.sql",
+      "bytes": 57042,
+      "md5": "bc70b7086e7072f409db83a8b8bb14df",
+      "sha256": "7c9acf51539b5e137aa99baa583a0dcfc23ebbabeaf86581e3a2571ff7d242e4",
+      "status": "source-only-live-approval-required",
+      "phase": "staffing-approval-review-only"
     }
   ]
 }

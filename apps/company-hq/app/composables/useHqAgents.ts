@@ -83,7 +83,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   const pending = ref(false), refreshing = ref(false), sending = ref(false), submittingTask = ref(false), clock = ref(0)
   const messageReason = ref<MessageReason | null>(null)
   const attempts = new Map<string, Attempt>()
-  const headers = { 'X-HQ-Access': '1', 'X-HQ-Brain': '1', 'X-HQ-Chat-Progress': '1' }
+  const headers = { 'X-HQ-Access': '1', 'X-HQ-Brain': '1', 'X-HQ-Chat-Progress': '1', 'X-HQ-Staffing': '1' }
   let controller: AbortController | null = null, inFlight: Promise<boolean> | null = null
   let freshnessTimer: ReturnType<typeof setTimeout> | null = null
   let refreshQueued = false, mounted = false, disposed = false, epoch = 0

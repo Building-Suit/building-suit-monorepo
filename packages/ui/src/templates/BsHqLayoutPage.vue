@@ -2,7 +2,7 @@
 import designTokens from '@building-suit/design-tokens'
 import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
-import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
+import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation, HqStaffingCopy, HqStaffingDecision, HqStaffingPresentation } from '../types/hqLayoutPresentation'
 import type { HqAgentPresentation, HqAgentsPresentation, HqTaskRequest, HqTrialCommand } from '../types/hqAgentsPresentation'
 import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
 import BsHqMeetingPanel from '../organisms/BsHqMeetingPanel.vue'
@@ -10,6 +10,7 @@ import BsHqOfficeOverview from '../organisms/BsHqOfficeOverview.vue'
 import BsHqCeoChat from '../organisms/BsHqCeoChat.vue'
 import BsHqWorkforce from '../organisms/BsHqWorkforce.vue'
 import BsTabs from '../molecules/BsTabs.vue'
+import BsHqStaffingPlans from '../organisms/BsHqStaffingPlans.vue'
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
@@ -20,8 +21,8 @@ const confirmation = useConfirmation()
 const trialConfirming = ref(false)
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
-const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
+const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
 const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgentId.value))
 async function trialAction(command: HqTrialCommand) {
   if (trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
@@ -429,7 +430,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
               <BsHqWorkforce v-if="content.agents.workforce" :section="ceoSection" :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" @create-task="emit('createAgentTask', $event)" @refresh="emit('refreshAgents')" />
             </KeepAlive>
           </div>
-          <div v-if="founderAccess.status !== 'founder' || ceoSection === 'plans' || !content.agents" :id="`${ceoTabsId}-panel`" :role="founderAccess.status === 'founder' ? 'tabpanel' : undefined" :aria-labelledby="founderAccess.status === 'founder' ? `${ceoTabsId}-plans` : undefined"><BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" @refresh="emit('refreshPlans')" @decision="(id, revision, decision) => emit('decidePlan', id, revision, decision)" /></div>
+          <div v-if="founderAccess.status !== 'founder' || ceoSection === 'plans' || !content.agents" :id="`${ceoTabsId}-panel`" :role="founderAccess.status === 'founder' ? 'tabpanel' : undefined" :aria-labelledby="founderAccess.status === 'founder' ? `${ceoTabsId}-plans` : undefined"><BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" @refresh="emit('refreshPlans')" @decision="(id, revision, decision) => emit('decidePlan', id, revision, decision)" /><BsHqStaffingPlans v-if="staffing && staffingCopy" :presentation="staffing" :copy="staffingCopy" :founder="founderAccess.status === 'founder' && !founderAccess.pending" @refresh="emit('refreshStaffing')" @decision="emit('staffingDecision', $event)" @cancel="emit('staffingCancel', $event)" /></div>
         </template>
         <section v-else class="bs-hq-layout__workplace-details" :aria-label="selectedWorkplace.name">
           <dl><div><dt>{{ content.workplaces.workstationsLabel }}</dt><dd>{{ selectedWorkplaceAgents?.length ?? content.workplaces.workstationsValue }}</dd></div></dl>

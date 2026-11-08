@@ -1,0 +1,27 @@
+{
+  "id": "hq-staffing-approval-workflow-20261108",
+  "task": "HQ-STAFFING-APPROVAL-WORKFLOW-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/",
+    "packages/ui/src/organisms/BsHqStaffingPlans.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/package.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/company-hq/HQ-STAFFING-APPROVAL-20261108.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "tooling/hq-agent-host/",
+    "release-changes/items.json"
+  ],
+  "reason": "Prepare exact staffing proposals through bounded HR/CEO stages and one immutable founder decision, with visible unavailable canonical publication, scoped proof/continuation gates, and legacy claim/API/journal compatibility; no canonical writer or live hire is enabled."
+}

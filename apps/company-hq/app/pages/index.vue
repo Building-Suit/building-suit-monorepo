@@ -50,6 +50,7 @@ const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
   confirmationRequired: companyPlansCopy.value.confirmationRequired,
 }))
 const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status, () => access.value.user)
+const { staffing, staffingCopy, refreshStaffing, decideStaffing, cancelStaffing } = useHqStaffing(() => access.value)
 const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
   unavailable: companyPlansCopy.value.unavailable,
   conflict: companyPlansCopy.value.conflict,
@@ -155,6 +156,7 @@ const agentsContent = computed<HqAgentsContent>(() => ({
         'task-report': t('hq.agents.workforce.activity.stages.task-report'),
         'lesson-extract': t('hq.agents.workforce.activity.stages.lesson-extract'),
         'lesson-review': t('hq.agents.workforce.activity.stages.lesson-review'),
+        'staffing-plan': 'Prepare staffing plan', 'staffing-review': 'Review staffing plan',
       },
     },
     followup: {
@@ -299,4 +301,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>

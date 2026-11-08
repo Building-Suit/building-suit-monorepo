@@ -442,6 +442,7 @@
     "./organisms/BsHologramScene": "./src/organisms/BsHologramScene.vue",
     "./utils/hologramScene": "./src/utils/hologramScene.ts",
     "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",
+    "./organisms/BsHqStaffingPlans": "./src/organisms/BsHqStaffingPlans.vue",
     "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue",
     "./organisms/BsHqCeoChat": "./src/organisms/BsHqCeoChat.vue",
     "./organisms/BsHqWorkforce": "./src/organisms/BsHqWorkforce.vue",

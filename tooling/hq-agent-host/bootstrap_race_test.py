@@ -251,6 +251,46 @@ class Races(unittest.TestCase):
             self.assertNotEqual(r.returncode, 0)
             self.assertIn('permission denied', r.stderr)
 
+    def test_staffing_fence_is_one_use_and_transaction_scoped_not_a_ready_flag(self):
+        """Exact new trigger, real PG transactions; no model or hosted state."""
+        source = (ROOT / 'apps/company-hq/supabase/migrations/20261107231929_hq_staffing_approval_workflow.sql').read_text()
+        fence = source[source.index('create table hq_private.staffing_claim_fences ('):
+                       source.index('create function hq_private.worker_staffing_claim(')]
+        first, second = str(uuid.uuid4()), str(uuid.uuid4())
+        self.sql("alter table public.hq_agent_jobs add column kind text not null default 'task-work';" + fence)
+        try:
+            self.sql(f"""set fixture.worker='{WORKER}';
+              insert into public.hq_agent_jobs(id,status,kind) values('{first}','queued','staffing-plan'),('{second}','queued','staffing-review');
+              do $$ begin
+                update public.hq_agent_jobs set status='working',worker_id='{WORKER}',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '5 minutes'
+                  where id='{first}';
+                if found then raise exception 'unsupported-client-admitted'; end if;
+              end $$;
+              begin;
+              insert into hq_private.staffing_claim_fences values('{first}','{WORKER}',txid_current());
+              do $$ begin
+                update public.hq_agent_jobs set status='working',worker_id='{WORKER}',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '5 minutes'
+                  where id='{first}';
+                if not found then raise exception 'current-claim-not-admitted'; end if;
+                if exists(select 1 from hq_private.staffing_claim_fences) then raise exception 'fence-not-consumed'; end if;
+                update public.hq_agent_jobs set status='working',lease_expires_at=clock_timestamp()+interval '6 minutes' where id='{first}';
+                if not found then raise exception 'heartbeat-blocked'; end if;
+                update public.hq_agent_jobs set lease_token=gen_random_uuid() where id='{first}';
+                if found then raise exception 'fence-reused-for-new-lease'; end if;
+              end $$;
+              commit;
+              insert into hq_private.staffing_claim_fences values('{second}','{WORKER}',txid_current());
+              do $$ begin
+                update public.hq_agent_jobs set status='working',worker_id='{WORKER}',lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()+interval '5 minutes'
+                  where id='{second}';
+                if found then raise exception 'stale-transaction-fence-admitted'; end if;
+              end $$;""")
+            denied = self.sql(f"set role authenticated; insert into hq_private.staffing_claim_fences values('{first}','{WORKER}',txid_current());", ok=False)
+            self.assertIn('permission denied', denied.stderr)
+        finally:
+            self.sql('drop trigger hq_staffing_claim_fence on public.hq_agent_jobs; drop function hq_private.guard_staffing_claim(); '
+                     'drop table hq_private.staffing_claim_fences; alter table public.hq_agent_jobs drop column kind;')
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
