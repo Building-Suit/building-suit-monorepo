@@ -67,6 +67,7 @@ const sidebarTitle = computed(() => {
     case 'team': return copy?.teamLabel
     case 'tasks': return props.content.tasksLabel
     case 'plans': return props.content.workplaces.plansLabel
+    default: return ''
   }
 })
 type RecordKind = 'task' | 'lesson' | 'note' | 'plan' | 'staffing'
@@ -127,6 +128,7 @@ const recordTitle = computed(() => {
   if (record.kind === 'lesson') return agentsState.value.lessons?.find(lesson => lesson.id === record.id)?.title ?? props.content.agents?.workforce?.learningLabel
   if (record.kind === 'plan') return plansWorkspace.value.plans.find(plan => plan.id === record.id)?.title ?? props.content.workplaces.plansLabel
   if (record.kind === 'staffing') return props.staffing?.workflows.find(row => row.id === record.id)?.plan?.name ?? props.staffingCopy?.title
+  return ''
 })
 const coverPrimary = computed(() => Boolean(recordDetail.value) && viewportSize.value.width <= 1250)
 const officeCopy = computed(() => props.content.workplaces.office)
