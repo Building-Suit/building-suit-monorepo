@@ -2,8 +2,9 @@
 import test from 'node:test'
 import {fake} from './test-cli.mjs'
 import assert from 'node:assert/strict'
-import {createHash} from 'node:crypto'
-import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,stageInstructions,invokeCodex,failedToolEvidence,validateTaskAckOutput} from './worker.mjs'
+import {createHash,randomUUID} from 'node:crypto'
+import {readFile} from 'node:fs/promises'
+import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,checkRoleContract,stageInstructions,invokeCodex,failedToolEvidence,validateTaskAckOutput} from './worker.mjs'
 const hash=x=>createHash('sha256').update(x).digest('hex')
 const fixture=(excerpt='Literal public business location.')=>{
  const text='Title: Public business\nURL: https://business.org/\nHighlights:\n'+excerpt
@@ -108,4 +109,56 @@ test('only an explicit eligible original Nadia handoff selects the fixed policy;
  for(const mutate of [j=>{j.context.task.attempt=1},j=>{j.context.roster[0].publicDiscoveryQualified=false},j=>{j.context.supervisedTrial={id:'trial'}},j=>{j.agent_id='AG-HR-001';j.context.roster[0].managerId=j.agent_id}]){const bad=structuredClone(job);mutate(bad);assert.throws(()=>validateTaskAckOutput(bad,JSON.stringify(body)),/task-ack-research-policy-invalid/)}
  for(const value of [null,false,'unknown'])assert.throws(()=>validateTaskAckOutput(job,JSON.stringify({...body,publicDiscoveryPolicy:value})),/task-ack-research-policy-invalid/)
  const unchanged=structuredClone(job);unchanged.context.roster[0].publicDiscoveryQualified=false;assert.doesNotMatch(stageInstructions(unchanged),/optional JSON field/);delete body.publicDiscoveryPolicy;assert.doesNotThrow(()=>validateTaskAckOutput(unchanged,JSON.stringify(body)))
+})
+
+const retailPolicy='exa-public-retail-discovery-v1'
+for(const category of ['clothing','footwear','homewares'])test(`retail receipt ${category} preserves literal evidence and binds fixed category`,()=>{
+ const {job,item}=fixture();Object.assign(job.context.publicDiscoveryPermit,{policyId:retailPolicy,category})
+ Object.assign(item.result.structured_content,{policyId:retailPolicy,category})
+ const receipt=discoveryToolReceipt(item,job);assert.equal(receipt.policyId,retailPolicy);assert.equal(receipt.queryId,`new-cairo-retail-${category}-v1`)
+ assert.equal(receipt.sources[0].excerpt,'Literal public business location.');assert.equal(Object.keys(receipt).length,18)
+ item.result.structured_content.category='another-category';assert.throws(()=>discoveryToolReceipt(item,job),/provider-mcp-evidence-invalid/)
+})
+test('retail head selection is original, qualified and finite; absent selection preserves supplied-context work',()=>{
+ const job={agent_id:'AG-RES-001',context:{mode:'task-ack',task:{attempt:0},roster:[{id:'AG-RES-002',name:'Generated worker',managerId:'AG-RES-001',publicRetailQualified:true}]}}
+ const base={message:'@Generated worker: prepare the approved internal packet.',delegateId:'AG-RES-002'}
+ assert.doesNotThrow(()=>validateTaskAckOutput(job,JSON.stringify(base)))
+ for(const category of ['clothing','footwear','homewares'])assert.doesNotThrow(()=>validateTaskAckOutput(job,JSON.stringify({...base,publicDiscoveryPolicy:retailPolicy,publicDiscoveryCategory:category})))
+ for(const category of [null,['clothing'],'pharmacy','private task text'])assert.throws(()=>validateTaskAckOutput(job,JSON.stringify({...base,publicDiscoveryPolicy:retailPolicy,publicDiscoveryCategory:category})),/task-ack-research-policy-invalid/)
+ assert.throws(()=>validateTaskAckOutput(job,JSON.stringify({...base,publicDiscoveryCategory:'clothing'})),/task-ack-research-policy-invalid/)
+ const copy=structuredClone(job);copy.context.task.attempt=1
+ assert.throws(()=>validateTaskAckOutput(copy,JSON.stringify({...base,publicDiscoveryPolicy:retailPolicy,publicDiscoveryCategory:'clothing'})),/task-ack-research-policy-invalid/)
+ assert.match(stageInstructions(job),/finite public retail/);assert.match(stageInstructions(job),/never your task text/)
+})
+test('role claim proof is optional before rollout and strict when advertised',()=>{
+ assert.equal(checkRoleContract({}),false)
+ const status={roleApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_role_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}}}
+ assert.equal(checkRoleContract(status),true)
+ for(const change of [s=>{s.roleApi.execute=false},s=>{s.roleApi.rpcs.hq_worker_role_claim.pop()},s=>{s.roleApi.rpcs.other=[]}]){const bad=structuredClone(status);change(bad);assert.throws(()=>checkRoleContract(bad),/schema-incompatible/)}
+})
+test('evaluator stages retain complete fixed fixture packet and identify the bound senior reviewer',()=>{
+ const {job}=fixture();job.context.agent.name='Generated senior reviewer';job.context.supervisedTrial={scope:'evaluator-skill-trial-v1',agentId:'AG-HR-003',reviewerId:'AG-CEO-001'}
+ for(const mode of ['task-ack','trial-start','worker-trial','ceo-review','task-report']){
+  job.context.mode=mode;job.context.trialReview=true;job.context.trialReport=true
+  const text=stageInstructions(job);assert.match(text,/context.trialAssignment/);assert.match(text,/do not invent substitute cases/);assert.doesNotMatch(text,/recorded head\/Iris/)
+  if(mode==='ceo-review')assert.match(text,/As Generated senior reviewer/)
+ }
+})
+test('actual retail CLI plan returns real module declaration and retains it through acknowledged journal cleanup',async()=>{
+ const job=pilotJob(),{item}=fixture(),category='clothing';job.context.mode='worker-trial'
+ Object.assign(job.context.publicDiscoveryPermit,{policyId:retailPolicy,category})
+ job.context.supervisedTrial={id:randomUUID(),taskId:job.context.task.id,agentId:job.agent_id,managerId:'AG-RES-001',skillFileId:'skill_fixture_01',
+  scope:'public-retail-tool-trial-v1',toolPolicyId:retailPolicy,category,status:'active',bindingDigest:'a'.repeat(64),expiresAt:new Date(Date.now()+60000).toISOString(),externalActionsAllowed:false,publishingAllowed:false}
+ Object.assign(item.result.structured_content,{policyId:retailPolicy,category})
+ const appItem={...item,type:'mcpToolCall',result:{content:item.result.content,structuredContent:item.result.structured_content}}
+ const output=await fake([],config=>invokeCodex({...config,id:'generated-worker'},job,[],AbortSignal.timeout(5000)),
+  {cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,publicDiscoveryCategory:category,events:[{method:'item/completed',params:{item:appItem}}],turnItems:[appItem]}})
+ const policy=output.modelBindingEvidence.publicDiscoveryPolicy
+ assert.equal(policy.policyId,retailPolicy);assert.equal(policy.category,category)
+ assert.equal(policy.moduleSha256,hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))))
+ assert.equal(output.evidence[0].queryId,'new-cairo-retail-clothing-v1')
+ let saved
+ await deliverWorkerEntry({workerId:'generated-worker',rpc:async()=>({accepted:true,trialReceiptAccepted:true,publicDiscoveryReceiptAccepted:true}),write:async entry=>{saved=entry}},
+  {version:3,job:{id:job.id,lease_token:'generated-lease'},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,modelBindingEvidence:output.modelBindingEvidence})
+ assert.equal(saved.phase,'delivered');assert.deepEqual(saved.modelBindingEvidence.publicDiscoveryPolicy,policy)
 })

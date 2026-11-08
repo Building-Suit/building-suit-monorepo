@@ -10,7 +10,20 @@ export interface HqPublicResearchTrialPresentation {
   bindingCurrent: boolean
 }
 
+export type HqRetailCategory = 'clothing' | 'footwear' | 'homewares'
+export interface HqOrdinaryTrialPresentation extends HqPublicResearchTrialPresentation {
+  skillName: string | null
+  reviewerId: string | null
+  reviewerReady: boolean
+}
+export interface HqRetailTrialPresentation extends HqPublicResearchTrialPresentation {
+  categories: readonly HqRetailCategory[]
+  lastCategory: HqRetailCategory | null
+  setupRequired: boolean
+}
 export interface HqTrialPresentation {
+  ordinary?: HqOrdinaryTrialPresentation
+  publicRetail?: HqRetailTrialPresentation
   publicResearch?: HqPublicResearchTrialPresentation
   agentId: string
   skillFileId: string | null
@@ -21,8 +34,11 @@ export interface HqTrialPresentation {
   receiptIssued: boolean
   reviewComplete: boolean
 }
-export type HqTrialCommand = { action: 'qualify' | 'qualify-public-research'; trialId: string }
+export type HqTrialCommand = { action: 'qualify' | 'qualify-public-research' | 'qualify-public-retail'; trialId: string; agentId?: string }
   | { action: 'start-public-research'; skillFileId: string }
+  | { action: 'start-skill-trial'; agentId: string; skillFileId: string }
+  | { action: 'start-public-retail'; skillFileId: string; category: HqRetailCategory }
+  | { action: 'clear-trial-feedback' }
 
 export interface HqAgentAvatar {
   body: 'female' | 'male'
@@ -85,6 +101,7 @@ export interface HqAgentsPresentation {
   trials?: readonly HqTrialPresentation[]
   trialPending?: boolean
   trialMessage?: string
+  trialMessageAgentId?: string | null
   status: 'loading' | 'connected' | 'unavailable' | 'error'
   /** Initial load or a business write; background reads use refreshing. */
   pending: boolean

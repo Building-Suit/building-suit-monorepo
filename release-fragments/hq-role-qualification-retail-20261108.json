@@ -1,0 +1,43 @@
+{
+  "id": "hq-role-qualification-retail-20261108",
+  "task": "HQ-ROLE-QUALIFICATION-RETAIL-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/app/composables/useHqAgents.ts",
+    "apps/company-hq/server/api/hq/evaluator-trials/index.post.ts",
+    "apps/company-hq/server/api/hq/retail-trials/index.post.ts",
+    "apps/company-hq/server/api/hq/retail-trials/qualification.post.ts",
+    "apps/company-hq/server/api/hq/trials/start.post.ts",
+    "apps/company-hq/server/utils/hqAgents.ts",
+    "apps/company-hq/supabase/migrations/20261108200149_hq_evaluator_qualification_status.sql",
+    "apps/company-hq/supabase/migrations/20261108200632_hq_public_retail_discovery.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/browser/role-trials.spec.ts",
+    "apps/company-hq/tests/browser/trials.spec.ts",
+    "apps/company-hq/tests/unit/research-trial-controls.test.mjs",
+    "apps/company-hq/tests/unit/role-trials-bff.test.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "tooling/hq-agent-host/README.md",
+    "tooling/hq-agent-host/departmentWorkflow.mjs",
+    "tooling/hq-agent-host/discovery-mcp.test.mjs",
+    "tooling/hq-agent-host/discovery-worker.test.mjs",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "tooling/hq-agent-host/retail-discovery-db.test.mjs",
+    "tooling/hq-agent-host/test-cli.mjs",
+    "tooling/hq-agent-host/worker.mjs"
+  ],
+  "reason": "Expose founder assigned-skill trials, bind the evaluator independent reviewer to the existing CEO for that sole purpose, and prepare a finite public retail tool policy with durable observed module metadata. Preserve current salon authority, private-input boundaries, legacy claim/API/journal compatibility, real qualification and separately approved canonical/live activation. No outreach, credentials, hiring, host or CI optimization changes."
+}

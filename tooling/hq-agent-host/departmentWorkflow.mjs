@@ -136,10 +136,12 @@ const hasCurrentQualification = (agent, qualification) => {
   return assigned.length > 0 && JSON.stringify(assigned) === JSON.stringify(qualified)
 }
 
-const supervisedTrialAllowed = (job, agent) => {
+export const supervisedTrialAllowed = (job, agent) => {
   const trial = job.context?.supervisedTrial
   const expiresAt = Date.parse(trial?.expiresAt || '')
-  return trial?.scope === 'synthetic-internal-trial-v1' && trial.status === 'active'
+  return (trial?.scope === 'synthetic-internal-trial-v1'
+    || trial?.scope === 'evaluator-skill-trial-v1' && job.agent_id === 'AG-HR-003' && agent?.managerId === 'AG-HR-001'
+      && trial.reviewerId === 'AG-CEO-001' && /^[a-f0-9]{64}$/.test(trial.reviewerBindingDigest || '')) && trial.status === 'active'
     && trial.externalActionsAllowed === false && trial.publishingAllowed === false
     && trial.agentId === job.agent_id && trial.agentId === agent?.id
     && trial.taskId === job.context?.task?.id && trial.managerId === agent?.managerId
@@ -205,6 +207,14 @@ export function workerExecutionBlock(job) {
 // arbitrary-query MCP, page fetching or a new runtime dependency/service.
 export const DISCOVERY_MCP_TOOL = 'public_business_discovery'
 export const DISCOVERY_MCP_POLICY = 'exa-public-business-discovery-v1'
+export const DISCOVERY_RETAIL_POLICY = 'exa-public-retail-discovery-v1'
+export const DISCOVERY_RETAIL_CATEGORIES = Object.freeze(['clothing','footwear','homewares'])
+export function discoveryRetailPlan(category) {
+  if (!DISCOVERY_RETAIL_CATEGORIES.includes(category)) return null
+  const subject = {clothing:'clothing stores',footwear:'footwear stores',homewares:'homewares stores'}[category]
+  return Object.freeze({query:`Official websites of ${subject} in New Cairo, Egypt`,
+    objective:`Find up to three public official business websites with literal page evidence of their New Cairo location and ${subject}. Exclude personal profiles, social networks, directories and inferred contact details.`})
+}
 export const DISCOVERY_QUERY = 'Official websites of barbershops and hair salons in New Cairo, Egypt'
 export const DISCOVERY_OBJECTIVE = 'Find up to three public official business websites with literal page evidence of their New Cairo location and barber or hair salon services. Exclude personal profiles, social networks, directories and inferred contact details.'
 const EXA_ENDPOINT = 'https://mcp.exa.ai/mcp?tools=web_search_exa'
@@ -226,8 +236,9 @@ export function researchDiscoveryTrialAllowed(job) {
   return ['trial-start','worker-trial'].includes(job?.context?.mode) && job.agent_id==='AG-RES-002' && agent?.id===job.agent_id
     && agent.modelTier==='T1_WORKER' && agent.model===T1_WORKER_MODEL && agent.departmentKey==='research-market-intelligence'
     && agent.managerModelTier==='T2_HEAD' && agent.headAuthorization===true && Boolean(agent.profileFileId)
-    && trial?.scope==='public-research-tool-trial-v1' && trial.status==='active'
-    && trial.toolPolicyId===DISCOVERY_MCP_POLICY && trial.agentId===job.agent_id
+    && (trial?.scope==='public-research-tool-trial-v1' && trial.toolPolicyId===DISCOVERY_MCP_POLICY
+      || trial?.scope==='public-retail-tool-trial-v1' && trial.toolPolicyId===DISCOVERY_RETAIL_POLICY && Boolean(discoveryRetailPlan(trial.category)))
+    && trial.status==='active' && trial.agentId===job.agent_id
     && trial.taskId===job.context?.task?.id && trial.managerId===agent.managerId
     && trial.externalActionsAllowed===false && trial.publishingAllowed===false
     && (agent.skillFileIds||[]).includes(trial.skillFileId) && /^[a-f0-9]{64}$/.test(trial.bindingDigest||'')
@@ -236,18 +247,20 @@ export function researchDiscoveryTrialAllowed(job) {
 
 export function discoveryMcpConfig(job, { nodePath, modulePath, budgetFile, executionModel } = {}) {
   const agent = job?.context?.agent, permit = job?.context?.publicDiscoveryPermit
-  const trial=researchDiscoveryTrialAllowed(job)
+  const trial=researchDiscoveryTrialAllowed(job),retail=permit?.policyId===DISCOVERY_RETAIL_POLICY
   if (!job || !['task-work','worker-trial'].includes(job.context?.mode) || agent?.id !== job.agent_id || job.agent_id!=='AG-RES-002'
     || agent.modelTier !== 'T1_WORKER' || agent.departmentKey !== 'research-market-intelligence'
     || job.context?.task?.attempt!==0 || executionModel!==agent.model
     || workerExecutionBlock(job) !== null || Object.hasOwn(job.context,'meetingResponse')
-    || !exactKeys(permit,['version','policyId','jobId','agentId','bindingDigest'])
-    || permit.version !== 1 || permit.policyId !== DISCOVERY_MCP_POLICY
+    || !exactKeys(permit,['version','policyId','jobId','agentId','bindingDigest',...(retail?['category']:[])])
+    || permit.version !== 1 || ![DISCOVERY_MCP_POLICY,DISCOVERY_RETAIL_POLICY].includes(permit.policyId)
+    || retail && !discoveryRetailPlan(permit.category)
+    || trial && (job.context.supervisedTrial.toolPolicyId!==permit.policyId || retail && job.context.supervisedTrial.category!==permit.category)
     || permit.jobId !== job.id || permit.agentId !== job.agent_id
     || permit.bindingDigest !== (trial ? job.context.supervisedTrial.bindingDigest : agent.qualification?.bindingDigest)
     || !isAbsolute(nodePath || '') || !isAbsolute(modulePath || '') || !modulePath.endsWith('/departmentWorkflow.mjs')
     || !validDiscoveryBudgetPath(budgetFile)) return null
-  return { command: nodePath, args: ['--preserve-symlinks-main',modulePath,'--public-discovery-mcp',budgetFile],
+  return { command: nodePath, args: ['--preserve-symlinks-main',modulePath,...(retail?['--public-retail-discovery-mcp',permit.category,budgetFile]:['--public-discovery-mcp',budgetFile])],
     enabled: true, required: true, startup_timeout_sec: 10, tool_timeout_sec: 25,
     enabled_tools: [DISCOVERY_MCP_TOOL] }
 }
@@ -385,7 +398,9 @@ export function discoveryResultSources(text) {
 }
 
 /** One upstream attempt with memory-only session state; callers reserve budget first. */
-export async function runFixedDiscovery({ signal, post = discoveryPinnedPost, now = () => new Date() } = {}) {
+export async function runFixedDiscovery({ signal, post = discoveryPinnedPost, now = () => new Date(), policyId = DISCOVERY_MCP_POLICY, category } = {}) {
+  const retail=policyId===DISCOVERY_RETAIL_POLICY,plan=retail?discoveryRetailPlan(category):{query:DISCOVERY_QUERY,objective:DISCOVERY_OBJECTIVE}
+  mcpNeed([DISCOVERY_MCP_POLICY,DISCOVERY_RETAIL_POLICY].includes(policyId) && plan && (retail || category===undefined),'discovery-policy-invalid')
   const deadline=AbortSignal.any([AbortSignal.timeout(20000),...(signal?[signal]:[])])
   let session=null, requests=0
   const sessionValues=new Set()
@@ -434,14 +449,14 @@ export async function runFixedDiscovery({ signal, post = discoveryPinnedPost, no
       && schema.properties?.query?.type==='string' && schema.properties.objective?.type==='string'
       && schema.properties.numResults?.type==='number','discovery-tool-schema-invalid')
     const searched=await exchange({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'web_search_exa',
-      arguments:{query:DISCOVERY_QUERY,objective:DISCOVERY_OBJECTIVE,numResults:3}}})
+      arguments:{query:plan.query,objective:plan.objective,numResults:3}}})
     const result=searched.result
     mcpNeed(result.isError!==true && Array.isArray(result.content) && result.content.length===1
       && result.content[0].type==='text' && typeof result.content[0].text==='string','discovery-result-invalid')
     const text=result.content[0].text
     mcpNeed(![...sessionValues].some(value=>text.includes(value)),'discovery-session-echo-rejected')
     const sources=discoveryResultSources(text)
-    const structuredContent={version:1,kind:'mcp-exa-public-discovery',policyId:DISCOVERY_MCP_POLICY,
+    const structuredContent={version:1,kind:'mcp-exa-public-discovery',policyId,...(retail?{category}:{}),
       observedAt:now().toISOString(),rawResultSha256:mcpHash(searched.raw),rawResultBytes:searched.raw.length,
       sourceUrls:sources.map(source=>source.url),literalTextSha256:mcpHash(text),partial:true,wholePageVerified:false}
     return {content:[{type:'text',text}],structuredContent}
@@ -449,7 +464,9 @@ export async function runFixedDiscovery({ signal, post = discoveryPinnedPost, no
 }
 
 /** JSON-RPC handler shared by stdio and generated tests. No caller text reaches Exa. */
-export function createDiscoveryMcpServer({ upstream = runFixedDiscovery, budgetFile } = {}) {
+export function createDiscoveryMcpServer({ upstream = runFixedDiscovery, budgetFile, policyId = DISCOVERY_MCP_POLICY, category } = {}) {
+  mcpNeed([DISCOVERY_MCP_POLICY,DISCOVERY_RETAIL_POLICY].includes(policyId)
+    && (policyId===DISCOVERY_RETAIL_POLICY?Boolean(discoveryRetailPlan(category)):category===undefined),'discovery-policy-invalid')
   mcpNeed(validDiscoveryBudgetPath(budgetFile),'discovery-budget-invalid')
   let initialized=false, ready=false, consumed=false
   const controller=new AbortController()
@@ -478,7 +495,7 @@ export function createDiscoveryMcpServer({ upstream = runFixedDiscovery, budgetF
       || Object.keys(message.params).some(key=>!['name','arguments','_meta'].includes(key)))return error(id,-32602,'Tool takes no arguments')
     if(consumed)return {jsonrpc:'2.0',id,result:{isError:true,content:[{type:'text',text:'discovery-budget-exhausted'}]}}
     consumed=true // Reserve before any asynchronous upstream work, including initialization.
-    try { await reserveDiscoveryBudget(budgetFile);return {jsonrpc:'2.0',id,result:await upstream({signal:controller.signal})} }
+    try { await reserveDiscoveryBudget(budgetFile);return {jsonrpc:'2.0',id,result:await upstream({signal:controller.signal,...(policyId===DISCOVERY_RETAIL_POLICY?{policyId,category}:{})})} }
     catch(error) {
       const known=new Set(['discovery-access-denied','discovery-rate-limited','discovery-response-too-large',
         'discovery-dns-rejected','discovery-source-unavailable','discovery-result-invalid'])
@@ -488,8 +505,8 @@ export function createDiscoveryMcpServer({ upstream = runFixedDiscovery, budgetF
   } }
 }
 
-export async function serveDiscoveryMcp({budgetFile,input=process.stdin,output=process.stdout}={}) {
-  const server=createDiscoveryMcpServer({budgetFile});let buffer='',bytes=0,messages=0
+export async function serveDiscoveryMcp({budgetFile,policyId=DISCOVERY_MCP_POLICY,category,input=process.stdin,output=process.stdout}={}) {
+  const server=createDiscoveryMcpServer({budgetFile,policyId,category});let buffer='',bytes=0,messages=0
   const decoder=new TextDecoder('utf-8',{fatal:true})
   const write=value=>{if(value)output.write(JSON.stringify(value)+'\n')}
   try {
@@ -513,4 +530,9 @@ export async function serveDiscoveryMcp({budgetFile,input=process.stdin,output=p
 if(process.argv.length===4 && process.argv[2]==='--public-discovery-mcp'
   && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   serveDiscoveryMcp({budgetFile:process.argv[3]}).catch(()=>{process.exitCode=1})
+}
+
+if(process.argv.length===5 && process.argv[2]==='--public-retail-discovery-mcp'
+  && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
+  serveDiscoveryMcp({policyId:DISCOVERY_RETAIL_POLICY,category:process.argv[3],budgetFile:process.argv[4]}).catch(()=>{process.exitCode=1})
 }

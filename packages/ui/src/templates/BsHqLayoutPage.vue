@@ -3,7 +3,7 @@ import designTokens from '@building-suit/design-tokens'
 import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation, HqStaffingCopy, HqStaffingDecision, HqStaffingPresentation } from '../types/hqLayoutPresentation'
-import type { HqAgentPresentation, HqAgentsPresentation, HqTrialCommand } from '../types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqTrialCommand, HqRetailCategory } from '../types/hqAgentsPresentation'
 import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
 import BsHqTeamChart from '../organisms/BsHqTeamChart.vue'
 import BsHqPlanBoard from '../organisms/BsHqPlanBoard.vue'
@@ -29,26 +29,42 @@ onScopeDispose(() => { trialDisposed = true })
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
 const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
 const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgent.value?.id))
+const selectedOrdinaryTrial = computed(() => selectedTrial.value?.ordinary)
+const selectedRetailTrial = computed(() => selectedAgent.value?.id === 'AG-RES-002' ? selectedTrial.value?.publicRetail : undefined)
+const retailCategory = ref<HqRetailCategory>('clothing')
+function chooseRetailCategory(value: unknown) {
+  if (value === 'clothing' || value === 'footwear' || value === 'homewares') retailCategory.value = value
+}
 const selectedResearchTrial = computed(() => selectedAgent.value?.id === 'AG-RES-002' ? selectedTrial.value?.publicResearch : undefined)
 const publicTrialIsLatest = computed(() => Boolean(selectedResearchTrial.value?.trialId && selectedResearchTrial.value.trialId === selectedTrial.value?.trialId))
 async function trialAction(command: HqTrialCommand) {
-  if (trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
+  if (command.action === 'clear-trial-feedback' || trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
   const agentId = selectedAgent.value?.id
   trialConfirming.value = true
   try {
-    const start = command.action === 'start-public-research', research = command.action !== 'qualify'
-    const accepted = await confirmation.ask({ title: start ? 'Start Public Research trial' : research ? 'Approve Public Research qualification' : 'Approve qualification',
-      message: start ? 'Start Karim’s supervised tool trial under Nadia and independent review? It permits one fixed generic public search for up to three results, with no private task text or outreach. Starting does not grant qualification.'
-        : research ? 'Record qualification from the completed current-binding Public Research trial and its independent reviews? This does not authorize outreach or general browsing.'
-        : 'Record qualification from the completed independently reviewed trial? Canonical Active lifecycle is still required before ordinary execution.',
+    const start = command.action.startsWith('start-'), retail = command.action.includes('public-retail')
+    const research = command.action.includes('public-research'), ordinary = !retail && !research
+    const reviewer = selectedOrdinaryTrial.value?.reviewerId
+    const reviewerName = props.agents?.agents.find(agent => agent.id === reviewer)?.name ?? reviewer ?? 'the bound independent reviewer'
+    const accepted = await confirmation.ask({
+      title: start ? retail ? 'Start Public Retail trial' : research ? 'Start Public Research trial' : 'Start assigned-skill trial'
+        : retail ? 'Approve Public Retail qualification' : research ? 'Approve Public Research qualification' : 'Approve qualification',
+      message: start ? retail
+        ? 'Start the reviewed Public Retail contract evaluation for the selected fixed New Cairo shop category? It permits one generic public search with at most three results and no private task text, arbitrary URLs or outreach. The actual observed category remains distinct from unexercised examples; starting does not grant qualification.'
+        : research ? 'Start Karim’s supervised tool trial under Nadia and independent review? It permits one fixed generic public search for up to three results, with no private task text or outreach. Starting does not grant qualification.'
+          : `Start the selected assigned skill’s supplied-fixture trial for ${selectedAgent.value?.name}? The manager reviews first, then ${reviewerName} independently reviews the same artifact. ${agentId === 'AG-HR-003' ? 'Steve is the fixed independent reviewer for Iris; Iris cannot review herself. ' : ''}No network tools, customer work or external actions are permitted. Starting does not grant qualification.`
+        : ordinary ? 'Record qualification from the completed current-binding manager and independent reviews? All assigned skills and canonical Active lifecycle remain required.'
+          : 'Record qualification from the completed current-binding tool trial and its independent reviews? This does not authorize outreach or general browsing.',
       confirmLabel: start ? 'Start trial' : 'Approve qualification', cancelLabel: 'Cancel' })
-    const current = research ? selectedResearchTrial.value : selectedTrial.value
-    const valid = command.action === 'start-public-research'
-      ? selectedResearchTrial.value?.eligible && !selectedResearchTrial.value.qualified && selectedResearchTrial.value.status !== 'active'
-        && selectedResearchTrial.value.skillFileId === command.skillFileId
-        && !(selectedResearchTrial.value.reviewComplete && selectedResearchTrial.value.bindingCurrent && !selectedResearchTrial.value.receiptIssued)
-      : current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
-        && (!research || selectedResearchTrial.value?.bindingCurrent)
+    const current = retail ? selectedRetailTrial.value : research ? selectedResearchTrial.value : selectedOrdinaryTrial.value ?? selectedTrial.value
+    const valid = start && 'skillFileId' in command
+      ? current?.eligible && !current.qualified && current.status !== 'active' && current.skillFileId === command.skillFileId
+        && (!ordinary || selectedOrdinaryTrial.value?.reviewerReady)
+        && (!retail || command.action === 'start-public-retail' && selectedRetailTrial.value?.categories.includes(command.category))
+        && !('bindingCurrent' in current && current.reviewComplete && current.bindingCurrent && !current.receiptIssued)
+      : 'trialId' in command && current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
+        && (!('bindingCurrent' in current) || current.bindingCurrent)
+        && (!ordinary || !selectedOrdinaryTrial.value || selectedOrdinaryTrial.value.reviewerReady)
     if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgent.value?.id === agentId && !props.agents?.trialPending) emit('trialCommand', command)
   } finally { trialConfirming.value = false }
 }
@@ -129,6 +145,7 @@ const { section: officeSection, selectedAgentId, selectSection, selectAgent, clo
 const selectedAgent = computed(() => teamVisible.value
   ? (founderAccess.value.status === 'founder' ? agentsState.value.agents.find(agent => agent.id === teamAgentId.value) ?? null : null)
   : selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null)
+watch(() => selectedAgent.value?.id, () => emit('trialCommand', { action: 'clear-trial-feedback' }))
 const selectedNote = computed(() => recordDetail.value?.kind === 'note' && props.brain?.selectedId === recordDetail.value.id ? props.brain?.note : null)
 const recordTitle = computed(() => {
   const record = recordDetail.value
@@ -529,9 +546,27 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
               <BsButton v-if="selectedResearchTrial.reviewComplete && selectedResearchTrial.bindingCurrent && selectedResearchTrial.trialId && !selectedResearchTrial.receiptIssued && !selectedResearchTrial.qualified" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify-public-research', trialId: selectedResearchTrial.trialId })">Approve Public Research qualification</BsButton>
             </template>
           </section>
-          <p v-if="!publicTrialIsLatest" role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? selectedTrial.skillFileId ? 'Skill qualification recorded; remaining assigned skills require trials' : 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
-          <BsButton v-if="!publicTrialIsLatest && selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
-          <p v-if="agentsState.trialMessage" role="status">{{ agentsState.trialMessage }}</p>
+          <section v-if="selectedRetailTrial" aria-label="Public Retail qualification">
+            <h3>Public Retail qualification</h3>
+            <p role="status">{{ selectedRetailTrial.qualified ? 'Public Retail tool qualified for the approved finite policy' : selectedRetailTrial.status === 'active' ? 'Public Retail trial in progress' : selectedRetailTrial.reviewComplete && selectedRetailTrial.bindingCurrent && !selectedRetailTrial.receiptIssued ? 'Reviewed Public Retail trial ready for qualification' : selectedRetailTrial.trialId && !selectedRetailTrial.bindingCurrent ? 'Earlier Public Retail evidence is not current' : selectedRetailTrial.eligible ? 'Public Retail trial available' : 'Public Retail setup or current qualification prerequisites are not ready' }}</p>
+            <p v-if="selectedRetailTrial.lastCategory">Actual latest trial category: {{ selectedRetailTrial.lastCategory }}. Other category results are not implied.</p>
+            <template v-if="selectedRetailTrial.eligible && selectedRetailTrial.skillFileId && !selectedRetailTrial.qualified && selectedRetailTrial.status !== 'active' && !(selectedRetailTrial.reviewComplete && selectedRetailTrial.bindingCurrent && !selectedRetailTrial.receiptIssued)">
+              <BsSelect :model-value="retailCategory" :options="[...selectedRetailTrial.categories]" label="Fixed New Cairo shop category" :disabled="trialConfirming || agentsState.trialPending" append-to="self" @update:model-value="chooseRetailCategory" />
+              <BsButton :disabled="trialConfirming || agentsState.trialPending || !selectedRetailTrial.categories.includes(retailCategory)" @click="trialAction({ action: 'start-public-retail', skillFileId: selectedRetailTrial.skillFileId, category: retailCategory })">Start Public Retail trial</BsButton>
+            </template>
+            <BsButton v-if="selectedRetailTrial.reviewComplete && selectedRetailTrial.bindingCurrent && selectedRetailTrial.trialId && !selectedRetailTrial.receiptIssued && !selectedRetailTrial.qualified" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify-public-retail', trialId: selectedRetailTrial.trialId })">Approve Public Retail qualification</BsButton>
+          </section>
+          <section v-if="selectedOrdinaryTrial" aria-label="Assigned-skill qualification">
+            <h3>Assigned-skill qualification</h3>
+            <p v-if="selectedOrdinaryTrial.skillName">Selected skill: {{ selectedOrdinaryTrial.skillName }}</p>
+            <p v-if="selectedOrdinaryTrial.reviewerId">Independent reviewer: {{ agentsState.agents.find(agent => agent.id === selectedOrdinaryTrial?.reviewerId)?.name ?? selectedOrdinaryTrial.reviewerId }}</p>
+            <p role="status">{{ selectedOrdinaryTrial.qualified ? 'Qualified for bounded drafting' : selectedOrdinaryTrial.status === 'active' ? 'Assigned-skill trial in progress' : selectedOrdinaryTrial.reviewComplete && selectedOrdinaryTrial.bindingCurrent && !selectedOrdinaryTrial.receiptIssued ? 'Reviewed assigned-skill trial ready for qualification' : selectedOrdinaryTrial.trialId && !selectedOrdinaryTrial.bindingCurrent ? 'Earlier assigned-skill evidence is not current' : selectedOrdinaryTrial.eligible && selectedOrdinaryTrial.reviewerReady ? 'Assigned-skill trial available' : 'Assigned-skill trial prerequisites are not ready' }}</p>
+            <BsButton v-if="selectedOrdinaryTrial.eligible && selectedOrdinaryTrial.reviewerReady && selectedOrdinaryTrial.skillFileId && !selectedOrdinaryTrial.qualified && selectedOrdinaryTrial.status !== 'active' && !(selectedOrdinaryTrial.reviewComplete && selectedOrdinaryTrial.bindingCurrent && !selectedOrdinaryTrial.receiptIssued)" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'start-skill-trial', agentId: selectedAgent.id, skillFileId: selectedOrdinaryTrial.skillFileId })">Start assigned-skill trial</BsButton>
+            <BsButton v-if="selectedOrdinaryTrial.reviewComplete && selectedOrdinaryTrial.bindingCurrent && selectedOrdinaryTrial.reviewerReady && selectedOrdinaryTrial.trialId && !selectedOrdinaryTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', agentId: selectedAgent.id, trialId: selectedOrdinaryTrial.trialId })">Approve assigned-skill qualification</BsButton>
+          </section>
+          <p v-if="!selectedOrdinaryTrial && !publicTrialIsLatest && selectedRetailTrial?.trialId !== selectedTrial.trialId" role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? selectedTrial.skillFileId ? 'Skill qualification recorded; remaining assigned skills require trials' : 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
+          <BsButton v-if="!selectedOrdinaryTrial && !publicTrialIsLatest && selectedRetailTrial?.trialId !== selectedTrial.trialId && selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
+          <p v-if="agentsState.trialMessage && agentsState.trialMessageAgentId === selectedAgent.id" role="status">{{ agentsState.trialMessage }}</p>
         </template>
         </div>
       </aside>

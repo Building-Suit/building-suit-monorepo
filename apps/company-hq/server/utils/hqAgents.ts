@@ -90,3 +90,21 @@ export async function hqPublicResearchTrialBody(event: H3Event): Promise<{ skill
     || !id(entry.requestKey)) throw createError({ statusCode: 400, statusMessage: 'HQ research trial unavailable' })
   return { skillFileId: entry.skillFileId, requestKey: String(entry.requestKey) }
 }
+
+/** Assigned-skill fixture trial only; reviewer/model/tool authority are server-owned. */
+export async function hqOrdinaryTrialBody(event: H3Event): Promise<{ agentId: string; skillFileId: string; requestKey: string }> {
+  const entry = exact(await boundedBody(event, 2048), ['agentId', 'skillFileId', 'requestKey'])
+  if (!entry || typeof entry.agentId !== 'string' || !/^AG-[A-Z]{2,10}-[0-9]{3}$/.test(entry.agentId)
+    || typeof entry.skillFileId !== 'string' || !/^[A-Za-z0-9_-]{8,200}$/.test(entry.skillFileId)
+    || !id(entry.requestKey)) throw createError({ statusCode: 400, statusMessage: 'HQ skill trial unavailable' })
+  return { agentId: entry.agentId, skillFileId: entry.skillFileId, requestKey: String(entry.requestKey) }
+}
+
+/** Finite public criteria; no freeform provider query, URL or private context. */
+export async function hqPublicRetailTrialBody(event: H3Event): Promise<{ skillFileId: string; category: 'clothing' | 'footwear' | 'homewares'; requestKey: string }> {
+  const entry = exact(await boundedBody(event, 2048), ['skillFileId', 'category', 'requestKey'])
+  if (!entry || typeof entry.skillFileId !== 'string' || !/^[A-Za-z0-9_-]{8,200}$/.test(entry.skillFileId)
+    || typeof entry.category !== 'string' || !['clothing','footwear','homewares'].includes(entry.category) || !id(entry.requestKey))
+    throw createError({ statusCode: 400, statusMessage: 'HQ retail trial unavailable' })
+  return { skillFileId: entry.skillFileId, category: entry.category as 'clothing' | 'footwear' | 'homewares', requestKey: String(entry.requestKey) }
+}

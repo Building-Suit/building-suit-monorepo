@@ -18,7 +18,7 @@ The founder directs new tasks, plans and work requests through Chat. The
 Tasks views show existing work and results without a manual creation or
 follow-up form. The live meeting room retains conversation and existing
 records; direct research, plan drafting and dispatch approval are disabled.
-Agent details can record reviewed qualifications but cannot launch trials.
+Agent details expose founder-confirmed assigned-skill trial Start/Approve controls and the separately guarded bounded Research tool trials. These controls use live founder authorization, frozen trial bindings and independent review; they never submit ordinary company work or grant external authority by configuration. Iris’s evaluator trial uses the fixed Amaya→Steve review path, with no self-review or arbitrary reviewer selector.
 Existing company and staffing proposal decisions remain available. The
 synthetic meeting fixture retains its isolated demonstration commands.
 
