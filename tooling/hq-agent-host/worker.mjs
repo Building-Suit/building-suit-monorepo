@@ -32,7 +32,8 @@ const record = value => value && typeof value === 'object' && !Array.isArray(val
 const LEARNING_ERRORS = new Set(['learning-invalid-record','learning-invalid-digest','learning-header-required','learning-journal-too-large',
   'learning-entry-conflict','learning-journal-capacity','learning-transport-unavailable','learning-source-conflict','learning-authorization-required',
   'learning-remote-unavailable','learning-response-too-large','learning-invalid-response','learning-configuration-required','learning-output-required',
-  'learning-cas-required','learning-scope-required','learning-readback-conflict'])
+  'learning-cas-required','learning-scope-required','learning-readback-conflict',
+  'learning-readback-version-conflict','learning-readback-media-conflict','learning-readback-entry-conflict'])
 export const codeOf = error => error instanceof WorkerProblem ? error.code : LEARNING_ERRORS.has(error?.code) ? error.code : 'worker-unavailable'
 
 /** Classify in memory and emit only fixed codes, never provider diagnostic text. */

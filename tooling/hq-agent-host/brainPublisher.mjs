@@ -1,5 +1,6 @@
 /** Reviewed-learning publication only. Never creates files or edits Brain sources. */
 import { createHash, createSign } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 const ROOT = '1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'
 const ID = /^[A-Za-z0-9_-]{8,200}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -55,9 +56,17 @@ export function appendReviewedLesson(text, lesson) {
   return { text: next, duplicate: false }
 }
 
+/** Fixed predicate codes only; never attach source bytes or provider diagnostics. */
+export function verifyLessonReadback({ versionMatches, mediaMatches, duplicate }) {
+  demand(versionMatches === true, 'learning-readback-version-conflict')
+  demand(mediaMatches === true, 'learning-readback-media-conflict')
+  demand(duplicate === true, 'learning-readback-entry-conflict')
+}
+
 export function createBrainPublisher(config, { fetch: transport = globalThis.fetch } = {}) {
   let bearer = null, deadline = 0
   async function exchange(url, options, max = 40_000) {
+    options.signal?.throwIfAborted()
     let response
     try { response = await transport(url, { ...options, redirect:'error' }) }
     catch { demand(false,'learning-transport-unavailable') }
@@ -67,6 +76,7 @@ export function createBrainPublisher(config, { fetch: transport = globalThis.fet
     demand(!declared || /^\d+$/.test(declared) && Number(declared) <= max,'learning-response-too-large')
     const chunks=[]; let size=0
     for await (const chunk of response.body || []) { size+=chunk.byteLength; demand(size<=max,'learning-response-too-large');chunks.push(Buffer.from(chunk)) }
+    options.signal?.throwIfAborted()
     let text
     try {text=new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))}catch{demand(false,'learning-invalid-response')}
     return {text,etag:response.headers.get('etag')}
@@ -85,10 +95,11 @@ export function createBrainPublisher(config, { fetch: transport = globalThis.fet
   return {async publishLesson(lesson, parentSignal) {
     validLesson(lesson)
     demand(config.brainRoot===ROOT && ID.test(config.learningFileId || ''),'learning-configuration-required')
-    const fileId=config.learningFileId, signal=parentSignal || AbortSignal.timeout(90_000)
+    const fileId=config.learningFileId, signal=AbortSignal.any([
+      AbortSignal.timeout(90_000), ...(parentSignal ? [parentSignal] : [])])
     const headers={Authorization:'Bearer '+await token(signal),'Cache-Control':'no-cache'}
-    const metadata=async id=>json('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)
-      +'?supportsAllDrives=true&fields=id,name,mimeType,parents,trashed,version,ownedByMe,capabilities(canEdit)',{headers,signal})
+    const metadata=async (id,readSignal=signal)=>json('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)
+      +'?supportsAllDrives=true&fields=id,name,mimeType,parents,trashed,version,ownedByMe,capabilities(canEdit)',{headers,signal:readSignal})
     // v3 omits the file resource ETag. v2 exposes its own strong resource
     // validator; it must be used with the matching v2 update endpoint.
     const validator=async()=>{
@@ -99,15 +110,15 @@ export function createBrainPublisher(config, { fetch: transport = globalThis.fet
       demand(typeof value.value.etag==='string' && /^"[^"\r\n]{1,200}"$/.test(value.value.etag),'learning-cas-required')
       return value.value
     }
-    const verifyScope=async()=>{
-      const first=await metadata(fileId), value=first.value
+    const verifyScope=async(readSignal=signal)=>{
+      const first=await metadata(fileId,readSignal), value=first.value
       demand(value.id===fileId && value.trashed===false && ['text/markdown','text/plain'].includes(value.mimeType)
         && value.name==='HQ Reviewed Learning.md' && value.ownedByMe===false && value.capabilities?.canEdit===true,'learning-output-required')
       const pending=[{value,depth:0}],seen=new Set();let found=false
       while(pending.length){const current=pending.shift();demand(current.depth<=32 && seen.size<=64,'learning-scope-required')
         if(seen.has(current.value.id))continue;seen.add(current.value.id)
         demand(Array.isArray(current.value.parents) && current.value.parents.length<=10,'learning-scope-required')
-        for(const parent of current.value.parents){demand(ID.test(parent),'learning-scope-required');const node=await metadata(parent)
+        for(const parent of current.value.parents){demand(ID.test(parent),'learning-scope-required');const node=await metadata(parent,readSignal)
           demand(node.value.id===parent && !node.value.trashed && node.value.mimeType==='application/vnd.google-apps.folder','learning-scope-required')
           if(parent===ROOT){found=true;break}pending.push({value:node.value,depth:current.depth+1})}
         if(found)break
@@ -130,12 +141,29 @@ export function createBrainPublisher(config, { fetch: transport = globalThis.fet
         await exchange('https://www.googleapis.com/upload/drive/v2/files/'+encodeURIComponent(fileId)+'?uploadType=media&supportsAllDrives=true&fields=id,etag,version',{
           method:'PUT',signal,headers:{...headers,'Content-Type':'text/markdown; charset=utf-8','If-Match':etag},body:result.text},32_000)
       }catch(error){if(error.code==='learning-source-conflict' && attempt===0)continue;throw error}
-      const after=await verifyScope()
-      const readback=await exchange('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(fileId)+'?alt=media&supportsAllDrives=true',{headers,signal})
-      const confirmed=await metadata(fileId)
-      demand(after.value.version===confirmed.value.version && hash(readback.text)===hash(result.text),'learning-readback-conflict')
-      demand(appendReviewedLesson(readback.text,lesson).duplicate,'learning-readback-conflict')
-      return receipt
+      // Only a fully successful PUT exchange enters this read-only loop. Freeze
+      // complete expected decoded text/hash, never a failed attempt's version.
+      const expectedText=result.text, expectedHash=hash(expectedText)
+      const readSignal=AbortSignal.any([signal,AbortSignal.timeout(10_000)])
+      for(let readAttempt=0;readAttempt<3;readAttempt++){
+        try {
+          readSignal.throwIfAborted()
+          const after=await verifyScope(readSignal)
+          const readback=await exchange('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(fileId)+'?alt=media&supportsAllDrives=true',{headers,signal:readSignal})
+          const confirmed=await metadata(fileId,readSignal)
+          demand([after.value.version,confirmed.value.version].every(value=>typeof value==='string' && /^\d+$/.test(value)), 'learning-invalid-response')
+          // Every acceptance predicate belongs to this one complete attempt.
+          verifyLessonReadback({ versionMatches: after.value.version===confirmed.value.version,
+            mediaMatches: hash(readback.text)===expectedHash && readback.text===expectedText, duplicate: true })
+          verifyLessonReadback({ versionMatches: true, mediaMatches: true,
+            duplicate: appendReviewedLesson(readback.text,lesson).duplicate })
+          readSignal.throwIfAborted()
+          return receipt
+        }catch(error){
+          if(readSignal.aborted || readAttempt===2 || !['learning-readback-version-conflict','learning-readback-media-conflict'].includes(error.code))throw error
+          await delay(150*(readAttempt+1),undefined,{signal:readSignal})
+        }
+      }
     }
     demand(false,'learning-source-conflict')
   }}

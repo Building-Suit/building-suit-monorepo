@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, generateKeyPairSync, randomUUID } from 'node:crypto'
-import { appendReviewedLesson, createBrainPublisher } from './brainPublisher.mjs'
+import { appendReviewedLesson, createBrainPublisher, verifyLessonReadback } from './brainPublisher.mjs'
 const root='1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8', output='learning_output_123', parent='work_output_folder_123'
 const hash=text=>createHash('sha256').update(text).digest('hex')
 const base='---\nid: BRAIN-HQ-REVIEWED-LEARNING\ntype: reviewed_learning\nstatus: maintained\ncustodian: AG-CEO-001\n---\n\n# HQ Reviewed Learning\n\nHuman authored explanation stays intact.\n\n<!-- hq-learning-entries -->\n'
@@ -20,6 +20,7 @@ function transportFixture(settings={}){
   }
   if(new URL(url).pathname.startsWith('/drive/v2/files/')) return Response.json({id:output,title:'HQ Reviewed Learning.md',mimeType:'text/markdown',labels:{trashed:false},version:String(version),...(settings.noEtag?{}:{etag:'"version-'+version+'"'})})
   if(new URL(url).searchParams.get('alt')==='media')return new Response(settings.readbackMismatch&&patches?text+'changed':text)
+  if(settings.versionDrift && patches && calls.filter(x=>x.url.includes('alt=media')).length===2)version++;
   const file=id===output?{id,name:'HQ Reviewed Learning.md',mimeType:'text/markdown',parents:[settings.outside?'outside_folder_123':parent],trashed:false,version:String(version),ownedByMe:false,capabilities:{canEdit:true}}:
     {id,name:'Folder',mimeType:'application/vnd.google-apps.folder',parents:id===parent?[root]:[],trashed:false,version:'1'}
   return Response.json(file)
@@ -39,7 +40,7 @@ test('known conditional conflict reloads human edit, without stale replacement o
  assert.equal(h.patches,2);assert.match(h.text,/Human concurrent update/);assert.equal(h.text.split('<!-- hq-lesson:'+lesson.id+':').length,2)
 })
 test('scope, CAS, size, header, malformed/rejected and readback failures cannot publish a receipt',async()=>{
- for(const [settings,code] of [[{outside:true},/learning-scope-required/],[{noEtag:true},/learning-cas-required/],[{text:'x'.repeat(40001)},/learning-response-too-large/],[{text:'# Wrong file'},/learning-header-required/],[{readbackMismatch:true},/learning-readback-conflict/]]){
+ for(const [settings,code] of [[{outside:true},/learning-scope-required/],[{noEtag:true},/learning-cas-required/],[{text:'x'.repeat(40001)},/learning-response-too-large/],[{text:'# Wrong file'},/learning-header-required/],[{readbackMismatch:true},/learning-readback-media-conflict/]]){
   const h=transportFixture(settings);await assert.rejects(()=>h.publisher.publishLesson(makeLesson()),code)
   if(!settings.readbackMismatch)assert.equal(h.patches,0)
  }
@@ -54,4 +55,23 @@ test('managed journal rotates old managed entries within40KB while preserving hu
  const changed={...last,body:'Changed'};changed.digest=hash(changed.source_type+changed.source_id+changed.body)
  assert.throws(()=>appendReviewedLesson(text,changed),/learning-entry-conflict/)
  assert.throws(()=>appendReviewedLesson(base,makeLesson('<!-- hq-lesson:spoof -->')),/learning-invalid-record/)
+})
+
+ test('readback predicates fail closed with fixed codes and preserve worker redaction',async()=>{
+ const {codeOf}=await import('./worker.mjs')
+ for(const [checks,code] of [
+  [{versionMatches:false,mediaMatches:true,duplicate:true},'learning-readback-version-conflict'],
+  [{versionMatches:true,mediaMatches:false,duplicate:true},'learning-readback-media-conflict'],
+  [{versionMatches:true,mediaMatches:true,duplicate:false},'learning-readback-entry-conflict'],
+  [{versionMatches:undefined,mediaMatches:true,duplicate:true},'learning-readback-version-conflict']]){
+  assert.throws(()=>verifyLessonReadback(checks),error=>{
+   assert.equal(error.message,code);assert.equal(codeOf(error),code)
+   assert.deepEqual(Object.keys(error),['code']);return true
+  })
+ }
+ verifyLessonReadback({versionMatches:true,mediaMatches:true,duplicate:true})
+ assert.equal(codeOf({message:'private fixture',code:'private fixture'}),'worker-unavailable')
+ const h=transportFixture({versionDrift:true})
+ assert.ok((await h.publisher.publishLesson(makeLesson())).digest)
+ assert.equal(h.patches,1)
 })
