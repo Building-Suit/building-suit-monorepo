@@ -10,6 +10,12 @@ export interface HqTrialPresentation {
 }
 export type HqTrialCommand = { action: 'qualify'; trialId: string }
 
+export interface HqAgentAvatar {
+  body: 'female' | 'male'
+  hairstyle: number
+  seed: number
+}
+
 /** Product-owned agent/runtime observations projected into shared HQ UI. */
 export interface HqAgentPresentation {
   id: string
@@ -33,6 +39,7 @@ export interface HqAgentPresentation {
   managerName?: string
   profileUrl?: string
   avatarUrl?: string
+  avatar?: HqAgentAvatar
 }
 
 export interface HqChatMessage {
