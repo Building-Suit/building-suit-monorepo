@@ -24,7 +24,7 @@ const tasks = computed(() => [...(props.presentation.tasks ?? [])].sort((a, b) =
 const detailTask = ref<HqTaskPresentation | null>(null)
 const detailPending = ref(false)
 let detailRequest: AbortController | null = null
-watch(() => [selectedTaskId.value, props.presentation.taskBrowserRevision, props.presentation.status], async () => {
+watch([selectedTaskId, () => props.presentation.taskBrowserRevision, () => props.presentation.status], async () => {
   detailRequest?.abort(); detailTask.value = null; detailPending.value = false
   const id = selectedTaskId.value
   if (!id || !taskSource || props.presentation.status !== 'connected') return
@@ -36,7 +36,7 @@ watch(() => [selectedTaskId.value, props.presentation.taskBrowserRevision, props
   finally { if (!request.signal.aborted) detailPending.value = false }
 }, { immediate: true })
 const selected = computed(() => detailTask.value ?? tasks.value.find(task => task.id === selectedTaskId.value) ?? null)
-watch(() => [selectedTaskId.value, props.presentation.status], () => {
+watch([selectedTaskId, () => props.presentation.status], () => {
   selectionEpoch += 1; cancellationFeedback.value = null
 }, { flush: 'sync' })
 async function cancelSelected() {
@@ -95,7 +95,7 @@ onBeforeUnmount(() => { disposed = true; selectionEpoch += 1; detailRequest?.abo
         <article class="bs-hq-workforce__detail">
           <header><h3 dir="auto">{{ selected.title }}</h3><p class="bs-hq-workforce__status" :data-state="selected.state">{{ selected.statusLabel }}</p><p class="bs-hq-workforce__muted">{{ selected.assigneeName }} · <time :datetime="selected.createdAt">{{ date(selected.createdAt) }}</time></p><p v-if="selected.completedAt && content.completedLabel" class="bs-hq-workforce__muted">{{ content.completedLabel }} · <time :datetime="selected.completedAt">{{ date(selected.completedAt) }}</time></p></header>
           <section v-if="content.cancellation && taskSource?.cancel && presentation.status === 'connected'" :aria-busy="presentation.taskCancellationPending">
-            <BsButton v-if="selected.canCancel" variant="danger" size="sm" :disabled="cancelConfirming || presentation.taskCancellationPending" @click="cancelSelected">{{ presentation.taskCancellationPending ? content.cancellation.pending : content.cancellation.action }}</BsButton>
+            <BsButton v-if="selected.canCancel" variant="danger" size="sm" :disabled="presentation.taskCancellationPending" @click="cancelSelected">{{ presentation.taskCancellationPending ? content.cancellation.pending : content.cancellation.action }}</BsButton>
             <p v-if="cancellationFeedback" class="bs-hq-workforce__notice" role="status">{{ content.cancellation[cancellationFeedback] }}</p>
           </section>
           <p v-if="selected.error" class="bs-hq-workforce__notice" role="status">{{ selected.error }}</p>
