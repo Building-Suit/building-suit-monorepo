@@ -3,11 +3,14 @@ import designTokens from '@building-suit/design-tokens'
 import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation, HqStaffingCopy, HqStaffingDecision, HqStaffingPresentation } from '../types/hqLayoutPresentation'
-import type { HqAgentPresentation, HqAgentsPresentation, HqTaskRequest, HqTrialCommand } from '../types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqTrialCommand } from '../types/hqAgentsPresentation'
 import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
+import BsHqTeamChart from '../organisms/BsHqTeamChart.vue'
+import BsHqPlanBoard from '../organisms/BsHqPlanBoard.vue'
 import BsHqMeetingPanel from '../organisms/BsHqMeetingPanel.vue'
 import BsHqOfficeOverview from '../organisms/BsHqOfficeOverview.vue'
 import BsHqCeoChat from '../organisms/BsHqCeoChat.vue'
+import BsHqTaskBrowser from '../organisms/BsHqTaskBrowser.vue'
 import BsHqWorkforce from '../organisms/BsHqWorkforce.vue'
 import BsTabs from '../molecules/BsTabs.vue'
 import BsHqStaffingPlans from '../organisms/BsHqStaffingPlans.vue'
@@ -22,20 +25,19 @@ const trialConfirming = ref(false)
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; createAgentTask: [request: HqTaskRequest]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
-const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgentId.value))
+const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgent.value?.id))
 async function trialAction(command: HqTrialCommand) {
   if (trialConfirming.value || props.agents?.trialPending || props.access?.status !== 'founder') return
-  const agentId = selectedAgentId.value
+  const agentId = selectedAgent.value?.id
   trialConfirming.value = true
   try {
-    const accepted = await confirmation.ask({ title: command.action === 'start' ? 'Start supervised trial' : 'Approve qualification',
-      message: command.action === 'start' ? 'Queue one synthetic internal skill trial, with head and independent HR review? No external actions are permitted.' : 'Record qualification from the completed independently reviewed trial? Canonical Active lifecycle is still required before ordinary execution.',
-      confirmLabel: command.action === 'start' ? 'Start trial' : 'Approve qualification', cancelLabel: 'Cancel' })
+    const accepted = await confirmation.ask({ title: 'Approve qualification',
+      message: 'Record qualification from the completed independently reviewed trial? Canonical Active lifecycle is still required before ordinary execution.',
+      confirmLabel: 'Approve qualification', cancelLabel: 'Cancel' })
     const current = selectedTrial.value
-    const valid = command.action === 'start' ? current?.eligible && current.skillFileId === command.skillFileId
-      : current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
-    if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgentId.value === agentId && !props.agents?.trialPending) emit('trialCommand', command)
+    const valid = current?.reviewComplete && current.trialId === command.trialId && !current.receiptIssued
+    if (accepted && valid && !trialDisposed && props.access?.status === 'founder' && selectedAgent.value?.id === agentId && !props.agents?.trialPending) emit('trialCommand', command)
   } finally { trialConfirming.value = false }
 }
 
@@ -47,20 +49,35 @@ const workplacePanelPresent = ref(false)
 const workplaceTitleRef = shallowRef<HTMLElement | null>(null)
 const agentTitleRef = shallowRef<HTMLElement | null>(null)
 const agentPanelId = useId(), agentTitleId = useId(), officeTabsId = useId()
-const ceoWorkspaceVisible = ref(false)
 const chatVisible = ref(false)
 const chatDraft = ref('')
 let chatDraftIdentity: string | null = null
 const chatTitleRef = shallowRef<HTMLElement | null>(null)
 const chatPanelId = useId(), chatTitleId = useId()
-const conversationDetail = ref<'tasks' | 'learning' | null>(null)
-const conversationTaskId = ref<string | null>(null)
-const conversationLessonId = ref<string | null>(null)
+type SidebarSection = 'tasks' | 'plans' | 'team'
+const conversationDetail = ref<SidebarSection | null>(null)
+const teamVisible = computed(() => conversationDetail.value === 'team')
+const plansVisible = computed(() => conversationDetail.value === 'plans')
+const teamAgentId = ref<string | null>(null)
+const sidebarTitle = computed(() => {
+  const copy = props.content.agents?.workforce
+  switch (conversationDetail.value) {
+    case 'team': return copy?.teamLabel
+    case 'tasks': return props.content.tasksLabel
+    case 'plans': return props.content.workplaces.plansLabel
+  }
+})
+type RecordKind = 'task' | 'lesson' | 'note' | 'plan' | 'staffing'
+const recordDetail = shallowRef<{ kind: RecordKind; id: string; title?: string } | null>(null)
+const recordTitleRef = shallowRef<HTMLElement | null>(null)
+const recordTitleId = useId()
+let recordReturnFocus: HTMLElement | null = null
 const conversationDetailTitleRef = shallowRef<HTMLElement | null>(null)
 const conversationDetailPanelId = useId(), conversationDetailTitleId = useId()
 let chatReturnFocus: HTMLElement | null = null
 let conversationDetailReturnFocus: HTMLElement | null = null
 let agentReturnFocus: HTMLElement | null = null
+watch(teamVisible, visible => { if (!visible) { teamAgentId.value = null; agentReturnFocus = null } })
 const workplaceSelectRef = shallowRef<{ focus: () => void } | null>(null)
 const officeLayout = computed(() => layoutDepartmentOffices(props.departments ?? []))
 const islandFootprint = computed(() => createHqIslandFootprint(officeLayout.value))
@@ -73,24 +90,14 @@ const workplaceOptions = computed(() => availableWorkplaces.value.map(({ id, nam
 const founderAccess = computed<HqFounderAccessPresentation>(() => props.access ?? { status: 'anonymous', pending: false })
 const plansWorkspace = computed<HqCompanyPlansPresentation>(() => props.companyPlans ?? { status: 'unavailable', pending: false, plans: [] })
 const agentsState = computed<HqAgentsPresentation>(() => props.agents ?? { status: 'unavailable', pending: false, sending: false, agents: [], messages: [], queuedCount: 0, runtimeOnline: false })
-const ceoSection = ref<'tasks' | 'team' | 'learning' | 'plans'>('plans')
-const ceoTabsId = useId()
-const ceoTabs = computed(() => {
-  const copy = props.content.agents?.workforce
-  return [
-    ...(copy ? [{ value: 'tasks', label: copy.tasksLabel, count: agentsState.value.tasks?.length ?? 0 }, { value: 'team', label: copy.teamLabel, count: agentsState.value.agents.length }, { value: 'learning', label: copy.learningLabel, count: agentsState.value.lessons?.length ?? 0 }] : []),
-    { value: 'plans', label: props.content.workplaces.plansLabel },
-  ]
-})
-function chooseCeoSection(value: string) { if (ceoTabs.value.some(tab => tab.value === value)) ceoSection.value = value as typeof ceoSection.value }
 const displayedUser = computed(() => founderAccess.value.user ?? props.user)
 const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => Boolean(focusedTargetId.value) || brainPanelPresent.value || workplacePanelPresent.value || chatVisible.value || meetingVisible.value || Boolean(conversationDetail.value), sceneRadius: () => floorRadius.value })
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => Boolean(focusedTargetId.value) || brainPanelPresent.value || workplacePanelPresent.value || chatVisible.value || meetingVisible.value || Boolean(conversationDetail.value) || Boolean(recordDetail.value), sceneRadius: () => floorRadius.value })
 const viewportSize = shallowRef({ width: 1, height: 1 })
 const { selectedId: focusedTargetId, select: focusTarget, clear: clearFocus, refit: refitFocus } = useSpatialWorkspaceSelection({
   camera, viewport: () => viewportSize.value, sceneRadius: () => floorRadius.value,
-  overlayWidth: () => Math.min(Number.parseFloat((ceoWorkspaceVisible.value ? designTokens.component.hqGlass.plansWidth : designTokens.component.hqGlass.panelWidth).value), Math.max(0, viewportSize.value.width - 24)) + 24,
+  overlayWidth: () => Math.min(Number.parseFloat(designTokens.component.hqGlass.panelWidth.value), Math.max(0, viewportSize.value.width - 24)) + 24,
   rtl: () => typeof window !== 'undefined' && Boolean(viewportRef.value) && getComputedStyle(viewportRef.value!).direction === 'rtl',
   transitionTo,
 })
@@ -106,31 +113,49 @@ const selectedWorkplaceAgents = computed<readonly HqAgentPresentation[]>(() => {
 })
 const { section: officeSection, selectedAgentId, selectSection, selectAgent, closeAgent } = useHqOfficeInspection(
   () => selectedWorkplaceId.value, () => selectedWorkplaceAgents.value.map(agent => agent.id))
-const selectedAgent = computed(() => selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null)
+const selectedAgent = computed(() => teamVisible.value
+  ? (founderAccess.value.status === 'founder' ? agentsState.value.agents.find(agent => agent.id === teamAgentId.value) ?? null : null)
+  : selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null)
+const selectedNote = computed(() => recordDetail.value?.kind === 'note' && props.brain?.selectedId === recordDetail.value.id ? props.brain?.note : null)
+const recordTitle = computed(() => {
+  const record = recordDetail.value
+  if (!record) return ''
+  if (record.kind === 'note') return selectedNote.value?.title ?? record.title ?? props.content.companyBrain.title
+  if (record.kind === 'task') return record.title ?? agentsState.value.tasks?.find(task => task.id === record.id)?.title ?? props.content.tasksLabel
+  if (record.kind === 'lesson') return agentsState.value.lessons?.find(lesson => lesson.id === record.id)?.title ?? props.content.agents?.workforce?.learningLabel
+  if (record.kind === 'plan') return plansWorkspace.value.plans.find(plan => plan.id === record.id)?.title ?? props.content.workplaces.plansLabel
+  if (record.kind === 'staffing') return props.staffing?.workflows.find(row => row.id === record.id)?.plan?.name ?? props.staffingCopy?.title
+})
+const coverPrimary = computed(() => Boolean(recordDetail.value) && viewportSize.value.width <= 1250)
 const officeCopy = computed(() => props.content.workplaces.office)
 const officeTabs = computed(() => officeCopy.value ? [
-  { value: 'overview', label: officeCopy.value.overview }, { value: 'tasks', label: officeCopy.value.runningTasks },
+  { value: 'overview', label: officeCopy.value.overview }, { value: 'tasks', label: props.content.agents?.workforce?.tasksLabel ?? officeCopy.value.runningTasks },
   { value: 'calendar', label: officeCopy.value.calendar }, { value: 'settings', label: officeCopy.value.settings },
 ] : [])
 const officeRosterKnown = computed(() => selectedWorkplace.value?.executive ? agentsState.value.status === 'connected' : officeLayout.value.offices.find(office => office.id === selectedWorkplaceId.value)?.agents !== undefined)
-const runningOfficeTasks = computed(() => (agentsState.value.runningTasks ?? []).filter(task => selectedWorkplaceAgents.value.some(agent => agent.id === task.assigneeId)))
-function chooseOfficeSection(value: string) { ceoWorkspaceVisible.value = false; selectSection(value) }
 async function openAgent(id: string) {
   if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) agentReturnFocus = document.activeElement
   selectAgent(id)
   await nextTick()
   if (selectedAgentId.value === id) agentTitleRef.value?.focus({ preventScroll: true })
 }
+async function openTeamAgent(id: string, event: MouseEvent) {
+  if (!teamVisible.value || founderAccess.value.status !== 'founder' || !agentsState.value.agents.some(agent => agent.id === id)) return
+  agentReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : activeControl()
+  teamAgentId.value = id
+  await nextTick()
+  if (teamVisible.value && teamAgentId.value === id) agentTitleRef.value?.focus({ preventScroll: true })
+}
 async function closeAgentPanel() {
   const target = agentReturnFocus
-  closeAgent(); agentReturnFocus = null
+  if (teamVisible.value) teamAgentId.value = null
+  else closeAgent()
+  agentReturnFocus = null
   await nextTick()
-  if (target?.isConnected && target.getClientRects().length) target.focus({ preventScroll: true })
-  else workplaceTitleRef.value?.focus({ preventScroll: true })
+  restoreControl(target, teamVisible.value ? conversationDetailTitleRef.value : workplaceTitleRef.value)
 }
 const workplaceVisible = computed(() => Boolean(selectedWorkplace.value))
-const plansVisible = computed(() => Boolean(selectedWorkplace.value?.executive && ceoWorkspaceVisible.value))
-watch([viewportSize, floorRadius, ceoWorkspaceVisible], () => refitFocus())
+watch([viewportSize, floorRadius], () => refitFocus())
 let viewportObserver: ResizeObserver | undefined
 watch(viewportRef, element => {
   viewportObserver?.disconnect()
@@ -153,6 +178,18 @@ let returnFocus: HTMLElement | null = null
 const search = ref<string | number>('')
 const noteLimit = ref(40)
 const brainCopy = computed(() => props.content.companyBrain)
+const brainTabsId = useId()
+const brainTab = ref<'notes' | 'learning'>('notes')
+const brainTabs = computed(() => [
+  { value: 'notes', label: brainCopy.value.notesTabLabel },
+  ...(props.content.agents?.workforce ? [{ value: 'learning', label: props.content.agents.workforce.learningLabel }] : []),
+])
+function selectBrainTab(value: string) {
+  if (value === 'notes' || value === 'learning') {
+    clearRecord()
+    brainTab.value = value
+  }
+}
 const brainStatus = computed(() => props.brain?.status ?? 'unavailable')
 const brainStatusLabel = computed(() => {
   if (props.brain?.reason === 'not-configured') return brainCopy.value.setupRequiredLabel
@@ -168,6 +205,7 @@ watch(search, () => { noteLimit.value = 40 })
 async function openBrain() {
   closeConversation(false)
   if (brainVisible.value) return
+  brainTab.value = 'notes'
   emit('refreshBrain')
   rememberReturnFocus()
   brainPanelPresent.value = true
@@ -181,6 +219,7 @@ function rememberReturnFocus() {
   returnFocus = active instanceof HTMLElement && active !== document.body && active !== document.documentElement ? active : viewportRef.value
 }
 function closeSelection(restoreCamera = true) {
+  clearRecord()
   closeAgent(); agentReturnFocus = null
   if (!clearFocus(restoreCamera)) return
   if (returnFocus?.isConnected && returnFocus.getClientRects().length && !returnFocus.closest('[hidden]')) returnFocus.focus({ preventScroll: true })
@@ -189,13 +228,12 @@ function closeSelection(restoreCamera = true) {
   returnFocus = null
 }
 function closeBrain(restoreCamera = true) { if (brainVisible.value) closeSelection(restoreCamera) }
-async function openWorkplace(id: string, ceoWorkspace = false) {
+async function openWorkplace(id: string) {
   const workplace = availableWorkplaces.value.find(item => item.id === id)
   if (!workplace) return
   closeConversation(false)
-  ceoWorkspaceVisible.value = ceoWorkspace
   closeAgent()
-  if (!ceoWorkspace) selectSection('overview')
+  selectSection('overview')
   rememberReturnFocus()
   workplacePanelPresent.value = true
   focusTarget(workplaceTarget(workplace))
@@ -216,7 +254,11 @@ function chooseWorkplace(value: string | number | null) {
   if (typeof value === 'string') void openWorkplace(value)
   else closeSelection()
 }
-function openPlans() { ceoSection.value = 'plans'; void openWorkplace(officeLayout.value.executive.id, true) }
+function openPlans() { openHeaderPanel('plans') }
+function refreshPlanBoard() {
+  emit('refreshPlans')
+  if (props.staffing) emit('refreshStaffing')
+}
 function activeControl() { return typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null }
 function restoreControl(control: HTMLElement | null, fallback: HTMLElement | null) {
   if (control?.isConnected && control.getClientRects().length && !control.closest('[hidden], [inert]')) control.focus({ preventScroll: true })
@@ -226,34 +268,58 @@ async function openChat() {
   if (!chatVisible.value) chatReturnFocus = activeControl()
   chatVisible.value = true
   conversationDetail.value = null
+  clearRecord()
   await nextTick()
   if (chatVisible.value) chatTitleRef.value?.focus({ preventScroll: true })
 }
 function closeConversation(restoreFocus = true) {
-  const wasVisible = chatVisible.value || conversationDetail.value
+  const wasVisible = chatVisible.value || conversationDetail.value || recordDetail.value
   const target = chatReturnFocus ?? conversationDetailReturnFocus
-  chatVisible.value = false; conversationDetail.value = null
+  chatVisible.value = false; conversationDetail.value = null; clearRecord()
   chatReturnFocus = null; conversationDetailReturnFocus = null
   if (wasVisible && restoreFocus) void nextTick(() => restoreControl(target, viewportRef.value))
 }
-async function openConversationDetail(section: 'tasks' | 'learning', id: string | null = null) {
+async function openConversationDetail(section: SidebarSection) {
   conversationDetailReturnFocus = activeControl()
-  conversationTaskId.value = section === 'tasks' ? id : null
-  conversationLessonId.value = section === 'learning' ? id : null
   conversationDetail.value = section
   await nextTick()
   if (conversationDetail.value === section) conversationDetailTitleRef.value?.focus({ preventScroll: true })
 }
 async function closeConversationDetail() {
   const target = conversationDetailReturnFocus
+  clearRecord()
   conversationDetail.value = null; conversationDetailReturnFocus = null
   await nextTick()
   restoreControl(target, chatVisible.value ? chatTitleRef.value : viewportRef.value)
 }
-function openTasks() { ceoSection.value = 'tasks'; void openWorkplace(officeLayout.value.executive.id, true) }
+async function openRecord(kind: RecordKind, id: string, title?: string) {
+  recordReturnFocus = activeControl()
+  closeAgent()
+  recordDetail.value = { kind, id, title }
+  if (kind === 'note') emit('selectBrainNote', id)
+  await nextTick()
+  if (recordDetail.value?.kind === kind && recordDetail.value.id === id) {
+    recordTitleRef.value?.focus({ preventScroll: true })
+  }
+}
+function clearRecord() { recordDetail.value = null; recordReturnFocus = null }
+async function closeRecord() {
+  const target = recordReturnFocus
+  clearRecord()
+  await nextTick()
+  restoreControl(target, chatVisible.value ? chatTitleRef.value : conversationDetail.value ? conversationDetailTitleRef.value
+    : brainVisible.value ? panelTitleRef.value : workplaceTitleRef.value ?? viewportRef.value)
+}
+function openHeaderPanel(section: SidebarSection) {
+  if (section === 'team') { closeAgent(); teamAgentId.value = null }
+  closeConversation(false)
+  void openConversationDetail(section)
+}
 function showWorkspace() { closeConversation(false); closeSelection() }
 function resetScene() { closeConversation(false); closeSelection(false); reset() }
 function onWorkspaceKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && recordDetail.value) { event.preventDefault(); void closeRecord(); return }
+  if (event.key === 'Escape' && teamVisible.value && selectedAgent.value) { event.preventDefault(); void closeAgentPanel(); return }
   if (event.key === 'Escape' && conversationDetail.value) { event.preventDefault(); void closeConversationDetail(); return }
   if (event.key === 'Escape' && chatVisible.value) { event.preventDefault(); closeConversation(); return }
   if (event.key === 'Escape' && selectedAgent.value) { event.preventDefault(); void closeAgentPanel(); return }
@@ -319,12 +385,14 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
         <img :src="content.logoSrc" alt="" width="32" height="44">
         <h1>{{ content.brandName }} <span>{{ content.brandSuffix }}</span></h1>
       </div>
-      <nav class="bs-hq-layout__navigation" :aria-label="content.workspaceLabel" data-spatial-controls>
-        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !focusedTargetId }" :aria-current="!focusedTargetId ? 'page' : undefined" @click="showWorkspace">{{ content.workspaceLabel }}</BsButton>
-        <BsButton variant="tab" class="bs-hq-layout__tab" :disabled="!content.agents?.workforce" :class="{ 'bs-hq-layout__tab--selected': plansVisible && ceoSection === 'tasks' }" :aria-controls="workplacePanelId" :aria-expanded="plansVisible && ceoSection === 'tasks'" @click="openTasks">{{ content.tasksLabel }}</BsButton>
+      <nav class="bs-hq-layout__navigation bs-hq-nav" :aria-label="content.workspaceLabel" data-spatial-controls>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !focusedTargetId && !conversationDetail && !chatVisible }" :aria-current="!focusedTargetId && !conversationDetail && !chatVisible ? 'page' : undefined" @click="showWorkspace">{{ content.workspaceLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :disabled="!content.agents?.workforce" :class="{ 'bs-hq-layout__tab--selected': conversationDetail === 'tasks' && !chatVisible }" :aria-controls="conversationDetailPanelId" :aria-expanded="conversationDetail === 'tasks' && !chatVisible" @click="openHeaderPanel('tasks')">{{ content.tasksLabel }}</BsButton>
+        <BsButton v-if="content.agents?.workforce && officeCopy" variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': teamVisible }" :aria-controls="conversationDetailPanelId" :aria-expanded="teamVisible" @click="openHeaderPanel('team')">{{ content.agents.workforce.teamLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': conversationDetail === 'plans' }" :aria-controls="conversationDetailPanelId" :aria-expanded="conversationDetail === 'plans'" @click="openPlans">{{ content.workplaces.plansLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.calendarLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-label="brainCopy.openLabel" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
-        <div class="bs-hq-layout__workplace-picker" :class="{ 'bs-hq-layout__workplace-picker--selected': selectedWorkplace }">
+        <div class="bs-hq-layout__workplace-picker" :class="{ 'bs-hq-layout__workplace-picker--selected': selectedWorkplace }" data-spatial-scroll>
           <BsSelect ref="workplaceSelectRef" :model-value="selectedWorkplaceId" :options="workplaceOptions" option-label="name" option-value="id" :label="content.workplaces.label" :placeholder="content.workplaces.label" :title="selectedWorkplace?.name ?? content.workplaces.label" append-to="self" scroll-height="clamp(88px, calc(100dvh - 210px), 224px)" @update:model-value="chooseWorkplace" @keydown.esc.stop />
           <BsButton v-if="selectedWorkplace" variant="icon" class="bs-hq-layout__workplace-clear" :aria-label="`${content.workplaces.clearSelectionLabel}: ${selectedWorkplace.name}`" :title="content.workplaces.clearSelectionLabel" @click="closeSelection()"><BsIcon name="close" :size="16" /></BsButton>
         </div>
@@ -333,11 +401,11 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
         <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
         <BsButton variant="accent" class="bs-hq-layout__ceo" :aria-controls="chatPanelId" :aria-expanded="chatVisible" @click="openChat"><BsIcon name="chat" :size="17" />{{ content.talkToCeoLabel }}</BsButton>
         <BsButton v-if="meeting" variant="secondary" class="bs-hq-layout__ceo" aria-haspopup="dialog" :aria-expanded="meetingVisible" @click="openMeeting"><BsIcon name="chat" :size="17" />{{ meeting.copy.labels.entry }}</BsButton>
-        <BsButton v-if="displayedUser" variant="text" class="bs-hq-layout__account" :aria-label="content.companyPlans.executiveLabel" :aria-controls="workplacePanelId" :aria-expanded="plansVisible" @click="openPlans">
+        <BsButton v-if="displayedUser" variant="text" class="bs-hq-layout__account" :aria-label="content.companyPlans.executiveLabel" :aria-controls="conversationDetailPanelId" :aria-expanded="conversationDetail === 'plans'" @click="openPlans">
           <span class="bs-hq-layout__avatar"><img v-if="displayedUser.avatarUrl" :src="displayedUser.avatarUrl" alt="" width="30" height="30"><span v-else>{{ userInitials }}</span></span>
           <span class="bs-hq-layout__identity"><strong>{{ displayedUser.displayName }}</strong><small v-if="displayedUser.detailLabel">{{ displayedUser.detailLabel }}</small></span>
         </BsButton>
-        <BsButton v-else variant="text" class="bs-hq-layout__login" :disabled="founderAccess.pending" :aria-controls="workplacePanelId" :aria-expanded="plansVisible" @click="openPlans"><BsIcon name="user" :size="18" />{{ content.loginLabel }}</BsButton>
+        <BsButton v-else variant="text" class="bs-hq-layout__login" :disabled="founderAccess.pending" :aria-controls="conversationDetailPanelId" :aria-expanded="conversationDetail === 'plans'" @click="openPlans"><BsIcon name="user" :size="18" />{{ content.loginLabel }}</BsButton>
         <BsButton v-if="founderAccess.status === 'founder'" variant="text" class="bs-hq-layout__login" :disabled="founderAccess.pending" @click="emit('logout')">{{ content.companyPlans.signOutLabel }}</BsButton>
       </aside>
       <div class="bs-hq-layout__footer" dir="ltr">
@@ -366,73 +434,64 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       </div>
     </section>
     <Transition name="bs-hq-brain-slide" @after-leave="brainPanelPresent = brainVisible">
-    <aside v-if="brainVisible" :id="brainPanelId" v-memo="[brain, brainCopy, search, noteLimit, chatVisible, conversationDetail]" class="bs-hq-layout__brain-panel" :class="{ 'bs-hq-layout__panel--covered': chatVisible || conversationDetail }" :inert="chatVisible || conversationDetail ? true : undefined" :aria-labelledby="brainTitleId" @wheel.stop @keydown.esc.stop.prevent="closeBrain()">
+    <aside v-if="brainVisible" :id="brainPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel" :class="{ 'bs-hq-layout__panel--covered': chatVisible || conversationDetail || coverPrimary }" :inert="chatVisible || conversationDetail || coverPrimary ? true : undefined" :aria-labelledby="brainTitleId" @wheel.stop @keydown.esc.stop.prevent="recordDetail ? closeRecord() : closeBrain()">
       <header class="bs-hq-layout__brain-heading">
         <h2 :id="brainTitleId" ref="panelTitleRef" tabindex="-1">{{ brainCopy.title }}</h2>
-        <BsButton variant="icon" :aria-label="ui('close')" @click="closeBrain()"><BsIcon name="close" :size="20" /></BsButton>
+        <div class="bs-hq-layout__panel-actions">
+          <BsButton v-if="brainTab === 'notes'" :pending="brain?.refreshing" :disabled="brainStatus === 'loading'" @click="emit('refreshBrain')" variant="icon" :aria-label="brainCopy.refreshLabel" :title="brainCopy.refreshLabel"><BsIcon name="refresh" :size="18" /></BsButton>
+          <BsButton variant="icon" :aria-label="ui('close')" @click="closeBrain()"><BsIcon name="close" :size="20" /></BsButton>
+        </div>
       </header>
-      <section class="bs-hq-brain" :aria-label="brainCopy.title">
-        <div class="bs-hq-brain__source">
-          <div><strong role="status">{{ brainStatusLabel }}</strong><p>{{ brainCopy.sourceLabel }} · {{ brainCopy.readOnlyLabel }}</p><p>{{ brainCopy.freshnessLabel }}</p><small v-if="brain?.observedLabel">{{ brainCopy.observedLabel }}: {{ brain.observedLabel }}</small></div>
-          <BsButton :pending="brain?.refreshing" :disabled="brainStatus === 'loading'" @click="emit('refreshBrain')">{{ brainCopy.refreshLabel }}</BsButton>
-        </div>
-        <p v-if="brain?.reason === 'not-configured' || brain?.reason === 'authorization-required'" role="status">{{ brainCopy.setupInstructionsLabel }}</p>
-        <p v-if="brain?.partial" role="status">{{ brainCopy.partialLabel }}</p>
-        <div v-if="brainStatus === 'connected'" class="bs-hq-brain__body">
-          <nav class="bs-hq-brain__directory" :aria-label="brainCopy.searchLabel">
-            <BsInput v-model="search" type="search" :aria-label="brainCopy.searchLabel" :placeholder="brainCopy.searchLabel" />
-            <p v-if="!visibleNotes.length" role="status">{{ brainCopy.emptyLabel }}</p>
-            <ul v-else><li v-for="note in renderedNotes" :key="note.id"><BsButton variant="text" :aria-pressed="brain?.selectedId === note.id" @click="emit('selectBrainNote', note.id)"><strong>{{ note.title }}</strong><small dir="auto">{{ note.path }}</small></BsButton></li></ul>
-            <BsButton v-if="renderedNotes.length < visibleNotes.length" variant="text" @click="noteLimit += 40">{{ brainCopy.showMoreLabel }}</BsButton>
-          </nav>
-          <article class="bs-hq-brain__note" :aria-busy="brain?.noteStatus === 'loading'" aria-live="polite">
-            <p v-if="brain?.noteStatus === 'loading'">{{ brainCopy.loadingLabel }}</p>
-            <p v-else-if="brain?.noteStatus === 'error'" role="alert">{{ brainCopy.noteErrorLabel }}</p>
-            <template v-else-if="brain?.note">
-              <h2>{{ brain.note.title }}</h2><p dir="auto">{{ brain.note.path }}</p><small>{{ brainCopy.modifiedLabel }}: {{ brain.note.modifiedLabel }} · {{ brainCopy.versionLabel }}: {{ brain.note.version }}</small>
-              <pre dir="auto">{{ brain.note.content }}</pre>
-            </template>
-            <p v-else>{{ brainCopy.selectLabel }}</p>
-          </article>
-        </div>
-      </section>
+      <BsTabs v-if="brainTabs.length > 1" variant="hq" class="bs-hq-layout__office-tabs" :model-value="brainTab" :tabs="brainTabs" :label="brainCopy.title" :id-prefix="brainTabsId" @update:model-value="selectBrainTab" />
+      <div :id="`${brainTabsId}-panel`" :key="brainTab" class="bs-hq-layout__panel-scroll bs-hq-layout__office-content" :role="brainTabs.length > 1 ? 'tabpanel' : undefined" :aria-labelledby="brainTabs.length > 1 ? `${brainTabsId}-${brainTab}` : undefined" tabindex="0">
+        <section v-if="brainTab === 'notes'" class="bs-hq-brain" :aria-label="brainCopy.title">
+          <div class="bs-hq-brain__source">
+            <div><strong role="status">{{ brainStatusLabel }}</strong><p>{{ brainCopy.sourceLabel }} · {{ brainCopy.readOnlyLabel }}</p><p>{{ brainCopy.freshnessLabel }}</p><small v-if="brain?.observedLabel">{{ brainCopy.observedLabel }}: {{ brain.observedLabel }}</small></div>
+          </div>
+          <p v-if="brain?.reason === 'not-configured' || brain?.reason === 'authorization-required'" role="status">{{ brainCopy.setupInstructionsLabel }}</p>
+          <p v-if="brain?.partial" role="status">{{ brainCopy.partialLabel }}</p>
+          <div v-if="brainStatus === 'connected'" class="bs-hq-brain__body">
+            <nav class="bs-hq-brain__directory" :aria-label="brainCopy.searchLabel">
+              <BsInput v-model="search" type="search" :aria-label="brainCopy.searchLabel" :placeholder="brainCopy.searchLabel" />
+              <p v-if="!visibleNotes.length" role="status">{{ brainCopy.emptyLabel }}</p>
+              <ul v-else><li v-for="note in renderedNotes" :key="note.id"><BsButton variant="tile" align="start" :aria-pressed="recordDetail?.kind === 'note' && recordDetail.id === note.id" @click="openRecord('note', note.id, note.title)"><strong>{{ note.title }}</strong><small dir="auto">{{ note.path }}</small></BsButton></li></ul>
+              <BsButton v-if="renderedNotes.length < visibleNotes.length" variant="secondary" @click="noteLimit += 40">{{ brainCopy.showMoreLabel }}</BsButton>
+            </nav>
+          </div>
+        </section>
+        <template v-else>
+          <BsHqWorkforce v-if="founderAccess.status === 'founder' && content.agents?.workforce" section="learning" browse-only :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" @open-learning="openRecord('lesson', $event)" @refresh="emit('refreshAgents')" />
+          <BsHqCompanyPlans v-else hide-header :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" />
+        </template>
+      </div>
     </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide" @after-leave="workplacePanelPresent = workplaceVisible">
-      <aside v-if="selectedWorkplace" :id="workplacePanelId" class="bs-hq-layout__brain-panel bs-hq-layout__workplace-panel" :class="{ 'bs-hq-layout__plans-panel': ceoWorkspaceVisible, 'bs-hq-layout__workplace-panel--behind': selectedAgent, 'bs-hq-layout__panel--covered': chatVisible || conversationDetail }" :inert="chatVisible || conversationDetail || selectedAgent && viewportSize.width < 1000 ? true : undefined" :aria-labelledby="workplaceTitleId" @wheel.stop @keydown.esc.stop.prevent="selectedAgent ? closeAgentPanel() : closeSelection()">
+      <aside v-if="selectedWorkplace" :id="workplacePanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__workplace-panel" :class="{ 'bs-hq-layout__workplace-panel--behind': selectedAgent, 'bs-hq-layout__panel--covered': chatVisible || conversationDetail || coverPrimary }" :inert="chatVisible || conversationDetail || coverPrimary || selectedAgent && viewportSize.width <= 1250 ? true : undefined" :aria-labelledby="workplaceTitleId" @wheel.stop @keydown.esc.stop.prevent="recordDetail ? closeRecord() : selectedAgent ? closeAgentPanel() : closeSelection()">
         <header class="bs-hq-layout__brain-heading">
           <h2 :id="workplaceTitleId" ref="workplaceTitleRef" tabindex="-1">{{ selectedWorkplace.name }}</h2>
+          <div class="bs-hq-layout__panel-actions">
+            <BsButton v-if="officeCopy && founderAccess.status === 'founder'" variant="icon" :disabled="agentsState.pending" :aria-label="officeCopy.retry" :title="officeCopy.retry" @click="emit('refreshAgents')"><BsIcon name="refresh" :size="18" /></BsButton>
           <BsButton variant="icon" :aria-label="ui('close')" @click="closeSelection()"><BsIcon name="close" :size="20" /></BsButton>
+          </div>
         </header>
-        <template v-if="officeCopy && !ceoWorkspaceVisible">
+        <template v-if="officeCopy">
           <p class="bs-hq-layout__workplace-description">{{ officeRosterKnown ? selectedWorkplaceAgents.length : '—' }} · {{ officeCopy.agents }}</p>
-          <BsTabs class="bs-hq-layout__office-tabs" :model-value="officeSection" :tabs="officeTabs" :label="selectedWorkplace.name" :id-prefix="officeTabsId" @update:model-value="chooseOfficeSection" />
-          <div :id="`${officeTabsId}-panel`" class="bs-hq-layout__office-content" role="tabpanel" :aria-labelledby="`${officeTabsId}-${officeSection}`" tabindex="0">
+          <BsTabs variant="hq" class="bs-hq-layout__office-tabs" :model-value="officeSection" :tabs="officeTabs" :label="selectedWorkplace.name" :id-prefix="officeTabsId" @update:model-value="selectSection" />
+          <div :id="`${officeTabsId}-panel`" class="bs-hq-layout__office-content bs-hq-layout__panel-scroll" role="tabpanel" :aria-labelledby="`${officeTabsId}-${officeSection}`" tabindex="0">
             <template v-if="founderAccess.status !== 'founder' && (officeSection === 'overview' || officeSection === 'tasks')"><BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email,password) => emit('login',email,password)" @register="(email,password) => emit('register',email,password)" /></template>
             <template v-else-if="officeSection === 'overview'">
-              <BsButton variant="text" class="bs-hq-layout__office-refresh" :disabled="agentsState.pending" @click="emit('refreshAgents')">{{ officeCopy.retry }}</BsButton>
               <p v-if="agentsState.pending" class="bs-hq-layout__workplace-description" role="status">{{ officeCopy.loading }}</p>
               <BsHqOfficeOverview :agents="selectedWorkplaceAgents" :observations="officeRosterKnown ? agentsState.observations : undefined" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" @select-agent="openAgent" />
-              <div v-if="selectedWorkplace.executive" class="bs-hq-layout__office-actions"><BsButton variant="text" @click="openPlans">{{ content.workplaces.plansLabel }}</BsButton></div>
             </template>
             <section v-else-if="officeSection === 'tasks'" class="bs-hq-layout__office-tasks">
-              <p v-if="!agentsState.observations || agentsState.tasksPartial || !officeRosterKnown" role="status">{{ officeCopy.unavailable }}</p>
-              <p v-else-if="!runningOfficeTasks.length">{{ officeCopy.noRunningTasks }}</p>
-              <article v-for="task in runningOfficeTasks" :key="task.id"><h3 dir="auto">{{ task.title }}</h3><small>{{ task.assigneeName }} · {{ task.statusLabel }}</small><p dir="auto">{{ task.brief }}</p><p dir="auto">{{ task.acceptance }}</p></article>
+              <BsHqTaskBrowser v-if="agentsState.status === 'connected' && agentsState.taskBrowser && content.agents?.workforce?.taskBrowser && officeRosterKnown" :key="selectedWorkplace.id" :adapter="agentsState.taskBrowser" :copy="content.agents.workforce.taskBrowser" :agents="agentsState.agents" :office-id="selectedWorkplace.executive ? 'executive' : selectedWorkplace.id" :locale="content.agents.locale" @select="openRecord('task', $event.id, $event.title)" />
+              <p v-else role="status">{{ officeCopy.unavailable }}</p>
             </section>
             <!-- Calendar and Settings intentionally remain empty, selectable panels. -->
           </div>
         </template>
-        <template v-else-if="selectedWorkplace.executive">
-          <BsTabs v-if="founderAccess.status === 'founder' && content.agents" class="bs-hq-layout__ceo-sections" :model-value="ceoSection" :tabs="ceoTabs" :label="selectedWorkplace.name" :id-prefix="ceoTabsId" @update:model-value="chooseCeoSection" />
-          <div v-if="founderAccess.status === 'founder' && content.agents && ceoSection !== 'plans'" :id="`${ceoTabsId}-panel`" role="tabpanel" :aria-labelledby="`${ceoTabsId}-${ceoSection}`">
-            <KeepAlive>
-              <BsHqWorkforce v-if="content.agents.workforce" :section="ceoSection" :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" @create-task="emit('createAgentTask', $event)" @refresh="emit('refreshAgents')" />
-            </KeepAlive>
-          </div>
-          <div v-if="founderAccess.status !== 'founder' || ceoSection === 'plans' || !content.agents" :id="`${ceoTabsId}-panel`" :role="founderAccess.status === 'founder' ? 'tabpanel' : undefined" :aria-labelledby="founderAccess.status === 'founder' ? `${ceoTabsId}-plans` : undefined"><BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" @refresh="emit('refreshPlans')" @decision="(id, revision, decision) => emit('decidePlan', id, revision, decision)" /><BsHqStaffingPlans v-if="staffing && staffingCopy" :presentation="staffing" :copy="staffingCopy" :founder="founderAccess.status === 'founder' && !founderAccess.pending" @refresh="emit('refreshStaffing')" @decision="emit('staffingDecision', $event)" @cancel="emit('staffingCancel', $event)" /></div>
-        </template>
-        <section v-else class="bs-hq-layout__workplace-details" :aria-label="selectedWorkplace.name">
+        <section v-else class="bs-hq-layout__workplace-details bs-hq-layout__panel-scroll" :aria-label="selectedWorkplace.name">
           <dl><div><dt>{{ content.workplaces.workstationsLabel }}</dt><dd>{{ selectedWorkplaceAgents?.length ?? content.workplaces.workstationsValue }}</dd></div></dl>
           <p>{{ content.workplaces.agentsSpaceLabel }}</p>
           <ul v-if="selectedWorkplaceAgents"><li v-for="agent in selectedWorkplaceAgents" :key="agent.id"><strong>{{ agent.name }}</strong><span v-if="agent.roleLabel"> · {{ agent.roleLabel }}</span><p v-if="agent.connectionLabel || agent.activityLabel">{{ agent.connectionLabel ?? agent.activityLabel }}</p></li></ul>
@@ -441,33 +500,68 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide">
-      <aside v-if="selectedAgent && officeCopy" :id="agentPanelId" class="bs-hq-layout__brain-panel bs-hq-layout__agent-panel" :class="{ 'bs-hq-layout__panel--covered': chatVisible || conversationDetail }" :inert="chatVisible || conversationDetail ? true : undefined" :aria-labelledby="agentTitleId" @wheel.stop @keydown.esc.stop.prevent="closeAgentPanel">
+      <aside v-if="selectedAgent && officeCopy" :id="agentPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__agent-panel" :class="{ 'bs-hq-layout__agent-panel--team': teamVisible, 'bs-hq-layout__panel--covered': !teamVisible && (chatVisible || conversationDetail || recordDetail) }" :inert="!teamVisible && (chatVisible || conversationDetail || recordDetail) ? true : undefined" :aria-labelledby="agentTitleId" @wheel.stop @keydown.esc.stop.prevent="closeAgentPanel">
         <header class="bs-hq-layout__brain-heading"><div><h2 :id="agentTitleId" ref="agentTitleRef" tabindex="-1" dir="auto">{{ selectedAgent.name }}</h2><p class="bs-hq-layout__workplace-description">{{ selectedAgent.roleLabel }} · <bdi>{{ selectedAgent.id }}</bdi></p></div><BsButton variant="icon" :aria-label="officeCopy.close" @click="closeAgentPanel"><BsIcon name="close" :size="20" /></BsButton></header>
+        <div class="bs-hq-layout__panel-scroll">
         <BsHqOfficeOverview :agents="[selectedAgent]" :observations="agentsState.observations" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" detail />
         <template v-if="founderAccess.status === 'founder' && selectedTrial">
           <p role="status">{{ selectedTrial.qualified ? 'Qualified for bounded drafting' : selectedTrial.receiptIssued ? selectedTrial.skillFileId ? 'Skill qualification recorded; remaining assigned skills require trials' : 'Qualification recorded; canonical Active lifecycle required' : selectedTrial.status ? `Supervised trial: ${selectedTrial.status}` : 'Supervised trial required' }}</p>
-          <BsButton v-if="selectedTrial.eligible && selectedTrial.skillFileId" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'start', agentId: selectedAgent.id, skillFileId: selectedTrial.skillFileId })">Start supervised trial</BsButton>
           <BsButton v-if="selectedTrial.reviewComplete && selectedTrial.trialId && !selectedTrial.receiptIssued" :disabled="trialConfirming || agentsState.trialPending" @click="trialAction({ action: 'qualify', trialId: selectedTrial.trialId })">Approve qualification</BsButton>
           <p v-if="agentsState.trialMessage" role="status">{{ agentsState.trialMessage }}</p>
         </template>
+        </div>
       </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide">
-      <aside v-if="chatVisible" :id="chatPanelId" class="bs-hq-layout__brain-panel bs-hq-layout__chat-panel" :class="{ 'bs-hq-layout__chat-panel--behind': conversationDetail }" :inert="conversationDetail && viewportSize.width < 1000 ? true : undefined" :aria-labelledby="chatTitleId" @wheel.stop @keydown.esc.stop.prevent="conversationDetail ? closeConversationDetail() : closeConversation()">
+      <aside v-if="chatVisible" :id="chatPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__chat-panel" :class="{ 'bs-hq-layout__chat-panel--behind': coverPrimary }" :inert="coverPrimary ? true : undefined" :aria-labelledby="chatTitleId" @wheel.stop @keydown.esc.stop.prevent="recordDetail ? closeRecord() : closeConversation()">
         <header class="bs-hq-layout__brain-heading"><h2 :id="chatTitleId" ref="chatTitleRef" tabindex="-1">{{ content.talkToCeoLabel }}</h2><BsButton variant="icon" :aria-label="ui('close')" @click="closeConversation()"><BsIcon name="close" :size="20" /></BsButton></header>
-        <BsHqCeoChat v-if="founderAccess.status === 'founder' && content.agents" v-model:draft="chatDraft" :presentation="agentsState" :content="content.agents" @send="emit('sendCeoMessage', $event)" @refresh="emit('refreshAgents')" @open-task="openConversationDetail('tasks', $event)" @open-learning="openConversationDetail('learning', $event)" />
-        <BsHqCompanyPlans v-else :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" />
+        <BsHqCeoChat v-if="founderAccess.status === 'founder' && content.agents" v-model:draft="chatDraft" :presentation="agentsState" :content="content.agents" @send="emit('sendCeoMessage', $event)" @refresh="emit('refreshAgents')" @open-task="openRecord('task', $event)" @open-learning="openRecord('lesson', $event)" />
+        <BsHqCompanyPlans v-else class="bs-hq-layout__panel-scroll" :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" />
       </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide">
-      <aside v-if="conversationDetail && content.agents?.workforce" :id="conversationDetailPanelId" class="bs-hq-layout__brain-panel bs-hq-layout__conversation-detail" :class="{ 'bs-hq-layout__conversation-detail--beside': chatVisible }" :aria-labelledby="conversationDetailTitleId" @wheel.stop @keydown.esc.stop.prevent="closeConversationDetail()">
-        <header class="bs-hq-layout__brain-heading"><h2 :id="conversationDetailTitleId" ref="conversationDetailTitleRef" tabindex="-1">{{ conversationDetail === 'tasks' ? content.agents.workforce.tasksLabel : content.agents.workforce.learningLabel }}</h2><BsButton variant="icon" :aria-label="ui('close')" @click="closeConversationDetail()"><BsIcon name="close" :size="20" /></BsButton></header>
-        <BsHqWorkforce v-if="founderAccess.status === 'founder'" v-model:selected-task-id="conversationTaskId" :selected-lesson-id="conversationLessonId" :section="conversationDetail" :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" @create-task="emit('createAgentTask', $event)" @refresh="emit('refreshAgents')" />
-        <BsHqCompanyPlans v-else :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" />
+      <aside v-if="conversationDetail && sidebarTitle" :key="conversationDetail" :id="conversationDetailPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__conversation-detail" :class="{ 'bs-hq-layout__top-panel': plansVisible || teamVisible, 'bs-hq-layout__team-panel': teamVisible, 'bs-hq-layout__panel--covered': coverPrimary || teamVisible && selectedAgent && viewportSize.width <= 760 }" :inert="coverPrimary || teamVisible && selectedAgent && viewportSize.width <= 760 ? true : undefined" :aria-labelledby="conversationDetailTitleId" @wheel.stop @keydown.esc.stop.prevent="recordDetail ? closeRecord() : teamVisible && selectedAgent ? closeAgentPanel() : closeConversationDetail()">
+        <header v-if="!teamVisible" class="bs-hq-layout__brain-heading">
+          <h2 :id="conversationDetailTitleId" ref="conversationDetailTitleRef" tabindex="-1">{{ sidebarTitle }}</h2>
+          <div class="bs-hq-layout__panel-actions">
+            <BsButton v-if="plansVisible && founderAccess.status === 'founder'" variant="icon" :disabled="founderAccess.pending || plansWorkspace.pending || staffing?.pending" :aria-label="content.companyPlans.refreshLabel" :title="content.companyPlans.refreshLabel" @click="refreshPlanBoard"><BsIcon name="refresh" :size="18" /></BsButton>
+            <BsButton variant="icon" :aria-label="ui('close')" @click="closeConversationDetail()"><BsIcon name="close" :size="20" /></BsButton>
+          </div>
+        </header>
+        <h2 v-else :id="conversationDetailTitleId" ref="conversationDetailTitleRef" tabindex="-1" class="bs-hq-layout__team-accessible-title">{{ sidebarTitle }}</h2>
+        <BsHqTeamChart v-if="teamVisible && content.agents?.workforce && officeCopy" @close="closeConversationDetail" :chart-label="content.agents.workforce.orgChartLabel ?? 'Org Chart'" :controls="content.agents.workforce.orgChartControls" :unassigned-label="content.agents.workforce.unassignedDepartmentLabel ?? content.agents.workforce.departmentLabel" :empty-label="content.agents.workforce.emptyTeamLabel" :refresh-label="content.agents.workforce.refreshLabel" :presentation="agentsState" :copy="officeCopy" :locale="content.agents.locale" :founder="founderAccess.status === 'founder'" @refresh="emit('refreshAgents')" @select-employee="openTeamAgent">
+          <template #access>
+            <BsHqCompanyPlans hide-header :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" />
+          </template>
+        </BsHqTeamChart>
+        <div v-else class="bs-hq-layout__panel-scroll">
+          <p v-if="plansVisible && founderAccess.status === 'founder' && founderAccess.message" role="alert">{{ founderAccess.message }}</p>
+          <BsHqPlanBoard v-if="plansVisible && founderAccess.status === 'founder'" :copy="content.companyPlans" :workspace="plansWorkspace" :staffing="staffing" :staffing-copy="staffingCopy" @open="openRecord" />
+          <BsHqWorkforce v-else-if="conversationDetail === 'tasks' && founderAccess.status === 'founder' && content.agents?.workforce" section="tasks" browse-only @open-task="(id, title) => openRecord('task', id, title)" :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" @refresh="emit('refreshAgents')" />
+          <BsHqCompanyPlans v-else hide-header :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" />
+        </div>
+      </aside>
+    </Transition>
+    <Transition name="bs-hq-brain-slide">
+      <aside v-if="recordDetail" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__record-panel" :class="{ 'bs-hq-layout__record-panel--plans': plansVisible }" :aria-labelledby="recordTitleId" @wheel.stop @keydown.esc.stop.prevent="closeRecord()">
+        <header class="bs-hq-layout__brain-heading"><h2 :id="recordTitleId" ref="recordTitleRef" tabindex="-1" dir="auto">{{ recordTitle }}</h2><BsButton variant="icon" :aria-label="ui('close')" @click="closeRecord()"><BsIcon name="close" :size="20" /></BsButton></header>
+        <div class="bs-hq-layout__panel-scroll" :key="`${recordDetail.kind}:${recordDetail.id}`">
+          <article v-if="recordDetail.kind === 'note'" class="bs-hq-brain__note" :aria-busy="brain?.noteStatus === 'loading'" aria-live="polite">
+            <p v-if="brain?.noteStatus === 'loading'">{{ brainCopy.loadingLabel }}</p>
+            <p v-else-if="brain?.noteStatus === 'error' || !selectedNote" role="status">{{ brainCopy.noteErrorLabel }}</p>
+            <template v-else><p dir="auto">{{ selectedNote.path }}</p><small>{{ brainCopy.modifiedLabel }}: {{ selectedNote.modifiedLabel }} · {{ brainCopy.versionLabel }}: {{ selectedNote.version }}</small><pre dir="auto">{{ selectedNote.content }}</pre></template>
+          </article>
+          <template v-else-if="founderAccess.status === 'founder'">
+            <BsHqWorkforce v-if="content.agents?.workforce && (recordDetail.kind === 'task' || recordDetail.kind === 'lesson')" detail-only :section="recordDetail.kind === 'task' ? 'tasks' : 'learning'" :selected-task-id="recordDetail.kind === 'task' ? recordDetail.id : null" :selected-lesson-id="recordDetail.kind === 'lesson' ? recordDetail.id : null" :presentation="agentsState" :content="content.agents.workforce" :locale="content.agents.locale" />
+            <BsHqCompanyPlans v-else-if="recordDetail.kind === 'plan'" separate-details hide-header :selected-plan-id="recordDetail.id" :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @refresh="emit('refreshPlans')" @decision="(id, revision, decision) => emit('decidePlan', id, revision, decision)" />
+            <BsHqStaffingPlans v-else-if="recordDetail.kind === 'staffing' && staffing && staffingCopy" separate-details :selected-workflow-id="recordDetail.id" :presentation="staffing" :copy="staffingCopy" :founder="!founderAccess.pending" @refresh="emit('refreshStaffing')" @decision="emit('staffingDecision', $event)" @cancel="emit('staffingCancel', $event)" />
+          </template>
+          <BsHqCompanyPlans v-else hide-header :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" />
+        </div>
       </aside>
     </Transition>
     </main>
-    <BsHqMeetingPanel v-if="meeting" v-model:visible="meetingVisible" :meeting="meeting" @command="command => emit('meetingCommand', command)" />
+    <BsHqMeetingPanel v-if="meeting" v-model:visible="meetingVisible" :meeting="meeting" :chat-only-work="meeting.mode !== 'demonstration'" @command="command => emit('meetingCommand', command)" />
   </div>
 </template>
 
@@ -504,15 +598,14 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout__brand img { flex: none; width: 32px; height: 44px; object-fit: contain; }
 .bs-hq-layout__brand h1 { margin: 0; font-size: 21px; font-weight: 650; line-height: 1.2; letter-spacing: -.5px; white-space: nowrap; }
 .bs-hq-layout__brand h1 span { color: var(--bs-premium-gold); }
-.bs-hq-layout__navigation { position: absolute; z-index: 4; top: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; width: max-content; max-width: calc(100% - 32px); padding: 4px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 16%, var(--bs-color-brand-building-navy)); border-radius: 15px; background: linear-gradient(135deg, color-mix(in srgb, var(--bs-color-brand-building-navy) 60%, var(--bs-color-neutral-charcoal)), var(--bs-color-neutral-charcoal)); box-shadow: inset 0 1px color-mix(in srgb, var(--bs-soft-silver) 6%, transparent); cursor: default; }
-.bs-hq-layout .bs-hq-layout__tab { min-width: 0; min-height: 38px; padding: 8px 14px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--bs-soft-silver); font-size: 13px; font-weight: 500; line-height: 20px; white-space: nowrap; }
-.bs-hq-layout .bs-hq-layout__tab--selected { border-color: color-mix(in srgb, var(--bs-premium-gold) 45%, transparent); background: var(--bs-color-brand-building-navy); color: var(--bs-pearl-white); font-weight: 650; }
+.bs-hq-layout__navigation { position: absolute; z-index: 4; top: 18px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); cursor: default; }
 .bs-hq-layout__workplace-picker { position: relative; display: flex; align-items: center; flex: 0 1 190px; width: 190px; min-width: 120px; border: 1px solid transparent; border-inline-start-color: color-mix(in srgb, var(--bs-soft-silver) 16%, transparent); border-radius: 10px; }
 .bs-hq-layout__workplace-picker--selected { border-color: color-mix(in srgb, var(--bs-premium-gold) 45%, transparent); background: var(--bs-color-brand-building-navy); }
 .bs-hq-layout__workplace-picker :deep(.bs-select) { flex: 1; width: 0; min-width: 0; min-height: 36px; height: 36px; border: 0; border-radius: 9px; padding: 0; background: transparent; color: var(--bs-soft-silver); font: inherit; font-size: 13px; box-shadow: none; }
 .bs-hq-layout__workplace-picker :deep(.bs-select-label) { padding-inline: 10px 4px; }
 .bs-hq-layout__workplace-picker :deep(.bs-select-trigger) { min-width: 28px; min-height: 36px; }
 .bs-hq-layout__workplace-picker :deep(.bs-select-overlay) { min-width: 190px; border-color: color-mix(in srgb, var(--bs-premium-gold) 30%, var(--bs-color-brand-building-navy)); background: var(--bs-color-neutral-charcoal); color: var(--bs-pearl-white); }
+.bs-hq-layout__workplace-picker :deep(.bs-select-list-container) { overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; scrollbar-color: color-mix(in srgb, var(--bs-soft-silver) 55%, transparent) transparent; }
 .bs-hq-layout__workplace-picker :deep(.bs-select-option[data-p-focused='true']) { background: var(--bs-color-brand-building-navy); }
 .bs-hq-layout__workplace-picker :deep(.bs-select-option[aria-selected='true']) { background: var(--bs-premium-gold); color: var(--bs-color-neutral-ink); }
 .bs-hq-layout .bs-hq-layout__workplace-clear { flex: none; width: 30px; min-height: 36px; padding: 5px; border: 0; background: transparent; color: var(--bs-soft-silver); }
@@ -531,7 +624,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout .bs-hq-layout__login { display: flex; justify-content: center; gap: 7px; width: 100%; min-height: 32px; padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 15%, var(--bs-color-brand-building-navy)); border-radius: 9px; background: color-mix(in srgb, var(--bs-color-brand-deep-structure-navy) 60%, var(--bs-color-neutral-graphite)); color: var(--bs-soft-silver); font-size: 12px; }
 .bs-hq-layout__tab:not(:disabled) { cursor: pointer; }
 .bs-hq-layout__tab:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
-.bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); --bs-text: var(--bs-color-role-dark-text); --bs-text-muted: var(--bs-color-role-dark-text-muted); --bs-surface: var(--bs-color-role-dark-surface); --bs-surface-muted: var(--bs-color-role-dark-surface-muted); --bs-border: var(--bs-color-role-dark-border); --bs-primary: var(--bs-color-role-dark-primary); --bs-primary-hover: var(--bs-color-role-dark-primary-hover); --bs-primary-pressed: var(--bs-color-role-dark-primary-pressed); --bs-text-on-primary: var(--bs-color-role-dark-text-on-primary); --bs-accent: var(--bs-color-role-dark-accent); --bs-link: var(--bs-color-role-dark-link); --bs-focus-ring: var(--bs-color-role-dark-focus-ring); position: absolute; z-index: 3; inset-block: 80px var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-panel-width), calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 18%, var(--bs-color-brand-building-navy)); border-radius: var(--bs-radius-modal); color: var(--bs-pearl-white); background: linear-gradient(150deg, color-mix(in srgb, var(--bs-color-brand-deep-structure-navy) 60%, var(--bs-color-neutral-charcoal)), var(--bs-color-neutral-charcoal) 72%); box-shadow: var(--bs-shadow-elevation3-dark), inset 0 1px color-mix(in srgb, var(--bs-soft-silver) 7%, transparent); user-select: text; }
+.bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); position: absolute; z-index: 3; inset-block: 80px var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-panel-width), calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); user-select: text; }
 :global([dir="rtl"]) .bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(100% + var(--bs-space-3)); }
 .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease; will-change: transform; }
 .bs-hq-brain-slide-enter-from, .bs-hq-brain-slide-leave-to { transform: translateX(var(--bs-brain-panel-offset)); opacity: 0; }
@@ -540,9 +633,6 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout__brain-heading h2:focus { outline: none; }
 .bs-hq-layout__brain-heading button { flex: none; color: var(--bs-soft-silver); }
 .bs-hq-layout__workplace-description { margin: 0 0 var(--bs-space-4); color: var(--bs-soft-silver); font-size: 13px; line-height: 1.7; }
-.bs-hq-layout__ceo-sections { display: flex; flex: none; gap: var(--bs-space-1); overflow-x: auto; overscroll-behavior: contain; margin-block-end: var(--bs-space-4); padding: var(--bs-space-1); border: 1px solid var(--bs-color-gray-800); border-radius: var(--bs-radius-control); background: var(--bs-color-brand-building-navy); }
-.bs-hq-layout__ceo-sections :deep([role="tab"]) { flex: none; padding-inline: var(--bs-space-2); font-size: .75rem; white-space: nowrap; }
-.bs-hq-layout__ceo-sections :deep([aria-selected="true"]) { color: var(--bs-premium-gold); }
 .bs-hq-layout__workplace-subheading { margin: 0 0 var(--bs-space-4); font-size: 14px; font-weight: 600; }
 .bs-hq-layout__workplace-details dl { margin: 0 0 var(--bs-space-4); }
 .bs-hq-layout__workplace-details dl > div { display: flex; justify-content: space-between; gap: var(--bs-space-4); padding-block: var(--bs-space-4); border-block: 1px solid var(--bs-color-gray-800); }
@@ -558,7 +648,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-brain__directory { min-width: 0; }
 .bs-hq-brain__directory input { color: var(--bs-pearl-white); background: color-mix(in srgb, var(--bs-color-brand-deep-structure-navy) 55%, var(--bs-color-neutral-graphite)); border-color: var(--bs-color-gray-800); }
 .bs-hq-brain__directory input::placeholder { color: var(--bs-color-gray-400); }
-.bs-hq-brain__directory ul { display: grid; gap: var(--bs-space-1); padding: 0; margin: var(--bs-space-3) 0 0; list-style: none; max-height: 29dvh; overflow: auto; overscroll-behavior: contain; }
+.bs-hq-brain__directory ul { display: grid; gap: var(--bs-space-1); padding: 0; margin: var(--bs-space-3) 0 0; list-style: none; }
 .bs-hq-brain__directory button { display: grid; width: 100%; min-width: 0; gap: var(--bs-space-1); padding: var(--bs-space-3); text-align: start; color: var(--bs-pearl-white); }
 .bs-hq-brain__directory strong { font-size: 13px; font-weight: 600; }
 .bs-hq-brain__directory small { overflow-wrap: anywhere; }
@@ -583,7 +673,6 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout__office-marker { fill: var(--bs-color-brand-building-navy); stroke: var(--bs-soft-silver); stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__office-marker--executive { fill: var(--bs-premium-gold); stroke: var(--bs-premium-gold); }
 .bs-hq-layout__office-marker--selected { stroke: var(--bs-pearl-white); stroke-width: 2px; }
-.bs-hq-layout__plans-panel { width: min(var(--bs-component-hq-glass-plans-width), calc(100% - var(--bs-space-6))); }
 .bs-hq-layout__minimap-view { fill: none; stroke: color-mix(in srgb, var(--bs-soft-silver) 80%, transparent); stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 26px; height: 26px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-brand-deep-structure-navy); box-shadow: 0 0 14px color-mix(in srgb, var(--bs-premium-gold) 18%, transparent); }
 .bs-hq-layout__zoom { display: grid; grid-template-columns: repeat(3, 36px); gap: 2px; padding: 4px; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 16%, var(--bs-color-brand-building-navy)); border-radius: 14px; background: linear-gradient(135deg, var(--bs-color-brand-deep-structure-navy), var(--bs-color-neutral-charcoal)); pointer-events: auto; }
@@ -598,27 +687,22 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 :global([dir="rtl"]) .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { flex-direction: row-reverse; }
 /* Canonical HQ glass tokens keep every overlay translucent without dimming text. */
 .bs-hq-layout { --bs-component-card-dark-background: var(--bs-component-hq-glass-card); --bs-component-card-light-background: var(--bs-component-hq-glass-card); }
-.bs-hq-layout__navigation,.bs-hq-layout__session,.bs-hq-layout__brain-panel,.bs-hq-layout__zoom,.bs-hq-layout__minimap {
+.bs-hq-layout__navigation,.bs-hq-layout__session,.bs-hq-layout__zoom,.bs-hq-layout__minimap {
   background: var(--bs-component-hq-glass-panel); border-color: var(--bs-component-hq-glass-border);
   backdrop-filter: blur(var(--bs-component-hq-glass-blur)); -webkit-backdrop-filter: blur(var(--bs-component-hq-glass-blur));
 }
-.bs-hq-layout__brain-panel { --bs-surface: var(--bs-component-hq-glass-card); --bs-surface-muted: var(--bs-component-hq-glass-card); --bs-surface-raised: var(--bs-component-hq-glass-control); }
-.bs-hq-layout .bs-hq-layout__tab--selected,.bs-hq-layout__workplace-picker--selected,.bs-hq-layout__ceo-sections,.bs-hq-layout__orb-marker { background: var(--bs-component-hq-glass-selected); }
+.bs-hq-layout__brain-panel { overflow: hidden; }
+.bs-hq-layout .bs-hq-layout__tab--selected,.bs-hq-layout__workplace-picker--selected,.bs-hq-layout__orb-marker { background: var(--bs-component-hq-glass-selected); }
 .bs-hq-layout .bs-hq-layout__login,.bs-hq-layout__avatar,.bs-hq-layout__zoom-value { background: var(--bs-component-hq-glass-control); }
 .bs-hq-layout__workplace-picker :deep(.bs-select-overlay) { background: var(--bs-component-hq-glass-panel); backdrop-filter: blur(var(--bs-component-hq-glass-blur)); }
 .bs-hq-layout__map-floor { fill: var(--bs-component-hq-glass-selected); }
-.bs-hq-layout__brain-panel :deep(article),.bs-hq-layout__brain-panel :deep(.bs-card),.bs-hq-layout__brain-panel :deep(.ls-card) { background-color: var(--bs-component-hq-glass-card); }
-.bs-hq-layout__office-tabs { display: flex; gap: var(--bs-space-1); flex: none; margin-bottom: var(--bs-space-5); border-bottom: 1px solid var(--bs-component-hq-glass-border); background: transparent; overflow-x: auto; }
-.bs-hq-layout__office-tabs :deep([role='tab']) { flex: none; padding: var(--bs-space-3) var(--bs-space-2); border-radius: 0; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--bs-soft-silver); font-size: .76rem; white-space: nowrap; }
-.bs-hq-layout__office-tabs :deep([aria-selected='true']) { color: var(--bs-pearl-white); border-bottom-color: var(--bs-premium-gold); background: var(--bs-component-hq-glass-card); }
-.bs-hq-layout__office-content { flex: 1; min-height: 150px; outline-offset: -2px; }
-.bs-hq-layout .bs-hq-layout__office-refresh { display: block; margin-inline-start: auto; margin-bottom: var(--bs-space-3); padding: var(--bs-space-1); color: var(--bs-soft-silver); font-size: .7rem; }
-.bs-hq-layout__office-actions { display: flex; flex-wrap: wrap; gap: var(--bs-space-3); margin-top: var(--bs-space-5); }
-.bs-hq-layout__office-actions button { color: var(--bs-premium-gold); font-size: .8rem; }
+.bs-hq-layout__brain-panel:not(.bs-hq-layout__team-panel) :deep(article),.bs-hq-layout__brain-panel:not(.bs-hq-layout__team-panel) :deep(.bs-card),.bs-hq-layout__brain-panel:not(.bs-hq-layout__team-panel) :deep(.ls-card) { background-color: var(--bs-component-hq-glass-card); }
+.bs-hq-layout__office-tabs { flex: none; flex-wrap: wrap; margin-block-end: var(--bs-space-3); }
+.bs-hq-layout__office-tabs :deep(.ls-action-tab) { padding-inline: var(--bs-space-2); }
+.bs-hq-layout__office-content { outline-offset: -2px; }
 .bs-hq-layout__office-tasks { display: grid; gap: var(--bs-space-4); font-size: .8rem; line-height: 1.8; }
 .bs-hq-layout__office-tasks article { padding: var(--bs-space-4); border: 1px solid var(--bs-component-hq-glass-border); border-radius: var(--bs-radius-card); background: var(--bs-component-hq-glass-card); }
 .bs-hq-layout__office-tasks h3 { margin: 0; font-size: .9rem; }.bs-hq-layout__office-tasks p { white-space: pre-wrap; overflow-wrap: anywhere; }
-.bs-hq-layout__agent-panel { z-index: 5; inset-inline-start: calc(var(--bs-component-hq-glass-panel-width) + var(--bs-space-6)); width: min(var(--bs-component-hq-glass-detail-width),calc(100% - var(--bs-component-hq-glass-panel-width) - var(--bs-space-6) - var(--bs-space-3))); max-width: none; }
 .bs-hq-layout__agent-panel .bs-hq-layout__brain-heading { align-items: start; }
 .bs-hq-layout__agent-panel .bs-hq-layout__workplace-description { margin-block: var(--bs-space-2) 0; font-size: .75rem; }
 .bs-hq-layout__panel--covered { visibility: hidden; pointer-events: none; }
@@ -626,14 +710,37 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout__chat-panel > .bs-hq-layout__brain-heading { flex: none; margin-block-end: var(--bs-space-3); }
 .bs-hq-layout__chat-panel :deep(.bs-hq-chat) { flex: 1; min-height: 0; }
 .bs-hq-layout__conversation-detail { z-index: 7; }
-.bs-hq-layout__conversation-detail--beside { inset-inline-start: calc(var(--bs-component-hq-glass-panel-width) + var(--bs-space-6)); width: min(var(--bs-component-hq-glass-detail-width), calc(100% - var(--bs-component-hq-glass-panel-width) - var(--bs-space-6) - var(--bs-space-3))); }
-@media(max-width:999px) {
-  .bs-hq-layout__agent-panel { inset-inline-start: var(--bs-space-3); width: calc(100% - var(--bs-space-6)); max-width: 620px; }
-  .bs-hq-layout__workplace-panel--behind { visibility: hidden; pointer-events: none; }
-  .bs-hq-layout__conversation-detail--beside { inset-inline-start: var(--bs-space-3); width: calc(100% - var(--bs-space-6)); max-width: 620px; }
-  .bs-hq-layout__chat-panel--behind { visibility: hidden; pointer-events: none; }
+.bs-hq-layout__brain-heading { flex: none; }
+.bs-hq-layout__panel-actions { display: flex; flex: none; gap: var(--bs-space-1); }
+.bs-hq-layout__panel-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.bs-hq-layout__agent-panel, .bs-hq-layout__record-panel {
+  --hq-parent-width: var(--bs-component-hq-glass-panel-width);
+  z-index: 9;
+  inset-inline-start: calc(var(--hq-parent-width) + var(--bs-space-6));
+  width: min(max(var(--bs-component-hq-glass-plans-width), var(--bs-component-hq-glass-detail-width)), calc(100% - var(--hq-parent-width) - var(--bs-space-6) - var(--bs-space-3)));
 }
-@media (max-width: 1000px) {
+.bs-hq-layout__top-panel.bs-hq-glass-panel {
+  inset-inline: 0;
+  width: 85%;
+  margin-inline: auto;
+}
+.bs-hq-layout__team-panel.bs-hq-glass-panel { padding: 0; }
+.bs-hq-layout__team-accessible-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.bs-hq-layout__agent-panel--team { inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-panel-width), calc(100% - var(--bs-space-6))); }
+.bs-hq-layout__top-panel.bs-hq-brain-slide-enter-from,
+.bs-hq-layout__top-panel.bs-hq-brain-slide-leave-to { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) {
+  .bs-hq-layout__top-panel.bs-hq-brain-slide-enter-from,
+  .bs-hq-layout__top-panel.bs-hq-brain-slide-leave-to { transform: none; }
+}
+.bs-hq-layout__record-panel--plans { inset-inline-start: var(--bs-space-3); width: min(max(var(--bs-component-hq-glass-plans-width), var(--bs-component-hq-glass-detail-width)), calc(100% - var(--bs-space-6))); }
+@media (max-width: 1250px) {
+  .bs-hq-layout__agent-panel, .bs-hq-layout__record-panel { inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-plans-width), calc(100% - var(--bs-space-6))); }
+  .bs-hq-layout__workplace-panel--behind, .bs-hq-layout__chat-panel--behind { visibility: hidden; pointer-events: none; }
+}
+
+
+@media (max-width: 1250px) {
   .bs-hq-layout__navigation { top: 76px; }
   .bs-hq-layout__session { width: 196px; }
   .bs-hq-layout__brain-panel { inset-block-start: 132px; }
@@ -645,7 +752,13 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
   .bs-hq-layout__minimap { width: 180px; height: 180px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
   .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
-  .bs-hq-brain__directory ul { max-height: 23dvh; }
+}
+@media (max-width: 760px) {
+  .bs-hq-layout__navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: calc(100% - 24px); max-width: 460px; }
+  .bs-hq-layout .bs-hq-layout__tab { padding-inline: 6px; white-space: normal; }
+  .bs-hq-layout__workplace-picker { grid-column: 1 / -1; width: auto; min-width: 0; border-inline-start: 0; }
+  .bs-hq-layout__session { inset-block-start: 218px; }
+  .bs-hq-layout__brain-panel { inset-block-start: 216px; }
 }
 @media (max-width: 520px) {
   .bs-hq-layout { padding: 5px; }
@@ -656,10 +769,10 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
   .bs-hq-layout__navigation { top: 64px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: calc(100% - 24px); max-width: 360px; padding: 3px; }
   .bs-hq-layout .bs-hq-layout__tab { flex: 1; padding: 7px 6px; font-size: 11px; }
   .bs-hq-layout__workplace-picker { grid-column: 1 / -1; width: auto; min-width: 0; border-inline-start: 0; }
-  .bs-hq-layout__session { inset-block-start: 164px; inset-inline-end: 12px; width: 172px; padding: 8px; gap: 6px; border-radius: 13px; }
+  .bs-hq-layout__session { inset-block-start: 204px; inset-inline-end: 12px; width: 172px; padding: 8px; gap: 6px; border-radius: 13px; }
   .bs-hq-layout__status { font-size: 10px; }
   .bs-hq-layout .bs-hq-layout__ceo, .bs-hq-layout .bs-hq-layout__login { font-size: 11px; }
-  .bs-hq-layout__brain-panel { inset-block-start: 160px; }
+  .bs-hq-layout__brain-panel { inset-block-start: 202px; }
   .bs-hq-layout__footer { padding: 12px; gap: 10px; }
   .bs-hq-layout__workspace-info { max-width: 160px; }
   .bs-hq-layout__gesture-hint { font-size: 9px; }
@@ -674,7 +787,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
   .bs-hq-layout__gesture-hint { display: none; }
   .bs-hq-layout__minimap { width: 128px; height: 128px; }
 }
-@media (max-height: 500px) and (min-width: 521px) {
+@media (max-height: 500px) and (min-width: 761px) {
   .bs-hq-layout__brand { inset-block-start: 12px; }
   .bs-hq-layout__navigation { top: 12px; }
   .bs-hq-layout__brand h1 { font-size: 16px; }
@@ -682,7 +795,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
   .bs-hq-layout__brain-panel { inset-block-start: 72px; }
   .bs-hq-layout__gesture-hint { display: none; }
 }
-@media (max-height: 500px) and (min-width: 521px) and (max-width: 760px) {
+@media (max-height: 500px) and (min-width: 761px) and (max-width: 760px) {
   .bs-hq-layout__brand h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 @media (pointer: coarse) {
@@ -692,3 +805,5 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 }
 @media (prefers-reduced-motion: reduce) { .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: none; } }
 </style>
+
+<style src="../styles/hqGlassPanel.css"></style>

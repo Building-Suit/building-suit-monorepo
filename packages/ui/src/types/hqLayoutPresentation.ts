@@ -87,6 +87,7 @@ export interface HqWorkplacesCopy {
 
 export interface HqBrainContent {
   title: string
+  notesTabLabel: string
   openLabel: string
   loadingLabel: string
   connectedLabel: string
@@ -183,6 +184,14 @@ export interface HqCompanyPlansPresentation {
 }
 export interface HqCompanyPlansCopy {
   title: string
+  board: {
+    discussion: string
+    preparation: string
+    blocked: string
+    done: string
+    empty: string
+    description: string
+  }
   executiveLabel: string
   loginTitle: string
   loginDescription: string

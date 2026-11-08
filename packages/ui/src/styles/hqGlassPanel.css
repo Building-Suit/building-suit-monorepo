@@ -1,0 +1,25 @@
+.bs-hq-glass-panel.bs-hq-glass-panel {
+  --bs-text: var(--bs-color-role-dark-text);
+  --bs-text-muted: var(--bs-color-role-dark-text-muted);
+  --bs-border: var(--bs-color-role-dark-border);
+  --bs-primary: var(--bs-color-role-dark-primary);
+  --bs-primary-hover: var(--bs-color-role-dark-primary-hover);
+  --bs-primary-pressed: var(--bs-color-role-dark-primary-pressed);
+  --bs-text-on-primary: var(--bs-color-role-dark-text-on-primary);
+  --bs-accent: var(--bs-color-role-dark-accent);
+  --bs-link: var(--bs-color-role-dark-link);
+  --bs-focus-ring: var(--bs-color-role-dark-focus-ring);
+  --bs-surface: var(--bs-component-hq-glass-card);
+  --bs-surface-muted: var(--bs-component-hq-glass-card);
+  --bs-surface-raised: var(--bs-component-hq-glass-control);
+  --bs-component-card-dark-background: var(--bs-component-hq-glass-card);
+  --bs-component-card-light-background: var(--bs-component-hq-glass-card);
+  color-scheme: dark;
+  color: var(--bs-pearl-white);
+  border: 1px solid var(--bs-component-hq-glass-border);
+  border-radius: var(--bs-radius-modal);
+  background: var(--bs-component-hq-glass-panel);
+  backdrop-filter: blur(var(--bs-component-hq-glass-blur));
+  -webkit-backdrop-filter: blur(var(--bs-component-hq-glass-blur));
+  box-shadow: var(--bs-shadow-elevation3-dark), inset 0 1px color-mix(in srgb, var(--bs-soft-silver) 7%, transparent);
+}

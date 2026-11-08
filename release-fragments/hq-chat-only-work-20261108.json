@@ -1,0 +1,9 @@
+{
+  "id": "hq-chat-only-work-20261108",
+  "task": "HQ-CHAT-ONLY-WORK-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui/src/organisms/BsHqWorkforce.vue", "packages/ui/src/organisms/BsHqCeoChat.vue", "packages/ui/src/organisms/BsHqMeetingPanel.vue", "packages/ui/src/templates/BsHqLayoutPage.vue", "packages/ui/src/types/hqAgentsPresentation.ts", "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue"],
+  "reason": "HQ uses Chat as the application entry point for new work. Remove the manual task and follow-up forms and task creation POST; remove live meeting work intake and direct trial launch while preserving existing work records and proposal or qualification decisions. Local source only; no hosted permission changes, publication or verification."
+}

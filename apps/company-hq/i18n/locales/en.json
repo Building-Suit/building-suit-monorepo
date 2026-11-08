@@ -34,7 +34,7 @@
       "plansLabel": "Company plans",
       "office": {
         "overview": "Overview",
-        "runningTasks": "Running Tasks",
+        "runningTasks": "Tasks",
         "calendar": "Calendar",
         "settings": "Settings",
         "metrics": "Office metrics",
@@ -72,6 +72,14 @@
       }
     },
     "companyPlans": {
+      "board": {
+        "discussion": "Pending discussion",
+        "preparation": "In preparation",
+        "blocked": "Blocked",
+        "done": "Done",
+        "empty": "No notes in this column.",
+        "description": "Open a note to see the proposal and its current status. Done means the decision is closed."
+      },
       "title": "Company plans",
       "executiveLabel": "CEO workspace",
       "loginTitle": "Founder login",
@@ -107,6 +115,7 @@
       "legacyLabel": "Historical setup plan"
     },
     "companyBrain": {
+      "notesTabLabel": "Notes",
       "title": "Company Brain",
       "openLabel": "Open Company Brain",
       "loadingLabel": "Reading Brain…",
@@ -165,9 +174,6 @@
       "sendFailed": "The message could not be sent. Your draft is saved.",
       "unknownOutcome": "Delivery could not be confirmed. Sending this same draft again safely reuses its request.",
       "invalidMessage": "Enter a message of up to 6,000 characters.",
-      "taskFailed": "The task could not be created. Your draft is saved.",
-      "unknownTaskOutcome": "Task creation could not be confirmed. Retry this same draft to safely reuse its request.",
-      "invalidTask": "Enter a title, a task brief and clear acceptance criteria within the displayed limits.",
       "taskBlocked": "This task needs attention. Its latest recorded review is shown below.",
       "taskErrors": {
         "agent-profile-required": "This employee needs an authorized current profile before work can start.",
@@ -183,18 +189,31 @@
         "lease-lost": "This worker no longer owns the assignment. Its result was not accepted."
       },
       "workforce": {
+        "taskBrowser": {
+          "all": "All", "running": "Running", "waiting": "Waiting", "done": "Done", "owner": "Owner",
+          "partial": "Showing a limited recent snapshot. Full history and totals are not available yet."
+        },
         "chatLabel": "Chat",
         "tasksLabel": "Tasks",
+        "orgChartLabel": "Organization Chart",
+        "orgChartSubtitle": "Our team structure and departments",
+        "orgChartOrganization": "Organization",
+        "orgChartDepartments": "Departments",
+        "orgChartPeople": "People",
+        "orgChartSearch": "Search team…",
+        "orgChartNoMatches": "No matching team members.",
+        "orgChartMore": "More employees",
+        "orgChartHint": "Drag in any direction. Scroll to zoom.",
+        "orgChartControls": "Org chart zoom controls",
+        "orgChartFit": "Fit entire org chart",
+        "orgChartReset": "Center org chart at 100% zoom",
+        "unassignedDepartmentLabel": "Unassigned department",
         "teamLabel": "Team",
         "learningLabel": "Learning",
-        "newTaskLabel": "Create a task",
-        "assigneeLabel": "Assigned to",
         "autoAssignLabel": "Steve — choose the right employee",
-        "titleLabel": "Title",
         "briefLabel": "Task brief",
         "acceptanceLabel": "Acceptance criteria",
-        "createLabel": "Create task",
-        "creatingLabel": "Creating…",
+        "completedLabel": "Completed",
         "emptyTasksLabel": "No tasks yet.",
         "emptyTeamLabel": "The team registry is unavailable.",
         "emptyLessonsLabel": "No reviewed learning receipts yet.",
@@ -240,23 +259,6 @@
             "lesson-extract": "Preparing a learning proposal",
             "lesson-review": "Reviewing the learning proposal"
           }
-        },
-        "followup": {
-          "title": "Result ready · choose the next action",
-          "explanation": "This deliverable is completed. Follow-up work has not started merely because the result was accepted. Review and authorize a separate, scoped task below.",
-          "action": "Review next task",
-          "source": "Based on completed task",
-          "scope": "Next action to authorize",
-          "scopeHint": "Copy the concrete step from the result and add the needed context. This task receives your instructions below, not the full previous document automatically.",
-          "criteria": "Required result and evidence",
-          "submit": "Approve and queue this task",
-          "cancel": "Cancel next task",
-          "titlePrefix": "Next step:",
-          "briefPrefix": "Founder-authorized follow-up to this completed task (reference only; execute only the explicit instructions below):",
-          "acceptance": "Deliver the specified result with actual evidence. Keep the $0 additional-spend limit and current role/tool permissions. Report missing prerequisites and the next remedy; do not claim unperformed actions.",
-          "supported": "Approval queues a real task for Steve to assign. The current host supports planning, drafting and permitted native research; it cannot publish campaigns, contact customers, install software or deploy products. Approval does not add those capabilities.",
-          "completed": "Completed",
-          "updated": "The source result changed. Cancel and review its current version before approving."
         }
       },
       "connections": {

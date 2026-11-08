@@ -8,7 +8,7 @@ export interface HqTrialPresentation {
   receiptIssued: boolean
   reviewComplete: boolean
 }
-export type HqTrialCommand = { action: 'start'; agentId: string; skillFileId: string } | { action: 'qualify'; trialId: string }
+export type HqTrialCommand = { action: 'qualify'; trialId: string }
 
 /** Product-owned agent/runtime observations projected into shared HQ UI. */
 export interface HqAgentPresentation {
@@ -78,12 +78,12 @@ export interface HqAgentsPresentation {
   workActivity?: readonly HqWorkActivity[]
   runtimeOnline: boolean
   lastRuntimeSeenAt?: string
+  taskBrowser?: HqTaskBrowserAdapter
   tasks?: readonly HqTaskPresentation[]
   runningTasks?: readonly HqTaskPresentation[]
   officeTasks?: readonly HqTaskPresentation[]
   tasksPartial?: boolean
   lessons?: readonly HqLessonPresentation[]
-  submittingTask?: boolean
   observations?: HqOfficeObservations
 }
 
@@ -128,8 +128,8 @@ export interface HqOfficeCopy {
   agentDetails: string; back: string; close: string; scope: string; lifecycle: string; department: string
 }
 
-export interface HqTaskRequest { assigneeId: string | null; title: string; brief: string; acceptance: string }
 export interface HqTaskPresentation {
+  group?: HqTaskGroup
   id: string
   title: string
   brief: string
@@ -162,24 +162,21 @@ export interface HqLessonPresentation {
 }
 
 export interface HqWorkforceContent {
+  taskBrowser?: HqTaskBrowserCopy
   activity?: HqWorkActivityCopy
-  followup?: {
-    title: string; explanation: string; action: string; source: string; scope: string
-    scopeHint: string; criteria: string; submit: string; cancel: string; titlePrefix: string
-    briefPrefix: string; acceptance: string; supported: string; completed: string; updated: string
-  }
+  completedLabel?: string
   chatLabel: string
   tasksLabel: string
   teamLabel: string
+  orgChartLabel?: string
+  orgChartControls?: {
+    hint: string; label: string; zoomIn: string; zoomOut: string; fit: string; reset: string
+    subtitle: string; organization: string; departments: string; people: string; search: string; noMatches: string; more: string
+  }
+  unassignedDepartmentLabel?: string
   learningLabel: string
-  newTaskLabel: string
-  assigneeLabel: string
-  autoAssignLabel: string
-  titleLabel: string
   briefLabel: string
   acceptanceLabel: string
-  createLabel: string
-  creatingLabel: string
   emptyTasksLabel: string
   emptyTeamLabel: string
   emptyLessonsLabel: string
@@ -239,4 +236,28 @@ export interface HqAgentsContent {
     recoveryWorking: string
   }
   workforce?: HqWorkforceContent
+}
+
+export type HqTaskGroup = 'running' | 'waiting' | 'done'
+export interface HqTaskBrowserRequest {
+  group: HqTaskGroup
+  officeId: string | null
+  offset: number
+  limit: number
+}
+export interface HqTaskBrowserPage {
+  items: readonly HqTaskPresentation[]
+  counts: Record<HqTaskGroup, number>
+  /** A legacy snapshot is incomplete; its counts must not be shown as totals. */
+  partial?: boolean
+}
+export interface HqTaskBrowserAdapter {
+  revision: number
+  load: (request: HqTaskBrowserRequest, signal: AbortSignal) => Promise<HqTaskBrowserPage>
+  detail: (id: string, signal: AbortSignal) => Promise<HqTaskPresentation | null>
+}
+export interface HqTaskBrowserCopy {
+  all: string; running: string; waiting: string; done: string
+  owner: string; empty: string; loading: string; unavailable: string; retry: string
+  partial: string
 }

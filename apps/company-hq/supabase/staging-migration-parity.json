@@ -239,6 +239,14 @@
       "phase": "task-evidence-context-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "tooling/hq-agent-host/proposed-migrations/hq_task_evidence_context.sql"
+    },
+    {
+      "file": "20261108041146_hq_task_browser.sql",
+      "bytes": 3728,
+      "md5": "8250d05b379e4eefef963ebecedb5fae",
+      "sha256": "14b9e1451945373d8df2663043798c7cf385e10ebf884a3f5ca23b4d5f0f3eb1",
+      "phase": "task-browser-review-only",
+      "status": "source-only-live-approval-required"
     }
   ]
 }

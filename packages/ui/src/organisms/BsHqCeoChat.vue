@@ -18,7 +18,7 @@ const maximumLength = 6000
 let pendingMessage: { text: string; existingIds: Set<string> } | null = null
 let disposed = false
 
-const blocked = computed(() => props.presentation.status !== 'connected' || props.presentation.sending || props.presentation.submittingTask || dispatching.value)
+const blocked = computed(() => props.presentation.status !== 'connected' || props.presentation.sending || dispatching.value)
 const { supported: dictationSupported, active: dictationActive, phase: dictationPhase, error: dictationError, start: startDictation, stop: stopDictation } = useSpeechDictation({
   getDraft: () => draft.value, setDraft: value => { draft.value = value },
   language: () => props.content.locale ?? 'en', disabled: () => blocked.value, maximumLength,
@@ -180,7 +180,7 @@ onBeforeUnmount(() => { disposed = true; pendingMessage = null })
     <p v-if="notice" class="bs-hq-chat__notice" role="alert">{{ notice }}</p>
     <p v-if="presentation.status === 'loading'" class="bs-hq-chat__notice" role="status">{{ content.loadingLabel }}</p>
     <p v-else-if="presentation.status === 'unavailable'" class="bs-hq-chat__notice" role="status">{{ content.unavailableLabel }}</p>
-    <BsButton v-if="content.workforce && (presentation.status === 'unavailable' || presentation.status === 'error')" variant="text" size="sm" :disabled="presentation.pending" @click="emit('refresh')">{{ content.workforce.refreshLabel }}</BsButton>
+    <BsButton v-if="content.workforce && (presentation.status === 'unavailable' || presentation.status === 'error')" :disabled="presentation.pending" @click="emit('refresh')" variant="icon" :aria-label="content.workforce.refreshLabel" :title="content.workforce.refreshLabel"><BsIcon name="refresh" :size="18" /></BsButton>
 
     <div ref="transcript" class="bs-hq-chat__transcript" role="log" :aria-label="content.transcriptLabel" aria-live="polite" aria-relevant="additions text" tabindex="0">
       <p v-if="!presentation.messages.length && presentation.status === 'connected'" class="bs-hq-chat__empty">{{ content.emptyLabel }}</p>
@@ -196,7 +196,7 @@ onBeforeUnmount(() => { disposed = true; pendingMessage = null })
               <div class="bs-hq-chat__bubble" dir="auto">
                 <strong class="bs-hq-chat__sender" dir="auto">{{ message.sender }}</strong>
                 <p class="bs-hq-chat__text" dir="auto"><span v-for="(run, index) in message.runs" :key="index" :class="{ 'bs-hq-chat__mention': run.mention, 'bs-hq-chat__emphasis': run.bold, 'bs-hq-chat__code': run.code }">{{ run.text }}</span></p>
-                <BsButton v-if="message.taskId" variant="text" size="sm" class="bs-hq-chat__task-link" @click="emit('openTask', message.taskId)">
+                <BsButton v-if="message.taskId" variant="secondary" size="sm" class="bs-hq-chat__task-link" @click="emit('openTask', message.taskId)">
                   <BsIcon name="reports" :size="16" />
                   <span dir="auto">{{ content.openTaskLabel || content.workforce?.tasksLabel }}<template v-if="message.task"> · {{ message.task.title }}</template></span>
                   <BsIcon name="arrowRight" :size="14" directional />
@@ -210,7 +210,7 @@ onBeforeUnmount(() => { disposed = true; pendingMessage = null })
             <div><strong dir="auto">{{ presentation.requestProgress.agentName }}</strong><p>{{ requestProgressLabel }}</p></div>
           </div>
           <div v-if="message.lessons.length" class="bs-hq-chat__learning">
-            <BsButton v-for="lesson in message.lessons" :key="lesson.id" variant="text" size="sm" @click="emit('openLearning', lesson.id)">
+            <BsButton v-for="lesson in message.lessons" :key="lesson.id" variant="secondary" size="sm" @click="emit('openLearning', lesson.id)">
               <BsIcon name="orb" :size="16" />
               <span>{{ content.learningUpdatedLabel || content.workforce?.learningLabel }} · <bdi>{{ lesson.title }}</bdi></span>
               <BsIcon name="arrowRight" :size="14" directional />

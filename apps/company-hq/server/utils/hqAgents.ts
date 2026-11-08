@@ -77,24 +77,8 @@ export async function hqCeoMessageBody(event: H3Event): Promise<{ prompt: string
   if (!entry || !text(entry.prompt, 6000) || !id(entry.requestKey)) throw createError({ statusCode: 400, statusMessage: 'HQ message unavailable' })
   return { prompt: String(entry.prompt).trim(), requestKey: String(entry.requestKey).toLowerCase() }
 }
-export async function hqTaskBody(event: H3Event): Promise<{ title: string; brief: string; acceptance: string; assigneeId: string | null; requestKey: string }> {
-  const entry = exact(await boundedBody(event, 140000), ['title', 'brief', 'acceptance', 'assigneeId', 'requestKey'])
-  if (!entry || !text(entry.title, 180) || !text(entry.brief, 12000) || !text(entry.acceptance, 6000) || !id(entry.requestKey)
-    || !(entry.assigneeId === null || typeof entry.assigneeId === 'string' && /^AG-[A-Z]+-[0-9]{3}$/.test(entry.assigneeId))) {
-    throw createError({ statusCode: 400, statusMessage: 'HQ task unavailable' })
-  }
-  return { title: String(entry.title).trim(), brief: String(entry.brief).trim(), acceptance: String(entry.acceptance).trim(),
-    assigneeId: entry.assigneeId as string | null, requestKey: String(entry.requestKey).toLowerCase() }
-}
-
-export async function hqTrialBody(event: H3Event): Promise<{ agentId: string; skillFileId: string; requestKey: string } | { trialId: string }> {
-  const body = await boundedBody(event, 4096)
-  const qualification = exact(body, ['trialId'])
+export async function hqTrialBody(event: H3Event): Promise<{ trialId: string }> {
+  const qualification = exact(await boundedBody(event, 4096), ['trialId'])
   if (qualification && id(qualification.trialId)) return { trialId: String(qualification.trialId) }
-  const trial = exact(body, ['agentId', 'skillFileId', 'requestKey'])
-  if (trial && typeof trial.agentId === 'string' && /^AG-[A-Z]+-[0-9]{3}$/.test(trial.agentId)
-    && typeof trial.skillFileId === 'string' && /^[A-Za-z0-9_-]{8,200}$/.test(trial.skillFileId) && id(trial.requestKey)) {
-    return { agentId: trial.agentId, skillFileId: trial.skillFileId, requestKey: String(trial.requestKey) }
-  }
-  throw createError({ statusCode: 400, statusMessage: 'HQ trial unavailable' })
+  throw createError({ statusCode: 400, statusMessage: 'HQ trial qualification unavailable' })
 }

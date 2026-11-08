@@ -1,0 +1,30 @@
+.bs-hq-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--bs-component-hq-glass-border);
+  border-radius: 15px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bs-color-brand-building-navy) 60%, var(--bs-color-neutral-charcoal)), var(--bs-color-neutral-charcoal));
+  box-shadow: inset 0 1px color-mix(in srgb, var(--bs-soft-silver) 6%, transparent);
+}
+.bs-hq-nav .ls-action-tab {
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--bs-soft-silver);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.bs-hq-nav .ls-action-tab[aria-selected='true'],
+.bs-hq-nav .bs-hq-layout__tab--selected {
+  border-color: color-mix(in srgb, var(--bs-premium-gold) 45%, transparent);
+  background: var(--bs-component-hq-glass-selected);
+  color: var(--bs-pearl-white);
+  font-weight: 650;
+}

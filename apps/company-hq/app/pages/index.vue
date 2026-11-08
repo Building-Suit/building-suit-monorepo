@@ -9,6 +9,14 @@ const { t, te, locale } = useI18n()
 const { brain, refresh, selectNote } = useCompanyBrain()
 const companyPlansCopy = computed<HqCompanyPlansCopy>(() => ({
   title: t('hq.companyPlans.title'),
+  board: {
+    discussion: t('hq.companyPlans.board.discussion'),
+    preparation: t('hq.companyPlans.board.preparation'),
+    blocked: t('hq.companyPlans.board.blocked'),
+    done: t('hq.companyPlans.board.done'),
+    empty: t('hq.companyPlans.board.empty'),
+    description: t('hq.companyPlans.board.description'),
+  },
   executiveLabel: t('hq.companyPlans.executiveLabel'),
   loginTitle: t('hq.companyPlans.loginTitle'),
   loginDescription: t('hq.companyPlans.loginDescription'),
@@ -69,10 +77,9 @@ function employeeRoleLabel(agent: HqAgentPresentation): string {
     || te(`hq.agents.departments.${role.toLowerCase()}`)
   return knownFallback && te(employeeKey) ? t(employeeKey) : role || t(`hq.agents.roles.${agent.role}`)
 }
-const { agents, trialCommand, send: sendCeoMessage, createTask: createAgentTask, refresh: refreshAgents } = useHqAgents(() => access.value, () => ({
+const { agents, trialCommand, send: sendCeoMessage, refresh: refreshAgents } = useHqAgents(() => access.value, () => ({
   unavailable: t('hq.agents.unavailableLabel'), sendFailed: t('hq.agents.sendFailed'),
   unknownOutcome: t('hq.agents.unknownOutcome'), invalidMessage: t('hq.agents.invalidMessage'),
-  taskFailed: t('hq.agents.taskFailed'), unknownTaskOutcome: t('hq.agents.unknownTaskOutcome'), invalidTask: t('hq.agents.invalidTask'),
   taskBlocked: t('hq.agents.taskBlocked'), autoAssign: t('hq.agents.workforce.autoAssignLabel'), reviewLabel: t('hq.agents.workforce.reviewsLabel'),
   taskStatus: status => agentLabel('taskStatuses', status), lessonStatus: status => agentLabel('lessonStatuses', status),
   taskError: code => te(`hq.agents.taskErrors.${code}`) ? t(`hq.agents.taskErrors.${code}`) : t('hq.agents.taskBlocked'),
@@ -132,6 +139,13 @@ const agentsContent = computed<HqAgentsContent>(() => ({
     recoveryWorking: t('hq.agents.requestProgress.recoveryWorking'),
   },
   workforce: {
+    taskBrowser: {
+      all: t('hq.agents.workforce.taskBrowser.all'), running: t('hq.agents.workforce.taskBrowser.running'),
+      waiting: t('hq.agents.workforce.taskBrowser.waiting'), done: t('hq.agents.workforce.taskBrowser.done'),
+      owner: t('hq.agents.workforce.taskBrowser.owner'), empty: t('hq.agents.workforce.emptyTasksLabel'),
+      loading: t('hq.agents.workforce.loadingLabel'), unavailable: t('hq.agents.workforce.unavailableLabel'),
+      retry: t('hq.agents.workforce.refreshLabel'), partial: t('hq.agents.workforce.taskBrowser.partial'),
+    },
     activity: {
       title: t('hq.agents.workforce.activity.title'),
       empty: t('hq.agents.workforce.activity.empty'),
@@ -159,27 +173,19 @@ const agentsContent = computed<HqAgentsContent>(() => ({
         'staffing-plan': 'Prepare staffing plan', 'staffing-review': 'Review staffing plan',
       },
     },
-    followup: {
-      title: t('hq.agents.workforce.followup.title'),
-      explanation: t('hq.agents.workforce.followup.explanation'),
-      action: t('hq.agents.workforce.followup.action'),
-      source: t('hq.agents.workforce.followup.source'),
-      scope: t('hq.agents.workforce.followup.scope'),
-      scopeHint: t('hq.agents.workforce.followup.scopeHint'),
-      criteria: t('hq.agents.workforce.followup.criteria'),
-      submit: t('hq.agents.workforce.followup.submit'),
-      cancel: t('hq.agents.workforce.followup.cancel'),
-      titlePrefix: t('hq.agents.workforce.followup.titlePrefix'),
-      briefPrefix: t('hq.agents.workforce.followup.briefPrefix'),
-      acceptance: t('hq.agents.workforce.followup.acceptance'),
-      supported: t('hq.agents.workforce.followup.supported'),
-      completed: t('hq.agents.workforce.followup.completed'),
-      updated: t('hq.agents.workforce.followup.updated'),
+    orgChartLabel: t('hq.agents.workforce.orgChartLabel'), unassignedDepartmentLabel: t('hq.agents.workforce.unassignedDepartmentLabel'),
+    orgChartControls: {
+      hint: t('hq.agents.workforce.orgChartHint'), label: t('hq.agents.workforce.orgChartControls'),
+      zoomIn: t('hq.zoomInLabel'), zoomOut: t('hq.zoomOutLabel'),
+      fit: t('hq.agents.workforce.orgChartFit'), reset: t('hq.agents.workforce.orgChartReset'),
+      subtitle: t('hq.agents.workforce.orgChartSubtitle'), organization: t('hq.agents.workforce.orgChartOrganization'),
+      departments: t('hq.agents.workforce.orgChartDepartments'), people: t('hq.agents.workforce.orgChartPeople'),
+      search: t('hq.agents.workforce.orgChartSearch'), noMatches: t('hq.agents.workforce.orgChartNoMatches'), more: t('hq.agents.workforce.orgChartMore'),
     },
+    completedLabel: t('hq.agents.workforce.completedLabel'),
     chatLabel: t('hq.agents.workforce.chatLabel'), tasksLabel: t('hq.agents.workforce.tasksLabel'), teamLabel: t('hq.agents.workforce.teamLabel'), learningLabel: t('hq.agents.workforce.learningLabel'),
-    newTaskLabel: t('hq.agents.workforce.newTaskLabel'), assigneeLabel: t('hq.agents.workforce.assigneeLabel'), autoAssignLabel: t('hq.agents.workforce.autoAssignLabel'),
-    titleLabel: t('hq.agents.workforce.titleLabel'), briefLabel: t('hq.agents.workforce.briefLabel'), acceptanceLabel: t('hq.agents.workforce.acceptanceLabel'),
-    createLabel: t('hq.agents.workforce.createLabel'), creatingLabel: t('hq.agents.workforce.creatingLabel'), emptyTasksLabel: t('hq.agents.workforce.emptyTasksLabel'),
+    briefLabel: t('hq.agents.workforce.briefLabel'), acceptanceLabel: t('hq.agents.workforce.acceptanceLabel'),
+    emptyTasksLabel: t('hq.agents.workforce.emptyTasksLabel'),
     emptyTeamLabel: t('hq.agents.workforce.emptyTeamLabel'), emptyLessonsLabel: t('hq.agents.workforce.emptyLessonsLabel'), departmentLabel: t('hq.agents.workforce.departmentLabel'),
     lifecycleLabel: t('hq.agents.workforce.lifecycleLabel'), connectionLabel: t('hq.agents.workforce.connectionLabel'), configuredNotice: t('hq.agents.workforce.configuredNotice'),
     deliverableLabel: t('hq.agents.workforce.deliverableLabel'), reviewsLabel: t('hq.agents.workforce.reviewsLabel'), pendingDeliverableLabel: t('hq.agents.workforce.pendingDeliverableLabel'),
@@ -276,6 +282,7 @@ const content = computed<HqLayoutContent>(() => ({
   agents: agentsContent.value,
   companyBrain: {
     title: t('hq.companyBrain.title'),
+    notesTabLabel: t('hq.companyBrain.notesTabLabel'),
     openLabel: t('hq.companyBrain.openLabel'),
     loadingLabel: t('hq.companyBrain.loadingLabel'),
     connectedLabel: t('hq.companyBrain.connectedLabel'),
@@ -301,4 +308,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @create-agent-task="createAgentTask" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>

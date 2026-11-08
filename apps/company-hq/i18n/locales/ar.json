@@ -34,7 +34,7 @@
       "plansLabel": "خطط الشركة",
       "office": {
         "overview": "نظرة عامة",
-        "runningTasks": "المهام الجارية",
+        "runningTasks": "Tasks",
         "calendar": "التقويم",
         "settings": "الإعدادات",
         "metrics": "مؤشرات المكتب",
@@ -72,6 +72,14 @@
       }
     },
     "companyPlans": {
+      "board": {
+        "discussion": "بانتظار النقاش",
+        "preparation": "قيد الإعداد",
+        "blocked": "متوقفة",
+        "done": "منتهية",
+        "empty": "لا توجد ملاحظات في هذا العمود.",
+        "description": "افتح ملاحظة للاطلاع على المقترح وحالته. تعني «منتهية» أن القرار قد حُسم."
+      },
       "title": "خطط الشركة",
       "executiveLabel": "مساحة المدير التنفيذي",
       "loginTitle": "دخول المؤسس",
@@ -107,6 +115,7 @@
       "legacyLabel": "خطة التأسيس السابقة"
     },
     "companyBrain": {
+      "notesTabLabel": "الملاحظات",
       "title": "معرفة الشركة",
       "openLabel": "فتح معرفة الشركة",
       "loadingLabel": "جارٍ قراءة المعرفة…",
@@ -165,9 +174,6 @@
       "sendFailed": "تعذّر إرسال الرسالة. مسودتك محفوظة.",
       "unknownOutcome": "تعذّر تأكيد التسليم. إعادة إرسال المسودة نفسها تستخدم الطلب نفسه بأمان.",
       "invalidMessage": "اكتب رسالة لا تتجاوز ٦٬٠٠٠ حرف.",
-      "taskFailed": "تعذّر إنشاء المهمة. احتُفظ بمسودتك.",
-      "unknownTaskOutcome": "تعذّر تأكيد إنشاء المهمة. أعد إرسال المسودة نفسها لإعادة استخدام الطلب بأمان.",
-      "invalidTask": "أدخل عنوانًا ووصفًا للمهمة ومعايير قبول واضحة ضمن الحدود المعروضة.",
       "taskBlocked": "تحتاج هذه المهمة متابعة. تظهر أدناه أحدث مراجعة مسجّلة لها.",
       "taskErrors": {
         "agent-profile-required": "يحتاج هذا الموظف ملفًا حاليًا معتمدًا قبل بدء العمل.",
@@ -183,18 +189,31 @@
         "lease-lost": "لم يعد هذا العامل مكلّفًا بالمهمة. لم تُقبل نتيجته."
       },
       "workforce": {
+        "taskBrowser": {
+          "all": "All", "running": "Running", "waiting": "Waiting", "done": "Done", "owner": "Owner",
+          "partial": "Showing a limited recent snapshot. Full history and totals are not available yet."
+        },
         "chatLabel": "المحادثة",
         "tasksLabel": "المهام",
+        "orgChartLabel": "Organization Chart",
+        "orgChartSubtitle": "Our team structure and departments",
+        "orgChartOrganization": "Organization",
+        "orgChartDepartments": "Departments",
+        "orgChartPeople": "People",
+        "orgChartSearch": "Search team…",
+        "orgChartNoMatches": "No matching team members.",
+        "orgChartMore": "More employees",
+        "orgChartHint": "Drag in any direction. Scroll to zoom.",
+        "orgChartControls": "Org chart zoom controls",
+        "orgChartFit": "Fit entire org chart",
+        "orgChartReset": "Center org chart at 100% zoom",
+        "unassignedDepartmentLabel": "Unassigned department",
         "teamLabel": "الفريق",
         "learningLabel": "التعلّم",
-        "newTaskLabel": "إنشاء مهمة",
-        "assigneeLabel": "المكلّف",
         "autoAssignLabel": "ستيف — اختيار الموظف المناسب",
-        "titleLabel": "العنوان",
         "briefLabel": "وصف المهمة",
         "acceptanceLabel": "معايير القبول",
-        "createLabel": "إنشاء المهمة",
-        "creatingLabel": "جارٍ الإنشاء…",
+        "completedLabel": "اكتملت",
         "emptyTasksLabel": "لا توجد مهام بعد.",
         "emptyTeamLabel": "سجل الفريق غير متاح.",
         "emptyLessonsLabel": "لا توجد إيصالات تعلّم مراجَعة بعد.",
@@ -240,23 +259,6 @@
             "lesson-extract": "إعداد مقترح تعلّم",
             "lesson-review": "مراجعة مقترح التعلّم"
           }
-        },
-        "followup": {
-          "title": "النتيجة جاهزة · اختر الإجراء التالي",
-          "explanation": "اكتملت هذه النتيجة. قبولها لا يعني بدء تنفيذ الأعمال التالية. راجع مهمة تالية محددة واعتمدها أدناه.",
-          "action": "مراجعة المهمة التالية",
-          "source": "بناءً على المهمة المكتملة",
-          "scope": "الإجراء التالي المراد اعتماده",
-          "scopeHint": "انسخ الخطوة المحددة من النتيجة وأضف سياقها اللازم. تتلقى المهمة التعليمات أدناه ولا يُنقل المستند السابق كاملًا تلقائيًا.",
-          "criteria": "النتيجة المطلوبة وأدلتها",
-          "submit": "اعتماد هذه المهمة وإضافتها للانتظار",
-          "cancel": "إلغاء المهمة التالية",
-          "titlePrefix": "الخطوة التالية:",
-          "briefPrefix": "متابعة معتمدة من المؤسس لهذه المهمة المكتملة (مرجع فقط؛ نفّذ التعليمات الصريحة أدناه فقط):",
-          "acceptance": "سلّم النتيجة المحددة بأدلة فعلية. التزم بعدم الإنفاق الإضافي وبصلاحيات الدور والأدوات الحالية. وضّح المتطلبات الناقصة والخطوة العلاجية، ولا تدّعِ تنفيذ ما لم يحدث.",
-          "supported": "ينشئ الاعتماد مهمة فعلية ليسندها ستيف. يدعم المضيف الحالي التخطيط والصياغة والبحث المسموح؛ ولا ينشر حملات أو يتواصل مع العملاء أو يثبّت برامج أو ينشر منتجات. لا يضيف الاعتماد هذه القدرات.",
-          "completed": "اكتملت",
-          "updated": "تغيّرت النتيجة المصدر. ألغِ الخطوة وراجع الإصدار الحالي قبل الاعتماد."
         }
       },
       "connections": {

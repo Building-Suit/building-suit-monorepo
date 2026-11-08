@@ -1,7 +1,9 @@
-import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskRequest, HqTrialCommand, HqTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot } from '#shared/types/agents'
 import { hqCosmeticIdle, hqObservationFresh, hqObservedActivity } from '../utils/hqAgentPresence'
+import { parseHqTaskPage } from '#shared/types/taskBrowser'
+import type { HqBusinessTask } from '#shared/types/agents'
 import { hqWorkActivity } from '../utils/hqWorkActivity'
 
 export interface HqAgentMessages {
@@ -9,9 +11,6 @@ export interface HqAgentMessages {
   sendFailed: string
   unknownOutcome?: string
   invalidMessage?: string
-  taskFailed?: string
-  unknownTaskOutcome?: string
-  invalidTask?: string
   taskBlocked?: string
   autoAssign?: string
   reviewLabel?: string
@@ -21,10 +20,8 @@ export interface HqAgentMessages {
   lifecycle?: (value: string) => string
   connection?: (value: string) => string
 }
-type MessageReason = 'unavailable' | 'sendFailed' | 'unknownOutcome' | 'invalidMessage' | 'taskFailed' | 'unknownTaskOutcome' | 'invalidTask'
-interface MessageAttempt { kind: 'message'; key: string; prompt: string; requestKey: string; identity: string }
-interface TaskAttempt { kind: 'task'; key: string; request: HqTaskRequest; requestKey: string; identity: string }
-type Attempt = MessageAttempt | TaskAttempt
+type MessageReason = 'unavailable' | 'sendFailed' | 'unknownOutcome' | 'invalidMessage'
+interface MessageAttempt { key: string; prompt: string; requestKey: string; identity: string }
 
 function responseStatus(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined
@@ -44,7 +41,6 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   const live = useHqLiveEvents()
   const trials = shallowRef<readonly HqTrialPresentation[]>([])
   const trialPending = ref(false), trialMessage = ref('')
-  const trialAttempts = new Map<string, string>()
   async function refreshTrials() {
     if (getAccess().status !== 'founder') { trials.value = []; return }
     const identity = accessIdentity(getAccess()), trialEpoch = epoch
@@ -64,25 +60,24 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     if (getAccess().status !== 'founder' || trialPending.value) return
     const identity = accessIdentity(getAccess()), trialEpoch = epoch
     trialPending.value = true; trialMessage.value = ''
-    const key = command.action === 'start' ? command.agentId + ':' + command.skillFileId : command.trialId
-    if (!trialAttempts.has(key)) trialAttempts.set(key, crypto.randomUUID())
     try {
       const result = await $fetch<{ accepted?: boolean }>('/api/hq/trials', { method: 'POST', headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' },
-        body: command.action === 'start' ? { agentId: command.agentId, skillFileId: command.skillFileId, requestKey: trialAttempts.get(key) } : { trialId: command.trialId } })
+        body: { trialId: command.trialId } })
       if (getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
       if (result?.accepted !== true) throw Error('trial-unconfirmed')
-      trialAttempts.delete(key)
-      trialMessage.value = command.action === 'start' ? 'Supervised internal trial queued.' : 'Skill qualification recorded. All assigned skills and canonical Active lifecycle are required.'
+      trialMessage.value = 'Skill qualification recorded. All assigned skills and canonical Active lifecycle are required.'
       await Promise.all([refresh(), refreshTrials()])
     } catch {
       if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trialMessage.value = 'Trial action unconfirmed. Refresh and retry the same action; eligibility and evidence are checked by HQ.'
     } finally { trialPending.value = false }
   }
   const snapshot = shallowRef<HqAgentSnapshot | null>(null)
+  let taskBrowserRevision = 0
+  watch(snapshot, () => { taskBrowserRevision += 1 }, { flush: 'sync' })
   const status = ref<HqAgentsPresentation['status']>('unavailable')
-  const pending = ref(false), refreshing = ref(false), sending = ref(false), submittingTask = ref(false), clock = ref(0)
+  const pending = ref(false), refreshing = ref(false), sending = ref(false), clock = ref(0)
   const messageReason = ref<MessageReason | null>(null)
-  const attempts = new Map<string, Attempt>()
+  const attempts = new Map<string, MessageAttempt>()
   const headers = { 'X-HQ-Access': '1', 'X-HQ-Brain': '1', 'X-HQ-Chat-Progress': '1', 'X-HQ-Staffing': '1' }
   let controller: AbortController | null = null, inFlight: Promise<boolean> | null = null
   let freshnessTimer: ReturnType<typeof setTimeout> | null = null
@@ -141,7 +136,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     const error = reason && copy ? copy[reason] ?? (reason === 'unavailable' ? copy.unavailable : copy.sendFailed) : undefined
     return {
       trials: trials.value, trialPending: trialPending.value, trialMessage: trialMessage.value,
-      status: status.value, pending: pending.value, refreshing: refreshing.value, sending: sending.value, submittingTask: submittingTask.value,
+      status: status.value, pending: pending.value, refreshing: refreshing.value, sending: sending.value,
       workActivity: state ? hqWorkActivity(state, runtimeOnline.value, clock.value) : [],
       observations: state?.observations,
       tasksPartial: state?.observations?.tasksPartial,
@@ -172,15 +167,8 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
           lifecycleLabel: copy?.lifecycle?.(record.lifecycle ?? 'unknown') ?? record.lifecycle,
           connectionLabel: copy?.connection?.(connection) ?? connection }
       }),
-      tasks: (state?.tasks ?? []).map(task => ({
-        id: task.id, title: task.title, brief: task.brief, acceptance: task.acceptance, assigneeId: task.assigneeId,
-        assigneeName: state?.agents.find(agent => agent.id === task.assigneeId)?.name ?? copy?.autoAssign ?? '',
-        statusLabel: copy?.taskStatus?.(task.status) ?? task.status,
-        state: task.status === 'completed' ? 'complete' : task.status === 'queued' ? 'pending' : task.status === 'working' || task.status === 'review' ? 'active' : 'blocked',
-        createdAt: task.createdAt, updatedAt: task.updatedAt, completedAt: task.completedAt, deliverable: task.deliverable ?? '',
-        reviews: task.reviewSummary ? [{ id: `${task.id}-review`, reviewer: copy?.reviewLabel ?? '', outcome: copy?.taskStatus?.(task.status) ?? task.status, text: task.reviewSummary }] : [],
-        ...(task.error && task.status !== 'canceled' ? { error: copy?.taskError?.(task.error) ?? copy?.taskBlocked ?? copy?.taskFailed ?? '' } : {}),
-      })),
+      taskBrowser: { revision: taskBrowserRevision, load: loadTaskPage, detail: loadTaskDetail },
+      tasks: (state?.tasks ?? []).map(projectTask),
       lessons: (state?.lessons ?? []).map(lesson => ({
         id: lesson.id, status: lesson.status, sourceId: lesson.sourceId, title: lesson.summary, text: lesson.body, agentName: state?.agents.find(agent => agent.id === lesson.agentId)?.name ?? lesson.agentId,
         statusLabel: copy?.lessonStatus?.(lesson.status) ?? lesson.status, taskId: lesson.sourceType === 'task' ? lesson.sourceId : null,
@@ -196,6 +184,72 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     }
   })
 
+  function projectTask(task: HqBusinessTask) {
+    const copy = messages?.()
+    return {
+      id: task.id, title: task.title, brief: task.brief, acceptance: task.acceptance, assigneeId: task.assigneeId,
+      assigneeName: snapshot.value?.agents.find(agent => agent.id === task.assigneeId)?.name ?? copy?.autoAssign ?? '',
+      statusLabel: copy?.taskStatus?.(task.status) ?? task.status,
+      group: taskGroup(task.status),
+      state: (task.status === 'completed' ? 'complete' : task.status === 'queued' ? 'pending' : task.status === 'working' || task.status === 'review' ? 'active' : 'blocked') as 'complete' | 'pending' | 'active' | 'blocked',
+      createdAt: task.createdAt, updatedAt: task.updatedAt, completedAt: task.completedAt, deliverable: task.deliverable ?? '',
+      reviews: task.reviewSummary ? [{ id: `${task.id}-review`, reviewer: copy?.reviewLabel ?? '', outcome: copy?.taskStatus?.(task.status) ?? task.status, text: task.reviewSummary }] : [],
+      ...(task.error && task.status !== 'canceled' ? { error: copy?.taskError?.(task.error) ?? copy?.taskBlocked ?? '' } : {}),
+    }
+  }
+  async function fetchTaskPage(query: Record<string, string | number>, signal: AbortSignal) {
+    if (!allowed()) throw Error('HQ task access unavailable')
+    const identity = scopeIdentity, requestEpoch = epoch
+    const result = await $fetch<unknown>('/api/hq/tasks', { query, headers, signal })
+    if (!allowed() || scopeIdentity !== identity || epoch !== requestEpoch || signal.aborted) throw Error('HQ task scope changed')
+    const page = parseHqTaskPage(result)
+    if (!page) throw Error('HQ task page invalid')
+    return page
+  }
+  function taskGroup(status: string): HqTaskGroup {
+    return status === 'working' || status === 'review' ? 'running' : status === 'queued' || status === 'blocked' ? 'waiting' : 'done'
+  }
+  function recentTaskPage(request: HqTaskBrowserRequest): HqTaskBrowserPage {
+    const state = snapshot.value, copy = messages?.()
+    const records = new Map<string, HqTaskBrowserPage['items'][number]>()
+    for (const task of [...(state?.observations?.recentTasks ?? []), ...(state?.observations?.runningTasks ?? [])]) {
+      records.set(task.id, { id: task.id, title: task.title, brief: '', acceptance: '', assigneeId: task.assigneeId,
+        assigneeName: state?.agents.find(agent => agent.id === task.assigneeId)?.name ?? copy?.autoAssign ?? '',
+        statusLabel: copy?.taskStatus?.(task.status) ?? task.status, group: taskGroup(task.status),
+        state: task.status === 'completed' ? 'complete' : task.status === 'queued' ? 'pending' : task.status === 'working' || task.status === 'review' ? 'active' : 'blocked',
+        createdAt: task.createdAt, deliverable: '', reviews: [] })
+    }
+    for (const task of state?.tasks ?? []) records.set(task.id, projectTask(task))
+    const scoped = [...records.values()].filter(task => !request.officeId || (request.officeId === 'executive'
+      ? task.assigneeId === 'AG-CEO-001' : state?.agents.some(agent => agent.id === task.assigneeId && agent.departmentId === request.officeId)))
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id.localeCompare(a.id))
+    const counts = { running: 0, waiting: 0, done: 0 }
+    for (const task of scoped) counts[task.group!] += 1
+    return { partial: true, counts, items: scoped.filter(task => task.group === request.group).slice(request.offset, request.offset + request.limit) }
+  }
+  async function loadTaskPage(request: HqTaskBrowserRequest, signal: AbortSignal): Promise<HqTaskBrowserPage> {
+    try {
+      const page = await fetchTaskPage({ group: request.group, offset: request.offset, limit: request.limit,
+        ...(request.officeId ? { officeId: request.officeId } : {}) }, signal)
+      return { counts: page.counts, items: page.items.map(projectTask) }
+    } catch (error) {
+      // Local-only edits can precede the repository-driven database rollout.
+      // Never disguise a truncated snapshot as complete history or bypass Auth.
+      if (signal.aborted || !allowed() || responseStatus(error) !== 503) throw error
+      return recentTaskPage(request)
+    }
+  }
+  async function loadTaskDetail(id: string, signal: AbortSignal) {
+    try {
+      const page = await fetchTaskPage({ taskId: id, limit: 1 }, signal)
+      return page.items[0] ? projectTask(page.items[0]) : null
+    } catch (error) {
+      if (signal.aborted || !allowed() || responseStatus(error) !== 503) throw error
+      const task = snapshot.value?.tasks?.find(task => task.id === id)
+      return task ? projectTask(task) : null
+    }
+  }
+
   function accessIdentity(access: HqFounderAccessPresentation): string | null {
     return access.user?.displayName ? JSON.stringify([access.user.displayName, access.user.detailLabel ?? '']) : null
   }
@@ -208,9 +262,8 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
 
   function invalidate(clearAttempts: boolean, reason: MessageReason | null = null) {
     epoch += 1; controller?.abort(); controller = null; inFlight = null
-    refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; submittingTask.value = false; snapshot.value = null
+    refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; snapshot.value = null
     trials.value = []; trialMessage.value = ''
-    if (clearAttempts) trialAttempts.clear()
     status.value = 'unavailable'; messageReason.value = reason
     if (freshnessTimer !== null) clearTimeout(freshnessTimer)
     freshnessTimer = null
@@ -235,23 +288,23 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     scheduleFreshness()
   }
 
-  function run(attempt?: Attempt): Promise<boolean> {
+  function run(attempt?: MessageAttempt): Promise<boolean> {
     if (!allowed() || attempt && attempt.identity !== scopeIdentity) return Promise.resolve(false)
     if (inFlight) {
       if (!attempt) return inFlight
-      if (sending.value || submittingTask.value) return Promise.resolve(false)
+      if (sending.value) return Promise.resolve(false)
       // An explicit write takes priority over a replaceable background GET.
       // Its aborted response cannot overwrite the write's newer epoch.
       epoch += 1; controller?.abort(); controller = null; inFlight = null
       refreshQueued = true
     }
     const expected = epoch, identity = scopeIdentity, request = new AbortController()
-    controller = request; pending.value = Boolean(attempt) || !snapshot.value; refreshing.value = !attempt && Boolean(snapshot.value); sending.value = attempt?.kind === 'message'; submittingTask.value = attempt?.kind === 'task'; messageReason.value = null
+    controller = request; pending.value = Boolean(attempt) || !snapshot.value; refreshing.value = !attempt && Boolean(snapshot.value); sending.value = Boolean(attempt); messageReason.value = null
     if (!snapshot.value) status.value = 'loading'
     const task: Promise<boolean> = Promise.resolve().then(async () => {
       try {
-        const result = await $fetch<unknown>(attempt?.kind === 'task' ? '/api/hq/tasks' : attempt ? '/api/hq/ceo/messages' : '/api/hq/agents', {
-          method: attempt ? 'POST' : 'GET', ...(attempt ? { body: attempt.kind === 'task' ? { ...attempt.request, requestKey: attempt.requestKey } : { prompt: attempt.prompt, requestKey: attempt.requestKey } } : {}),
+        const result = await $fetch<unknown>(attempt ? '/api/hq/ceo/messages' : '/api/hq/agents', {
+          method: attempt ? 'POST' : 'GET', ...(attempt ? { body: { prompt: attempt.prompt, requestKey: attempt.requestKey } } : {}),
           headers, credentials: 'same-origin', cache: 'no-store', retry: 0, timeout: 45_000, signal: request.signal,
         })
         if (disposed || expected !== epoch || request.signal.aborted || !allowed() || identity !== scopeIdentity) return false
@@ -275,13 +328,13 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
         // A transient read failure retains the last authorized snapshot.
         // Every write still performs fresh server authorization.
         messageReason.value = attempt ? code !== undefined && code >= 400 && code < 500
-          ? attempt.kind === 'task' ? 'taskFailed' : 'sendFailed'
-          : attempt.kind === 'task' ? 'unknownTaskOutcome' : 'unknownOutcome' : 'unavailable'
+          ? 'sendFailed'
+          : 'unknownOutcome' : 'unavailable'
         return false
       }
       finally {
         if (!disposed && expected === epoch) {
-          pending.value = false; refreshing.value = false; sending.value = false; submittingTask.value = false
+          pending.value = false; refreshing.value = false; sending.value = false
           if (controller === request) controller = null
           if (inFlight === task) inFlight = null
           if (refreshQueued) { refreshQueued = false; if (allowed()) void refresh() }
@@ -297,7 +350,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     return run()
   }
   function send(message: string): Promise<boolean> {
-    if (!allowed() || sending.value || submittingTask.value) return Promise.resolve(false)
+    if (!allowed() || sending.value) return Promise.resolve(false)
     if (typeof message !== 'string' || !message.trim() || message.length > 6000 || hasHqControlCharacters(message)) {
       messageReason.value = 'invalidMessage'
       return Promise.resolve(false)
@@ -309,31 +362,13 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       if (attempts.size >= 16 || typeof crypto.randomUUID !== 'function' || scopeIdentity === null) {
         messageReason.value = 'sendFailed'; return Promise.resolve(false)
       }
-      attempt = { kind: 'message', key, prompt, requestKey: crypto.randomUUID(), identity: scopeIdentity }
+      attempt = { key, prompt, requestKey: crypto.randomUUID(), identity: scopeIdentity }
       attempts.set(key, attempt)
     }
     // An uncertain POST keeps this exact prompt/UUID in memory under the same
     // founder identity. A matching GET message is not proof of its request ID.
     return run(attempt)
   }
-  function createTask(value: HqTaskRequest): Promise<boolean> {
-    if (!allowed() || sending.value || submittingTask.value) return Promise.resolve(false)
-    const bounded = (entry: unknown, max: number): entry is string => typeof entry === 'string' && entry.trim().length > 0 && entry.length <= max && !hasHqControlCharacters(entry)
-    if (!value || !bounded(value.title, 180) || !bounded(value.brief, 12000) || !bounded(value.acceptance, 6000)
-      || !(value.assigneeId === null || typeof value.assigneeId === 'string' && snapshot.value?.agents.some(agent => agent.id === value.assigneeId))) {
-      messageReason.value = 'invalidTask'; return Promise.resolve(false)
-    }
-    const request = { title: value.title.trim(), brief: value.brief.trim(), acceptance: value.acceptance.trim(), assigneeId: value.assigneeId }
-    const key = `task:${JSON.stringify(request)}`
-    let attempt = attempts.get(key)
-    if (!attempt) {
-      if (attempts.size >= 16 || typeof crypto.randomUUID !== 'function' || scopeIdentity === null) { messageReason.value = 'taskFailed'; return Promise.resolve(false) }
-      attempt = { kind: 'task', key, request, requestKey: crypto.randomUUID(), identity: scopeIdentity }
-      attempts.set(key, attempt)
-    }
-    return run(attempt)
-  }
-
   live.subscribePresence(observation => {
     const current = snapshot.value, now = Date.now(), observed = Date.parse(observation.observedAt)
     // Presence updates timestamps only. An in-flight snapshot is authoritative
@@ -361,7 +396,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     if (access.status !== 'founder' || !access.user?.displayName) {
       const ended = access.status === 'anonymous' || access.status === 'denied'
       invalidate(ended)
-      trials.value = []; trialMessage.value = ''; trialAttempts.clear()
+      trials.value = []; trialMessage.value = ''
       if (ended) scopeIdentity = null
       return
     }
@@ -372,5 +407,5 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   onMounted(() => { mounted = true; void refreshTrials() })
   onScopeDispose(() => { disposed = true; invalidate(true); scopeIdentity = null })
 
-  return { agents, send, createTask, refresh: async () => { await Promise.all([refresh(), refreshTrials()]) }, trialCommand }
+  return { agents, send, refresh: async () => { await Promise.all([refresh(), refreshTrials()]) }, trialCommand }
 }
