@@ -2,6 +2,9 @@
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
   Orbit01Icon,
+  HandshakeIcon,
+  Layers01Icon,
+  Search01Icon,
   Chatting01Icon,
   CubeIcon,
   MinusSignIcon,
@@ -48,6 +51,9 @@ import {
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  handshake: HandshakeIcon,
+  layers: Layers01Icon,
+  search: Search01Icon,
   microphone: Mic01Icon,
   stop: StopIcon,
   send: SentIcon,
@@ -68,6 +74,7 @@ const bsIcons = {
   arrowDown: ArrowDown01Icon,
   arrowRight: ArrowRight01Icon,
   automation: ArrowReloadHorizontalIcon,
+  refresh: ArrowReloadHorizontalIcon,
   cash: Cash02Icon,
   calendar: Calendar03Icon,
   phone: Call02Icon,

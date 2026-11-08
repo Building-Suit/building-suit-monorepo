@@ -2,12 +2,13 @@
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import type { HqCompanyPlanPresentation, HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation } from '../types/hqLayoutPresentation'
 
-const props = withDefaults(defineProps<{ copy: HqCompanyPlansCopy; access: HqFounderAccessPresentation; workspace: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>(), { departments: () => [] })
+const props = withDefaults(defineProps<{ copy: HqCompanyPlansCopy; access: HqFounderAccessPresentation; workspace: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[]; separateDetails?: boolean; selectedPlanId?: string; hideHeader?: boolean }>(), { departments: () => [] })
 const emit = defineEmits<{
   login: [email: string, password: string]
   register: [email: string, password: string]
   logout: []
   refresh: []
+  openPlan: [id: string]
   decision: [id: string, revision: number, decision: 'approved' | 'rejected']
 }>()
 const confirmation = useConfirmation()
@@ -21,7 +22,7 @@ const confirming = ref(false)
 const decisionError = ref<string | null>(null)
 let disposed = false
 
-const selected = computed(() => props.workspace.plans.find(plan => plan.id === selectedId.value) ?? props.workspace.plans[0] ?? null)
+const selected = computed(() => props.separateDetails ? props.workspace.plans.find(plan => plan.id === props.selectedPlanId) ?? null : props.workspace.plans.find(plan => plan.id === selectedId.value) ?? props.workspace.plans[0] ?? null)
 const confirmationNotice = computed(() => props.access.message === props.copy.confirmationRequired)
 const accessError = computed(() => {
   if (confirmationNotice.value) return null
@@ -49,6 +50,7 @@ function changeAuthMode() {
 }
 function selectPlan(plan: HqCompanyPlanPresentation) {
   if (confirming.value || props.workspace.pending) return
+  if (props.separateDetails) { emit('openPlan', plan.id); return }
   selectedId.value = plan.id
   decisionError.value = null
 }
@@ -100,15 +102,15 @@ onBeforeUnmount(() => { disposed = true; password.value = ''; email.value = '' }
 </script>
 
 <template>
-  <section class="bs-hq-plans" :aria-labelledby="headingId" :aria-busy="access.pending || workspace.pending">
-    <header class="bs-hq-plans__header">
+  <section class="bs-hq-plans" :aria-labelledby="hideHeader ? undefined : headingId" :aria-label="hideHeader ? copy.title : undefined" :aria-busy="access.pending || workspace.pending">
+    <header v-if="!hideHeader" class="bs-hq-plans__header">
       <div>
         <h2 :id="headingId">{{ copy.title }}</h2>
         <p v-if="access.status === 'founder' && access.user" class="bs-hq-plans__identity">{{ access.user.displayName }}</p>
       </div>
       <div v-if="access.status === 'founder'" class="bs-hq-plans__toolbar">
-        <BsButton type="button" variant="text" size="sm" :disabled="access.pending || workspace.pending || confirming" @click="emit('refresh')">{{ copy.refreshLabel }}</BsButton>
-        <BsButton type="button" variant="text" size="sm" :pending="access.pending" :disabled="workspace.pending || confirming" @click="emit('logout')">{{ copy.signOutLabel }}</BsButton>
+        <BsButton type="button" :disabled="access.pending || workspace.pending || confirming" @click="emit('refresh')" variant="icon" :aria-label="copy.refreshLabel" :title="copy.refreshLabel"><BsIcon name="refresh" :size="18" /></BsButton>
+        <BsButton type="button" variant="secondary" size="sm" :pending="access.pending" :disabled="workspace.pending || confirming" @click="emit('logout')">{{ copy.signOutLabel }}</BsButton>
       </div>
     </header>
 
@@ -123,8 +125,8 @@ onBeforeUnmount(() => { disposed = true; password.value = ''; email.value = '' }
       </BsField>
       <template #footer>
         <p v-if="authMode === 'register'" class="bs-hq-plans__notice">{{ copy.confirmationRequired }}</p>
-        <BsButton type="button" variant="link" :disabled="access.pending" @click="changeAuthMode">{{ authMode === 'login' ? copy.registerLabel : copy.signInLabel }}</BsButton>
-        <BsButton v-if="access.status === 'denied'" type="button" variant="text" :disabled="access.pending" @click="emit('logout')">{{ copy.signOutLabel }}</BsButton>
+        <BsButton type="button" variant="secondary" :disabled="access.pending" @click="changeAuthMode">{{ authMode === 'login' ? copy.registerLabel : copy.signInLabel }}</BsButton>
+        <BsButton v-if="access.status === 'denied'" type="button" variant="secondary" :disabled="access.pending" @click="emit('logout')">{{ copy.signOutLabel }}</BsButton>
       </template>
     </BsAuthForm>
 
@@ -134,18 +136,19 @@ onBeforeUnmount(() => { disposed = true; password.value = ''; email.value = '' }
       <p v-if="workspace.status === 'loading'" class="bs-hq-plans__notice" role="status">{{ copy.loading }}</p>
       <div v-else-if="workspace.status === 'unavailable'" class="bs-hq-plans__state">
         <p role="status">{{ copy.unavailable }}</p>
-        <BsButton type="button" variant="secondary" :pending="workspace.pending" :disabled="access.pending || confirming" @click="emit('refresh')">{{ copy.refreshLabel }}</BsButton>
+        <BsButton type="button" :pending="workspace.pending" :disabled="access.pending || confirming" @click="emit('refresh')" variant="icon" :aria-label="copy.refreshLabel" :title="copy.refreshLabel"><BsIcon name="refresh" :size="18" /></BsButton>
       </div>
       <p v-else-if="!workspace.plans.length" class="bs-hq-plans__notice" role="status">{{ copy.empty }}</p>
       <div v-else class="bs-hq-plans__workspace">
-        <nav class="bs-hq-plans__list" :aria-label="copy.title">
-          <BsButton v-for="plan in workspace.plans" :key="plan.id" type="button" variant="tile" align="start" class="bs-hq-plans__choice" :aria-pressed="selected?.id === plan.id" :aria-controls="detailId" :disabled="confirming || workspace.pending" @click="selectPlan(plan)">
+        <nav v-if="!selectedPlanId" class="bs-hq-plans__list" :aria-label="copy.title">
+          <BsButton v-for="plan in workspace.plans" :key="plan.id" type="button" variant="tile" align="start" class="bs-hq-plans__choice" :aria-pressed="separateDetails ? undefined : selected?.id === plan.id" :aria-controls="separateDetails ? undefined : detailId" :disabled="confirming || workspace.pending" @click="selectPlan(plan)">
             <span class="bs-hq-plans__choice-title">{{ plan.title }}</span>
             <span class="bs-hq-plans__meta">{{ statusLabel(plan.status) }}</span>
             <span v-if="plan.legacy" class="bs-hq-plans__meta">{{ copy.legacyLabel }}</span>
           </BsButton>
         </nav>
 
+        <p v-if="selectedPlanId && !selected" role="status">{{ copy.unavailable }}</p>
         <article v-if="selected" :id="detailId" class="bs-hq-plans__detail">
           <header class="bs-hq-plans__plan-header">
             <h3>{{ selected.title }}</h3>

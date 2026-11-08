@@ -20,20 +20,20 @@ function event(body,headers={}) {
  const req=Readable.from([Buffer.from(JSON.stringify(body))]);req.headers={'content-type':'application/json',...headers}
  return {node:{req,res:{setHeader(){}}}}
 }
-test('trial BFF requires founder before dispatch and accepts only bounded exact commands',async()=>{
+test('trial BFF requires founder access and accepts only qualification commands',async()=>{
  globalThis.__trialFixture={authorized:false,calls:[]}
  const start={agentId:'AG-HR-002',skillFileId:'synthetic_skill_01',requestKey:randomUUID()}
  await assert.rejects(()=>post(event(start)),error=>error.statusCode===403)
  await assert.rejects(()=>get(event(null)),error=>error.statusCode===403)
  assert.deepEqual(globalThis.__trialFixture.calls,[])
  globalThis.__trialFixture.authorized=true
- await post(event(start))
- assert.deepEqual(globalThis.__trialFixture.calls[0],{name:'hq_begin_supervised_worker_trial',args:{p_agent_id:start.agentId,p_skill_file_id:start.skillFileId,p_request_key:start.requestKey}})
+ await assert.rejects(()=>post(event(start)),error=>error.statusCode===400)
+ assert.deepEqual(globalThis.__trialFixture.calls,[])
  const trialId=randomUUID();await post(event({trialId}))
- assert.deepEqual(globalThis.__trialFixture.calls[1],{name:'hq_issue_workforce_qualification',args:{p_trial_id:trialId}})
- for(const body of [{...start,authorized:true},{...start,skillFileId:'../private'},{trialId,workerId:randomUUID()},{trialId:'invalid'},{agentId:'AG-HR-002'}]) await assert.rejects(()=>post(event(body)),error=>error.statusCode===400)
- await assert.rejects(()=>post(event(start,{'content-length':'99999'})),error=>error.statusCode===400)
+ assert.deepEqual(globalThis.__trialFixture.calls[0],{name:'hq_issue_workforce_qualification',args:{p_trial_id:trialId}})
+ for(const body of [{trialId,workerId:randomUUID()},{trialId:'invalid'},{agentId:'AG-HR-002'}]) await assert.rejects(()=>post(event(body)),error=>error.statusCode===400)
+ await assert.rejects(()=>post(event({trialId},{'content-length':'99999'})),error=>error.statusCode===400)
  await get(event(null));assert.equal(globalThis.__trialFixture.calls.at(-1).name,'hq_workforce_trial_status')
- assert.equal(globalThis.__trialFixture.calls.length,3)
+ assert.equal(globalThis.__trialFixture.calls.length,2)
  delete globalThis.__trialFixture
 })

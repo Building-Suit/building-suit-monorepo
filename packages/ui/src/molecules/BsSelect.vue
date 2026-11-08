@@ -69,6 +69,7 @@ const ui = useUiCopy()
       root: { class: 'bs-select ls-input' }, label: { class: 'bs-select-label' },
       dropdown: { class: 'bs-select-trigger' }, overlay: { class: 'bs-select-overlay ls-card shadow-overlay' },
       header: { class: 'p-2' }, pcFilter: { root: { class: 'ls-input', 'aria-label': ui('search') + ' · ' + label } },
+      listContainer: { class: 'bs-select-list-container' },
       list: { class: 'm-0 p-0 list-none' }, option: { class: 'bs-select-option' },
       emptyMessage: { class: 'p-3 text-fg-muted' },
     }"

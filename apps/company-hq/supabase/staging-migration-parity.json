@@ -239,6 +239,23 @@
       "phase": "task-evidence-context-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "tooling/hq-agent-host/proposed-migrations/hq_task_evidence_context.sql"
+    },
+    {
+      "file": "20261108041146_hq_task_browser.sql",
+      "bytes": 3728,
+      "md5": "8250d05b379e4eefef963ebecedb5fae",
+      "sha256": "14b9e1451945373d8df2663043798c7cf385e10ebf884a3f5ca23b4d5f0f3eb1",
+      "phase": "task-browser-review-only",
+      "status": "source-only-live-approval-required"
+    },
+    {
+      "file": "20261108054818_hq_qualification_query_budget.sql",
+      "bytes": 8676,
+      "md5": "aeebe77e0c0c8ca610354bf0bf9a1c7d",
+      "sha256": "9f4838569def70f6a0abfc7c7a413b1a1573fccf3cf9048efe6dcb1554133f36",
+      "phase": "qualification-query-budget-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261108054818_hq_qualification_query_budget.sql"
     }
   ]
 }

@@ -35,7 +35,7 @@ export function canonicalRoleFallbacks(snapshot: HqAgentSnapshot): HqAgentSnapsh
   return { ...snapshot, agents: snapshot.agents.map(agent => departments[agent.id] ? { ...agent, role: departments[agent.id]!, departmentKey: departments[agent.id]!, departmentId: null } : agent) }
 }
 
-export async function installWorkforceFixture(page: Page, options: { founder?: boolean; rejectTasks?: boolean } = {}) {
+export async function installWorkforceFixture(page: Page, options: { founder?: boolean } = {}) {
   let snapshot = workforceSnapshot()
   const requests: string[] = [], taskRequests: Record<string, unknown>[] = [], chatRequests: Record<string, unknown>[] = [], unexpected: string[] = [], errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
@@ -78,13 +78,20 @@ export async function installWorkforceFixture(page: Page, options: { founder?: b
     if (path === '/api/hq/company') return json({ plans: [], departments: [{ id: departmentId, name: 'Fixture department', nameAr: 'قسم تجريبي', approvedAt: new Date(Date.now() - 1000).toISOString(), agents: snapshot.agents.slice(1).map(({ id, name }) => ({ id, name })) }] })
     if (path === '/api/brain') return json({ status: 'connected', source: 'google-drive', observedAt: new Date().toISOString(), notes: [], count: 0, partial: false })
     if (path === '/api/hq/agents') return json(snapshot)
-    if (path === '/api/hq/tasks' && request.method() === 'POST') {
-      const body = request.postDataJSON() as Record<string, unknown>
-      taskRequests.push(body)
-      if (options.rejectTasks) return json({ statusCode: 503, message: 'Fixture unavailable' }, 503)
-      const now = new Date().toISOString()
-      snapshot = { ...snapshot, tasks: [{ id: taskId, title: String(body.title), brief: String(body.brief), acceptance: String(body.acceptance), assigneeId: typeof body.assigneeId === 'string' ? body.assigneeId : null, status: 'queued', createdAt: now, updatedAt: now, completedAt: null, repairCount: 0, deliverable: null, reviewSummary: null, error: null }] }
-      return json(snapshot)
+    if (path === '/api/hq/tasks') {
+      if (request.method() === 'POST') {
+        taskRequests.push(request.postDataJSON() as Record<string, unknown>)
+        return json({ statusCode: 405 }, 405)
+      }
+      const query = new URL(request.url()).searchParams
+      const group = (status: string) => ['working', 'review'].includes(status) ? 'running' : ['queued', 'blocked'].includes(status) ? 'waiting' : 'done'
+      const office = query.get('officeId')
+      const scoped = (snapshot.tasks ?? []).filter(task => !office || (office === 'executive' ? task.assigneeId === ids[0] : snapshot.agents.some(agent => agent.id === task.assigneeId && agent.departmentId === office)))
+      const counts = { running: 0, waiting: 0, done: 0 }
+      for (const task of scoped) counts[group(task.status)]++
+      const offset = Number(query.get('offset') ?? 0)
+      const items = scoped.filter(task => query.has('taskId') ? task.id === query.get('taskId') : group(task.status) === query.get('group'))
+      return json({ counts, items: items.slice(offset, offset + Number(query.get('limit') ?? 12)) })
     }
     if (path === '/api/hq/ceo/messages' && request.method() === 'POST') {
       const body = request.postDataJSON() as Record<string, unknown>
