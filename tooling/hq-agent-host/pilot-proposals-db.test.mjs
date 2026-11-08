@@ -1819,7 +1819,7 @@ test('public research status preserves legacy rows and founder authorization, an
   await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id==='AG-RES-002'?{...a,lifecycle:'Active / Qualified'}:a))])
   await h.as('founder');const before=await h.rpc('hq_workforce_trial_status')
   await installResearchStatus(h);await h.as('founder');const after=await h.rpc('hq_workforce_trial_status')
-  assert.deepEqual(after.map(({publicResearch:_research,...row})=>row),before)
+  assert.deepEqual(after.map(row=>{const ordinary={...row};delete ordinary.publicResearch;return ordinary}),before)
   assert.equal(after.filter(row=>'publicResearch' in row).length,1)
   assert.deepEqual(await researchStatus(h),{skillFileId:skill,eligible:true,qualified:false,trialId:null,status:null,
    receiptIssued:false,reviewComplete:false,bindingCurrent:false,taskId:null})
