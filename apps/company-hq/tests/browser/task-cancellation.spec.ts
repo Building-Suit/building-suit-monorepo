@@ -13,7 +13,9 @@ async function cancellation(page: Page) {
   async function open() {
     await fixture.open(); await page.getByRole('button', { name: 'Tasks', exact: true }).click()
     await page.getByRole('button', { name: /Generated stale trial task/ }).click()
-    return page.locator('.bs-hq-layout__conversation-detail')
+    const panel = page.getByRole('complementary').filter({ has: page.getByRole('heading', { name: 'Generated stale trial task', exact: true, level: 2 }) })
+    await expect(panel).toBeVisible()
+    return panel
   }
   return { fixture, posts, handler, open }
 }
