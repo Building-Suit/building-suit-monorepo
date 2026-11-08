@@ -2,12 +2,12 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqAgentPresentation } from '../types/hqAgentsPresentation'
-import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
+import type { HqAvatarAssets, HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { createHologramRenderer } from '../utils/hologramScene'
 import type { HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
 import { islandWaterDebug } from '../utils/islandWaterConfig'
 
-const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentPresentation[]; executiveLabel?: string; selectedWorkplaceId?: string | null }>(), { opened: false, officeLayerCount: 0, departments: () => [], agents: () => [], executiveLabel: '', selectedWorkplaceId: null })
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentPresentation[]; avatarAssets?: HqAvatarAssets; executiveLabel?: string; selectedWorkplaceId?: string | null }>(), { opened: false, officeLayerCount: 0, departments: () => [], agents: () => [], executiveLabel: '', selectedWorkplaceId: null })
 const emit = defineEmits<{ activate: []; selectWorkplace: [id: string]; hoverChange: [active: boolean] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
@@ -107,7 +107,8 @@ function draw(time: number) {
   const reduced = motion?.matches ?? false
   const openTarget = props.opened ? 1 : 0
   const transitioning = Math.abs(openTarget - openAmount) > 0.001
-  const minimumFrame = transitioning || excitedTarget || time < constructionUntil ? 1000 / 60 : 1000 / 30
+  const closeAvatarView = props.camera.zoom > 1.25 && props.agents.some(agent => agent.avatar && props.avatarAssets?.[agent.avatar.body])
+  const minimumFrame = transitioning || excitedTarget || time < constructionUntil || closeAvatarView ? 1000 / 60 : 1000 / 30
   if (!reduced && !needsDraw && lastPaint && time - lastPaint + 0.5 < minimumFrame) {
     requestDraw(false)
     return
@@ -155,7 +156,7 @@ function startRenderer() {
     silver: read('--bs-color-brand-soft-silver'), pearl: read('--bs-color-brand-pearl-white'),
     gold: read('--bs-color-brand-premium-gold'),
   }
-  renderer = createHologramRenderer(canvas, palette)
+  renderer = createHologramRenderer(canvas, palette, () => props.avatarAssets, requestDraw)
   unavailable.value = !renderer
   requestDraw()
 }
@@ -178,6 +179,7 @@ watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.came
   if (typeof window !== 'undefined') requestDraw()
 })
 watch(() => props.agents, () => { if (typeof window !== 'undefined') requestDraw() }, { deep: true })
+watch(() => props.avatarAssets, () => requestDraw())
 watch(() => props.resetVersion, () => {
   elapsed = 0; lastFrame = 0; lastPaint = 0
   openAmount = props.opened ? 1 : 0
