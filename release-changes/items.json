@@ -6052,5 +6052,25 @@
       "release-changes/items.json"
     ],
     "reason": "Prepare exact staffing proposals through bounded HR/CEO stages and one immutable founder decision, with visible unavailable canonical publication, scoped proof/continuation gates, and legacy claim/API/journal compatibility; no canonical writer or live hire is enabled."
+  },
+  {
+    "id": "hq-agents-refresh-coalescing-20261108",
+    "task": "HQ-AGENTS-REFRESH-COALESCING-20261108",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/app/composables/useHqAgents.ts",
+      "apps/company-hq/tests/unit/agents-refresh-coalescing.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Await both agent and trial snapshot reads in the existing live hub queue, preserving one dirty follow-up and preventing stale failed reads from clearing a new founder scope."
   }
 ]
