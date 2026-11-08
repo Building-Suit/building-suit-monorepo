@@ -230,6 +230,15 @@
       "sha256": "7c9acf51539b5e137aa99baa583a0dcfc23ebbabeaf86581e3a2571ff7d242e4",
       "status": "source-only-live-approval-required",
       "phase": "staffing-approval-review-only"
+    },
+    {
+      "file": "20261108030332_hq_task_evidence_context.sql",
+      "bytes": 6678,
+      "md5": "9e5178d3b20a573b198f9c63b08c612a",
+      "sha256": "2f537c5389a1fc037a28a3e01cb13bdb03cbb7f32c94bb197bce00a1d8a48645",
+      "phase": "task-evidence-context-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "tooling/hq-agent-host/proposed-migrations/hq_task_evidence_context.sql"
     }
   ]
 }

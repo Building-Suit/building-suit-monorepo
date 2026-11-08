@@ -683,21 +683,29 @@ test('real delivery path commits lease-bound trial proof before independent revi
 })
 
 
-async function trialSetup(skills,withTrialPacket=true) {
+async function trialSetup(skills,withTrialPacket=true,agentId='AG-HR-002',managerId='AG-HR-001') {
  const h=await setup(true,true,true,true,false,withTrialPacket)
  await h.db.exec('reset role')
  for(const skill of skills)await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
    values($1,'1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic skill.md','text/markdown','1',false,true)`,[skill])
  await h.db.query(`update hq_private.brain_files set source_version='1' where file_id='profile_source_2'`)
- const configured=roster.map(a=>a.id==='AG-HR-002'?{...a,skillFileIds:skills}:a)
+ const configured=roster.map(a=>a.id===agentId?{...a,skillFileIds:skills}:a)
+ if(!configured.some(a=>a.id===agentId)){
+  await h.db.query(`insert into hq_private.brain_files(file_id,root_id,parent_ids,name,mime_type,source_version,trashed,in_scope)
+   values('synthetic_research_profile','1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8','{}','Synthetic Research profile.md','text/markdown','1',false,true)`)
+  configured.push({id:agentId,name:'Synthetic Research Worker',role:'Fixture',departmentKey:'research-market-intelligence',profileFileId:'synthetic_research_profile',
+   skillFileIds:skills,lifecycle:'configured trial pending',model:'gpt-6.1-terra',effort:'medium',managerId,modelTier:'T1_WORKER'})
+ }
  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured)])
  return {h,configured}
 }
-async function claimTrialWork(h,skill) {
- await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',['AG-HR-002',skill,randomUUID()])
+async function claimTrialWork(h,skill,agentId='AG-HR-002',managerId='AG-HR-001') {
+ await h.as('founder');const trial=await h.rpc('hq_begin_supervised_worker_trial',[agentId,skill,randomUUID()])
  let j=await h.claim();assert.equal(j.context.mode,'task-route')
- await h.finish(j,{assigneeId:'AG-HR-001',reason:'Head supervises only the selected skill exercise.',message:'@Employee 1 will supervise.'})
- j=await h.claim();await h.finish(j,{message:'@Employee 2 complete the selected internal exercise.',delegateId:'AG-HR-002'})
+ const manager=j.context.roster.find(a=>a.id===managerId)
+ await h.finish(j,{assigneeId:managerId,reason:'Head supervises only the selected skill exercise.',message:'@'+manager.name+' will supervise.'})
+ j=await h.claim();const recipient=j.context.roster.find(a=>a.id===agentId)
+ await h.finish(j,{message:'@'+recipient.name+' complete the selected internal exercise.',delegateId:agentId})
  j=await h.claim();assert.equal(j.context.mode,'trial-start');await h.finish(j,{message:'I will test only the selected assigned skill.'})
  j=await h.claim();assert.equal(j.context.mode,'worker-trial');assert.deepEqual(j.context.agent.skillFileIds,[skill])
  return {j,trial}
@@ -854,8 +862,8 @@ test('trial packet keeps the head own authorized skill and refuses oversized pac
 const delivery=(h,entry,write=async()=>{})=>deliverWorkerEntry({workerId:worker,retryWait:async()=>{},write,rpc:async(name,input)=>{
  await h.as('worker');return h.rpc(name,Object.values(input).map(v=>v!==null&&typeof v==='object'?JSON.stringify(v):v))
 }},entry)
-async function passSkillTrial(h,skill) {
- const {j,trial}=await claimTrialWork(h,skill)
+async function passSkillTrial(h,skill,agentId='AG-HR-002',managerId='AG-HR-001') {
+ const {j,trial}=await claimTrialWork(h,skill,agentId,managerId)
  const output=await fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0'})
  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,
    modelBindingEvidence:output.modelBindingEvidence,modelExecutionEvidence:output.modelExecutionEvidence})
@@ -866,6 +874,94 @@ async function passSkillTrial(h,skill) {
  await h.as('founder');await h.rpc('hq_issue_workforce_qualification',[trial.trialId])
  return trial
 }
+
+const evidenceMigration='20261108030332_hq_task_evidence_context.sql'
+async function installTaskEvidence(h) {
+ await h.db.exec('reset role')
+ await h.db.exec("update hq_private.brain_files set source_version='1' where source_version is null")
+ for(const file of ['20261105171608_hq_office_observations.sql','20261107133124_hq_worker_status_compatibility.sql'])await h.db.exec(await readFile(new URL(file,root),'utf8'))
+ await h.db.exec(await readFile(new URL('20261107231929_hq_staffing_approval_workflow.sql',root),'utf8'))
+ const before=(await h.db.query("select 'hq_private.worker_claim_before_meetings(uuid,integer)'::regprocedure::oid oid")).rows[0].oid
+ await h.db.exec(await readFile(new URL(evidenceMigration,root),'utf8'))
+ assert.equal((await h.db.query("select 'hq_private.worker_claim_before_meetings(uuid,integer)'::regprocedure::oid oid")).rows[0].oid,before)
+}
+test('ordinary repair retains original artifact/job/digest receipts and current subject qualification through actual claims',async()=>{
+ const skill='synthetic_evidence_skill',author='AG-RES-099',manager='AG-RES-001',{h,configured}=await trialSetup([skill],true,author,manager);try{
+  await installTaskEvidence(h)
+  await passSkillTrial(h,skill,author,manager)
+  await h.as('worker');await h.rpc('hq_worker_sync_roster',[worker,JSON.stringify(configured.map(a=>a.id===author?{...a,lifecycle:'Active; bounded drafting only'}:a))])
+  await h.as('founder');const snapshot=await h.rpc('hq_create_task',['Synthetic evidence continuity','One internal draft from observed public evidence.','Preserve missing excerpts and original provenance.',manager,randomUUID()])
+  const task=snapshot.tasks.find(t=>t.title==='Synthetic evidence continuity')
+  let j=await h.claim();assert.equal(j.context.mode,'task-route')
+  await h.finish(j,{assigneeId:manager,reason:'Head scopes the one internal draft.',message:'@Employee 4 please scope.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-ack')
+  await h.finish(j,{message:'@Synthetic Research Worker prepare the bounded draft.',delegateId:author})
+  j=await h.claim();assert.equal(j.context.mode,'task-start');await h.finish(j,{message:'I will use only observed sources.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-work');assert.equal(j.context.assignee.qualified,true)
+  const firstJob=j.id,receipts=[{version:1,eventId:'native_fixture_original',tool:'web_search',action:'search',queries:['synthetic public query'],
+    sources:[{url:'https://example.com/observed',title:'Observed fixture',excerpt:'Observed public fixture text.'},{url:'https://example.com/unavailable',title:'No excerpt observed',excerpt:null}],observedAt:'2026-11-08T00:00:00.000Z',truncated:false}]
+  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'Synthetic draft with deliberately insufficient detail.',error:null,evidence:receipts})
+  j=await h.claim();assert.equal(j.context.mode,'head-review');assert.equal(j.context.assignee.id,author);assert.equal(j.context.assignee.qualified,true)
+  assert.equal(j.context.artifact.agentId,author);assert.equal(j.context.artifact.authorQualified,true);assert.equal(j.context.artifact.jobId,firstJob)
+  const original={id:j.context.artifact.id,jobId:firstJob,digest:j.context.artifact.digest}
+  assert.deepEqual(j.context.artifact.toolEvidence,receipts)
+  assert.ok(j.context.taskDelegations.some(x=>x.kind==='task-route'&&x.assigneeId===manager))
+  assert.ok(j.context.taskDelegations.some(x=>x.kind==='task-ack'&&x.agentId===manager&&x.delegateId===author))
+  await h.finish(j,{accepted:false,summary:'Remove unsupported details; preserve the original evidence boundaries.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-start');await h.finish(j,{message:'I will repair without claiming fresh research.'})
+  j=await h.claim();assert.equal(j.context.mode,'task-work')
+  let prior=j.context.task_history.find(x=>x.id===original.id)
+  assert.deepEqual({id:prior.id,jobId:prior.jobId,digest:prior.digest},original);assert.deepEqual(prior.toolEvidence,receipts)
+  await delivery(h,{job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'Repaired bounded draft; earlier receipt remains historical and a missing excerpt remains unavailable.',error:null,evidence:[]})
+  j=await h.claim();assert.equal(j.context.mode,'head-review');assert.deepEqual(j.context.artifact.toolEvidence,[])
+  prior=j.context.task_history.find(x=>x.id===original.id);assert.deepEqual(prior.toolEvidence,receipts);assert.equal(prior.jobId,firstJob)
+  assert.equal(j.context.taskHistoryTruncated,false);assert.equal(j.context.taskDelegationsTruncated,false)
+  await h.finish(j,{accepted:true,summary:'The repaired artifact respects its evidence limits.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'ceo-review');assert.equal(j.context.artifact.authorQualified,true);assert.equal(j.context.assignee.qualified,true)
+  assert.deepEqual(j.context.task_history.find(x=>x.id===original.id).toolEvidence,receipts)
+  await h.finish(j,{accepted:true,summary:'Bounded internal acceptance met.',artifactDigest:j.context.artifact.digest})
+  j=await h.claim();assert.equal(j.context.mode,'task-report');assert.equal(j.context.task.id,task.id)
+  assert.deepEqual(j.context.task_history.find(x=>x.id===original.id).toolEvidence,receipts)
+  await h.db.exec('reset role')
+  assert.equal((await h.db.query('select evidence from hq_private.native_tool_receipts where job_id=$1',[firstJob])).rows[0].evidence[0].eventId,'native_fixture_original')
+ }finally{await h.db.close()}
+})
+test('evidence helper enforces task/founder/conversation boundaries, private ACLs and pre-lease capacity',async()=>{
+ const h=await setup(true,true,true,true);try{
+  await installTaskEvidence(h)
+  await h.as('founder');const snapshot=await h.rpc('hq_create_task',['Synthetic scoped evidence','Bounded internal draft.','No external action.','AG-RES-001',randomUUID()])
+  const task=snapshot.tasks.find(x=>x.title==='Synthetic scoped evidence')
+  let j=await h.claim();await h.finish(j,{assigneeId:'AG-RES-001',reason:'Research head drafts internally.',message:'@Employee 4 draft.'})
+  j=await h.claim();await h.finish(j,{message:'I will draft.',delegateId:null})
+  j=await h.claim();assert.equal(j.context.mode,'task-work')
+  await h.finish(j,'Observed internal fixture only.')
+  j=await h.claim();assert.equal(j.context.mode,'ceo-review')
+  await h.db.exec('reset role')
+  const row=(await h.db.query('select to_jsonb(j) j from public.hq_agent_jobs j where id=$1',[j.id])).rows[0].j
+  const call=async(job,context=j.context)=>(await h.db.query('select hq_private.task_evidence_context(jsonb_populate_record(null::public.hq_agent_jobs,$1::jsonb),$2::jsonb) context',[JSON.stringify(job),JSON.stringify(context)])).rows[0].context
+  for(const change of [{founder_user_id:randomUUID()},{conversation_id:randomUUID()},{founder_message_id:randomUUID()}])await assert.rejects(()=>call({...row,...change}),/HQ_TASK_EVIDENCE_SCOPE_INVALID/)
+  const skipped={...j.context,mode:'task-route',task_history:null}
+  assert.deepEqual(await call({...row,kind:'task-route'},skipped),skipped)
+  const mismatchedAuthor={...j.context,artifact:{...j.context.artifact,id:randomUUID()}}
+  assert.deepEqual((await call(row,mismatchedAuthor)).artifact,mismatchedAuthor.artifact)
+  const tight={...j.context,task_history:[],taskDelegations:[],syntheticRequired:''}
+  const baselineBytes=(await h.db.query('select octet_length($1::jsonb::text) n',[JSON.stringify(tight)])).rows[0].n
+  tight.syntheticRequired='x'.repeat(245700-baselineBytes)
+  const bounded=await call(row,tight)
+  assert.equal((await h.db.query('select octet_length($1::jsonb::text)<=245760 ok',[JSON.stringify(bounded)])).rows[0].ok,true)
+  assert.ok(bounded.taskHistoryTruncated||bounded.taskDelegationsTruncated,'optional omissions are explicit before lease admission')
+  await h.as('worker');await assert.rejects(()=>h.db.query('select hq_private.task_evidence_context(null::public.hq_agent_jobs,$1::jsonb)',['{}']),/permission denied/)
+  await h.db.exec('reset role')
+  await h.db.exec("create or replace function hq_private.workforce_qualification_context(p_agent_id text) returns jsonb language sql stable security definer set search_path='' as $$select jsonb_build_object('syntheticRequired',repeat('x',250000))$$")
+  // Release the fixture lease only; the next actual claim must block before allocating a new lease.
+  await h.db.query("update public.hq_agent_jobs set status='queued',worker_id=null,lease_token=null,lease_expires_at=null,started_at=null where id=$1",[j.id])
+  assert.equal(await h.claim(),null)
+  await h.db.exec('reset role')
+  const blocked=(await h.db.query('select status,error,lease_token from public.hq_agent_jobs where id=$1',[j.id])).rows[0]
+  assert.deepEqual(blocked,{status:'blocked',error:'context-capacity',lease_token:null})
+  assert.equal((await h.db.query("select count(*)::int n from public.hq_agent_jobs where task_id=$1 and status='working'",[task.id])).rows[0].n,0)
+ }finally{await h.db.close()}
+})
 test('actual emitted pre-turn failure proof settles durably without qualification or poisoned drain',async()=>{
  const {h}=await trialSetup(['failure_skill_01']);try{
   for(const appServer of [{nullEffort:true},{modelMismatch:true}]){
