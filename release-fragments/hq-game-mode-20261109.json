@@ -22,6 +22,7 @@
     "apps/company-hq/public/avatars/hq-game-pirate.glb",
     "apps/company-hq/public/avatars/hq-game-witch.glb",
     "apps/company-hq/public/avatars/hq-game-wizard.glb",
+    "packages/ui/package.json",
     "packages/ui/src/organisms/BsHologramScene.vue",
     "packages/ui/src/templates/BsHqLayoutPage.vue",
     "packages/ui/src/types/hqAgentsPresentation.ts",

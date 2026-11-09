@@ -466,6 +466,7 @@
     "./molecules/BsHqWorkActivity": "./src/molecules/BsHqWorkActivity.vue",
     "./utils/hologramTerrainMaterial": "./src/utils/hologramTerrainMaterial.ts",
     "./utils/hqAgentCharacters": "./src/utils/hqAgentCharacters.ts",
+    "./utils/hqIslandGame": "./src/utils/hqIslandGame.ts",
     "./utils/hqIslandGeometry": "./src/utils/hqIslandGeometry.ts",
     "./utils/hqOrgChart": "./src/utils/hqOrgChart.ts",
     "./utils/hqTaskBrowserSource": "./src/utils/hqTaskBrowserSource.ts",
