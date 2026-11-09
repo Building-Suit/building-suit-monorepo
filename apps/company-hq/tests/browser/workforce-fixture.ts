@@ -75,6 +75,8 @@ export async function installWorkforceFixture(page: Page, options: { founder?: b
     if (path === '/api/hq/trials') return json([])
     if (path === '/api/hq/staffing') return json({ version: 1, canonicalWriter: 'unavailable', workflows: [] })
     if (path === '/api/hq/access') return json(options.founder === false ? { status: 'anonymous' } : { status: 'founder', user: { displayName: 'Founder fixture', detailLabel: 'founder@example.invalid' } })
+    if (path === '/api/hq/push/config' && request.method() === 'GET') return json({ publicKey: null })
+    if (path === '/api/hq/plans/backlog' && request.method() === 'GET') return json([])
     if (path === '/api/hq/company') return json({ plans: [], departments: [{ id: departmentId, name: 'Fixture department', nameAr: 'قسم تجريبي', approvedAt: new Date(Date.now() - 1000).toISOString(), agents: snapshot.agents.slice(1).map(({ id, name }) => ({ id, name })) }] })
     if (path === '/api/brain') return json({ status: 'connected', source: 'google-drive', observedAt: new Date().toISOString(), notes: [], count: 0, partial: false })
     if (path === '/api/hq/agents') return json(snapshot)
