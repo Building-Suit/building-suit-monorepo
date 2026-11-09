@@ -243,6 +243,25 @@ test('real CLI retail trial preserves current salon history, binds category/modu
    assert.equal((await currentStatus(h)).status,'failed');assert.equal((await currentStatus(h)).qualified,false)
    await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_retail_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
   } finally { await h.db.exec('rollback;reset role') }
+  for(const code of ['discovery-access-denied','discovery-rate-limited','discovery-response-too-large','discovery-dns-rejected','discovery-source-unavailable','discovery-result-invalid','discovery-budget-exhausted','discovery-unavailable-no-retry']){
+   await h.db.exec('reset role;begin')
+   try {
+    const item={id:'diagnostic-fixture',type:'mcpToolCall',server:'hq_public_discovery',tool:'public_business_discovery',arguments:{},status:'completed',error:null,result:{isError:true,content:[{type:'text',text:code}]}}
+    let failure
+    try { await fake([],config=>invokeCodex({...config,id:worker},j,[],AbortSignal.timeout(5000)),{cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,publicDiscoveryCategory:'clothing',events:[{method:'item/completed',params:{item}}],turnItems:[item]}}) }
+    catch(error) { failure=error }
+    assert.equal(failure?.code,code);assert.deepEqual(failure.modelBindingEvidence.observedErrors,[code])
+    const entry={job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:'',error:code,evidence:[],modelBindingEvidence:failure.modelBindingEvidence,modelExecutionEvidence:null}
+    const result=await delivery(h,entry)
+    assert.equal(result.trialReceiptAccepted,true)
+    assert.deepEqual(await delivery(h,entry),result,'failed diagnostic delivery retries do not rerun inference')
+    assert.equal((await currentStatus(h)).status,'failed');assert.equal((await currentStatus(h)).qualified,false)
+    await h.db.exec('reset role')
+    assert.equal((await h.db.query('select count(*)::int n from hq_private.public_retail_receipts where job_id=$1',[j.id])).rows[0].n,0,'an error diagnostic is not a public-source receipt')
+    assert.deepEqual((await h.db.query('select outcome,observed_errors from hq_private.workforce_trial_host_execution_receipts where worker_job_id=$1',[j.id])).rows,[{outcome:'failed',observed_errors:[code]}])
+    await h.as('founder');await assert.rejects(()=>h.rpc('hq_issue_public_retail_qualification',[trial.trialId]),/HQ_TRIAL_EVIDENCE_INCOMPLETE/)
+   } finally { await h.db.exec('rollback;reset role') }
+  }
   const output=await publicDiscoveryOutput(j)
   assert.equal(output.evidence[0].policyId,'exa-public-retail-discovery-v1')
   assert.equal(output.evidence[0].queryId,'new-cairo-retail-clothing-v1')
