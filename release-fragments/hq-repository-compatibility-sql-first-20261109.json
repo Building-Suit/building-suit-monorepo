@@ -1,0 +1,26 @@
+{
+  "id": "hq-repository-compatibility-sql-first-20261109",
+  "task": "HQ-REPOSITORY-COMPATIBILITY-SQL-FIRST-20261109",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261109024147_hq_repository_worker_compatibility.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "tooling/hq-agent-host/proposed-migrations/hq_repository_worker_compatibility.sql",
+    "tooling/hq-agent-host/public-repository-db.test.mjs",
+    "tooling/hq-agent-host/test-fixtures/repository-compatible-worker.mjs.txt",
+    "docs/work-packages/company-hq/REPOSITORY-COMPATIBILITY-SQL-FIRST-20261109.md",
+    "tooling/hq-agent-host/test-fixtures/README.md"
+  ],
+  "reason": "Prepare exact private two-worker SQL compatibility through GitHub staging only. Preserve current active worker, immutable historical proof and ACLs; pin future source as inert test data. No live migration or host rollout."
+}
