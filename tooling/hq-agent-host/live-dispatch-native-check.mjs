@@ -1,15 +1,15 @@
 /** Native PostgreSQL concurrency tests. Fixed disposable endpoint; no hosted URL accepted. */
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { setTimeout as delay } from 'node:timers/promises'
-import { setup, asWorker, enqueue, worker } from './live-dispatch-native-fixture.mjs'
+import { setup, asWorker, enqueue, worker, activationForFixture } from './live-dispatch-native-fixture.mjs'
 const require = createRequire(new URL('../../package.json', import.meta.url))
 const { Client } = require('pg')
 const clients=[]
-async function connect(name) {
-  const client=new Client({host:'127.0.0.1',port:55439,database:'hq_live_dispatch_disposable',user:'postgres',password:'disposable-only',application_name:name,connectionTimeoutMillis:5000})
+async function connect(name,user='postgres') {
+  assert.ok(['postgres','fixture_admin'].includes(user),'only fixed disposable fixture identities are supported')
+  const client=new Client({host:'127.0.0.1',port:55439,database:'hq_live_dispatch_disposable',user,password:'disposable-only',application_name:name,connectionTimeoutMillis:5000,query_timeout:25000,statement_timeout:20000})
   await client.connect(); clients.push(client); return client
 }
 async function until(fn,message,timeout=10000) {
@@ -18,6 +18,20 @@ async function until(fn,message,timeout=10000) {
   assert.fail(message)
 }
 async function one(db,sql,args=[]) { return (await db.query(sql,args)).rows[0] }
+async function runCase(t,name,fn) {
+  let failure
+  await t.test(name,async()=>{
+    try { await fn() } catch(error) { failure=error; throw error }
+  })
+  // node:test records a failed child but otherwise lets its parent continue.
+  // Do not run dependent phases after an invalid baseline or failed activation.
+  if(failure) throw failure
+}
+async function withMessageLock(hold,fn) {
+  await hold.query('begin; lock table realtime.messages in access exclusive mode')
+  try { return await fn() } finally { await hold.query('rollback') }
+}
+
 async function blocked(db,pid,relation) {
   return until(async()=>{
     const row=await one(db,`select a.wait_event_type,a.wait_event,l.mode,l.granted,pg_blocking_pids(a.pid) blockers
@@ -53,13 +67,32 @@ async function assertServiceCannotFlush(admin, service) {
 
 // One fixture and ordered subtests deliberately distinguish baseline from proposal.
 test('native HQ claim and pg_cron publication isolation', {timeout:180000}, async t=>{
-  const admin=await connect('hq-native-admin'), hold=await connect('hq-native-lock'), claim=await connect('hq-native-claim'), publisher=await connect('hq-native-publisher'), second=await connect('hq-native-second')
-  t.after(async()=>{ for(const db of clients) { await db.query('rollback').catch(()=>{}); await db.end().catch(()=>{}) } })
-  await setup(admin)
+  // pg Client.end() force-disconnects active queries; server disconnect rolls
+  // back held locks. Never queue ROLLBACK behind a blocked query in teardown.
+  t.after(async()=>{ await Promise.all(clients.map(db=>db.end().catch(()=>{}))) })
+  const bootstrap=await connect('hq-native-bootstrap','fixture_admin')
+  // initdb's bootstrap identity must remain a superuser. Application postgres
+  // is a separate disposable identity, elevated only to install the fixture.
+  await bootstrap.query("create role postgres login superuser password 'disposable-only'")
+  const installer=await connect('hq-native-installer')
+  await setup(installer)
+  // Disposable orchestration only. Fresh application-owner connections below
+  // genuinely lack superuser privileges. No application role inherits the
+  // owner; only its verified existing settings-read capability is modeled.
+  await bootstrap.query(`create role fixture_provider nologin;
+    alter table realtime.messages owner to fixture_provider;
+    alter function realtime.send(jsonb,text,text,boolean) owner to fixture_provider;
+    grant usage on schema realtime to postgres;
+    grant select,insert on realtime.messages to postgres;
+    grant execute on function realtime.send(jsonb,text,text,boolean) to postgres;
+    grant pg_read_all_settings to postgres;
+    alter role postgres nosuperuser bypassrls;`)
+  const admin=await connect('hq-native-admin','fixture_admin'), hold=await connect('hq-native-lock','fixture_admin'), claim=await connect('hq-native-claim','fixture_admin'), publisher=await connect('hq-native-publisher'), second=await connect('hq-native-second','fixture_admin'), otherPublisher=await connect('hq-native-competing-publisher')
+  assert.deepEqual(await one(publisher,"select current_user role,rolsuper,rolbypassrls from pg_roles where rolname=current_user"),{role:'postgres',rolsuper:false,rolbypassrls:true})
   const cronMode=(await one(admin,"select current_setting('cron.use_background_workers') mode")).mode
   if(process.env.HQ_NATIVE_CRON_MODE) assert.equal(cronMode,process.env.HQ_NATIVE_CRON_MODE)
   t.diagnostic(`Actual pg_cron execution mode: background workers ${cronMode}`)
-  await t.test('provider augments payload ID, independently generates row ID, and warns on ordinary failure', async()=>{
+  await runCase(t,'provider augments payload ID, independently generates row ID, and warns on ordinary failure', async()=>{
     await admin.query(`select realtime.send('{"kind":"agents"}','invalidate','hq-live',true)`)
     const auto=await one(admin,"select id,payload from realtime.messages order by inserted_at desc limit 1")
     assert.equal(auto.payload.id,auto.id)
@@ -77,8 +110,8 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
   })
   const job=await enqueue(admin)
   await asWorker(claim)
-  await t.test('baseline actual claim blocks on managed messages and cancellation rolls back its lease', async()=>{
-    await hold.query('begin; lock table realtime.messages in access exclusive mode')
+  await runCase(t,'baseline actual claim blocks on managed messages and cancellation rolls back its lease', async()=>{
+    await withMessageLock(hold,async()=>{
     const result=claim.query('select public.hq_worker_repository_claim($1,300,1) result',[worker]).then(x=>({value:x}),error=>({error}))
     await blocked(admin,claim.processID,'realtime.messages')
     assert.equal((await one(admin,'select status from public.hq_agent_jobs where id=$1',[job])).status,'queued')
@@ -87,18 +120,71 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     await hold.query('rollback')
     const state=await one(admin,'select status,lease_token,worker_id from public.hq_agent_jobs where id=$1',[job])
     assert.deepEqual(state,{status:'queued',lease_token:null,worker_id:null})
+    })
   })
-  await t.test('baseline worker_presence independently blocks on managed messages',async()=>{
-    await hold.query('begin; lock table realtime.messages in access exclusive mode')
+  await runCase(t,'baseline worker_presence independently blocks on managed messages',async()=>{
+    await withMessageLock(hold,async()=>{
     const result=claim.query('select public.hq_worker_presence($1)',[worker]).then(x=>({value:x}),error=>({error}))
     await blocked(admin,claim.processID,'realtime.messages')
     await admin.query('select pg_cancel_backend($1)',[claim.processID])
     assert.equal((await result).error?.code,'57014'); await hold.query('rollback')
+    })
   })
   const legacy=(await one(admin,"insert into hq_private.live_invalidations(kind) values('agents') returning id")).id
-  await admin.query(await readFile(new URL('./proposed-migrations/hq_live_dispatch.sql',import.meta.url),'utf8'))
-  await t.test('candidate actual claim and presence finish with messages exclusively locked', async()=>{
-    await hold.query('begin; lock table realtime.messages in access exclusive mode')
+  const activation=await activationForFixture(admin)
+  for(const substitution of activation.substitutions) t.diagnostic(`Explicit fixture-only guard substitution: ${JSON.stringify(substitution)}`)
+  const baselineCatalog=()=>one(admin,`select
+    (select jsonb_agg(to_jsonb(i) order by id) from hq_private.live_invalidations i) legacy,
+    (select jsonb_agg(jsonb_build_array(attname,atttypid) order by attnum) from pg_attribute
+      where attrelid='hq_private.live_invalidations'::regclass and attnum>0 and not attisdropped) columns,
+    (select jsonb_agg(jsonb_build_array(proname,md5(prosrc),proacl) order by oid) from pg_proc
+      where pronamespace='hq_private'::regnamespace) routines,
+    to_regclass('hq_private.live_dispatch_state') state,
+    (select count(*)::int from cron.job where jobname='hq-live-once') jobs`)
+  async function rejectedActivation(sql,pattern,prepare=null) {
+    const before=await baselineCatalog()
+    await publisher.query('begin')
+    try {
+      if(prepare) await publisher.query(prepare)
+      await assert.rejects(publisher.query(sql),pattern)
+    } finally { await publisher.query('rollback') }
+    assert.deepEqual(await baselineCatalog(),before,'failed activation must roll back all catalog, outbox, and cron changes')
+  }
+  await runCase(t,'untouched hosted guard rejects disposable database before persistent changes',async()=>{
+    await rejectedActivation(activation.original,/HQ_LIVE_ACTIVATION_OWNER_DATABASE_MISMATCH/)
+  })
+  await runCase(t,'statement-by-statement autocommit cannot activate without retained transaction snapshot',async()=>{
+    const boundary=activation.sql.indexOf('DO $preflight$')
+    assert.ok(boundary>0)
+    await publisher.query(activation.sql.slice(0,boundary))
+    await rejectedActivation(activation.sql.slice(boundary),/HQ_LIVE_ACTIVATION_OUTER_TRANSACTION_REQUIRED/)
+  })
+  await runCase(t,'activation rejects cron/object collisions and inherited default grants atomically',async()=>{
+    await rejectedActivation(activation.sql,/HQ_LIVE_ACTIVATION_JOB_NAME_COLLISION/,
+      "select cron.schedule('hq-live-once','0 0 1 1 *','select 1'); update cron.job set active=false where jobname='hq-live-once'")
+    await rejectedActivation(activation.sql,/HQ_LIVE_ACTIVATION_OBJECT_COLLISION/,
+      'create table hq_private.live_dispatch_state(fixture boolean)')
+    for(const grant of ['grant all on tables','grant execute on functions']) {
+      await rejectedActivation(activation.sql,/HQ_LIVE_ACTIVATION_DEFAULT_ACL_REVIEW_REQUIRED/,
+        `alter default privileges in schema hq_private ${grant} to anon,authenticated,service_role`)
+    }
+  })
+  await runCase(t,'failure after exact proposal DDL rolls back all activation changes',async()=>{
+    const probe=activation.sql.replace('DO $postflight$',
+      "DO $fixture_rollback$ begin raise exception 'FIXTURE_POST_DDL_ROLLBACK'; end $fixture_rollback$;\nDO $postflight$")
+    await rejectedActivation(probe,/FIXTURE_POST_DDL_ROLLBACK/)
+  })
+  await runCase(t,'complete guarded activation succeeds with explicit fixture-only expectations',async()=>{
+    await publisher.query('begin')
+    try { await publisher.query(activation.sql); await publisher.query('commit') }
+    catch(error) { await publisher.query('rollback'); throw error }
+    assert.equal((await one(admin,"select count(*)::int n from cron.job where jobname='hq-live-once'")).n,0)
+    for(const role of ['anon','authenticated','service_role']) {
+      assert.equal((await one(admin,"select has_table_privilege($1,'hq_private.live_dispatch_state','SELECT,INSERT,UPDATE,DELETE') allowed",[role])).allowed,false)
+    }
+  })
+  await runCase(t,'candidate actual claim and presence finish with messages exclusively locked', async()=>{
+    await withMessageLock(hold,async()=>{
     await claim.query("set statement_timeout='1500ms'")
     const result=await one(claim,'select public.hq_worker_repository_claim($1,300,1) result',[worker])
     assert.equal(result.result.job.id,job)
@@ -108,9 +194,10 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     const events=(await admin.query('select distinct event from hq_private.live_invalidations where format_version=2')).rows.map(x=>x.event)
     assert.ok(events.includes('presence')); assert.ok(events.includes('invalidate'))
     await pauseCron(admin); await hold.query('rollback')
-    await claim.query('set statement_timeout=0')
+    await claim.query("set statement_timeout='20s'")
+    })
   })
-  await t.test('legacy remains quarantined and application roles cannot call publisher or enqueue', async()=>{
+  await runCase(t,'legacy remains quarantined and application roles cannot call publisher or enqueue', async()=>{
     await assert.rejects(admin.query('select hq_private.live_deliver($1)',[legacy]),/HQ_LIVE_LEGACY_UNVERIFIED/)
     for(const role of ['anon','authenticated','service_role']) {
       await second.query(`set role ${role}`)
@@ -123,9 +210,9 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     assert.equal((await one(admin,'select delivered_at from hq_private.live_invalidations where id=$1',[legacy])).delivered_at,null)
   })
   await resetDispatch(admin)
-  await t.test('publisher cancellation preserves committed attempt and retry but not publication', async()=>{
+  await runCase(t,'publisher cancellation preserves committed attempt and retry but not publication', async()=>{
     await emit(admin)
-    await hold.query('begin; lock table realtime.messages in access exclusive mode')
+    await withMessageLock(hold,async()=>{
     const pending=publisher.query('call hq_private.live_dispatch_tick()').then(x=>({value:x}),error=>({error}))
     await blocked(admin,publisher.processID,'realtime.messages')
     const row=await one(admin,'select attempts,attempt_token,delivered_at from hq_private.live_invalidations where format_version=2')
@@ -138,17 +225,18 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     assert.equal((await one(admin,'select attempts from hq_private.live_invalidations where format_version=2')).attempts,1)
     assert.equal((await one(admin,'select count(*)::int n from realtime.messages')).n,0)
     await assertServiceCannotFlush(admin,second)
+    })
   })
   await resetDispatch(admin)
-  await t.test('two publishers serialize exact receipt and a new generation retains its wake',async()=>{
+  await runCase(t,'two publishers serialize exact receipt and a new generation retains its wake',async()=>{
     await emit(admin)
-    await hold.query('begin; lock table realtime.messages in access exclusive mode')
+    await withMessageLock(hold,async()=>{
     const first=publisher.query('call hq_private.live_dispatch_tick()')
     await blocked(admin,publisher.processID,'realtime.messages')
-    await second.query('call hq_private.live_dispatch_tick()')
+    await otherPublisher.query('call hq_private.live_dispatch_tick()')
     const item=await one(admin,'select id from hq_private.live_invalidations where format_version=2')
-    const competing=second.query('select hq_private.live_deliver($1)',[item.id])
-    await until(async()=> (await one(admin,"select pg_blocking_pids($1) blockers",[second.processID])).blockers.includes(publisher.processID),'second publisher did not wait for the exact outbox row')
+    const competing=otherPublisher.query('select hq_private.live_deliver($1)',[item.id])
+    await until(async()=> (await one(admin,"select pg_blocking_pids($1) blockers",[otherPublisher.processID])).blockers.includes(publisher.processID),'second publisher did not wait for the exact outbox row')
     await emit(admin,'company') // Must not wait for transport: state lock was committed.
     await hold.query('rollback'); await first; await competing; await pauseCron(admin)
     const state=await one(admin,'select generation,due_at from hq_private.live_dispatch_state')
@@ -159,9 +247,10 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
       where i.format_version=2 group by i.id`)).rows
     assert.equal(receipts.length,2)
     for(const row of receipts) { assert.ok(row.delivered_at); assert.equal(row.messages,1) }
+    })
   })
   await resetDispatch(admin)
-  await t.test('stale-token reconciliation preserves newer pending and delivered outcomes',async()=>{
+  await runCase(t,'stale-token reconciliation preserves newer pending and delivered outcomes',async()=>{
     await emit(admin)
     // Deterministically reproduce the committed reservation gap. These writes
     // affect only the fixed disposable fixture, never hosted application state.
@@ -189,7 +278,7 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     assert.equal((await one(admin,"select count(*)::int n from cron.job where jobname='hq-live-once'")).n,0)
   })
   await resetDispatch(admin)
-  await t.test('same-kind wrong-ID transport row is not an exact receipt',async()=>{
+  await runCase(t,'same-kind wrong-ID transport row is not an exact receipt',async()=>{
     await admin.query(`create function realtime.fixture_wrong_id() returns trigger language plpgsql as $$
       begin new.payload:=jsonb_set(new.payload,'{id}',to_jsonb(gen_random_uuid())); return new; end $$;
       create trigger fixture_wrong_id before insert on realtime.messages for each row execute function realtime.fixture_wrong_id();`)
@@ -202,7 +291,7 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     await admin.query('drop trigger fixture_wrong_id on realtime.messages; drop function realtime.fixture_wrong_id()')
   })
   await resetDispatch(admin)
-  await t.test('warnings cannot fabricate receipt; bounded failures open circuit and new events cannot reset it',async()=>{
+  await runCase(t,'warnings cannot fabricate receipt; bounded failures open circuit and new events cannot reset it',async()=>{
     await admin.query("alter table realtime.messages add constraint fixture_failure check (event='never')")
     await emit(admin)
     for(let attempt=1;attempt<=6;attempt++) {
@@ -221,7 +310,36 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
     await admin.query('alter table realtime.messages drop constraint fixture_failure')
   })
   await resetDispatch(admin)
-  await t.test('actual configured pg_cron mode executes COMMIT-capable CALL then removes its exhausted wake',async()=>{
+  await runCase(t,'long retries retain bounded recurring wake and early ticks do not spend attempts',async()=>{
+    await emit(admin)
+    for(const seconds of [80,160,3153600000]) {
+      await admin.query('update hq_private.live_invalidations set next_attempt_at=clock_timestamp()+make_interval(secs=>$1) where format_version=2',[seconds])
+      await publisher.query('call hq_private.live_dispatch_tick()'); await pauseCron(admin)
+      const row=await one(admin,`select i.attempts,i.attempt_token,i.delivered_at,i.next_attempt_at=s.due_at as due_retained,
+        (select schedule from cron.job where jobname='hq-live-once') schedule from hq_private.live_invalidations i
+        cross join hq_private.live_dispatch_state s where i.format_version=2`)
+      assert.deepEqual(row,{attempts:0,attempt_token:null,delivered_at:null,due_retained:true,schedule:'59 seconds'})
+      assert.equal((await one(admin,'select count(*)::int n from realtime.messages')).n,0)
+    }
+  })
+  await resetDispatch(admin)
+  await runCase(t,'real cron recovers a missed due time without calendar rearming',async()=>{
+    await emit(admin)
+    await admin.query("update hq_private.live_invalidations set next_attempt_at=clock_timestamp()+interval '160 seconds' where format_version=2")
+    await publisher.query('call hq_private.live_dispatch_tick()'); await pauseCron(admin)
+    assert.equal((await one(admin,"select schedule from cron.job where jobname='hq-live-once'")).schedule,'59 seconds')
+    // Deterministically advance only disposable due data while execution is
+    // disabled. Use an explicitly shortened recurring interval to avoid a
+    // one-minute CI wait; the production 59-second mapping was asserted above.
+    await admin.query(`update hq_private.live_invalidations set next_attempt_at=clock_timestamp()-interval '1 second' where format_version=2;
+      update hq_private.live_dispatch_state set due_at=clock_timestamp()-interval '1 second';
+      update cron.job set schedule='1 seconds',active=true where jobname='hq-live-once';`)
+    await until(async()=> (await one(admin,"select count(*)::int n from hq_private.live_invalidations where format_version=2 and delivered_at is not null")).n===1,'real cron failed to recover the missed due',30000)
+    await until(async()=> (await one(admin,"select count(*)::int n from cron.job where jobname='hq-live-once'")).n===0,'recovered wake did not drain')
+    assert.equal((await one(admin,'select attempts from hq_private.live_invalidations where format_version=2')).attempts,1)
+  })
+  await resetDispatch(admin)
+  await runCase(t,'actual configured pg_cron mode executes COMMIT-capable CALL then removes its exhausted wake',async()=>{
     // No mock scheduler/manual CALL: a real background worker must publish.
     await admin.query("select hq_private.live_emit('brain')")
     await until(async()=> (await one(admin,"select count(*)::int n from hq_private.live_invalidations where format_version=2 and delivered_at is not null")).n===1,'pg_cron did not publish',30000)

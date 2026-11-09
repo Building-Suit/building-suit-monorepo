@@ -24,7 +24,8 @@ export async function setup(db) {
   const names = (await readdir(migrations)).filter(name => name.endsWith('.sql')).sort()
   const omit = new Set(['20261104231318_brain_sync_scheduler.sql','20261104232516_brain_sync_safeupdate.sql',
     '20261104233340_brain_sync_request_deadline.sql','20261105002521_brain_sync_durable_dispatch.sql',
-    '20261107022638_hq_worker_admission_fence.sql','20261107142302_hq_worker_admission_resume.sql'])
+    '20261107022638_hq_worker_admission_fence.sql','20261107142302_hq_worker_admission_resume.sql',
+    '20261109150515_hq_live_dispatch_activation.sql'])
   for (const name of names) {
     if (omit.has(name)) continue
     let sql = await readFile(new URL(name, migrations), 'utf8')
@@ -78,4 +79,45 @@ export async function enqueue(db) {
   await db.query(`insert into public.hq_agent_jobs(id,conversation_id,founder_message_id,founder_user_id,agent_id,request_key,kind)
     select $1,id,$2,$3,'AG-CEO-001',$4,'conversation-ceo' from public.hq_agent_conversations where founder_user_id=$3`,[job,message,founder,randomUUID()])
   return job
+}
+
+export const activationPath=new URL('20261109150515_hq_live_dispatch_activation.sql',migrations)
+export async function activationForFixture(db) {
+  const original=await readFile(activationPath,'utf8')
+  const begin='-- BEGIN EXACT REVIEWED PROPOSAL BODY\n', end='-- END EXACT REVIEWED PROPOSAL BODY'
+  const [pre,tail]=original.split(begin)
+  const [body,post]=tail.split(end)
+  const proposal=await readFile(new URL('./proposed-migrations/hq_live_dispatch.sql',import.meta.url),'utf8')
+  if(body!==proposal) throw new Error('Activation body must equal reviewed proposal byte-for-byte')
+  let adapted=pre
+  const substitutions=[]
+  function replaceOnce(before,after,reason) {
+    if(adapted.split(before).length!==2) throw new Error(`Non-unique fixture substitution: ${reason}`)
+    adapted=adapted.replace(before,after); substitutions.push({reason,before,after})
+  }
+  const quote=value=>value===null?'null':"'"+value.replaceAll("'","''")+"'"
+  const query=async(sql,args=[])=> (await db.query(sql,args)).rows[0]
+  const database=(await query('select current_database() value')).value
+  replaceOnce("pg_catalog.current_database()<>'postgres'",`pg_catalog.current_database()<>${quote(database)}`,'synthetic database name, not owner identity')
+  const extension=(await query("select extversion value from pg_extension where extname='pg_cron'")).value
+  replaceOnce("extname='pg_cron') is distinct from '1.6.4'",`extname='pg_cron') is distinct from ${quote(extension)}`,'actual upstream SQL extension version, not hosted package version')
+  for(const [name,expected] of [['cron.database_name','postgres'],['cron.use_background_workers','off'],['cron.host','localhost']]) {
+    const actual=(await query('select current_setting($1,true) value',[name])).value
+    replaceOnce(`current_setting('${name}',true) is distinct from '${expected}'`,`current_setting('${name}',true) is distinct from ${quote(actual)}`,`actual disposable ${name}`)
+  }
+  const signatures=[...adapted.matchAll(/\('((?:hq_private|public)\.[^']+)','([0-9a-f]{32})',/g)]
+  for(const [whole,signature,expected] of signatures) {
+    const column=signature==='hq_private.require_brain_service()'||signature.startsWith('public.')?'pg_get_functiondef(oid)':'prosrc'
+    const actual=(await query(`select md5(${column}) value from pg_proc where oid=$1::regprocedure`,[signature])).value
+    replaceOnce(whole,whole.replace(expected,actual),`actual synthetic baseline fingerprint ${signature}`)
+  }
+  const cronOwners=(await db.query("select distinct pg_get_userbyid(proowner) owner from pg_proc where oid in ('cron.schedule(text,text,text)'::regprocedure,'cron.unschedule(bigint)'::regprocedure)")).rows
+  if(cronOwners.length!==1) throw new Error('Disposable cron routines have different owners')
+  replaceOnce("pg_catalog.pg_get_userbyid(p.proowner)<>'supabase_admin'",`pg_catalog.pg_get_userbyid(p.proowner)<>${quote(cronOwners[0].owner)}`,'actual extension installer owner')
+  const provider=await query("select pg_get_userbyid(proowner) owner,md5(prosrc) body,md5(pg_get_functiondef(oid)) definition,proacl::text acl from pg_proc where oid='realtime.send(jsonb,text,text,boolean)'::regprocedure")
+  replaceOnce("pg_catalog.pg_get_userbyid(routine.proowner)<>'supabase_realtime_admin'",`pg_catalog.pg_get_userbyid(routine.proowner)<>${quote(provider.owner)}`,'synthetic provider routine owner')
+  replaceOnce("pg_catalog.md5(routine.prosrc)<>'c12384e30dda994bf2e0d23daeaea20b'",`pg_catalog.md5(routine.prosrc)<>${quote(provider.body)}`,'copied provider contract body fingerprint')
+  replaceOnce("pg_catalog.md5(pg_catalog.pg_get_functiondef(routine.oid))<>'77afe4a67a0330f080cb562cec0898bd'",`pg_catalog.md5(pg_catalog.pg_get_functiondef(routine.oid))<>${quote(provider.definition)}`,'copied provider contract definition fingerprint')
+  replaceOnce("routine.proacl::text is distinct from '{=X/supabase_realtime_admin,supabase_realtime_admin=X/supabase_realtime_admin,postgres=X/supabase_realtime_admin,dashboard_user=X/supabase_realtime_admin}'",`routine.proacl::text is distinct from ${quote(provider.acl)}`,'actual synthetic provider ACL')
+  return {original,sql:adapted+begin+body+end+post,substitutions}
 }
