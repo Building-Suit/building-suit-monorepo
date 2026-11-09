@@ -37,7 +37,9 @@ provider's Git branch/project binding immediately before merge. SQL database
 name alone is not project identity; app.settings.project_ref is unset. Do not
 invent a project-ref SQL guard or use manual hosted SQL as a fallback.
 
-The migration must execute atomically with its ledger update. It fails closed
+The migration relies on the documented transaction-per-file path and contains
+no authored BEGIN/COMMIT statements. Hosted migration-ledger atomicity and
+deployment serialization are not independently proven. It fails closed
 on incompatible owner/configuration/source/ACL/collision state, snapshots legacy
 rows and checks them unchanged. It adds no initial cron row, but replaces the
 producers: the first subsequent valid event arms the durable owner-executed wake.
@@ -86,7 +88,14 @@ substitutions, when required by synthetic fixtures, must be explicit and confine
 to tests; the untouched production guard must fail closed first.
 
 Before activation: require fresh exact-head green CI, independent review, target
-binding, migration serialization/atomicity and no grant expansion. After provider
+binding, one coordinated deployment and no grant expansion. Supabase documents
+a transaction per migration file; the transaction sentinel rejects split
+autocommit. Do not infer that the hosted ledger write shares that transaction.
+If schema commit succeeds but ledger recording is uncertain, read both ledger
+and exact schema/routine/ACL state before any retry. A second execution refuses
+existing objects or changed outbox columns rather than resetting state. Concurrent
+activation after the bounded outbox lock also fails closed on changed columns.
+Never blindly retry, forge history or use manual SQL to reconcile uncertainty. After provider
 application: read migration ledger, ownership/ACLs, legacy invariants and scheduler
 outcomes; only then consider an explicitly authorized fresh event or task recovery.
 No old task rerun is implicit. Stop on failure without timeout increases, swallowed
@@ -108,3 +117,5 @@ interval mapping, overdue recovery and no early reservations, not an actual
 PostgreSQL restart or unchanged 59-second wait. Native activation/publication
 runs as genuinely nonsuperuser postgres; a separate fixture administrator only
 constructs synthetic infrastructure and controls probes.
+
+Deployment evidence: Supabase [GitHub migration behavior](https://supabase.com/docs/guides/deployment/branching/github-integration#migrations). Upstream CLI [authored transaction path](https://github.com/supabase/cli/blob/1813aa09e1869ff964d412f7cd39d6663fd92b76/apps/cli/src/command-internal/migration-apply.ts#L431-L486) can record history after authored statements; this migration deliberately avoids authored transaction commands. That upstream source does not identify the hosted runner version.
