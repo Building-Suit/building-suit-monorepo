@@ -77,13 +77,15 @@ test('native HQ claim and pg_cron publication isolation', {timeout:180000}, asyn
   const installer=await connect('hq-native-installer')
   await setup(installer)
   // Disposable orchestration only. Fresh application-owner connections below
-  // genuinely lack superuser privileges and receive no role memberships.
+  // genuinely lack superuser privileges. No application role inherits the
+  // owner; only its verified existing settings-read capability is modeled.
   await bootstrap.query(`create role fixture_provider nologin;
     alter table realtime.messages owner to fixture_provider;
     alter function realtime.send(jsonb,text,text,boolean) owner to fixture_provider;
     grant usage on schema realtime to postgres;
     grant select,insert on realtime.messages to postgres;
     grant execute on function realtime.send(jsonb,text,text,boolean) to postgres;
+    grant pg_read_all_settings to postgres;
     alter role postgres nosuperuser bypassrls;`)
   const admin=await connect('hq-native-admin','fixture_admin'), hold=await connect('hq-native-lock','fixture_admin'), claim=await connect('hq-native-claim','fixture_admin'), publisher=await connect('hq-native-publisher'), second=await connect('hq-native-second','fixture_admin'), otherPublisher=await connect('hq-native-competing-publisher')
   assert.deepEqual(await one(publisher,"select current_user role,rolsuper,rolbypassrls from pg_roles where rolname=current_user"),{role:'postgres',rolsuper:false,rolbypassrls:true})
