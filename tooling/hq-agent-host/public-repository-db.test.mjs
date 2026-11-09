@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID, createHash } from 'node:crypto'
 import { fake } from './test-cli.mjs'
-import { deliverWorkerEntry, invokeCodex, failedToolEvidence, checkRepositoryContract, checkRepositoryWorkerCompatibility } from './worker.mjs'
+import { deliverWorkerEntry, invokeCodex, failedToolEvidence, checkRepositoryContract } from './worker.mjs'
 import { REQUIRED_RPCS } from './maintenance.mjs'
 import { PUBLIC_REPOSITORY_MANIFEST, PUBLIC_REPOSITORY_MANIFEST_DIGEST } from './departmentWorkflow.mjs'
 
@@ -92,9 +92,30 @@ async function installTaskEvidence(h,withBudget=true) {
 }
 
 const repositoryMigration='20261108212105_hq_public_repository_read.sql'
-const compatibilityMigration=new URL('./proposed-migrations/hq_repository_worker_compatibility.sql',import.meta.url)
+const compatibilityMigration=new URL('20261109024147_hq_repository_worker_compatibility.sql',root)
+const compatibilityProposal=new URL('./proposed-migrations/hq_repository_worker_compatibility.sql',import.meta.url)
 const historicalWorkerDigest='bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
 const compatibleWorkerDigest='e01fd99ead607d740fcea13b33a23627518762c5ce94c9fd99d993ddc0a5c935'
+const fixedModuleDigest='bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'
+let futureWorker
+async function preparedWorker(){
+ const directory=await mkdtemp(join(tmpdir(),'hq-prepared-worker-'))
+ try{
+  const release=await readFile(new URL('./release.py',import.meta.url),'utf8')
+  const packaged=release.match(/^FILES = \((.+)\)$/m)?.[1]?.match(/'[^']+'/g)?.map(value=>value.slice(1,-1))
+  assert.deepEqual(packaged,['worker.mjs','workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs','departmentWorkflow.mjs'],'release allowlist must exclude the inert fixture and all test directories')
+  assert.equal(typeof invokeCodex,'function')
+  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),compatibleWorkerDigest,'worker child must activate only the exact reviewed future source')
+  assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
+  const bytes=await readFile(new URL('./test-fixtures/repository-compatible-worker.mjs.txt',import.meta.url))
+  assert.equal(hash(bytes),compatibleWorkerDigest,'inert fixture must be the exact reviewed future worker')
+  for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs')await copyFile(new URL(file,import.meta.url),join(directory,file))
+  await writeFile(join(directory,'worker.mjs'),bytes)
+  const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
+  return{invoke:module.invokeCodex,checkRepositoryWorkerCompatibility:module.checkRepositoryWorkerCompatibility,close:()=>rm(directory,{recursive:true,force:true})}
+ }catch(error){await rm(directory,{recursive:true,force:true});throw error}
+}
+const checkRepositoryWorkerCompatibility=status=>futureWorker.checkRepositoryWorkerCompatibility(status)
 async function historicalWorker(){
  const directory=await mkdtemp(join(tmpdir(),'hq-historical-worker-'))
  try{
@@ -116,7 +137,7 @@ const delivery=(h,entry)=>deliverWorkerEntry({workerId:worker,retryWait:async()=
 }},entry)
 const entryFor=(j,out)=>({version:3,job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:out.reply,error:null,evidence:out.evidence,
  modelBindingEvidence:out.modelBindingEvidence,modelExecutionEvidence:out.modelExecutionEvidence})
-async function output(j,{repository=false,events=[],turnStatus='completed',appServer={},cliVersion='codex-cli 0.160.0',signal=AbortSignal.timeout(10000),invoke=invokeCodex}={}){
+async function output(j,{repository=false,events=[],turnStatus='completed',appServer={},cliVersion='codex-cli 0.160.0',signal=AbortSignal.timeout(10000),invoke=futureWorker.invoke}={}){
  const state=await mkdtemp(join(tmpdir(),'hq-repository-db-'))
  try{return await fake([],config=>invoke({...config,id:worker,state},j,[],signal),{
   cliVersion,appServer:{...(repository?{publicRepository:true}:{}),events,turnStatus,...appServer},
@@ -257,6 +278,7 @@ async function transaction(h,action){
 async function count(h,table){return(await scalar(h,'select count(*)::int n from hq_private.'+table)).n}
 
 test('repository read capability is founder-frozen, lease-bound, independently reviewed and durable without upgrading ordinary qualification',async t=>{
+ futureWorker=await preparedWorker()
  const oldWorker=await historicalWorker(),f=await repositoryFixture(),{h,claim}=f
  try{
   await t.test('old contract remains exact; repository API is separate and authority starts absent',async()=>{
@@ -319,6 +341,7 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    const originalReleaseMetadata=await releaseMetadata(),metadata=await functionMetadata()
    const definitions=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
    const proposal=await readFile(compatibilityMigration,'utf8')
+   assert.equal(await readFile(compatibilityProposal,'utf8'),proposal,'canonical migration and reviewed proposal remain byte-identical')
    const drifted=definitions.host.replace("p_proof->>'workerSourceDigest' is distinct from hq_private.repository_worker_digest()","p_proof->>'workerSourceDigest'  is distinct from hq_private.repository_worker_digest()")
    assert.notEqual(drifted,definitions.host)
    await h.db.exec(drifted)
@@ -506,5 +529,5 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    assert.equal((await scalar(h,'select id,charged_attempts from hq_private.repository_reservations where job_id=$1',[j.id])).id,reservation)
    assert.equal((await scalar(h,'select sum(charged_attempts)::int n from hq_private.repository_reservations')).n,24)
   }))
- }finally{await h.db.close();await oldWorker.close()}
+ }finally{await h.db.close();await oldWorker.close();await futureWorker.close()}
 })
