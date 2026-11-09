@@ -1,0 +1,23 @@
+{
+  "id": "hq-realtime-adaptive-wake-20261109",
+  "task": "HQ-REALTIME-ADAPTIVE-WAKE-20261109",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/hq-live-dispatch-wake-disposable.yml",
+    "tooling/hq-agent-host/LIVE-DISPATCH-ADAPTIVE.md",
+    "tooling/hq-agent-host/live-dispatch-wake-native-check.mjs",
+    "tooling/hq-agent-host/live-dispatch-wake-source.test.mjs",
+    "tooling/hq-agent-host/proposed-migrations/hq_live_dispatch_adaptive.sql",
+    "release-changes/items.json"
+  ],
+  "reason": "Prepare a source-only adaptive wake proposal with append-only producers, version-fenced private jobs hints, separate browser and jobs circuits, and isolated native regression coverage. Preserves legacy rows, existing access, lease safeguards and bounded reservations. No migration activation, credentials, grants, worker restart or inference retry."
+}
