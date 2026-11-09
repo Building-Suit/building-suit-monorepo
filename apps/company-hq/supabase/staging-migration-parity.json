@@ -319,6 +319,15 @@
       "bytes": 12694,
       "md5": "89841c8ab6133ea3dc30e6b183c26166",
       "sha256": "477c94172709003051f3474db0c8a6838b339763ef1fa3fcaf9df80e9f3fdf34"
+    },
+    {
+      "file": "20261109124713_hq_trial_review_plan_cache.sql",
+      "bytes": 3364,
+      "md5": "97e7969cde671edec72e3f2ac76387f9",
+      "sha256": "be01a096ae9ccb4f3242d176d0c0a819a59420babe5c1b724f05a3a6750882ea",
+      "phase": "trial-review-plan-cache-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261109124713_hq_trial_review_plan_cache.sql"
     }
   ]
 }
