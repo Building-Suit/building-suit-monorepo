@@ -117,7 +117,15 @@ test('every old validation obligation remains, with isolated complete browser sh
 })
 
 test('build reuse is confined to this run and SHA, with publication gates unchanged',()=>{
-  for(const id of ['build','browser-tests']) assert.match(jobs[id],/name: workspace-build-\$\{\{ github.sha \}\}-\$\{\{ github.run_attempt \}\}/)
+  assert.match(jobs.build,/name: workspace-build-\$\{\{ github.sha \}\}-\$\{\{ github.run_attempt \}\}/)
+  assert.match(jobs.build,/artifact-id: \$\{\{ steps.build-artifact.outputs.artifact-id \}\}/)
+  assert.match(jobs.build,/uses: actions\/upload-artifact@v4\n {8}id: build-artifact/)
+  assert.match(jobs['browser-tests'],/artifact-ids: \$\{\{ needs.build.outputs.artifact-id \}\}/)
+  assert.match(jobs['browser-tests'],/BUILD_ARTIFACT_ID: \$\{\{ needs.build.outputs.artifact-id \}\}/)
+  assert.ok(jobs['browser-tests'].includes('[[ "$BUILD_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]'))
+  assert.doesNotMatch(jobs['browser-tests'],/name: workspace-build-/)
+
+  assert.match(jobs['browser-tests'],/merge-multiple: true/)
   assert.match(jobs['browser-tests'],/sha256sum --check workspace-build.tar.gz.sha256/)
   assert.match(jobs['browser-tests'],/test "\$\(cat \.ci-build-sha\)" = "\$VALIDATION_SHA"/)
   assert.doesNotMatch(jobs['browser-tests'],/run-id:|repository:|github-token:/)

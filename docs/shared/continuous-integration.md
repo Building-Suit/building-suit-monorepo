@@ -50,8 +50,11 @@ They are not redundant just because workspace validation also runs.
   pushes no longer serialize behind one another.
 - Build and built-asset checks run once. A one-day artifact carries only generated
   `.output` directories, a tested-commit marker and archive checksum. Browser jobs
-  download only their own run/attempt artifact and verify its SHA marker and
-  checksum. No cross-run build cache or privileged artifact consumption is added.
+  download only the successful producer artifact ID from their own run and verify
+  its SHA marker and checksum. This supports retrying only failed browser jobs
+  without rebuilding a successful producer from the preceding attempt. After the
+  one-day artifact expires, use Re-run all jobs. No cross-run build cache or
+  privileged artifact consumption is added.
 - The existing foundation and shared-regression Playwright configurations each
   run as two complete shards, on different runners. The deployed-only public
   changelog suite remains a separate SQL/browser lane. At most four browser jobs

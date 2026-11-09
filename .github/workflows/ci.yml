@@ -247,6 +247,8 @@ jobs:
       !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      artifact-id: ${{ steps.build-artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -276,6 +278,7 @@ jobs:
           tar --null -T /tmp/ci-build-paths -cf - | gzip -1 > workspace-build.tar.gz
           sha256sum workspace-build.tar.gz > workspace-build.tar.gz.sha256
       - uses: actions/upload-artifact@v4
+        id: build-artifact
         with:
           name: workspace-build-${{ github.sha }}-${{ github.run_attempt }}
           path: |
@@ -320,9 +323,16 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # A failed-job retry retains its successful producer's output, even when
+      # github.run_attempt advances. Do not resolve an archive from another run.
+      - name: Require the successful producer's exact artifact identity
+        env:
+          BUILD_ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+        run: '[[ "$BUILD_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]'
       - uses: actions/download-artifact@v4
         with:
-          name: workspace-build-${{ github.sha }}-${{ github.run_attempt }}
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
       - name: Verify and restore this exact run's build
         env:
           VALIDATION_SHA: ${{ github.sha }}
