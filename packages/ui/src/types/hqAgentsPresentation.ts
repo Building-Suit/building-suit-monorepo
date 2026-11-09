@@ -68,11 +68,16 @@ export interface HqRepositoryTrialPresentation {
   budgetRemaining: number
 }
 
+export type HqGameCharacter = 'ninja' | 'pirate' | 'wizard' | 'witch' | 'elf'
+
 export interface HqAgentAvatar {
   body: 'female' | 'male'
+  model?: HqGameCharacter
   hairstyle: number
   seed: number
 }
+
+export type HqAvatarAssetKey = HqAgentAvatar['body'] | HqGameCharacter
 
 /** Product-owned agent/runtime observations projected into shared HQ UI. */
 export interface HqAgentPresentation {

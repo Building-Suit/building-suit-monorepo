@@ -17,6 +17,18 @@
     "zoomInLabel": "Zoom in",
     "fitViewLabel": "Reset view: full workspace, 100% zoom and default camera angle",
     "hologramLabel": "Shielded Company Brain orb above its base",
+    "game": {
+      "label": "Game Mode",
+      "choose": "Choose your character",
+      "play": "Enter the island",
+      "resume": "Resume",
+      "exit": "Exit Game Mode",
+      "controls": "W, A, S, D to move. Mouse to look. Left click to inspect. Press Esc twice to exit.",
+      "paused": "Game paused",
+      "loading": "Loading character…",
+      "unavailable": "Could not load the character. Select it again to retry.",
+      "characters": { "ninja": "Ninja", "pirate": "Pirate", "wizard": "Wizard", "witch": "Witch", "elf": "Elf" }
+    },
     "sceneUnavailableLabel": "3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.",
     "mouseControlsLabel": "Left drag moves across the map. Middle drag rotates around the current view center. Scroll zooms with side panels closed. Right click is inactive.",
     "touchControlsLabel": "Drag to rotate. Two fingers move; pinch zooms with side panels closed. Hold the closed orb to pulse; tap to open.",

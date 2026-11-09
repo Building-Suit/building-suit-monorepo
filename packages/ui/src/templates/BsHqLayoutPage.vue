@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import designTokens from '@building-suit/design-tokens'
 import { computed, nextTick, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
-import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
+import { SPATIAL_VIEWPORT_GROUND_Y, spatialViewportFrame, spatialViewportGroundFootprint, spatialViewportScreenRectangle, useSpatialGameMode, useSpatialViewport, useSpatialWorkspaceSelection, useHqOfficeInspection } from '@building-suit/ux'
 import type { HqActivityNotificationsPresentation, HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation, HqStaffingCopy, HqStaffingDecision, HqStaffingPresentation } from '../types/hqLayoutPresentation'
-import type { HqAgentPresentation, HqAgentsPresentation, HqTrialCommand, HqRetailCategory } from '../types/hqAgentsPresentation'
+import type { HqAgentAvatar, HqAgentPresentation, HqAgentsPresentation, HqGameCharacter, HqTrialCommand, HqRetailCategory } from '../types/hqAgentsPresentation'
 import type { HqMeetingCommand, HqMeetingPresentation } from '../types/hqMeetingPresentation'
 import BsHqTeamChart from '../organisms/BsHqTeamChart.vue'
 import BsHqPlanBoard from '../organisms/BsHqPlanBoard.vue'
@@ -14,11 +14,13 @@ import BsHqTaskBrowser from '../organisms/BsHqTaskBrowser.vue'
 import BsHqWorkforce from '../organisms/BsHqWorkforce.vue'
 import BsTabs from '../molecules/BsTabs.vue'
 import BsHqStaffingPlans from '../organisms/BsHqStaffingPlans.vue'
+import BsDialog from '../organisms/BsDialog.vue'
 import BsHqRepositoryTrial from '../organisms/BsHqRepositoryTrial.vue'
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 import { createHqIslandFootprint } from '../utils/hqIslandGeometry.ts'
+import { hqIslandGameSurface } from '../utils/hqIslandGame.ts'
 import { useHqTaskBrowserSource } from '../utils/hqTaskBrowserSource'
 import { HQ_ORB_CENTER_Y, HQ_ORB_SCALE } from '../utils/hologramPresentationGeometry.ts'
 
@@ -29,7 +31,7 @@ let repositoryConfirmationEpoch = 0
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
 const props = defineProps<{ content: HqLayoutContent; notifications?: HqActivityNotificationsPresentation; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; togglePush: []; toggleNotificationSound: []; planBoardOpen: [open: boolean]; refreshPlanBacklog: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const emit = defineEmits<{ loadGameCharacter: [id: HqGameCharacter]; trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; togglePush: []; toggleNotificationSound: []; planBoardOpen: [open: boolean]; refreshPlanBacklog: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
 const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgent.value?.id))
 const selectedOrdinaryTrial = computed(() => selectedTrial.value?.ordinary)
 const selectedRetailTrial = computed(() => selectedAgent.value?.id === 'AG-RES-002' ? selectedTrial.value?.publicRetail : undefined)
@@ -96,7 +98,7 @@ async function repositoryAction(command: Extract<HqTrialCommand, { action: 'free
 
 const meetingVisible = ref(false)
 function openMeeting() { closeConversation(false); meetingVisible.value = true; emit('meetingCommand', { type: 'refresh' }) }
-const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
+const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean; preparePlayer: (id: HqGameCharacter) => Promise<boolean> } | null>(null)
 const brainPanelPresent = ref(false)
 const workplacePanelPresent = ref(false)
 const workplaceTitleRef = shallowRef<HTMLElement | null>(null)
@@ -150,6 +152,69 @@ const displayedUser = computed(() => founderAccess.value.user ?? props.user)
 const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
 const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => Boolean(focusedTargetId.value) || brainPanelPresent.value || workplacePanelPresent.value || chatVisible.value || meetingVisible.value || Boolean(conversationDetail.value) || Boolean(recordDetail.value), sceneRadius: () => floorRadius.value })
+const gamePicker = ref(false)
+const gameChoice = ref<HqGameCharacter | null>(null)
+const gameCharacter = ref<HqGameCharacter | null>(null)
+const gameAgentId = ref<string | null>(null)
+const gameSpawn = { x: 0, z: 5.25 }
+const gameGround = computed(() => hqIslandGameSurface(officeLayout.value, islandFootprint.value))
+const gameAsset = computed(() => gameChoice.value && props.content.avatarAssets?.[gameChoice.value])
+const gamePrepare = ref(0)
+const gameLoadStatus = ref<'loading' | 'ready' | 'error'>('loading')
+watch([gameChoice, gameAsset, gamePrepare, gamePicker], async ([id, asset, , opened], _, onCleanup) => {
+  if (!opened || !id || !asset) return
+  let current = true
+  onCleanup(() => { current = false })
+  gameLoadStatus.value = 'loading'
+  const ready = await sceneRef.value?.preparePlayer(id)
+  if (current) gameLoadStatus.value = ready ? 'ready' : 'error'
+}, { flush: 'post' })
+let gameReturnFocus: HTMLElement | null = null
+const game = useSpatialGameMode({
+  surface: () => viewportRef.value,
+  heightAt: (x, z) => gameGround.value(x, z),
+  interact: (x, y) => sceneRef.value?.activateAt(x, y),
+  onExit: () => {
+    gameCharacter.value = null
+    gameAgentId.value = null
+    void nextTick(() => restoreControl(gameReturnFocus, viewportRef.value))
+  },
+})
+const { locked: gameLocked, paused: gamePaused } = game
+const gameScene = computed(() => {
+  const model = gameCharacter.value
+  if (!model) return
+  const avatar: HqAgentAvatar = { model, body: model === 'witch' ? 'female' : 'male', hairstyle: 0, seed: 0 }
+  return { avatar, paused: gamePaused.value, advance: game.advance }
+})
+function openGamePicker(event: MouseEvent) {
+  if (gameCharacter.value) return
+  gameReturnFocus = event.currentTarget instanceof HTMLElement ? event.currentTarget : activeControl()
+  gamePicker.value = true
+}
+function chooseGameCharacter(id: HqGameCharacter) {
+  gameLoadStatus.value = 'loading'
+  gameChoice.value = id
+  gamePrepare.value++
+  emit('loadGameCharacter', id)
+}
+function clearGameOverlays() {
+  gameAgentId.value = null
+  closeConversation(false)
+  closeSelection()
+  meetingVisible.value = false
+}
+function startGame() {
+  if (!gameChoice.value || gameLoadStatus.value !== 'ready') return
+  clearGameOverlays()
+  gameCharacter.value = gameChoice.value
+  gamePicker.value = false
+  game.start({ ...gameSpawn, y: gameGround.value(gameSpawn.x, gameSpawn.z) ?? SPATIAL_VIEWPORT_GROUND_Y })
+}
+function resumeGame() {
+  clearGameOverlays()
+  game.resume()
+}
 const viewportSize = shallowRef({ width: 1, height: 1 })
 const compactWorkspace = ref(false)
 const { selectedId: focusedTargetId, select: focusTarget, clear: clearFocus, refit: refitFocus } = useSpatialWorkspaceSelection({
@@ -170,9 +235,13 @@ const selectedWorkplaceAgents = computed<readonly HqAgentPresentation[]>(() => {
 })
 const { section: officeSection, selectedAgentId, selectSection, selectAgent, closeAgent } = useHqOfficeInspection(
   () => selectedWorkplaceId.value, () => selectedWorkplaceAgents.value.map(agent => agent.id))
-const selectedAgent = computed(() => teamVisible.value
-  ? (founderAccess.value.status === 'founder' ? agentsState.value.agents.find(agent => agent.id === teamAgentId.value) ?? null : null)
-  : selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null)
+const selectedAgent = computed(() => {
+  if (teamVisible.value || gameAgentId.value) {
+    const id = teamVisible.value ? teamAgentId.value : gameAgentId.value
+    return founderAccess.value.status === 'founder' ? agentsState.value.agents.find(agent => agent.id === id) ?? null : null
+  }
+  return selectedWorkplaceAgents.value.find(agent => agent.id === selectedAgentId.value) ?? null
+})
 watch(() => selectedAgent.value?.id, () => emit('trialCommand', { action: 'clear-trial-feedback' }))
 watch([() => props.access?.status, () => props.access?.user?.displayName, () => selectedAgent.value?.id], () => { repositoryConfirmationEpoch += 1 }, { flush: 'sync' })
 const selectedNote = computed(() => recordDetail.value?.kind === 'note' && props.brain?.selectedId === recordDetail.value.id ? props.brain?.note : null)
@@ -208,9 +277,18 @@ async function openTeamAgent(id: string, event: MouseEvent) {
   await nextTick()
   if (teamVisible.value && teamAgentId.value === id) agentTitleRef.value?.focus({ preventScroll: true })
 }
+async function openGameAgent(id: string) {
+  if (!gameCharacter.value || founderAccess.value.status !== 'founder' || !agentsState.value.agents.some(agent => agent.id === id)) return
+  clearGameOverlays()
+  agentReturnFocus = viewportRef.value
+  gameAgentId.value = id
+  await nextTick()
+  if (gameAgentId.value === id) agentTitleRef.value?.focus({ preventScroll: true })
+}
 async function closeAgentPanel() {
   const target = agentReturnFocus
-  if (teamVisible.value) teamAgentId.value = null
+  if (gameAgentId.value) gameAgentId.value = null
+  else if (teamVisible.value) teamAgentId.value = null
   else closeAgent()
   agentReturnFocus = null
   await nextTick()
@@ -218,7 +296,10 @@ async function closeAgentPanel() {
 }
 const workplaceVisible = computed(() => Boolean(selectedWorkplace.value))
 const compactPanelOpen = computed(() => compactWorkspace.value
-  && Boolean(brainVisible.value || workplaceVisible.value || chatVisible.value || conversationDetail.value || recordDetail.value))
+  && Boolean(brainVisible.value || workplaceVisible.value || chatVisible.value || conversationDetail.value || recordDetail.value || gameAgentId.value))
+watch([brainVisible, workplaceVisible, chatVisible, conversationDetail, recordDetail, gameAgentId, meetingVisible], panels => {
+  if (gameCharacter.value && panels.some(Boolean)) game.pause()
+})
 watch([viewportSize, floorRadius, compactWorkspace], () => refitFocus())
 let viewportObserver: ResizeObserver | undefined
 watch(viewportRef, element => {
@@ -291,6 +372,7 @@ function closeSelection(restoreCamera = true) {
   returnFocus = null
   void nextTick(() => {
     if (focusedTargetId.value) return
+    if (gameCharacter.value && !gamePaused.value) return
     if (target?.isConnected && target.getClientRects().length && !target.closest('[hidden], [inert]')) target.focus({ preventScroll: true })
     else if (restoreCamera) workplaceSelectRef.value?.focus()
     else viewportRef.value?.focus({ preventScroll: true })
@@ -397,6 +479,7 @@ watch(() => props.notifications?.status === 'permission' && !props.notifications
 function showWorkspace() { closeConversation(false); closeSelection() }
 function resetScene() { closeConversation(false); closeSelection(false); reset() }
 function onWorkspaceKeydown(event: KeyboardEvent) {
+  if (gameCharacter.value) return
   if (event.key === 'Escape' && recordDetail.value) { event.preventDefault(); void closeRecord(); return }
   if (event.key === 'Escape' && teamVisible.value && selectedAgent.value) { event.preventDefault(); void closeAgentPanel(); return }
   if (event.key === 'Escape' && conversationDetail.value) { event.preventDefault(); void closeConversationDetail(); return }
@@ -427,6 +510,7 @@ onScopeDispose(() => { chatDraft.value = ''; chatDraftIdentity = null })
 watch(() => founderAccess.value.status, (status, previous) => {
   if (previous === 'founder' && status !== 'founder') closeConversation(false)
   if (previous === 'founder' && status !== 'founder' && selectedWorkplaceId.value) closeSelection()
+  if (status !== 'founder') gameAgentId.value = null
 })
 watch(() => availableWorkplaces.value.map(({ id, x, z, width, depth, yaw, sector }) => [id, x, z, width, depth, yaw, sector.startAngle, sector.endAngle, sector.innerRadius, sector.outerRadius].join(',')).join(';'), () => {
   if (!selectedWorkplaceId.value) return
@@ -457,14 +541,24 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 
 <template>
   <div class="bs-hq-layout">
-    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible || workplaceVisible || chatVisible || conversationDetail }" @keydown="onWorkspaceKeydown">
-    <section ref="viewportRef" :inert="compactPanelOpen || undefined" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting, 'bs-hq-layout__canvas--orb-hovered': orbHovered }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
-      <BsHologramScene ref="sceneRef" :camera="camera" :departments="departments" :agents="agentsState.agents" :avatar-assets="content.avatarAssets" :executive-label="content.companyPlans.executiveLabel" :selected-workplace-id="selectedWorkplaceId" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" @select-workplace="openWorkplace" @hover-change="orbHovered = $event" />
+    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible || workplaceVisible || chatVisible || conversationDetail || gameAgentId }" @keydown="onWorkspaceKeydown">
+    <section ref="viewportRef" :inert="compactPanelOpen || undefined" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': !gameCharacter && isInteracting, 'bs-hq-layout__canvas--orb-hovered': !gameCharacter && orbHovered, 'bs-hq-layout__canvas--playing': gameCharacter && !gamePaused }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="!gameCharacter && onPointerDown($event)" @pointermove="!gameCharacter && onPointerMove($event)" @pointerleave="!gameCharacter && onPointerLeave()" @pointerup="!gameCharacter && onPointerEnd($event)" @pointercancel="!gameCharacter && onPointerEnd($event)" @lostpointercapture="!gameCharacter && onPointerEnd($event)" @wheel="!gameCharacter && onWheel($event)" @click="gameCharacter && game.click($event)" @auxclick.prevent @contextmenu.prevent>
+      <BsHologramScene ref="sceneRef" :camera="camera" :departments="departments" :agents="agentsState.agents" :avatar-assets="content.avatarAssets" :executive-label="content.companyPlans.executiveLabel" :selected-workplace-id="selectedWorkplaceId" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" :game="gameScene" :can-inspect-agents="founderAccess.status === 'founder'" @activate="openBrain" @select-workplace="openWorkplace" @select-agent="openGameAgent" @context-lost="game.stop" @hover-change="orbHovered = $event" />
+      <span v-if="gameCharacter && gameLocked && !gamePaused" class="bs-hq-layout__game-crosshair" aria-hidden="true" />
       <div class="bs-hq-layout__footer" dir="ltr">
         <div class="bs-hq-layout__workspace-info" dir="auto">
-          <p :id="hintId" class="bs-hq-layout__gesture-hint"><span class="bs-hq-layout__mouse-hint">{{ content.mouseControlsLabel }}</span><span class="bs-hq-layout__touch-hint">{{ content.touchControlsLabel }}</span><span class="bs-hq-layout__keyboard-hint">{{ content.keyboardControlsLabel }}</span></p>
+          <BsButton v-if="content.game" v-show="!gameCharacter" variant="secondary" size="sm" class="bs-hq-layout__game-button" data-spatial-controls aria-haspopup="dialog" @click="openGamePicker">{{ content.game.label }}</BsButton>
+          <template v-if="gameCharacter && content.game">
+            <p :id="hintId" class="bs-hq-layout__game-hint">{{ content.game.controls }}</p>
+            <div v-if="gamePaused" class="bs-hq-layout__game-actions" data-spatial-controls>
+              <span role="status">{{ content.game.paused }}</span>
+              <BsButton variant="primary" size="sm" @click="resumeGame">{{ content.game.resume }}</BsButton>
+              <BsButton variant="secondary" size="sm" @click="game.stop">{{ content.game.exit }}</BsButton>
+            </div>
+          </template>
+          <p v-else :id="hintId" class="bs-hq-layout__gesture-hint"><span class="bs-hq-layout__mouse-hint">{{ content.mouseControlsLabel }}</span><span class="bs-hq-layout__touch-hint">{{ content.touchControlsLabel }}</span><span class="bs-hq-layout__keyboard-hint">{{ content.keyboardControlsLabel }}</span></p>
         </div>
-        <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
+        <aside v-if="!gameCharacter" class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
           <div class="bs-hq-layout__minimap" role="img" :aria-label="`${content.minimapLabel}, ${content.zoomLabel}: ${zoomPercent}%`">
             <svg class="bs-hq-layout__minimap-scene" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
               <defs><clipPath :id="islandClipId"><polygon :points="islandMapOutline" /></clipPath></defs>
@@ -588,7 +682,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       </aside>
     </Transition>
     <Transition name="bs-hq-brain-slide">
-      <aside v-if="selectedAgent && officeCopy" :id="agentPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__agent-panel" :class="{ 'bs-hq-layout__agent-panel--team': teamVisible, 'bs-hq-layout__panel--covered': !teamVisible && (chatVisible || conversationDetail || recordDetail) }" :inert="!teamVisible && (chatVisible || conversationDetail || recordDetail) ? true : undefined" :aria-labelledby="agentTitleId" @wheel.stop @keydown.esc.stop.prevent="closeAgentPanel">
+      <aside v-if="selectedAgent && officeCopy" :id="agentPanelId" class="bs-hq-glass-panel bs-hq-layout__brain-panel bs-hq-layout__agent-panel" :class="{ 'bs-hq-layout__agent-panel--standalone': teamVisible || gameAgentId, 'bs-hq-layout__panel--covered': !teamVisible && (chatVisible || conversationDetail || recordDetail) }" :inert="!teamVisible && (chatVisible || conversationDetail || recordDetail) ? true : undefined" :aria-labelledby="agentTitleId" @wheel.stop @keydown.esc.stop.prevent="closeAgentPanel">
         <header class="bs-hq-layout__brain-heading"><div><h2 :id="agentTitleId" ref="agentTitleRef" tabindex="-1" dir="auto">{{ selectedAgent.name }}</h2><p class="bs-hq-layout__workplace-description">{{ selectedAgent.roleLabel }} · <bdi>{{ selectedAgent.id }}</bdi></p></div><BsButton variant="icon" :aria-label="officeCopy.close" @click="closeAgentPanel"><BsIcon name="close" :size="20" /></BsButton></header>
         <div class="bs-hq-layout__panel-scroll">
         <BsHqOfficeOverview :agents="[selectedAgent]" :observations="agentsState.observations" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" detail />
@@ -683,6 +777,15 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
       </aside>
     </Transition>
     </main>
+    <BsDialog v-if="content.game" v-model:visible="gamePicker" :title="content.game.choose" size="sm">
+      <div class="bs-hq-layout__game-choices" role="group" :aria-label="content.game.choose">
+        <BsButton v-for="character in content.game.characters" :key="character.id" :variant="gameChoice === character.id ? 'primary' : 'secondary'" :aria-pressed="gameChoice === character.id" @click="chooseGameCharacter(character.id)">{{ character.label }}</BsButton>
+      </div>
+      <p v-if="gameChoice && gameLoadStatus !== 'ready'" class="bs-hq-layout__game-status" role="status">{{ gameLoadStatus === 'error' || content.game.failedCharacter === gameChoice ? content.game.unavailable : content.game.loading }}</p>
+      <template #footer>
+        <BsButton variant="primary" :disabled="gameLoadStatus !== 'ready'" @click="startGame">{{ content.game.play }}</BsButton>
+      </template>
+    </BsDialog>
     <BsHqMeetingPanel v-if="meeting" v-model:visible="meetingVisible" :meeting="meeting" :chat-only-work="meeting.mode !== 'demonstration'" @command="command => emit('meetingCommand', command)" />
   </div>
 </template>
@@ -793,6 +896,13 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-brain__note pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; line-height: 1.8; unicode-bidi: plaintext; }
 .bs-hq-layout__footer { position: absolute; z-index: 2; inset: auto 0 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 16px; pointer-events: none; }
 .bs-hq-layout__workspace-info { display: grid; min-width: 0; justify-items: start; gap: 8px; max-width: 340px; }
+.bs-hq-layout__game-button, .bs-hq-layout__game-actions { pointer-events: auto; }
+.bs-hq-layout__game-actions, .bs-hq-layout__game-choices { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bs-space-2); }
+.bs-hq-layout__game-actions { font-size: .875rem; }
+.bs-hq-layout__game-hint { margin: 0; padding: var(--bs-space-2); border-radius: var(--bs-radius-button); background: var(--bs-component-hq-glass-control); color: var(--bs-pearl-white); font-size: .75rem; }
+.bs-hq-layout__game-status { margin-block: var(--bs-space-3) 0; }
+.bs-hq-layout__canvas--playing { cursor: crosshair; }
+.bs-hq-layout__game-crosshair { position: absolute; z-index: 1; top: 50%; left: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border: 1px solid var(--bs-pearl-white); border-radius: 50%; box-shadow: 0 0 0 1px var(--bs-color-neutral-ink); pointer-events: none; }
 .bs-hq-layout__gesture-hint { margin: 0; color: var(--bs-soft-silver); opacity: .7; font-size: 10px; line-height: 1.6; }
 .bs-hq-layout__touch-hint { display: none; }
 .bs-hq-layout__keyboard-hint { display: block; }
@@ -859,7 +969,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 }
 .bs-hq-layout__team-panel.bs-hq-glass-panel { padding: 0; }
 .bs-hq-layout__team-accessible-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.bs-hq-layout__agent-panel--team { inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-panel-width), calc(100% - var(--bs-space-6))); }
+.bs-hq-layout__agent-panel--standalone { inset-inline-start: var(--bs-space-3); width: min(var(--bs-component-hq-glass-panel-width), calc(100% - var(--bs-space-6))); }
 .bs-hq-layout__top-panel.bs-hq-brain-slide-enter-from,
 .bs-hq-layout__top-panel.bs-hq-brain-slide-leave-to { transform: translateY(-100%); }
 @media (prefers-reduced-motion: reduce) {

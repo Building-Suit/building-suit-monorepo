@@ -117,7 +117,7 @@ const labeledAgents = computed<HqAgentsPresentation>(() => ({
       ?? (agent.role === 'ceo' ? companyPlansCopy.value.executiveLabel : agent.departmentName ? agentLabel('departments', agent.departmentName) : undefined),
   })),
 }))
-const avatarAssets = useHqAvatarAssets(() => labeledAgents.value.agents)
+const { assets: avatarAssets, loadGameCharacter, failedGameCharacter } = useHqAvatarAssets(() => labeledAgents.value.agents)
 const agentsContent = computed<HqAgentsContent>(() => ({
   locale: locale.value,
   title: t('hq.agents.title'),
@@ -257,6 +257,19 @@ const content = computed<HqLayoutContent>(() => ({
   fitViewLabel: t('hq.fitViewLabel'),
   hologramLabel: t('hq.hologramLabel'),
   avatarAssets: avatarAssets.value,
+  game: {
+    label: t('hq.game.label'),
+    choose: t('hq.game.choose'),
+    play: t('hq.game.play'),
+    resume: t('hq.game.resume'),
+    exit: t('hq.game.exit'),
+    controls: t('hq.game.controls'),
+    paused: t('hq.game.paused'),
+    loading: t('hq.game.loading'),
+    unavailable: t('hq.game.unavailable'),
+    characters: (['ninja', 'pirate', 'wizard', 'witch', 'elf'] as const).map(id => ({ id, label: t(`hq.game.characters.${id}`) })),
+    failedCharacter: failedGameCharacter.value,
+  },
   sceneUnavailableLabel: t('hq.sceneUnavailableLabel'),
   mouseControlsLabel: t('hq.mouseControlsLabel'),
   touchControlsLabel: t('hq.touchControlsLabel'),
@@ -341,4 +354,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>
