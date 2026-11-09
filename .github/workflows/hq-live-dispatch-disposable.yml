@@ -1,0 +1,72 @@
+name: Disposable HQ Realtime isolation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/hq-live-dispatch-disposable.yml'
+      - 'tooling/hq-agent-host/live-dispatch-native*'
+      - 'tooling/hq-agent-host/proposed-migrations/hq_live_dispatch.sql'
+      - 'apps/company-hq/supabase/migrations/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hq-live-dispatch-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cron-background-workers: ['on', 'off']
+    name: Native isolation (cron background workers ${{ matrix.cron-background-workers }})
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable native PostgreSQL and actual pg_cron
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          docker build -t hq-live-dispatch-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
+          docker network create --internal hq-live-dispatch-fixture
+          # cron libpq mode uses the official image's existing local Unix-socket
+          # authentication; no host trust rule or production credential is added.
+          # Tests run inside the same network namespace: no published host port.
+          # TCP readiness excludes the entrypoint's socket-only bootstrap server.
+          docker run -d --name hq-live-dispatch-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_live_dispatch_disposable \
+            hq-live-dispatch-fixture \
+            -c port=55439 -c shared_preload_libraries=pg_cron \
+            -c cron.database_name=hq_live_dispatch_disposable \
+            -c cron.host=/var/run/postgresql \
+            -c cron.use_background_workers=${{ matrix.cron-background-workers }} -c max_worker_processes=16
+          for attempt in $(seq 1 60); do
+            if docker exec hq-live-dispatch-fixture pg_isready -h 127.0.0.1 -p 55439 -U postgres -d hq_live_dispatch_disposable; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Prove claim, transport, and scheduler isolation
+        env:
+          HQ_NATIVE_CRON_MODE: ${{ matrix.cron-background-workers }}
+        run: |
+          docker exec -w /workspace/repository -e HQ_NATIVE_CRON_MODE \
+            hq-live-dispatch-fixture node --test tooling/hq-agent-host/live-dispatch-native-check.mjs
+      - name: Disposable scheduler diagnostics
+        if: failure()
+        run: |
+          docker logs --tail 80 hq-live-dispatch-fixture
+          docker exec hq-live-dispatch-fixture psql -p 55439 -U postgres -d hq_live_dispatch_disposable -c 'SELECT jobid,status,return_message FROM cron.job_run_details ORDER BY runid DESC LIMIT 10'
+      - name: Remove disposable database
+        if: always()
+        run: |
+          docker rm -f hq-live-dispatch-fixture || true
+          docker network rm hq-live-dispatch-fixture || true
