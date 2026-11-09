@@ -95,7 +95,7 @@ A subsequent explicitly authorized local-only follow-up prepares
 immutable, invoker predicate that recognizes exactly the original worker digest
 `bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88`
 and this reviewed diagnostic worker digest
-`5331fdf1b01e935432e2408f81a53b9da7cb4fe66b56dfe9553d36e90b5e9747`.
+`e01fd99ead607d740fcea13b33a23627518762c5ce94c9fd99d993ddc0a5c935`.
 Missing/unknown values return false. Public, anonymous, authenticated and
 service-role execution is revoked on the new helper. The old singleton digest
 function and every applied migration remain unchanged.
@@ -159,3 +159,54 @@ fixture timeouts and one symlink-entry timeout; representative baseline runs
 reproduced both categories. The repository compatibility regression is resolved
 by the prepared SQL. A separate run excluding only those two fixture files passed
 457/457. Neither result establishes a complete supported-runtime pass.
+
+
+## Enforced activation compatibility
+
+The final candidate worker source is SHA-256
+`e01fd99ead607d740fcea13b33a23627518762c5ce94c9fd99d993ddc0a5c935`.
+The prepared SQL accepts only that final candidate and the historical baseline;
+no intermediate candidate digest is approved. The unchanged module pin is
+`bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976`.
+
+The proposal now also adds `repositoryWorkerCompatibility` to the existing
+worker-authenticated release-status response. Its exact version/policy/module
+and two-source array are derived from the same private helpers used by the SQL
+validator. Only public source hashes and a policy identifier are exposed, not
+credentials, session values or customer data. Existing worker authorization,
+RPC signatures, owner/ACL and previous fields remain unchanged; new helpers
+are private invokers with application-role execution revoked. Old workers ignore
+the additive response, and original proof/qualification rows are untouched.
+
+New workers hash the actual worker and module files and require the exact pair
+in `compatible()`. This runs for candidate preflight and every managed
+status/resume; unmanaged startup also checks before connecting or admitting work
+and stops its API on failure. Missing, malformed, stale or unavailable capability
+fails closed. The existing updater preflights before requesting old-worker drain,
+so an old database cannot authorize activation. No updater or workflow code was
+changed. Publication can still occur from staging CI; publication is not
+activation or database-migration authorization.
+
+A fresh resume rechecks compatibility. If it is lost after health, the candidate
+remains paused with no admitted work. Existing updater transaction acceptance
+precedes resume: uncertain resume outcomes must not trigger unsafe rollback.
+This is an activation gate, not continuous revocation of already-running work.
+A later capability change does not automatically cancel or drain active jobs.
+
+Local checks: worker unit suite 34/34; real candidate/direct-start failure matrix
+and successful candidate preflight 2/2; updater tests 37/37, including explicit
+preflight-incompatibility no-drain and rejected-resume paused-state cases. The
+managed lifecycle capability-loss regression remains blocked at the same
+baseline fixture startup timeout; it was not skipped or weakened. Complete
+hosted validation remains required. No source flag or fabricated receipt may
+replace verified SQL application before actual activation.
+
+Final capability SQL tests passed 11/11 (repository plus release-contract suites).
+They exercise the actual worker hash validator on real old/new SQL responses,
+reject malformed capability mutations, preserve original authentication failures
+and helper ACLs, and verify drift-triggered transactional rollback. Staging parity
+passes after the prepared-only move; workspace, token and whitespace checks pass.
+Independent final source/security review found no blocker. Its full symlink test
+still times out at baseline startup awaiting `queue-connected`, also in isolation;
+the cause is unresolved. This validation blocker remains visible and must not be
+represented as a full-suite pass. The final all-host-tests rerun has no exclusions.

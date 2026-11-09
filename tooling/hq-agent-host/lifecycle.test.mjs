@@ -26,11 +26,15 @@ async function fixture(t, extra = {}) {
   const lesson={id:randomUUID(),source_type:'task',source_id:randomUUID(),source_digest:'a'.repeat(64),summary:'Synthetic fixture',body:'Generated learning only.'}
   lesson.digest=createHash('sha256').update(lesson.source_type+lesson.source_id+lesson.body).digest('hex')
   const googleKey=extra.FIXTURE_LEARNING?generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs8',format:'pem'}):''
+  const repositoryWorkerCompatibility = {version:1,policyId:'hq-public-github-read-v1',
+    moduleSha256:createHash('sha256').update(await readFile(join(root,'departmentWorkflow.mjs'))).digest('hex'),
+    workerSourceDigests:['bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88',createHash('sha256').update(await readFile(join(root,'worker.mjs'))).digest('hex')]}
   const staffingApi = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:STAFFING_RPCS}
   const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   await writeFile(join(root, 'bootstrap.mjs'), `
 import { appendFile, access } from 'node:fs/promises'
 const root = ${JSON.stringify(root)}, api = ${JSON.stringify(api)}, staffingApi = ${JSON.stringify(staffingApi)}
+const repositoryWorkerCompatibility = ${JSON.stringify(repositoryWorkerCompatibility)}
 let activeJobs = 0, taskAckDelivered = false
 const lesson=${JSON.stringify(lesson)}, brainRoot='1JgnIBa6As96sdOQn1z3rcQpwDyAvcZm8'
 const learningBase='---\\nid: BRAIN-HQ-REVIEWED-LEARNING\\n---\\n# HQ Reviewed Learning\\n<!-- hq-learning-entries -->\\n'
@@ -53,7 +57,7 @@ globalThis.fetch = async (url, options = {}) => {
   if (url.includes('/auth/')) body = {access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}
   else if (url.endsWith('/rest/v1/')) {
     throw Error('privileged-openapi-must-not-be-requested')
-  } else if (url.endsWith('/hq_worker_release_status')) { body = {researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api }
+  } else if (url.endsWith('/hq_worker_release_status')) { body = {repositoryWorkerCompatibility,researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},staffingApi:structuredClone(staffingApi),api:structuredClone(api),contract:2,trialSkills:1,trialFailureSettlement:1,trialDelivery:process.env.FIXTURE_TRIAL_SCHEMA_BAD ? 0 : 1,activeJobs:process.env.FIXTURE_FOREIGN_LEASE ? 1 : activeJobs}; if(process.env.FIXTURE_SCHEMA_BAD)delete body.api.rpcs.hq_worker_claim; if(process.env.FIXTURE_PROOF_MISSING)delete body.api; if(await exists(root+'/compatibility-lost'))delete body.repositoryWorkerCompatibility }
   else if (url.endsWith('/hq_worker_pending_lessons')) body = process.env.FIXTURE_LEARNING && !learningAck ? [lesson] : []
   else if(url.endsWith('/hq_worker_publish_lesson')){learningAck++;await appendFile(root+'/events','learning-ack\\n');body={accepted:true}}
   else if (url.endsWith('/hq_worker_heartbeat')) { await appendFile(root + '/events', 'lease-renewal\\n'); body = {accepted:true} }
@@ -282,4 +286,16 @@ for(const mode of ['converges','persistent'])test('actual worker learning '+mode
  assert.equal(events.split('learning-readback\n').length-1,mode==='persistent'?3:2)
  assert.equal(events.split('learning-ack\n').length-1,mode==='persistent'?0:1)
  if(mode!=='persistent')assert.ok(events.lastIndexOf('learning-readback')<events.indexOf('learning-ack'))
+})
+
+
+test('repository compatibility lost after healthy status is rechecked on resume without admission',async t=>{
+ const f=await fixture(t)
+ assert.equal((await f.control('status')).ready,true)
+ assert.equal(await f.events(),'')
+ await writeFile(join(f.root,'compatibility-lost'),'')
+ assert.equal((await f.control('resume')).error,'maintenance-unavailable')
+ const state=await f.control('status')
+ assert.equal(state.ready,false);assert.equal(state.paused,true);assert.equal(state.busy,0)
+ assert.equal(await f.events(),'','no queue, roster, learning or recovery effects while admission is denied')
 })

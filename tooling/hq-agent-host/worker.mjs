@@ -1140,6 +1140,25 @@ export async function deliverWorkerEntry({ rpc, write, workerId, retryWait = wai
   }
 }
 
+/** Authenticated activation proof is tied to actual source bytes, never manifest claims. */
+export async function checkRepositoryWorkerCompatibility(status, read = readFile) {
+  const cap = status?.repositoryWorkerCompatibility
+  const historical = 'bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
+  const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value)
+  requireValue(record(cap) && Object.keys(cap).sort().join(',') === 'moduleSha256,policyId,version,workerSourceDigests'
+    && cap.version === 1 && cap.policyId === PUBLIC_REPOSITORY_POLICY && digest(cap.moduleSha256)
+    && Array.isArray(cap.workerSourceDigests) && cap.workerSourceDigests.length === 2
+    && cap.workerSourceDigests.every(digest) && new Set(cap.workerSourceDigests).size === 2
+    && cap.workerSourceDigests.includes(historical), 'repository-worker-incompatible')
+  let workerDigest, moduleDigest
+  try {
+    workerDigest = createHash('sha256').update(await read(new URL('./worker.mjs', import.meta.url))).digest('hex')
+    moduleDigest = createHash('sha256').update(await read(new URL('./departmentWorkflow.mjs', import.meta.url))).digest('hex')
+  } catch { throw problem('repository-worker-incompatible') }
+  requireValue(cap.workerSourceDigests.includes(workerDigest) && cap.moduleSha256 === moduleDigest,
+    'repository-worker-incompatible')
+}
+
 export async function start(adapters = {}) {
   const config = configuration()
   await privateDirectory(config.state)
@@ -1169,6 +1188,7 @@ export async function start(adapters = {}) {
   async function compatible() {
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
+    await checkRepositoryWorkerCompatibility(status)
     checkApiContract(status)
     checkStaffingContract(status)
     checkResearchContract(status)
@@ -1180,6 +1200,11 @@ export async function start(adapters = {}) {
     requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
     try { await compatible(); process.stdout.write('{"contract":2}\n') } finally { api.stop() }
     return
+  }
+  // Managed workers remain paused until a successful status/resume proof. Direct
+  // starts have no maintenance admission gate, so validate before any connection.
+  if (!managed) {
+    try { await compatible() } catch (error) { api.stop(); throw error }
   }
   let control
   if (managed) {

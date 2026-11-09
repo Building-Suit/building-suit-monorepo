@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID, createHash } from 'node:crypto'
 import { fake } from './test-cli.mjs'
-import { deliverWorkerEntry, invokeCodex, failedToolEvidence, checkRepositoryContract } from './worker.mjs'
+import { deliverWorkerEntry, invokeCodex, failedToolEvidence, checkRepositoryContract, checkRepositoryWorkerCompatibility } from './worker.mjs'
 import { REQUIRED_RPCS } from './maintenance.mjs'
 import { PUBLIC_REPOSITORY_MANIFEST, PUBLIC_REPOSITORY_MANIFEST_DIGEST } from './departmentWorkflow.mjs'
 
@@ -94,7 +94,7 @@ async function installTaskEvidence(h,withBudget=true) {
 const repositoryMigration='20261108212105_hq_public_repository_read.sql'
 const compatibilityMigration=new URL('./proposed-migrations/hq_repository_worker_compatibility.sql',import.meta.url)
 const historicalWorkerDigest='bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
-const compatibleWorkerDigest='5331fdf1b01e935432e2408f81a53b9da7cb4fe66b56dfe9553d36e90b5e9747'
+const compatibleWorkerDigest='e01fd99ead607d740fcea13b33a23627518762c5ce94c9fd99d993ddc0a5c935'
 async function historicalWorker(){
  const directory=await mkdtemp(join(tmpdir(),'hq-historical-worker-'))
  try{
@@ -103,7 +103,7 @@ async function historicalWorker(){
   for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs')await copyFile(new URL(file,import.meta.url),join(directory,file))
   await writeFile(join(directory,'worker.mjs'),stdout)
   const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
-  return{invoke:module.invokeCodex,close:()=>rm(directory,{recursive:true,force:true})}
+  return{invoke:module.invokeCodex,checkRepositoryContract:module.checkRepositoryContract,close:()=>rm(directory,{recursive:true,force:true})}
  }catch(error){await rm(directory,{recursive:true,force:true});throw error}
 }
 const sourcePreset='hq-worker-boundary-v1',ciPreset='hq-ci-config-v1',sourceSha='a'.repeat(40)
@@ -307,16 +307,52 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    const before=await history(),ready=await readiness()
    assert.deepEqual(ready,{source:true,review:true,predecessor:true})
    await h.as('worker');const status=await h.rpc('hq_worker_release_status',[worker])
+   await assert.rejects(()=>checkRepositoryWorkerCompatibility(status),/repository-worker-incompatible/,'actual new worker rejects genuine old SQL response before activation')
    const functionMetadata=()=>scalar(h,`select jsonb_agg(jsonb_build_object('oid',p.oid,'owner',p.proowner,'acl',p.proacl,'name',p.proname,'args',p.proargtypes::text,'return',p.prorettype,'security',p.prosecdef,'config',p.proconfig) order by p.proname) functions from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='hq_private' and p.proname in ('repository_validate_host','repository_source_valid','repository_review_ready')`)
-   const metadata=await functionMetadata()
+   const releaseMetadata=()=>scalar(h,`select p.oid,p.proowner,p.proacl,p.proargtypes::text,p.prorettype,p.prosecdef,p.proconfig from pg_proc p where p.oid='public.hq_worker_release_status(uuid)'::regprocedure`)
+   const checkStatusAccess=async()=>{
+    for(const role of ['anon','service_role']){await h.db.exec('reset role;set role '+role);await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/permission denied/)}
+    await h.as('founder');await assert.rejects(()=>h.rpc('hq_worker_release_status',[worker]),/HQ_WORKER_REQUIRED/)
+    await h.as('worker');await assert.rejects(()=>h.rpc('hq_worker_release_status',[randomUUID()]),/HQ_WORKER_REQUIRED/)
+   }
+   await checkStatusAccess()
+   const originalReleaseMetadata=await releaseMetadata(),metadata=await functionMetadata()
    const definitions=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
-   await h.db.exec(await readFile(compatibilityMigration,'utf8'))
+   const proposal=await readFile(compatibilityMigration,'utf8')
+   const drifted=definitions.host.replace("p_proof->>'workerSourceDigest' is distinct from hq_private.repository_worker_digest()","p_proof->>'workerSourceDigest'  is distinct from hq_private.repository_worker_digest()")
+   assert.notEqual(drifted,definitions.host)
+   await h.db.exec(drifted)
+   try{await assert.rejects(()=>h.db.exec(proposal),/HQ_REPOSITORY_WORKER_COMPATIBILITY_SOURCE_MISMATCH/)}finally{await h.db.exec('rollback;reset role')}
+   for(const helper of ['repository_worker_digests()','repository_worker_digest_allowed(text)','repository_worker_compatibility()'])assert.equal((await scalar(h,'select to_regprocedure($1)::text helper',['hq_private.'+helper])).helper,null,'drift refusal rolls back every helper creation')
+   await h.db.exec(definitions.host)
+   await h.db.exec(proposal)
    assert.deepEqual(await history(),before,'migration must not rewrite a historical row or proof')
    assert.deepEqual(await readiness(),ready,'reviewed historical work and predecessor remain usable')
    assert.equal((await scalar(h,'select hq_private.repository_worker_digest() digest')).digest,historicalWorkerDigest,'legacy singleton stays historical')
    for(const digest of [historicalWorkerDigest,compatibleWorkerDigest,null,'','a'.repeat(64),'malformed',compatibleWorkerDigest.toUpperCase(),compatibleWorkerDigest+' '])assert.equal((await scalar(h,'select hq_private.repository_worker_digest_allowed($1) allowed',[digest])).allowed,[historicalWorkerDigest,compatibleWorkerDigest].includes(digest))
-   for(const role of ['anon','authenticated','service_role'])assert.equal((await scalar(h,"select has_function_privilege($1,'hq_private.repository_worker_digest_allowed(text)','EXECUTE') allowed",[role])).allowed,false)
-   await h.as('worker');assert.deepEqual(await h.rpc('hq_worker_release_status',[worker]),status,'migration changes no public capability or RPC contract')
+   for(const role of ['anon','authenticated','service_role'])for(const helper of ['repository_worker_digests()','repository_worker_digest_allowed(text)','repository_worker_compatibility()'])assert.equal((await scalar(h,"select has_function_privilege($1,$2,'EXECUTE') allowed",[role,'hq_private.'+helper])).allowed,false)
+   await h.as('worker');const advertised=await h.rpc('hq_worker_release_status',[worker])
+   const {repositoryWorkerCompatibility,...unchanged}=advertised
+   assert.equal(status.repositoryWorkerCompatibility,undefined)
+   assert.deepEqual(unchanged,status,'only the additive worker capability changes')
+   assert.deepEqual(repositoryWorkerCompatibility,{version:1,policyId:'hq-public-github-read-v1',moduleSha256:hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),workerSourceDigests:[historicalWorkerDigest,compatibleWorkerDigest]})
+   assert.deepEqual((await scalar(h,'select hq_private.repository_worker_digests() digests,hq_private.repository_worker_compatibility() capability')).digests,repositoryWorkerCompatibility.workerSourceDigests)
+   assert.deepEqual((await scalar(h,'select hq_private.repository_worker_compatibility() capability')).capability,repositoryWorkerCompatibility)
+   assert.equal(oldWorker.checkRepositoryContract(advertised),true,'actual historical worker accepts additive capability')
+   assert.equal(checkRepositoryContract(advertised),true)
+   await assert.doesNotReject(()=>checkRepositoryWorkerCompatibility(advertised),'actual final worker accepts genuine SQL capability using its own source and module bytes')
+   for(const mutate of [
+    x=>delete x.repositoryWorkerCompatibility,
+    x=>x.repositoryWorkerCompatibility.version=2,
+    x=>x.repositoryWorkerCompatibility.policyId='forged-policy',
+    x=>x.repositoryWorkerCompatibility.moduleSha256='0'.repeat(64),
+    x=>x.repositoryWorkerCompatibility.workerSourceDigests=[historicalWorkerDigest,'0'.repeat(64)],
+    x=>x.repositoryWorkerCompatibility.workerSourceDigests=[compatibleWorkerDigest],
+    x=>x.repositoryWorkerCompatibility.workerSourceDigests=[historicalWorkerDigest,historicalWorkerDigest],
+    x=>x.repositoryWorkerCompatibility.extra='forged',
+   ]){const invalid=structuredClone(advertised);mutate(invalid);await assert.rejects(()=>checkRepositoryWorkerCompatibility(invalid),/repository-worker-incompatible/)}
+   await checkStatusAccess()
+   assert.deepEqual(await releaseMetadata(),originalReleaseMetadata,'release RPC signature, ownership, OID and grants remain unchanged')
    const after=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
    const substitutions={
     host:["p_proof->>'workerSourceDigest' is distinct from hq_private.repository_worker_digest()","not hq_private.repository_worker_digest_allowed(p_proof->>'workerSourceDigest')"],
