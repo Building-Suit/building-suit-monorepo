@@ -54,12 +54,15 @@ async function assertServiceCannotFlush(admin, service) {
 // One fixture and ordered subtests deliberately distinguish baseline from proposal.
 test('native HQ claim and pg_cron publication isolation', {timeout:180000}, async t=>{
   t.after(async()=>{ for(const db of clients) { await db.query('rollback').catch(()=>{}); await db.end().catch(()=>{}) } })
-  const bootstrap=await connect('hq-native-bootstrap')
-  await setup(bootstrap)
+  const bootstrap=await connect('hq-native-bootstrap','fixture_admin')
+  // initdb's bootstrap identity must remain a superuser. Application postgres
+  // is a separate disposable identity, elevated only to install the fixture.
+  await bootstrap.query("create role postgres login superuser password 'disposable-only'")
+  const installer=await connect('hq-native-installer')
+  await setup(installer)
   // Disposable orchestration only. Fresh application-owner connections below
   // genuinely lack superuser privileges and receive no role memberships.
-  await bootstrap.query(`create role fixture_admin login superuser password 'disposable-only';
-    create role fixture_provider nologin;
+  await bootstrap.query(`create role fixture_provider nologin;
     alter table realtime.messages owner to fixture_provider;
     alter function realtime.send(jsonb,text,text,boolean) owner to fixture_provider;
     grant usage on schema realtime to postgres;

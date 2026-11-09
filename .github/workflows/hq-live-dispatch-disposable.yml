@@ -43,7 +43,7 @@ jobs:
           # TCP readiness excludes the entrypoint's socket-only bootstrap server.
           docker run -d --name hq-live-dispatch-fixture --network hq-live-dispatch-fixture \
             --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
-            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_USER=fixture_admin -e POSTGRES_PASSWORD=disposable-only \
             -e POSTGRES_DB=hq_live_dispatch_disposable \
             hq-live-dispatch-fixture \
             -c port=55439 -c shared_preload_libraries=pg_cron \
@@ -51,7 +51,7 @@ jobs:
             -c cron.host=/var/run/postgresql \
             -c cron.use_background_workers=${{ matrix.cron-background-workers }} -c max_worker_processes=16
           for attempt in $(seq 1 60); do
-            if docker exec hq-live-dispatch-fixture pg_isready -h 127.0.0.1 -p 55439 -U postgres -d hq_live_dispatch_disposable; then exit 0; fi
+            if docker exec hq-live-dispatch-fixture pg_isready -h 127.0.0.1 -p 55439 -U fixture_admin -d hq_live_dispatch_disposable; then exit 0; fi
             sleep 1
           done
           exit 1
@@ -64,12 +64,12 @@ jobs:
             hq-live-dispatch-fixture node --test tooling/hq-agent-host/live-dispatch-native-check.mjs
           # Upstream patch releases intentionally retain SQL extversion 1.6.
           # The image provenance above identifies the implementation separately.
-          test "$(docker exec hq-live-dispatch-fixture psql -p 55439 -U postgres -d hq_live_dispatch_disposable -Atc "SELECT current_setting('server_version_num') || ':' || extversion FROM pg_extension WHERE extname='pg_cron'")" = '170011:1.6'
+          test "$(docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -Atc "SELECT current_setting('server_version_num') || ':' || extversion FROM pg_extension WHERE extname='pg_cron'")" = '170011:1.6'
       - name: Disposable scheduler diagnostics
         if: failure()
         run: |
           docker logs --tail 80 hq-live-dispatch-fixture
-          docker exec hq-live-dispatch-fixture psql -p 55439 -U postgres -d hq_live_dispatch_disposable -c 'SELECT jobid,status,return_message FROM cron.job_run_details ORDER BY runid DESC LIMIT 10'
+          docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -c 'SELECT jobid,status,return_message FROM cron.job_run_details ORDER BY runid DESC LIMIT 10'
       - name: Remove disposable database
         if: always()
         run: |
