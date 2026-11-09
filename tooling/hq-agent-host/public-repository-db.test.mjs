@@ -2,7 +2,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
-import { readFile, mkdtemp, rm } from 'node:fs/promises'
+import { readFile, mkdtemp, rm, readdir, copyFile, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID, createHash } from 'node:crypto'
@@ -89,6 +92,20 @@ async function installTaskEvidence(h,withBudget=true) {
 }
 
 const repositoryMigration='20261108212105_hq_public_repository_read.sql'
+const compatibilityMigration='20261109013324_hq_repository_worker_compatibility.sql'
+const historicalWorkerDigest='bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
+const compatibleWorkerDigest='5331fdf1b01e935432e2408f81a53b9da7cb4fe66b56dfe9553d36e90b5e9747'
+async function historicalWorker(){
+ const directory=await mkdtemp(join(tmpdir(),'hq-historical-worker-'))
+ try{
+  const {stdout}=await promisify(execFile)('git',['show','f24ca26f1964f8473ce22ce36be5475697bd58fa:tooling/hq-agent-host/worker.mjs'],{cwd:fileURLToPath(new URL('../../',import.meta.url)),maxBuffer:1024*1024,encoding:'utf8'})
+  assert.equal(hash(stdout),historicalWorkerDigest,'baseline must execute the exact historical worker, never patched evidence')
+  for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs')await copyFile(new URL(file,import.meta.url),join(directory,file))
+  await writeFile(join(directory,'worker.mjs'),stdout)
+  const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
+  return{invoke:module.invokeCodex,close:()=>rm(directory,{recursive:true,force:true})}
+ }catch(error){await rm(directory,{recursive:true,force:true});throw error}
+}
 const sourcePreset='hq-worker-boundary-v1',ciPreset='hq-ci-config-v1',sourceSha='a'.repeat(40)
 const hash=x=>createHash('sha256').update(x).digest('hex')
 const skills={source:'synthetic_repository_source_skill',ci:'synthetic_repository_ci_skill',iris:'synthetic_repository_evaluator_skill'}
@@ -99,9 +116,9 @@ const delivery=(h,entry)=>deliverWorkerEntry({workerId:worker,retryWait:async()=
 }},entry)
 const entryFor=(j,out)=>({version:3,job:{id:j.id,lease_token:j.lease_token},phase:'finished',reply:out.reply,error:null,evidence:out.evidence,
  modelBindingEvidence:out.modelBindingEvidence,modelExecutionEvidence:out.modelExecutionEvidence})
-async function output(j,{repository=false,events=[],turnStatus='completed',appServer={},cliVersion='codex-cli 0.160.0',signal=AbortSignal.timeout(10000)}={}){
+async function output(j,{repository=false,events=[],turnStatus='completed',appServer={},cliVersion='codex-cli 0.160.0',signal=AbortSignal.timeout(10000),invoke=invokeCodex}={}){
  const state=await mkdtemp(join(tmpdir(),'hq-repository-db-'))
- try{return await fake([],config=>invokeCodex({...config,id:worker,state},j,[],signal),{
+ try{return await fake([],config=>invoke({...config,id:worker,state},j,[],signal),{
   cliVersion,appServer:{...(repository?{publicRepository:true}:{}),events,turnStatus,...appServer},
  })}finally{await rm(state,{recursive:true,force:true})}
 }
@@ -240,7 +257,7 @@ async function transaction(h,action){
 async function count(h,table){return(await scalar(h,'select count(*)::int n from hq_private.'+table)).n}
 
 test('repository read capability is founder-frozen, lease-bound, independently reviewed and durable without upgrading ordinary qualification',async t=>{
- const f=await repositoryFixture(),{h,claim}=f
+ const oldWorker=await historicalWorker(),f=await repositoryFixture(),{h,claim}=f
  try{
   await t.test('old contract remains exact; repository API is separate and authority starts absent',async()=>{
    await h.as('worker');const status=await h.rpc('hq_worker_release_status',[worker])
@@ -260,7 +277,11 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    const{trial,j}=await repositoryWork(f,'AG-DEV-002',frozen.bundleId),wire=repositoryItem(j)
    assert.equal(await count(h,'repository_reservations'),1)
    assert.equal((await scalar(h,'select sum(charged_attempts)::int n from hq_private.repository_reservations')).n,12)
-   const out=await output(j,{repository:true,events:[wire.event]}),entry=entryFor(j,out)
+   const newOutput=await output(j,{repository:true,events:[wire.event]})
+   assert.equal(newOutput.modelBindingEvidence.workerSourceDigest,compatibleWorkerDigest)
+   await transaction(h,()=>rejects(h,async()=>{await h.as('worker');return h.rpc('hq_worker_finish_v4',[j.id,j.lease_token,worker,newOutput.reply,null,JSON.stringify(newOutput.evidence),null,JSON.stringify(newOutput.modelBindingEvidence)])},/HQ_REPOSITORY_HOST_INVALID/))
+   const out=await output(j,{repository:true,events:[wire.event],invoke:oldWorker.invoke}),entry=entryFor(j,out)
+   assert.equal(out.modelBindingEvidence.workerSourceDigest,historicalWorkerDigest)
    assert.equal(out.evidence[0].bundleText,JSON.stringify(wire.bundle));assert.equal(out.evidence[0].bundleSha256,hash(out.evidence[0].bundleText))
    const delivered=await delivery(h,entry)
    assert.equal(delivered.repositoryReceiptAccepted,true);assert.equal(delivered.publicDiscoveryReceiptAccepted,true);assert.equal(delivered.trialReceiptAccepted,true)
@@ -275,6 +296,42 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    mazen={trial,artifact,bundleId:frozen.bundleId,entry,result:delivered}
   })
   if(!mazen)return // Later scenarios require the genuinely reviewed first artifact.
+  await t.test('forward worker compatibility preserves historical evidence, qualifications, readiness and private API boundaries',async()=>{
+   const history=async()=>{
+    await h.db.exec('reset role')
+    const result={}
+    for(const table of ['repository_bundles','repository_reservations','repository_receipts','repository_host_executions','repository_qualifications','workforce_qualification_receipts'])result[table]=(await h.db.query(`select to_jsonb(x) data from hq_private.${table} x order by to_jsonb(x)::text`)).rows
+    return result
+   }
+   const readiness=()=>scalar(h,'select hq_private.repository_source_valid($1,$2) source,hq_private.repository_review_ready($3) review,hq_private.repository_predecessor_valid($2,$4,$5) predecessor',[mazen.trial.taskId,mazen.artifact.id,mazen.trial.trialId,founder,sourceSha])
+   const before=await history(),ready=await readiness()
+   assert.deepEqual(ready,{source:true,review:true,predecessor:true})
+   await h.as('worker');const status=await h.rpc('hq_worker_release_status',[worker])
+   const functionMetadata=()=>scalar(h,`select jsonb_agg(jsonb_build_object('oid',p.oid,'owner',p.proowner,'acl',p.proacl,'name',p.proname,'args',p.proargtypes::text,'return',p.prorettype,'security',p.prosecdef,'config',p.proconfig) order by p.proname) functions from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='hq_private' and p.proname in ('repository_validate_host','repository_source_valid','repository_review_ready')`)
+   const metadata=await functionMetadata()
+   const definitions=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
+   await h.db.exec(await readFile(new URL(compatibilityMigration,root),'utf8'))
+   assert.deepEqual(await history(),before,'migration must not rewrite a historical row or proof')
+   assert.deepEqual(await readiness(),ready,'reviewed historical work and predecessor remain usable')
+   assert.equal((await scalar(h,'select hq_private.repository_worker_digest() digest')).digest,historicalWorkerDigest,'legacy singleton stays historical')
+   for(const digest of [historicalWorkerDigest,compatibleWorkerDigest,null,'','a'.repeat(64),'malformed',compatibleWorkerDigest.toUpperCase(),compatibleWorkerDigest+' '])assert.equal((await scalar(h,'select hq_private.repository_worker_digest_allowed($1) allowed',[digest])).allowed,[historicalWorkerDigest,compatibleWorkerDigest].includes(digest))
+   for(const role of ['anon','authenticated','service_role'])assert.equal((await scalar(h,"select has_function_privilege($1,'hq_private.repository_worker_digest_allowed(text)','EXECUTE') allowed",[role])).allowed,false)
+   await h.as('worker');assert.deepEqual(await h.rpc('hq_worker_release_status',[worker]),status,'migration changes no public capability or RPC contract')
+   const after=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
+   const substitutions={
+    host:["p_proof->>'workerSourceDigest' is distinct from hq_private.repository_worker_digest()","not hq_private.repository_worker_digest_allowed(p_proof->>'workerSourceDigest')"],
+    source:["x.proof->>'workerSourceDigest'=hq_private.repository_worker_digest()","hq_private.repository_worker_digest_allowed(x.proof->>'workerSourceDigest')"],
+    review:["execution.proof->>'workerSourceDigest'=hq_private.repository_worker_digest()","hq_private.repository_worker_digest_allowed(execution.proof->>'workerSourceDigest')"],
+   }
+   for(const [key,[oldExpression,newExpression]] of Object.entries(substitutions)){
+    assert.equal(definitions[key].split(oldExpression).length,2,'exactly one worker comparison exists')
+    assert.equal(after[key],definitions[key].replace(oldExpression,newExpression),'every non-worker expression remains byte-identical')
+   }
+   assert.deepEqual(await functionMetadata(),metadata,'existing function OIDs, owners, grants and signatures remain unchanged')
+   await h.as('founder');assert.equal((await h.rpc('hq_issue_repository_qualification',[mazen.trial.trialId])).accepted,true)
+   assert.deepEqual(await history(),before)
+  })
+
   await t.test('Farah accepts only the same-SHA completed Mazen predecessor; Samir gets the fixed CI preset',async()=>transaction(h,async()=>{
    await rejects(h,()=>freeze(h,'AG-DEV-003',sourcePreset,sourceSha,null),/HQ_REPOSITORY_BUNDLE_INVALID/)
    await rejects(h,()=>freeze(h,'AG-DEV-003',sourcePreset,'b'.repeat(40),mazen.artifact.id),/HQ_REPOSITORY_SETUP_REQUIRED/)
@@ -295,6 +352,10 @@ test('repository read capability is founder-frozen, lease-bound, independently r
   await t.test('ordinary Adam selection freezes only the original task; repair reuses original reservation with no MCP or qualification upgrade',async()=>transaction(h,async()=>{
    const j=await ordinaryWork(f,mazen.bundleId,{ackMutations:[x=>x.extra='private',x=>x.publicRepositoryBundleId=randomUUID(),x=>x.delegateId='AG-DEV-003']})
    const wire=repositoryItem(j),out=await output(j,{repository:true,events:[wire.event]}),entry=entryFor(j,out)
+   const oldOut=await output(j,{repository:true,events:[wire.event],invoke:oldWorker.invoke})
+   assert.equal(oldOut.modelBindingEvidence.workerSourceDigest,historicalWorkerDigest)
+   assert.equal(out.modelBindingEvidence.workerSourceDigest,compatibleWorkerDigest)
+   for(const proof of [oldOut.modelBindingEvidence,out.modelBindingEvidence])await scalar(h,'select hq_private.repository_validate_host(j,$2::jsonb,true) from public.hq_agent_jobs j where j.id=$1',[j.id,JSON.stringify(proof)])
    assert.equal(out.modelBindingEvidence.trialId,null)
    const result=await delivery(h,entry);assert.equal(result.repositoryReceiptAccepted,true)
    assert.equal(result.publicDiscoveryReceiptAccepted,true);assert.equal(result.trialReceiptAccepted,true,'old runtime compatibility acknowledgment does not grant ordinary qualification')
@@ -338,6 +399,10 @@ test('repository read capability is founder-frozen, lease-bound, independently r
     x=>x.modelBindingEvidence.hostResolution.model='gpt-6-luna',
     x=>x.modelBindingEvidence.publicRepositoryPolicy.moduleSha256='0'.repeat(64),
     x=>x.modelBindingEvidence.workerSourceDigest='0'.repeat(64),
+    x=>delete x.modelBindingEvidence.workerSourceDigest,
+    x=>x.modelBindingEvidence.workerSourceDigest=null,
+    x=>x.modelBindingEvidence.workerSourceDigest='not-a-digest',
+    x=>x.modelBindingEvidence.publicRepositoryPolicy.policyId='forged-policy',
    ]){const bad=structuredClone(entry);mutate(bad);await rejects(h,()=>rpcEntry(bad),/HQ_REPOSITORY_(EVIDENCE|HOST)_INVALID/)}
    const badItem=structuredClone(wire.item);badItem.arguments={query:'synthetic private input must not reach a tool'}
    await assert.rejects(()=>output(j,{repository:true,events:[{method:'item/completed',params:{item:badItem}}]}),/provider-tool-rejected/)
@@ -405,5 +470,5 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    assert.equal((await scalar(h,'select id,charged_attempts from hq_private.repository_reservations where job_id=$1',[j.id])).id,reservation)
    assert.equal((await scalar(h,'select sum(charged_attempts)::int n from hq_private.repository_reservations')).n,24)
   }))
- }finally{await h.db.close()}
+ }finally{await h.db.close();await oldWorker.close()}
 })

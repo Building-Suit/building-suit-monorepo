@@ -1,0 +1,9 @@
+{
+  "id": "hq-repository-worker-compatibility-20261109",
+  "task": "HQ-DISCOVERY-FAILURE-DIAGNOSTICS-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq/supabase/migrations/20261109013324_hq_repository_worker_compatibility.sql", "tooling/hq-agent-host/public-repository-db.test.mjs", "docs/work-packages/company-hq/DISCOVERY-FAILURE-DIAGNOSTICS-20261109.md"],
+  "reason": "Prepare private exact two-version worker-source compatibility without changing the baseline pin, historical evidence, public API or module/policy binding. Add disposable PostgreSQL old/new-runtime compatibility and authorization regressions. Source preparation only; no hosted migration or worker rollout."
+}

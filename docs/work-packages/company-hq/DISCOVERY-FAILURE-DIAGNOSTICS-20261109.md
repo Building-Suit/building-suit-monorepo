@@ -87,3 +87,59 @@ the still-running old host. No pin, migration, qualification or live host change
 The narrow diagnostic code is therefore prepared, **not release-ready**. The
 independent code-local review does not override this aggregate compatibility
 blocker or the separate PR-stack hold.
+
+## Local forward compatibility preparation
+
+A subsequent explicitly authorized local-only follow-up prepares
+`20261109013324_hq_repository_worker_compatibility.sql`. It adds a private,
+immutable, invoker predicate that recognizes exactly the original worker digest
+`bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88`
+and this reviewed diagnostic worker digest
+`5331fdf1b01e935432e2408f81a53b9da7cb4fe66b56dfe9553d36e90b5e9747`.
+Missing/unknown values return false. Public, anonymous, authenticated and
+service-role execution is revoked on the new helper. The old singleton digest
+function and every applied migration remain unchanged.
+
+The forward migration replaces only the worker-source comparison in
+`repository_validate_host`, `repository_source_valid`, and
+`repository_review_ready`. All existing module, policy, artifact, founder,
+agent, reviewer and scope checks remain. Each replacement must match exactly
+once or the transaction aborts. Function signatures, owners and privileges
+remain in place. No evidence rows, qualifications, public RPCs, API version,
+budget, retries or deployment controls are changed. The exact two-source set
+is deliberate approval of these reviewed versions, not automatic acceptance
+of future worker changes.
+
+Deployment is **not authorized or performed**. A later rollout must independently
+verify the final worker source digest and module digest, review the migration,
+and confirm its application on the exact intended environment before changing
+the host. With old SQL, the new worker still correctly fails repository
+attestation; an unchanged API version is not evidence the migration ran. With
+new SQL, either reviewed worker version remains admissible under the unchanged
+module/policy binding, so a host-only rollback to the old binary need not erase
+new evidence or requalify historical workers. SQL rollback is not proposed:
+removing new-source acceptance after new proofs exist would make those proofs
+ineligible again. A future retirement of either digest needs its own reviewed
+forward policy change. Do not forge the old digest or rewrite stored evidence.
+
+Compatibility verification: `node --test
+ tooling/hq-agent-host/public-repository-db.test.mjs` passes **10/10**. It runs
+actual baseline worker source from full commit
+`f24ca26f1964f8473ce22ce36be5475697bd58fa`, verifies its SHA-256, and creates
+reviewed evidence and qualification before migration. The old database rejects
+the actual new worker first. After migration, historical rows/readiness and the
+public capability response remain identical, both actual worker versions
+validate, and current-worker qualification, repairs, failures, cancellation and
+budgets retain their checks. Function OIDs, owners, ACLs, signatures, security
+attributes and configuration are unchanged; full definitions match exactly the
+three planned expression replacements. Unknown/missing/malformed digests,
+wrong module and forged policy are rejected. No stored evidence is rewritten.
+These tests require Git history containing the pinned baseline commit.
+
+Independent final SQL/test review found no remaining blocker for **local
+compatibility preparation**. It verified the final candidate digest and the
+exact expression/privilege assertions. This resolves the demonstrated local
+repository attestation regression only when the prepared migration is present.
+It does not clear the PR-stack hold, unrelated aggregate test failures, supported
+runtime verification, hosted CI or deployment authorization. The migration's
+source-drift abort branch is reviewed but not separately fault-injected.
