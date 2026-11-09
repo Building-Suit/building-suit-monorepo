@@ -64,3 +64,26 @@ no remaining blockers or material assertion weaknesses. Release provenance and
 current-main net coverage checks passed against the exact staging base above.
 The test executor uses Node v24.22.1, not repository-requested v26.8.1; focused
 passes do not establish the supported runtime or hosted CI gates.
+
+## Aggregate compatibility blocker
+
+The broader host run completed: **358 tests, 344 passed, 14 failed**. It began
+before expanded fixture editing finished, so the clean focused runs above are
+the final-change evidence. Eleven lifecycle tests time out; the candidate-health
+failure reproduces unchanged. The symlink-entry release-switch test also times
+out unchanged. Their underlying cause has not been established.
+
+A separate **real integration regression** must not be attributed to the test
+environment: `public-repository-db.test.mjs` passes 9/9 on the unchanged checkout,
+but the modified worker rejects the real typed bundle at
+`HQ_REPOSITORY_HOST_INVALID`. The canonical repository SQL deliberately pins
+`hq_private.repository_worker_digest()` to the old worker source digest. Editing
+worker.mjs changes that digest. The validator and qualification predicates must
+not be bypassed, and the applied migration must not be edited. A reviewed forward
+compatibility/rollout plan is required before this worker can be released; merely
+changing the pin can invalidate existing repository qualifications and reject
+the still-running old host. No pin, migration, qualification or live host changed.
+
+The narrow diagnostic code is therefore prepared, **not release-ready**. The
+independent code-local review does not override this aggregate compatibility
+blocker or the separate PR-stack hold.
