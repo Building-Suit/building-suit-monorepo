@@ -337,6 +337,15 @@
       "phase": "live-dispatch-activation",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261109150515_hq_live_dispatch_activation.sql"
+    },
+    {
+      "file": "20261109182552_hq_live_dispatch_adaptive_activation.sql",
+      "bytes": 52716,
+      "md5": "9fde37fe831f279ccdc7129e3d45548c",
+      "sha256": "d13b0856c8a2a5e0a031ea975c9a7e0ea0cd3a4771809981a0ff647dac1aae06",
+      "phase": "live-dispatch-adaptive-activation",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261109182552_hq_live_dispatch_adaptive_activation.sql"
     }
   ]
 }

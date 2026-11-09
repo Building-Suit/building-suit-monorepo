@@ -25,7 +25,8 @@ export async function setup(db) {
   const omit = new Set(['20261104231318_brain_sync_scheduler.sql','20261104232516_brain_sync_safeupdate.sql',
     '20261104233340_brain_sync_request_deadline.sql','20261105002521_brain_sync_durable_dispatch.sql',
     '20261107022638_hq_worker_admission_fence.sql','20261107142302_hq_worker_admission_resume.sql',
-    '20261109150515_hq_live_dispatch_activation.sql'])
+    '20261109150515_hq_live_dispatch_activation.sql',
+    '20261109182552_hq_live_dispatch_adaptive_activation.sql'])
   for (const name of names) {
     if (omit.has(name)) continue
     let sql = await readFile(new URL(name, migrations), 'utf8')
