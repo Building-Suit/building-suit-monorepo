@@ -14,7 +14,7 @@ test('HQ staging migration sources match the reviewed applied set and preserve t
     encoding: 'utf8',
   })
   assert.equal(result.status, 0, result.stderr || result.stdout)
-  assert.match(result.stdout, /17 applied baseline migrations; 22 pending forward migration/)
+  assert.match(result.stdout, /17 applied baseline migrations; 23 pending forward migration/)
 })
 
 
@@ -24,6 +24,8 @@ test('repository compatibility pending inventory rejects altered bindings and so
     const manifestPath = 'apps/company-hq/supabase/staging-migration-parity.json'
     const validator = 'apps/company-hq/supabase/verify-staging-migration-parity.mjs'
     const manifest = JSON.parse(readFileSync(path.join(root, manifestPath), 'utf8'))
+    const compatibilityIndex = manifest.pendingMigrations.findIndex(row => row.phase === 'repository-worker-compatibility-review-only')
+    assert.ok(compatibilityIndex >= 0)
     const paths = new Set([manifestPath, validator,
       'supabase/legacy/company-hq/migrations/' + manifest.archivedUnapplied.file,
       'tooling/hq-agent-host/bootstrap/initial-staging-pause.sql'])
@@ -44,12 +46,12 @@ test('repository compatibility pending inventory rejects altered bindings and so
       row => { row.sha256 = '0'.repeat(64) },
     ]) {
       const changed = structuredClone(manifest)
-      mutate(changed.pendingMigrations.at(-1))
+      mutate(changed.pendingMigrations[compatibilityIndex])
       writeFileSync(path.join(directory, manifestPath), JSON.stringify(changed))
       assert.notEqual(run().status, 0)
     }
     writeFileSync(path.join(directory, manifestPath), JSON.stringify(manifest))
-    const row = manifest.pendingMigrations.at(-1)
+    const row = manifest.pendingMigrations[compatibilityIndex]
     const proposal = path.join(directory, row.proposal)
     writeFileSync(proposal, readFileSync(proposal, 'utf8') + '\n')
     assert.notEqual(run().status, 0, 'canonical must match exact reviewed proposal')

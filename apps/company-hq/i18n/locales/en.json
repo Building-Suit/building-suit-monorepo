@@ -71,14 +71,38 @@
         "noRecentTasks": "No recent tasks for this office."
       }
     },
+    "notifications": {
+      "label": "Activity notifications",
+      "enablePush": "Enable browser push",
+      "enableAlerts": "Enable browser alerts",
+      "disableAlerts": "Disable browser alerts",
+      "liveOnly": "Alerts are on while this HQ tab is in use. Background push needs to be set up.",
+      "activity": {
+        "brain": "Company Brain updated",
+        "company": "Company plans or staffing updated",
+        "agents": "Agent or task activity updated"
+      },
+      "disablePush": "Disable browser push",
+      "enableSound": "Enable sound in this tab",
+      "disableSound": "Mute sound in this tab",
+      "loading": "Checking notification settings…",
+      "permission": "Allow browser notifications to receive HQ activity alerts.",
+      "denied": "Allow notifications in your browser settings.",
+      "unsupported": "Browser push is unavailable on this device.",
+      "unavailable": "Browser push is not configured for this HQ.",
+      "error": "Could not enable notifications. Try again."
+    },
     "companyPlans": {
       "board": {
-        "discussion": "Pending discussion",
-        "preparation": "In preparation",
+        "brainLabel": "Company Brain",
+        "brainUnavailable": "Saved Brain plans are unavailable. Refresh to try again.",
+        "sourceLabel": "Open source plan",
+        "discussion": "Pending",
+        "preparation": "Ongoing",
         "blocked": "Blocked",
         "done": "Done",
         "empty": "No notes in this column.",
-        "description": "Open a note to see the proposal and its current status. Done means the decision is closed."
+        "description": "Saved plans show recorded progress. For proposals, Done means the decision is closed."
       },
       "title": "Company plans",
       "executiveLabel": "CEO workspace",

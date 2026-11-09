@@ -179,7 +179,18 @@ export interface HqCompanyPlanPresentation {
   approvedAt?: string
   legacy: boolean
 }
+export interface HqBacklogPlan {
+  id: string
+  status: 'pending' | 'ongoing' | 'done'
+  title: string
+  summary: string
+  sourceUrl?: string
+}
 export interface HqCompanyPlansPresentation {
+  backlog?: {
+    status: 'loading' | 'ready' | 'unavailable'
+    plans: readonly HqBacklogPlan[]
+  }
   status: 'loading' | 'ready' | 'unavailable'
   pending: boolean
   plans: readonly HqCompanyPlanPresentation[]
@@ -188,6 +199,9 @@ export interface HqCompanyPlansPresentation {
 export interface HqCompanyPlansCopy {
   title: string
   board: {
+    brainLabel: string
+    brainUnavailable: string
+    sourceLabel: string
     discussion: string
     preparation: string
     blocked: string
@@ -227,4 +241,14 @@ export interface HqCompanyPlansCopy {
   conflict: string
   decisionFailed: string
   legacyLabel: string
+}
+
+export interface HqActivityNotificationsPresentation {
+  status: 'loading' | 'permission' | 'off' | 'on' | 'denied' | 'unsupported' | 'unavailable' | 'error'
+  busy: boolean
+  soundOn: boolean
+  label: string
+  pushLabel: string
+  soundLabel: string
+  message: string
 }
