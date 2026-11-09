@@ -39,16 +39,13 @@ end $$;
 -- Caller holds dispatch state. No transport or outbox row lock is taken here.
 create function hq_private.live_dispatch_schedule(p_due timestamptz) returns void
 language plpgsql security definer set search_path='' as $$
-declare seconds integer; schedule text; wall timestamp; zone text; begin
+declare seconds integer; schedule text; begin
   if p_due is null or not pg_catalog.isfinite(p_due) then raise exception 'HQ_INVALID_DISPATCH_TIME' using errcode='22023'; end if;
-  seconds:=greatest(1,pg_catalog.ceil(extract(epoch from p_due-pg_catalog.clock_timestamp()))::integer+1);
-  if seconds<=59 then schedule:=seconds::text||' seconds';
-  else
-    zone:=coalesce(nullif(pg_catalog.current_setting('cron.timezone',true),''),'GMT');
-    wall:=(pg_catalog.date_trunc('minute',p_due)+interval '1 minute') at time zone zone;
-    schedule:=extract(minute from wall)::integer::text||' '||extract(hour from wall)::integer::text||' '||
-      extract(day from wall)::integer::text||' '||extract(month from wall)::integer::text||' *';
-  end if;
+  -- A recurring bounded wake survives a missed scheduler window. The durable
+  -- next_attempt_at still enforces backoff: early ticks consume no attempt.
+  -- Drain/circuit reconciliation removes the job, so idle queues never poll.
+  seconds:=least(59,greatest(1,pg_catalog.ceil(extract(epoch from p_due-pg_catalog.clock_timestamp()))+1))::integer;
+  schedule:=seconds::text||' seconds';
   perform cron.schedule('hq-live-once',schedule,'call hq_private.live_dispatch_tick()');
   update hq_private.live_dispatch_state set due_at=p_due where singleton;
 end $$;

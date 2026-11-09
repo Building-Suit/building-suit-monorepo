@@ -1,3 +1,5 @@
+Activation follow-up: see [LIVE-DISPATCH-ACTIVATION.md](LIVE-DISPATCH-ACTIVATION.md) for the separately prepared forward migration and current deployment gates. The proposal below remains review source.
+
 # Review-only HQ Realtime isolation
 
 Status: source preparation, not activated. `proposed-migrations/hq_live_dispatch.sql`
@@ -57,8 +59,9 @@ https://supabase.com/docs/guides/cron/quickstart .
    matches; a newer generation retains a wake. Otherwise schedule the next due
    event. No idle job remains after a successful drain.
 
-Backoff is 5, 10, 20, 40, 80, 160 seconds, with calendar-minute rounding for long
-schedules. Six failed reservations open the lane circuit on the next tick. New
+Backoff is 5, 10, 20, 40, 80, 160 seconds. Recurring wakes are capped at 59 seconds;
+early ticks preserve next_attempt_at and do not consume a publication attempt.
+This avoids stranding a retry when a scheduler outage spans a calendar minute. Six failed reservations open the lane circuit on the next tick. New
 producer events do not reset attempts or reopen the circuit. Each tick handles
 one publication. New events can still contend on the short state/cron operations;
 this does not promise universally nonblocking claims. No statement timeout is

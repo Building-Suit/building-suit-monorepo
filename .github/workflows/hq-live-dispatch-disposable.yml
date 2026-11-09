@@ -20,7 +20,8 @@ jobs:
       fail-fast: false
       matrix:
         cron-background-workers: ['on', 'off']
-    name: Native isolation (cron background workers ${{ matrix.cron-background-workers }})
+        cron-source: ['upstream-1-6-4', 'packaged']
+    name: Native isolation (${{ matrix.cron-source }}, background workers ${{ matrix.cron-background-workers }})
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +35,7 @@ jobs:
       - name: Start disposable native PostgreSQL and actual pg_cron
         run: |
           test "$RUNNER_ENVIRONMENT" = github-hosted
-          docker build -t hq-live-dispatch-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
+          docker build --target ${{ matrix.cron-source }} -t hq-live-dispatch-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
           docker network create --internal hq-live-dispatch-fixture
           # cron libpq mode uses the official image's existing local Unix-socket
           # authentication; no host trust rule or production credential is added.
@@ -58,8 +59,12 @@ jobs:
         env:
           HQ_NATIVE_CRON_MODE: ${{ matrix.cron-background-workers }}
         run: |
+          docker exec hq-live-dispatch-fixture cat /usr/local/share/hq-cron-build.txt
           docker exec -w /workspace/repository -e HQ_NATIVE_CRON_MODE \
             hq-live-dispatch-fixture node --test tooling/hq-agent-host/live-dispatch-native-check.mjs
+          # Upstream patch releases intentionally retain SQL extversion 1.6.
+          # The image provenance above identifies the implementation separately.
+          test "$(docker exec hq-live-dispatch-fixture psql -p 55439 -U postgres -d hq_live_dispatch_disposable -Atc "SELECT current_setting('server_version_num') || ':' || extversion FROM pg_extension WHERE extname='pg_cron'")" = '170011:1.6'
       - name: Disposable scheduler diagnostics
         if: failure()
         run: |

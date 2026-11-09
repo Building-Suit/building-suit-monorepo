@@ -1,0 +1,31 @@
+{
+  "id": "hq-realtime-activation-20261109",
+  "task": "HQ-REALTIME-ACTIVATION-20261109",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/hq-live-dispatch-disposable.yml",
+    "apps/company-hq/supabase/migrations/20261109150515_hq_live_dispatch_activation.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "release-changes/items.json",
+    "tooling/hq-agent-host/LIVE-DISPATCH-ACTIVATION.md",
+    "tooling/hq-agent-host/LIVE-DISPATCH.md",
+    "tooling/hq-agent-host/live-dispatch-native-check.mjs",
+    "tooling/hq-agent-host/live-dispatch-native-fixture.mjs",
+    "tooling/hq-agent-host/live-dispatch-native-source.test.mjs",
+    "tooling/hq-agent-host/live-dispatch-native.Dockerfile",
+    "tooling/hq-agent-host/live-dispatch-native.md",
+    "tooling/hq-agent-host/proposed-migrations/hq_live_dispatch.sql"
+  ],
+  "reason": "Prepare a guarded staging-only activation migration for the existing-owner live outbox dispatcher and exact-source native cron compatibility tests. Preserves old events, existing access and worker safeguards; no credential or grant expansion. Deployment remains gated on exact-head tests and review."
+}

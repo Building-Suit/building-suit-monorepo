@@ -328,6 +328,15 @@
       "phase": "trial-review-plan-cache-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261109124713_hq_trial_review_plan_cache.sql"
+    },
+    {
+      "file": "20261109150515_hq_live_dispatch_activation.sql",
+      "bytes": 30463,
+      "md5": "9af209f8082a4912b33bd625c9a46514",
+      "sha256": "a69402ef0c3a6931e2441d82447183976324f108605b567714294a80fef2c0d4",
+      "phase": "live-dispatch-activation",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261109150515_hq_live_dispatch_activation.sql"
     }
   ]
 }

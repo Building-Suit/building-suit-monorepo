@@ -9,8 +9,9 @@ Supabase or authorize worker, identity, scheduler, or production changes.
   fixture migration compatibility, an actual worker claim, proposal creation, and
   the private invoker procedure contract using PGlite. It neither substitutes a
   fake cron implementation nor proves transaction/concurrency behavior.
-- `.github/workflows/hq-live-dispatch-disposable.yml` builds PostgreSQL 17 with
-  the actual `pg_cron` package in a two-job matrix (background workers on/off) and runs
+- `.github/workflows/hq-live-dispatch-disposable.yml` builds PostgreSQL 17.11 with
+  pinned upstream pg_cron v1.6.4 and a packaged comparison in a four-job matrix
+  (each with background workers on/off) and runs
   `node --test tooling/hq-agent-host/live-dispatch-native-check.mjs`. The database
   runs on an internal Docker network with no host port published. The official
   Node 26.8.1 binary runs the tests inside the same container; the checked-out
