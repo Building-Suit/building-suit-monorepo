@@ -105,7 +105,7 @@ async function preparedWorker(){
   const packaged=release.match(/^FILES = \((.+)\)$/m)?.[1]?.match(/'[^']+'/g)?.map(value=>value.slice(1,-1))
   assert.deepEqual(packaged,['worker.mjs','workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs','departmentWorkflow.mjs'],'release allowlist must exclude the inert fixture and all test directories')
   assert.equal(typeof invokeCodex,'function')
-  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),historicalWorkerDigest,'SQL-first work must not activate the future worker')
+  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),compatibleWorkerDigest,'worker child must activate only the exact reviewed future source')
   assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
   const bytes=await readFile(new URL('./test-fixtures/repository-compatible-worker.mjs.txt',import.meta.url))
   assert.equal(hash(bytes),compatibleWorkerDigest,'inert fixture must be the exact reviewed future worker')

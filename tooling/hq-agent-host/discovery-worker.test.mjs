@@ -162,3 +162,97 @@ test('actual retail CLI plan returns real module declaration and retains it thro
   {version:3,job:{id:job.id,lease_token:'generated-lease'},phase:'finished',reply:output.reply,error:null,evidence:output.evidence,modelBindingEvidence:output.modelBindingEvidence})
  assert.equal(saved.phase,'delivered');assert.deepEqual(saved.modelBindingEvidence.publicDiscoveryPolicy,policy)
 })
+
+const discoveryFailures=['discovery-access-denied','discovery-rate-limited','discovery-response-too-large','discovery-dns-rejected','discovery-source-unavailable','discovery-result-invalid','discovery-budget-exhausted','discovery-unavailable-no-retry']
+function retailFailure(category='clothing',code=discoveryFailures[0],trial=false){
+ const job=pilotJob(),{item}=fixture()
+ Object.assign(job.context.publicDiscoveryPermit,{policyId:retailPolicy,category})
+ if(trial){
+  job.context.mode='worker-trial'
+  job.context.supervisedTrial={id:randomUUID(),taskId:job.context.task.id,agentId:job.agent_id,managerId:'AG-RES-001',skillFileId:'skill_fixture_01',scope:'public-retail-tool-trial-v1',toolPolicyId:retailPolicy,category,status:'active',bindingDigest:'a'.repeat(64),expiresAt:new Date(Date.now()+60000).toISOString(),externalActionsAllowed:false,publishingAllowed:false}
+ }
+ item.result={isError:true,content:[{type:'text',text:code}]}
+ return {job,item}
+}
+async function invokeFailure(protocol,job,items){
+ const appItems=items.map(item=>({...item,type:'mcpToolCall'}))
+ const events=[{type:'turn.started'},...items.map(item=>({type:'item.completed',item:{...item,type:'mcp_tool_call'}})),{type:'item.completed',item:{type:'agent_message',text:'Must not turn a failed retrieval into a successful draft.'}},{type:'turn.completed'}]
+ let failure
+ await fake(events,async config=>{
+  try{await invokeCodex({...config,id:'generated-worker'},job,[],AbortSignal.timeout(5000))}catch(error){failure=error}
+ },protocol==='app-server'?{cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,publicDiscoveryCategory:job.context.publicDiscoveryPermit.category,events:appItems.map(item=>({method:'item/completed',params:{item}})),turnItems:appItems}}:{})
+ assert.ok(failure,'a failed retrieval must reject execution')
+ return failure
+}
+for(const category of ['clothing','footwear','homewares'])for(const code of discoveryFailures){
+ test(`retail diagnostic ${category} ${code} is sanitized rather than a receipt`,()=>{
+  const {job,item}=retailFailure(category,code)
+  assert.throws(()=>discoveryToolReceipt(item,job),error=>{assert.equal(error.code,code);assert.equal(error.message,code);return true})
+ })
+ for(const protocol of ['exec','app-server'])test(`${protocol} retail ${category} ${code} settles failure without receipts or fallback`,async()=>{
+  const {job,item}=retailFailure(category,code,protocol==='app-server')
+  const failure=await invokeFailure(protocol,job,[item])
+  assert.equal(failure.code,code);assert.deepEqual(failedToolEvidence(failure),[])
+  if(protocol==='exec'){
+   assert.equal(failure.modelExecutionEvidence.outcome,'failed');assert.equal(failure.modelExecutionEvidence.attempts.length,1);assert.equal(failure.modelExecutionEvidence.attempts[0].errorCode,code);assert.equal(failure.modelExecutionEvidence.fallbackUsed,false)
+  }else{
+   assert.equal(failure.modelBindingEvidence.outcome,'failed');assert.deepEqual(failure.modelBindingEvidence.observedErrors,[code]);assert.ok(Object.isFrozen(failure.modelBindingEvidence.observedErrors));assert.equal(failure.modelAttemptEvidence.errorCode,code)
+  }
+  let saved,calls=0
+  const entry={version:3,job:{id:job.id,lease_token:'generated-lease'},phase:'finished',reply:'',error:failure.code,evidence:failedToolEvidence(failure),modelExecutionEvidence:failure.modelExecutionEvidence,modelBindingEvidence:failure.modelBindingEvidence}
+  await deliverWorkerEntry({workerId:'generated-worker',retryWait:async()=>{},rpc:async(name,input)=>{
+   calls++;assert.equal(name,'hq_worker_finish_v4');assert.equal(input.p_error,code);assert.equal(input.p_reply,'');assert.deepEqual(input.p_evidence,[]);assert.equal((input.p_model_evidence??input.p_trial_evidence).outcome,'failed')
+   return {accepted:true,trialReceiptAccepted:true}
+  },write:async value=>{saved=value}},entry)
+  assert.equal(calls,1);assert.equal(saved.phase,'delivered');assert.equal(saved.error,null);assert.deepEqual(saved.evidence,[])
+ })
+}
+const forgedDiagnostics=[
+ ['unknown diagnostic',({item})=>{item.result.content[0].text='discovery-private-provider-error'}],
+ ['narrative prefix',({item})=>{item.result.content[0].text='Provider says discovery-access-denied'}],
+ ['trailing text',({item})=>{item.result.content[0].text+='\nprivate provider response'}],
+ ['missing error marker',({item})=>{delete item.result.isError}],
+ ['false error marker',({item})=>{item.result.isError=false}],
+ ['structured metadata',({item})=>{item.result.structured_content={policyId:retailPolicy}}],
+ ['camel structured metadata',({item})=>{item.result.structuredContent={private:'provider text'}}],
+ ['extra result field',({item})=>{item.result.private='provider text'}],
+ ['extra text field',({item})=>{item.result.content[0].private='provider text'}],
+ ['multiple text blocks',({item})=>{item.result.content.push({...item.result.content[0]})}],
+ ['nontext block',({item})=>{item.result.content[0].type='image'}],
+ ['wrong server',({item})=>{item.server='untrusted_server'}],
+ ['wrong tool',({item})=>{item.tool='untrusted_tool'}],
+ ['nonempty arguments',({item})=>{item.arguments={query:'private task text'}}],
+ ['wrong status',({item})=>{item.status='failed'}],
+ ['provider error field',({item})=>{item.error={message:'private provider response'}}],
+ ['unknown category',({job})=>{job.context.publicDiscoveryPermit.category='pharmacy'}],
+ ['permit job mismatch',({job})=>{job.context.publicDiscoveryPermit.jobId='other-job'}],
+ ['permit agent mismatch',({job})=>{job.context.publicDiscoveryPermit.agentId='AG-HR-002'}],
+ ['identity mismatch',({job})=>{job.context.agent.id='AG-HR-002'}],
+ ['binding digest mismatch',({job})=>{job.context.publicDiscoveryPermit.bindingDigest='c'.repeat(64)}],
+ ['extra permit field',({job})=>{job.context.publicDiscoveryPermit.query='private task text'}],
+ ['repair attempt',({job})=>{job.context.task.attempt=1}],
+ ['trial category mismatch',({job})=>{job.context.supervisedTrial.category='footwear'}],
+]
+for(const [name,mutate] of forgedDiagnostics)test(`retail diagnostic rejects ${name} without accepting provider text`,()=>{
+ const value=retailFailure('clothing',discoveryFailures[0],true);mutate(value)
+ assert.throws(()=>discoveryToolReceipt(value.item,value.job),error=>{assert.equal(error.code,'provider-mcp-evidence-invalid');assert.equal(error.message,'provider-mcp-evidence-invalid');return true})
+})
+for(const protocol of ['exec','app-server']){
+ test(`${protocol} forged diagnostic text never escapes the fixed sanitizer`,async()=>{
+  const {job,item}=retailFailure('clothing','discovery-access-denied private provider response',protocol==='app-server')
+  const failure=await invokeFailure(protocol,job,[item]);assert.equal(failure.code,'provider-mcp-evidence-invalid');assert.deepEqual(failedToolEvidence(failure),[])
+  assert.doesNotMatch(JSON.stringify(failure.modelExecutionEvidence??failure.modelBindingEvidence),/private provider response/)
+ })
+ test(`${protocol} duplicate failed MCP items remain a single failed attempt with zero receipts`,async()=>{
+  const {job,item}=retailFailure('clothing',discoveryFailures[0],protocol==='app-server')
+  const failure=await invokeFailure(protocol,job,[item,structuredClone(item)])
+  assert.equal(failure.code,discoveryFailures[0]);assert.deepEqual(failedToolEvidence(failure),[]);if(protocol==='exec'){assert.equal(failure.modelExecutionEvidence.attempts.length,1);assert.equal(failure.modelExecutionEvidence.fallbackUsed,false)}else{assert.deepEqual(failure.modelBindingEvidence.observedErrors,[discoveryFailures[0]]);assert.equal(failure.modelAttemptEvidence.outcome,'failed')}
+ })
+}
+
+for(const protocol of ['exec','app-server'])for(const metadata of ['structured_content','structuredContent','both'])test(`${protocol} rejects diagnostic carrying ${metadata} metadata`,async()=>{
+ const {job,item}=retailFailure('clothing',discoveryFailures[0],protocol==='app-server')
+ if(metadata!=='structuredContent')item.result.structured_content={private:'provider response'}
+ if(metadata!=='structured_content')item.result.structuredContent={private:'provider response'}
+ const failure=await invokeFailure(protocol,job,[item]);assert.equal(failure.code,'provider-mcp-evidence-invalid');assert.deepEqual(failedToolEvidence(failure),[])
+})

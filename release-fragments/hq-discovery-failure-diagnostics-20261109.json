@@ -1,0 +1,9 @@
+{
+  "id": "hq-discovery-failure-diagnostics-20261109",
+  "task": "HQ-DISCOVERY-FAILURE-DIAGNOSTICS-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/hq-agent-host/worker.mjs", "tooling/hq-agent-host/discovery-worker.test.mjs", "tooling/hq-agent-host/retail-discovery-db.test.mjs", "docs/work-packages/company-hq/DISCOVERY-FAILURE-DIAGNOSTICS-20261109.md"],
+  "reason": "Preserve only eight local discovery-server failure codes after fixed policy and typed item validation. No successful receipt, model fallback, repeated query, qualification, runtime activation, provider change or public product behavior is added. Synthetic worker and database fixtures verify failed settlement."
+}

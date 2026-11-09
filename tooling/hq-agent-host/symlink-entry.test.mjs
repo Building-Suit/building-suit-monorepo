@@ -34,19 +34,37 @@ async function setup(t) {
   const api = {version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:REQUIRED_RPCS}
   const preload = join(root,'fixture.mjs')
   await writeFile(preload,`
-import {appendFile} from 'node:fs/promises'
+import {appendFile,readFile} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
+import {pathToFileURL} from 'node:url'
 const api=${JSON.stringify(api)},staffingApi=${JSON.stringify(staffingApi)},log=${JSON.stringify(join(root,'calls'))}
+const compatibility=async()=>{
+const entry=pathToFileURL(process.argv[1])
+const digest=bytes=>createHash('sha256').update(bytes).digest('hex')
+const repositoryWorkerCompatibility={version:1,policyId:'hq-public-github-read-v1',
+ moduleSha256:digest(await readFile(new URL('./departmentWorkflow.mjs',entry))),
+ workerSourceDigests:['bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88',digest(await readFile(entry))]}
+return repositoryWorkerCompatibility
+}
 globalThis.fetch=async url=>{
  let body,kind
  if(url.includes('/auth/')){kind='auth';body={access_token:'fixture-access',refresh_token:'fixture-refresh',expires_in:3600}}
  else if(url.endsWith('/rest/v1/')){return new Response(JSON.stringify({error:'api-key',category:'privileged-key-required'}),{status:401})}
- else if(url.endsWith('/hq_worker_release_status')){kind='status';body={researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},api,staffingApi,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim}
+ else if(url.endsWith('/hq_worker_release_status')){kind='status';body={repositoryWorkerCompatibility:await compatibility(),researchApi:{version:1,role:'authenticated',schemaUsage:true,execute:true,rpcs:{hq_worker_research_claim:['p_worker_id','p_lease_seconds','p_meeting_protocol']}},publicDiscovery:{version:1,policyId:'exa-public-business-discovery-v1',trialPurpose:'public-research-tool-trial-v1',receiptVersion:2},api,staffingApi,contract:2,trialDelivery:1,trialSkills:1,trialFailureSettlement:1,activeJobs:0};if(process.env.FIXTURE_BAD_SCHEMA)delete body.api.rpcs.hq_worker_claim;
+ const mode=process.env.FIXTURE_COMPATIBILITY;
+ if(mode==='missing')delete body.repositoryWorkerCompatibility;
+ if(mode==='null')body.repositoryWorkerCompatibility=null;
+ if(mode==='malformed')body.repositoryWorkerCompatibility.version='1';
+ if(mode==='module')body.repositoryWorkerCompatibility.moduleSha256='a'.repeat(64);
+ if(mode==='worker')body.repositoryWorkerCompatibility.workerSourceDigests[1]='a'.repeat(64);
+ if(mode==='rpc')throw Error('synthetic-rpc-failure');}
+
  else throw Error('unexpected-fixture-request')
  await appendFile(log,kind+'\\n');return new Response(JSON.stringify(body))
 }
 globalThis.WebSocket=class extends EventTarget{
  static OPEN=1;readyState=1
- constructor(){super();setTimeout(()=>this.dispatchEvent(new Event('open')),5)}
+ constructor(){super();if(process.env.FIXTURE_COMPATIBILITY)throw Error('activation-side-effect-before-proof');setTimeout(()=>this.dispatchEvent(new Event('open')),5)}
  send(raw){const f=JSON.parse(raw);if(f.event==='phx_join')setTimeout(()=>{
  const emit=value=>this.dispatchEvent(new MessageEvent('message',{data:JSON.stringify(value)}))
  emit({topic:f.topic,ref:f.ref,event:'phx_reply',payload:{status:'ok'}})
@@ -124,4 +142,20 @@ test('direct symlink imports stay inert and trial source digest matches the impo
   assert.equal(evidence.workerSourceDigest,manifest.files['worker.mjs'].sha256)
   assert.equal(evidence.workerSourceDigest,digest(await readFile(join(f.root,'releases',f.b,'worker.mjs'))))
   assert.equal(evidence.attestationLevel,'host-returned-resolution');assert.equal(await f.calls(),'')
+})
+
+
+test('candidate preflight and direct startup reject incompatible repository proof before activation',async t=>{
+ const f=await setup(t),entry=join(f.root,'candidate','worker.mjs')
+ for(const mode of ['missing','null','malformed','module','worker','rpc']){
+  for(const preflight of [true,false]){
+   const before=await f.calls()
+   await assert.rejects(run(process.execPath,['--preserve-symlinks-main','--import',f.preload,entry,...(preflight?['--release-preflight']:[])],
+    {env:{...f.env,HQ_RELEASE_MANAGED:preflight?'1':'0',FIXTURE_COMPATIBILITY:mode},timeout:5000}),error=>{
+     assert.equal(error.code,1);assert.doesNotMatch(error.stdout+error.stderr,/activation-side-effect-before-proof/);return true
+    })
+   const calls=(await f.calls()).slice(before.length).trim().split('\n')
+   assert.deepEqual(calls,mode==='rpc'?['auth']:['auth','status'])
+  }
+ }
 })

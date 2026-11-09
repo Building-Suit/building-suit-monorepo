@@ -24,6 +24,10 @@ const MEETING_PROTOCOL = 1
 const TRIAL_CODEX_CLI_VERSIONS = new Set(['codex-cli 0.159.2', 'codex-cli 0.160.0'])
 const TERRA_MODEL = 'gpt-6.1-terra', LUNA_FALLBACK_MODEL = 'gpt-6-luna'
 const FALLBACK_PROVIDER_ERRORS = new Set(['provider-model-unavailable', 'provider-capacity', 'provider-error'])
+const DISCOVERY_FAILURE_CODES = new Set(['discovery-access-denied','discovery-rate-limited','discovery-response-too-large',
+  'discovery-dns-rejected','discovery-source-unavailable','discovery-result-invalid','discovery-budget-exhausted','discovery-unavailable-no-retry'])
+const discoveryFailureCode = error => error instanceof WorkerProblem && DISCOVERY_FAILURE_CODES.has(error.code)
+  ? error.code : 'provider-mcp-evidence-invalid'
 const TOPIC = 'realtime:hq-agent-jobs'
 class WorkerProblem extends Error { constructor(code) { super(code); this.code = code } }
 const problem = code => new WorkerProblem(code)
@@ -626,6 +630,21 @@ export function discoveryToolReceipt(item,job) {
   requireValue(item?.server==='hq_public_discovery' && item.tool===DISCOVERY_MCP_TOOL
     && item.status==='completed' && item.error==null && record(item.arguments)
     && Object.keys(item.arguments).length===0 && /^[A-Za-z0-9_-]{1,200}$/.test(item.id||''), 'provider-mcp-evidence-invalid')
+  if (item.result?.isError === true) {
+    // Reuse the launch authorization, including the frozen retail category and
+    // binding digest. This builds configuration only; it performs no I/O.
+    requireValue(discoveryMcpConfig(job, {nodePath:process.execPath,
+      modulePath:fileURLToPath(new URL('./departmentWorkflow.mjs',import.meta.url)),
+      budgetFile:join(tmpdir(),'exa-discovery-budget'),executionModel:job.context.agent?.model}), 'provider-mcp-evidence-invalid')
+    // The local server emits only one bounded code. Never promote provider prose,
+    // structured success evidence, extra blocks or mixed payloads into diagnostics.
+    requireValue(Object.keys(item.result).every(key => ['isError','content'].includes(key)
+      || ['structuredContent','structured_content'].includes(key) && item.result[key] === undefined)
+      && Array.isArray(content) && content.length === 1 && record(content[0])
+      && Object.keys(content[0]).sort().join(',') === 'text,type' && content[0].type === 'text'
+      && DISCOVERY_FAILURE_CODES.has(content[0].text), 'provider-mcp-evidence-invalid')
+    throw problem(content[0].text)
+  }
   requireValue(metadata?.version===1 && metadata.kind==='mcp-exa-public-discovery'
     && metadata.policyId===permit.policyId && (retail ? metadata.category===permit.category : !Object.hasOwn(metadata,'category')) && metadata.partial===true && metadata.wholePageVerified===false
     && /^[a-f0-9]{64}$/.test(metadata.rawResultSha256||'') && /^[a-f0-9]{64}$/.test(metadata.literalTextSha256||'')
@@ -687,7 +706,7 @@ function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, wor
       cliExecutable:executable,cliBinaryDigest,configuredModel:job.context.agent.model,launchModel:job.context.agent.model,
       configuredEffort:job.context.agent.effort,launchEffort:job.context.agent.effort,
       settingObservationSource:'explicit-codex-app-server-thread-start-and-locked-config',invocationStatus:'launched',threadId,
-      laterModelOverrideCount,invocation:invocation(),turnsStarted:turnStarted,turnsCompleted:turnCompleted,observedErrors,observedReroutes,
+      laterModelOverrideCount,invocation:invocation(),turnsStarted:turnStarted,turnsCompleted:turnCompleted,observedErrors:Object.freeze([...observedErrors]),observedReroutes,
       observedEventCoverage:'codex-app-server-jsonrpc-events-only',outcome,artifactDigest:outcome==='completed'?createHash('sha256').update(answer.trim()).digest('hex'):null,
     })
     const stop = () => {
@@ -715,11 +734,11 @@ function invokeTrialWithAppServer({ executable, cliVersion, cliBinaryDigest, wor
         if(item.server!==mcpServer || item.tool!==mcpTool || !record(item.arguments) || Object.keys(item.arguments).length) { fail('provider-tool-rejected');return }
         if(event.method==='item/completed') {
           try {
-            const receipt=(repository?repositoryToolReceipt:discoveryToolReceipt)({...item,result:item.result ? {...item.result,structured_content:item.result.structuredContent}:null},job)
+            const receipt=(repository?repositoryToolReceipt:discoveryToolReceipt)({...item,result:item.result?.isError === true ? item.result : item.result ? {...item.result,structured_content:item.result.structuredContent}:null},job)
             const existing=evidence.find(value=>value.eventId===receipt.eventId)
             if(existing) requireValue(JSON.stringify(existing)===JSON.stringify(receipt),'provider-mcp-evidence-invalid')
             else {requireValue(evidence.length===0 && Buffer.byteLength(JSON.stringify([receipt]))<=40000,'provider-mcp-evidence-invalid');evidence.push(receipt)}
-          } catch(error) {fail(repository && ['repository-access-denied','repository-rate-limited','repository-budget-exhausted','repository-unavailable-no-retry'].includes(error?.code)?error.code:'provider-mcp-evidence-invalid')}
+          } catch(error) {fail(repository && ['repository-access-denied','repository-rate-limited','repository-budget-exhausted','repository-unavailable-no-retry'].includes(error?.code)?error.code:repository?'provider-mcp-evidence-invalid':discoveryFailureCode(error))}
         }
         return
       }
@@ -943,7 +962,7 @@ async function invokeCodexAttempt(config, job, brain, signal, executionModel = j
         settingObservationSource: 'explicit-host-generated-codex-exec-argv-and-locked-config', invocationStatus: 'launched',
         threadId, invocation: { executable, argv: [...args], environment, stdinSha256: createHash('sha256').update(prompt).digest('hex') },
         turnsStarted: turnStarted, turnsCompleted: completed,
-        observedErrors, observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,
+        observedErrors:Object.freeze([...observedErrors]), observedReroutes, observedEventCoverage: 'codex-exec-jsonl-events-only', outcome,
         artifactDigest: outcome === 'completed' ? createHash('sha256').update(reply).digest('hex') : null,
       } : null
       const modelAttemptEvidence = (outcome, errorCode = null) => ({
@@ -995,7 +1014,7 @@ async function invokeCodexAttempt(config, job, brain, signal, executionModel = j
               requireValue(!evidence.some(receipt=>receipt.tool==='mcp'),'provider-mcp-evidence-invalid')
               evidence.push(discoveryToolReceipt(item,job))
               requireValue(Buffer.byteLength(JSON.stringify(evidence))<=36000,'provider-mcp-evidence-invalid')
-            }catch { fail('provider-mcp-evidence-invalid');return }
+            }catch(error) { fail(discoveryFailureCode(error));return }
           }
           if (event.type === 'item.completed' && item.type === 'agent_message') {
             if (typeof item.text !== 'string' || Buffer.byteLength(item.text) > 32_000) { fail('provider-output-invalid'); return }
@@ -1121,6 +1140,25 @@ export async function deliverWorkerEntry({ rpc, write, workerId, retryWait = wai
   }
 }
 
+/** Authenticated activation proof is tied to actual source bytes, never manifest claims. */
+export async function checkRepositoryWorkerCompatibility(status, read = readFile) {
+  const cap = status?.repositoryWorkerCompatibility
+  const historical = 'bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
+  const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value)
+  requireValue(record(cap) && Object.keys(cap).sort().join(',') === 'moduleSha256,policyId,version,workerSourceDigests'
+    && cap.version === 1 && cap.policyId === PUBLIC_REPOSITORY_POLICY && digest(cap.moduleSha256)
+    && Array.isArray(cap.workerSourceDigests) && cap.workerSourceDigests.length === 2
+    && cap.workerSourceDigests.every(digest) && new Set(cap.workerSourceDigests).size === 2
+    && cap.workerSourceDigests.includes(historical), 'repository-worker-incompatible')
+  let workerDigest, moduleDigest
+  try {
+    workerDigest = createHash('sha256').update(await read(new URL('./worker.mjs', import.meta.url))).digest('hex')
+    moduleDigest = createHash('sha256').update(await read(new URL('./departmentWorkflow.mjs', import.meta.url))).digest('hex')
+  } catch { throw problem('repository-worker-incompatible') }
+  requireValue(cap.workerSourceDigests.includes(workerDigest) && cap.moduleSha256 === moduleDigest,
+    'repository-worker-incompatible')
+}
+
 export async function start(adapters = {}) {
   const config = configuration()
   await privateDirectory(config.state)
@@ -1150,6 +1188,7 @@ export async function start(adapters = {}) {
   async function compatible() {
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
+    await checkRepositoryWorkerCompatibility(status)
     checkApiContract(status)
     checkStaffingContract(status)
     checkResearchContract(status)
@@ -1161,6 +1200,11 @@ export async function start(adapters = {}) {
     requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
     try { await compatible(); process.stdout.write('{"contract":2}\n') } finally { api.stop() }
     return
+  }
+  // Managed workers remain paused until a successful status/resume proof. Direct
+  // starts have no maintenance admission gate, so validate before any connection.
+  if (!managed) {
+    try { await compatible() } catch (error) { api.stop(); throw error }
   }
   let control
   if (managed) {

@@ -3,7 +3,7 @@ import { fake } from './test-cli.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, randomUUID, generateKeyPairSync } from 'node:crypto'
-import { deliverWorkerEntry, validateTaskAckOutput, validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
+import { start, checkRepositoryWorkerCompatibility, deliverWorkerEntry, validateTaskAckOutput, validateJob, stageInstructions, webAllowed, workerClaimInput, invokeCodex, nativeToolReceipt, providerErrorCode, codeOf, brainReader } from './worker.mjs'
 import { workerExecutionBlock } from './departmentWorkflow.mjs'
 import { registerHooks } from 'node:module'
 // Nuxt resolves these TypeScript source imports; plain Node tests need the same
@@ -495,4 +495,46 @@ test('trial resolution uses authoritative response envelope and rejects null or 
    ()=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),/provider-model-resolution-invalid/),{appServer})
  const output=await fake([],config=>invokeCodex({...config,id:randomUUID()},trial,[],AbortSignal.timeout(5000)),{appServer:{nestedSettings:true}})
  assert.equal(output.modelBindingEvidence.hostResolution.reasoningEffort,'medium')
+})
+
+
+test('repository activation capability validates actual bytes and rejects every incomplete proof',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const digest=bytes=>createHash('sha256').update(bytes).digest('hex')
+ const historical='bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
+ const current=digest(await readFile(new URL('./worker.mjs',import.meta.url)))
+ const cap={version:1,policyId:'hq-public-github-read-v1',moduleSha256:digest(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),workerSourceDigests:[historical,current]}
+ await checkRepositoryWorkerCompatibility({repositoryWorkerCompatibility:cap})
+ for(const invalid of [undefined,null,{},[],{...cap,version:2},{...cap,policyId:'other'},
+  {...cap,moduleSha256:'a'.repeat(64)},{...cap,moduleSha256:null},
+  {...cap,workerSourceDigests:[current]},{...cap,workerSourceDigests:[historical,historical]},
+  {...cap,workerSourceDigests:[historical,'a'.repeat(64)]},{...cap,workerSourceDigests:[current,'a'.repeat(64)]},
+  {...cap,workerSourceDigests:[historical,current,'a'.repeat(64)]},{...cap,workerSourceDigests:[historical,1]},
+  {...cap,unexpected:true}])await assert.rejects(checkRepositoryWorkerCompatibility({repositoryWorkerCompatibility:invalid}),/repository-worker-incompatible/)
+ for(const filename of ['worker.mjs','departmentWorkflow.mjs']){
+  await assert.rejects(checkRepositoryWorkerCompatibility({repositoryWorkerCompatibility:cap},url=>url.pathname.endsWith('/'+filename)?Promise.reject(Error('private-path')):readFile(url)),error=>error.message==='repository-worker-incompatible')
+  await assert.rejects(checkRepositoryWorkerCompatibility({repositoryWorkerCompatibility:cap},url=>url.pathname.endsWith('/'+filename)?Promise.resolve(Buffer.from('changed source bytes')):readFile(url)),/repository-worker-incompatible/)
+ }
+})
+
+
+test('direct startup stops the API on compatibility failure before connecting or using work adapters',async()=>{
+ const {mkdtemp,rm}=await import('node:fs/promises'),{tmpdir}=await import('node:os'),{join}=await import('node:path')
+ const state=await mkdtemp(join(tmpdir(),'hq-activation-'))
+ const env={HQ_RELEASE_MANAGED:'0',HQ_WORKER_STATE_DIR:state,HQ_SUPABASE_URL:'https://dpruoncalmwicrqhqelu.supabase.co',
+  HQ_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fixture',HQ_WORKER_ID:randomUUID(),HQ_WORKER_EMAIL:'synthetic@example.invalid',HQ_WORKER_PASSWORD:'synthetic-password-never-real-12345'}
+ const previous=Object.fromEntries(Object.keys(env).map(key=>[key,process.env[key]]))
+ Object.assign(process.env,env)
+ try{
+  for(const rpcFailure of [false,true]){
+   const calls=[]
+   const forbidden=()=>{assert.fail('work adapter used before compatibility')}
+   await assert.rejects(start({api:{rpc:async(name)=>{calls.push(name);if(rpcFailure)throw Error('synthetic-rpc-failure');return {}},stop:()=>calls.push('stop'),access:forbidden,onToken:forbidden},
+    roster:{sync:forbidden},brain:forbidden,invoke:forbidden}),rpcFailure?/synthetic-rpc-failure/:/repository-worker-incompatible/)
+   assert.deepEqual(calls,['hq_worker_release_status','stop'])
+  }
+ }finally{
+  for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value}
+  await rm(state,{recursive:true,force:true})
+ }
 })

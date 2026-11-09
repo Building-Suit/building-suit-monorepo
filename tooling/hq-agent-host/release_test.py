@@ -189,6 +189,36 @@ class Releases(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'schema-incompatible'):
             r.install(self.host, package(B), B)
 
+    def test_repository_compatibility_preflight_failure_never_drains_old_worker(self):
+        def preflight(sha):
+            self.host.calls.append('preflight')
+            raise RuntimeError('repository-worker-incompatible')
+        self.host.preflight = preflight
+        with self.assertRaisesRegex(RuntimeError, 'repository-worker-incompatible'):
+            r.install(self.host, package(B), B)
+        self.assertEqual(self.host.calls, ['preflight'])
+        self.assertEqual(r.current_sha(self.root), A)
+        self.assertEqual(self.host.running, A)
+        self.assertFalse(self.host.paused)
+        self.assertFalse((self.root / 'transaction.json').exists())
+
+    def test_compatibility_loss_on_resume_keeps_candidate_paused_without_unsafe_rollback(self):
+        original = self.host.control
+        def control(action):
+            if action == 'resume':
+                self.host.calls.append(action)
+                raise RuntimeError('maintenance-unavailable')
+            return original(action)
+        self.host.control = control
+        with self.assertRaisesRegex(RuntimeError, 'maintenance-unavailable'):
+            r.install(self.host, package(B), B)
+        self.assertEqual(r.current_sha(self.root), B)
+        self.assertEqual(self.host.running, B)
+        self.assertTrue(self.host.paused)
+        self.assertEqual(self.host.busy, 0)
+        self.assertEqual(self.host.calls, ['preflight', 'drain', 'stop', 'start', 'health:' + B, 'resume'])
+        self.assertEqual(r.decode((self.root / 'transaction.json').read_bytes())['phase'], 'accepted')
+
     def test_drain_timeout_defers_without_stop_and_recovers(self):
         self.host.fail_drain = True
         self.host.busy = 1
