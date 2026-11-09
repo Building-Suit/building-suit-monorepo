@@ -1,0 +1,9 @@
+{
+  "id": "hq-mobile-workspace-20261109",
+  "task": "HQ-MOBILE-WORKSPACE-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/templates/BsHqLayoutPage.vue"],
+  "reason": "Private HQ adapts its navigation and action controls to phones and gives each open panel the available workspace. Signed-in localhost checked at portrait, landscape and desktop widths."
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqActivityNotificationsPresentation, HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
 
 import type { HqAgentPresentation, HqAgentsContent, HqAgentsPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import { useHqAvatarAssets } from '../composables/useHqAvatarAssets'
@@ -12,6 +12,9 @@ const { brain, refresh, selectNote } = useCompanyBrain()
 const companyPlansCopy = computed<HqCompanyPlansCopy>(() => ({
   title: t('hq.companyPlans.title'),
   board: {
+    brainLabel: t('hq.companyPlans.board.brainLabel'),
+    brainUnavailable: t('hq.companyPlans.board.brainUnavailable'),
+    sourceLabel: t('hq.companyPlans.board.sourceLabel'),
     discussion: t('hq.companyPlans.board.discussion'),
     preparation: t('hq.companyPlans.board.preparation'),
     blocked: t('hq.companyPlans.board.blocked'),
@@ -59,6 +62,24 @@ const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
   signOutFailed: companyPlansCopy.value.signOutFailed,
   confirmationRequired: companyPlansCopy.value.confirmationRequired,
 }))
+const activityNotifications = useHqActivityNotifications(() => access.value.status === 'founder', topic => t(`hq.notifications.activity.${topic}`))
+const notifications = computed<HqActivityNotificationsPresentation>(() => {
+  const status = activityNotifications.status.value
+  const liveOnly = activityNotifications.liveOnly.value
+  return {
+    status,
+    busy: activityNotifications.busy.value,
+    soundOn: activityNotifications.soundOn.value,
+    label: t('hq.notifications.label'),
+    pushLabel: t(liveOnly
+      ? status === 'on' ? 'hq.notifications.disableAlerts' : 'hq.notifications.enableAlerts'
+      : status === 'on' ? 'hq.notifications.disablePush' : 'hq.notifications.enablePush'),
+    soundLabel: t(activityNotifications.soundOn.value ? 'hq.notifications.disableSound' : 'hq.notifications.enableSound'),
+    message: status === 'on' && liveOnly ? t('hq.notifications.liveOnly')
+      : status === 'off' || status === 'on' ? '' : t(`hq.notifications.${status}`),
+  }
+})
+const { backlog, setOpen: setPlanBoardOpen, refresh: refreshPlanBacklog } = useHqPlanBacklog(() => access.value.status === 'founder')
 const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status, () => access.value.user)
 const { staffing, staffingCopy, refreshStaffing, decideStaffing, cancelStaffing } = useHqStaffing(() => access.value)
 const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
@@ -211,6 +232,7 @@ const localizedDepartments = computed<readonly HqDepartmentOffice[]>(() => depar
 })))
 const companyPlans = computed<HqCompanyPlansPresentation>(() => ({
   ...workspace.value,
+  backlog: backlog.value,
   plans: workspace.value.plans.map(plan => ({
     ...plan,
     departments: plan.departments.map(department => ({ ...department, name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name })),
@@ -319,4 +341,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>

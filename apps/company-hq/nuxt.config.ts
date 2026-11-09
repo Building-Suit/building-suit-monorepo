@@ -26,7 +26,7 @@ export default defineNuxtConfig({
     hqBrainGoogleClientEmail: '', hqBrainGooglePrivateKey: '', hqBrainDevProxyToken,
     hqSupabaseUrl: '', hqSupabasePublishableKey: '', hqEnvironment: 'staging',
     hqFounderEmail: 'ceo@building-suit.com',
-    hqAppOrigin: '',
+    hqAppOrigin: '', hqPushVapidPublicKey: '',
     hqMeetingsDemo: false, hqMeetingsDemoDatabase: '', hqMeetingsLive: false,
   },
   // HQ chrome stays English; conversation and recognition languages are separate.
