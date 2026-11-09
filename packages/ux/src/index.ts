@@ -163,6 +163,8 @@ export { permissionSelection } from './permissionSelection.ts'
 export { useWorkspaceNavigation } from './composables/useWorkspaceNavigation.ts'
 export { useSpatialViewport, SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_MIN_PITCH, SPATIAL_VIEWPORT_TARGET_Y, SPATIAL_VIEWPORT_MIN_TARGET_Y } from './composables/useSpatialViewport.ts'
 export type { SpatialViewportCamera } from './composables/useSpatialViewport.ts'
+export { useSpatialGameMode } from './composables/useSpatialGameMode.ts'
+export type { SpatialGamePose } from './composables/useSpatialGameMode.ts'
 
 export { usePolling } from './composables/usePolling.ts'
 

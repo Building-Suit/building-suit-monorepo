@@ -20,3 +20,13 @@ CC BY — https://static.makehumancommunity.org/assets/assetpacks/hair02.html
 https://files2.makehumancommunity.org/asset_packs/hair02/hair02_ccby.zip
 
 The models were refitted, reskinned to a compact skeleton, and converted to glTF with resized textures.
+
+HQ Game Mode characters
+Grab3D, CC0 1.0 Universal
+https://grab3d.com/models/characters/ninja/
+https://grab3d.com/models/characters/pirate/
+https://grab3d.com/models/characters/wizard/
+https://grab3d.com/models/characters/witch/
+https://grab3d.com/models/characters/elf/
+
+Adaptations: compact rigs, resized textures and Character Studio walk cycles.

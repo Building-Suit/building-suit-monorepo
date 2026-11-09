@@ -1,5 +1,6 @@
 import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
-import type { SpatialViewportCamera } from '@building-suit/ux'
+import type { SpatialGamePose, SpatialViewportCamera } from '@building-suit/ux'
+import type { HqAgentAvatar, HqGameCharacter } from '../types/hqAgentsPresentation'
 import type { HqAvatarAssets, HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { createHqAvatarRenderer } from './hqAvatarRenderer.ts'
 import { identity, matrixProduct, model } from './hqSceneMatrices.ts'
@@ -37,6 +38,8 @@ const OFFICE_FOUNDATION_HEIGHT = 0.14
 const OFFICE_WALL_HEIGHT = 1.9
 const EMPTY_DEPARTMENTS: readonly HqDepartmentOffice[] = []
 const EMPTY_AGENTS: readonly HqAgentCharacter[] = []
+const GAME_PLAYER_ID = 'hq-game-player'
+const GAME_PLAYER_GAIT = { strideScale: 1, armSwing: 1, idleRate: 1, offset: 0 }
 interface Geometry { positions: number[]; normals: number[]; coast?: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; coast?: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
@@ -52,16 +55,39 @@ interface OfficeRenderEntry {
 
 export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; navy: Vector; navyDeep: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
 export interface HologramInteraction { open: number; excited: number; opened?: boolean }
-export interface HologramLayout { waterDebug?: IslandWaterDebug; waterSeconds?: number; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentCharacter[]; reducedMotion?: boolean }
+export interface HologramGameFrame { pose: SpatialGamePose; avatar: HqAgentAvatar; seconds: number }
+export interface HologramLayout { waterDebug?: IslandWaterDebug; waterSeconds?: number; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentCharacter[]; reducedMotion?: boolean; game?: HologramGameFrame }
 export interface HologramOfficeAnchor { x: number; y: number; visible: boolean }
 export interface HologramRenderer {
   draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>, layout?: Readonly<HologramLayout>) => void
   hitTestOrb: (clientX: number, clientY: number) => boolean
+  hitTestAgent: (clientX: number, clientY: number) => string | null
   hitTestWorkplace: (clientX: number, clientY: number) => string | null
+  preparePlayer: (id: HqGameCharacter) => Promise<boolean>
   projectOfficeAnchor: (id: string) => HologramOfficeAnchor | null
   projectExecutiveAnchor: () => HologramOfficeAnchor | null
   projectAgentAnchor: (id: string) => HologramOfficeAnchor | null
   dispose: () => void
+}
+
+function followPlayer(pose: SpatialGamePose) {
+  const sine = Math.sin(pose.yaw), cosine = Math.cos(pose.yaw)
+  const distance = 3.8
+  const horizontal = Math.cos(pose.pitch) * distance
+  const shoulder = .78
+  const eye: Vector = [
+    pose.x + sine * horizontal + cosine * shoulder,
+    pose.y + 1.46 + Math.sin(pose.pitch) * distance,
+    pose.z + cosine * horizontal - sine * shoulder,
+  ]
+  const target: Vector = [
+    pose.x - sine * .65 + cosine * shoulder,
+    pose.y + 1.2,
+    pose.z - cosine * .65 - sine * shoulder,
+  ]
+  const forward = normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]])
+  const right = normalize(cross(forward, [0, 1, 0]))
+  return { eye, target, forward, right, up: cross(right, forward), distance, near: .05 }
 }
 
 const vertexShader = `
@@ -718,6 +744,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     const hubRingModel = model(0, SPATIAL_VIEWPORT_GROUND_Y + 0.047)
     const outerRingModel = model(0, -0.48), innerRingModel = model(0, -0.30), emitterRingModel = model(0, -0.145)
     let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0, lastFloorRadius = -1
+    let hadPlayer = false
     const visibleAgentAnchors = new Map<string, Vector>()
     let viewProjection: Matrix | null = null
     let sceneProjection: Matrix | null = null, sceneView: Matrix | null = null
@@ -959,14 +986,15 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const { eye, right, up, forward } = orbProjection
       return { origin: eye, direction: normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical]) }
     }
-    function orbIntersection(ray: SceneRay): number {
-      if (!orbProjection) return Infinity
-      const { center, radius } = orbProjection
+    function sphereIntersection(ray: SceneRay, center: Vector, radius: number): number {
       const origin: Vector = [ray.origin[0] - center[0], ray.origin[1] - center[1], ray.origin[2] - center[2]]
       const projection = dot(origin, ray.direction), discriminant = projection * projection - dot(origin, origin) + radius * radius
       if (discriminant < 0) return Infinity
       const root = Math.sqrt(discriminant), near = -projection - root, far = -projection + root
       return near >= 0.05 ? near : far >= 0.05 ? far : Infinity
+    }
+    function orbIntersection(ray: SceneRay): number {
+      return orbProjection ? sphereIntersection(ray, orbProjection.center, orbProjection.radius) : Infinity
     }
     function workplaceIntersection(entry: OfficeRenderEntry, ray: SceneRay, executive = false): number {
       const age = executive ? OFFICE_BUILD_SECONDS : constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock)
@@ -1043,9 +1071,11 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         }
         gl.useProgram(program)
         gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-        if (layoutChanged || width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
+        const game = layout.game
+        if (game || hadPlayer || layoutChanged || width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
           || camera.zoom !== lastCamera[2] || camera.panX !== lastCamera[3] || camera.panY !== lastCamera[4]) {
-          const frame = spatialViewportFrame(camera, width, height, floorRadius)
+          const overview = spatialViewportFrame(camera, width, height, floorRadius)
+          const frame = game ? { ...overview, ...followPlayer(game.pose) } : overview
           // Extend only the presentation far clip to contain the soft sea fade;
           // framing, movement limits, ray directions and minimap remain shared.
           const seaFar = islandFootprint.radius * 2.4 + frame.distance + 2
@@ -1061,12 +1091,13 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           lastCamera = [camera.yaw, camera.pitch, camera.zoom, camera.panX, camera.panY]
           lastWidth = width; lastHeight = height
         }
+        hadPlayer = Boolean(game)
         const time = seconds % 1000, reveal = open * open * (3 - 2 * open)
         const agentRoster = layout.agents ?? EMPTY_AGENTS
         visibleAgentAnchors.clear()
         const agentPoses = agentMotion.update(officeLayout, agentRoster, constructionClock, Boolean(layout.reducedMotion))
         const agentById = new Map(agentRoster.map(agent => [agent.id, agent]))
-        avatars?.retain(agentById)
+        avatars?.retain(agentById, game ? GAME_PLAYER_ID : undefined)
         brainLightPower = 0.86 + reveal * 0.26
         const float = Math.sin(time * 0.9) * 0.028, beat = 1 + Math.sin(time * 2.15) * 0.006, orbHeight = HQ_ORB_CENTER_Y + float
         const shakeX = Math.sin(time * 31) * excited * 0.005, shakeY = Math.sin(time * 37) * excited * 0.004
@@ -1099,6 +1130,14 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           for (const pose of agentPoses) {
             const agent = agentById.get(pose.id)
             if (agent) drawAgent(pose, agent, Boolean(layout.reducedMotion), seconds)
+          }
+          if (game && viewProjection) {
+            const { x, y, z, heading, moving, phase } = game.pose
+            const player = avatars?.draw(game.avatar, {
+              id: GAME_PLAYER_ID, x, y, z, yaw: heading, phase, visible: true,
+              mode: moving ? 'walking' : 'standing', gait: GAME_PLAYER_GAIT,
+            }, viewProjection, game.seconds, false)
+            if (player) gl.useProgram(program)
           }
           drawMesh(geometry.base, palette.navyDeep, 8)
           drawMesh(geometry.bevel, palette.steelGray, 8)
@@ -1160,8 +1199,23 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       hitTestOrb(clientX, clientY) {
         return pickSceneAt(clientX, clientY).orb
       },
+      hitTestAgent(clientX, clientY) {
+        const ray = rayAt(clientX, clientY)
+        if (!ray) return null
+        let nearest = Math.min(22, orbIntersection(ray))
+        let target: string | null = null
+        for (const [id, [x, y, z]] of visibleAgentAnchors) {
+          const distance = Math.min(sphereIntersection(ray, [x, y - .36, z], .27),
+            sphereIntersection(ray, [x, y - .83, z], .42))
+          if (distance < nearest) { nearest = distance; target = id }
+        }
+        return target
+      },
       hitTestWorkplace(clientX, clientY) {
         return pickSceneAt(clientX, clientY).workplaceId
+      },
+      preparePlayer(id) {
+        return avatars?.prepare(id, true) ?? Promise.resolve(false)
       },
       projectOfficeAnchor(id) {
         const entry = officeEntries.get(id)

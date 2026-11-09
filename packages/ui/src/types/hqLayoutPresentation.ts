@@ -1,6 +1,6 @@
-import type { HqAgentAvatar, HqAgentsContent } from './hqAgentsPresentation'
+import type { HqAgentsContent, HqAvatarAssetKey, HqGameCharacter } from './hqAgentsPresentation'
 
-export type HqAvatarAssets = Readonly<Partial<Record<HqAgentAvatar['body'], Blob>>>
+export type HqAvatarAssets = Readonly<Partial<Record<HqAvatarAssetKey, Blob>>>
 
 export interface HqStaffingDecision {
   planId: string
@@ -63,6 +63,19 @@ export interface HqLayoutContent {
   fitViewLabel: string
   hologramLabel: string
   avatarAssets?: HqAvatarAssets
+  game?: {
+    label: string
+    choose: string
+    play: string
+    resume: string
+    exit: string
+    controls: string
+    paused: string
+    loading: string
+    unavailable: string
+    characters: readonly { id: HqGameCharacter; label: string }[]
+    failedCharacter?: HqGameCharacter
+  }
   sceneUnavailableLabel: string
   mouseControlsLabel: string
   touchControlsLabel: string

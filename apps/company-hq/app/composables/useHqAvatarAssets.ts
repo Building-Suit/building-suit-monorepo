@@ -1,31 +1,50 @@
-import type { HqAgentPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import type { HqAgentPresentation, HqAvatarAssetKey, HqGameCharacter } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqAvatarAssets } from '@building-suit/ui/types/hqLayoutPresentation'
 
 export function useHqAvatarAssets(roster: () => readonly HqAgentPresentation[]) {
   const assets = shallowRef<HqAvatarAssets>({})
   const pending = new AbortController()
-  const requested = new Set<'female' | 'male'>()
+  const requests = new Map<HqAvatarAssetKey, Promise<boolean>>()
+  const failedGameCharacter = shallowRef<HqGameCharacter>()
+  let gameRequest = 0
 
-  // Both packs are public, immutable art assets. The roster only determines
-  // which of the two files this view needs to load.
+  function load(key: HqAvatarAssetKey, pack: string) {
+    if (assets.value[key]) return Promise.resolve(true)
+    const existing = requests.get(key)
+    if (existing) return existing
+    const request = fetch(`/avatars/${pack}.glb`, { signal: pending.signal })
+      .then(response => {
+        if (!response.ok) throw new Error('Avatar pack unavailable')
+        return response.blob()
+      })
+      .then(blob => {
+        if (pending.signal.aborted) return false
+        assets.value = { ...assets.value, [key]: blob }
+        return true
+      })
+      .catch(() => false)
+      .finally(() => requests.delete(key))
+    requests.set(key, request)
+    return request
+  }
+
+  async function loadGameCharacter(character: HqGameCharacter) {
+    const current = ++gameRequest
+    failedGameCharacter.value = undefined
+    const loaded = await load(character, `hq-game-${character}`)
+    if (!loaded && current === gameRequest && !pending.signal.aborted) failedGameCharacter.value = character
+  }
+
+  // Each visible employee shares the pack for their body preset.
   onMounted(() => {
     watch(roster, agents => {
       for (const agent of agents) {
-        const body = agent.avatar?.body
-        if (!body || requested.has(body) || !(agent.activity === 'working' || agent.activity === 'idle' || agent.cosmeticIdle)) continue
-        requested.add(body)
-        void fetch(`/avatars/hq-lego-${body}.glb`, { signal: pending.signal })
-          .then(response => {
-            if (!response.ok) throw new Error('Avatar pack unavailable')
-            return response.blob()
-          })
-          .then(blob => {
-            if (!pending.signal.aborted) assets.value = { ...assets.value, [body]: blob }
-          })
-          .catch(() => { /* A missing asset leaves the employee nameplate available. */ })
+        const avatar = agent.avatar
+        if (!avatar || !(agent.activity === 'working' || agent.activity === 'idle' || agent.cosmeticIdle)) continue
+        void load(avatar.body, `hq-lego-${avatar.body}`)
       }
     }, { immediate: true })
   })
   onScopeDispose(() => pending.abort())
-  return assets
+  return { assets, loadGameCharacter, failedGameCharacter }
 }

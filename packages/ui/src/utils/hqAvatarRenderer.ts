@@ -1,4 +1,4 @@
-import type { HqAgentAvatar } from '../types/hqAgentsPresentation'
+import type { HqAgentAvatar, HqAvatarAssetKey } from '../types/hqAgentsPresentation'
 import type { HqAvatarAssets } from '../types/hqLayoutPresentation'
 import { HQ_AGENT_CHARACTER_SCALE, HQ_AGENT_RIG } from './hqAgentCharacters.ts'
 import type { HqAgentPose } from './hqAgentCharacters.ts'
@@ -12,6 +12,7 @@ const attributeSizes = [3, 3, 2, 4, 4]
 interface AvatarRig {
   height: number
   pivots: Point[]
+  studioMotion?: { walking?: { duration: number; matrices: number } }
 }
 
 interface StudioAvatarParts extends AvatarRig {
@@ -26,7 +27,9 @@ interface StudioAvatarParts extends AvatarRig {
   shoes: number[]
 }
 
-type AvatarParts = StudioAvatarParts | (AvatarRig & { minifigure: { meshes: number[]; height: number }[] })
+type AvatarParts = StudioAvatarParts
+  | (AvatarRig & { minifigure: { meshes: number[]; height: number }[] })
+  | (AvatarRig & { figure: number[] })
 
 interface AvatarGlb {
   extras: { hqAvatar: AvatarParts }
@@ -43,6 +46,7 @@ interface AvatarPack {
   document: AvatarGlb
   buffers: Map<number, WebGLBuffer>
   textures: WebGLTexture[]
+  walk?: Float32Array
 }
 
 interface MotionBlend {
@@ -172,7 +176,15 @@ async function loadPack(gl: WebGLRenderingContext, blob: Blob, signal: AbortSign
       gl.bindBuffer(target, buffer)
       gl.bufferData(target, contents(view), gl.STATIC_DRAW)
     }
-    return { parts, document, buffers, textures }
+    const motion = parts.studioMotion?.walking
+    const clip = motion && document.accessors[motion.matrices]
+    let walk: Float32Array | undefined
+    if (clip?.type === 'MAT4' && clip.componentType === gl.FLOAT
+      && clip.count >= parents.length * 2 && clip.count % parents.length === 0) {
+      const bytes = contents(clip.bufferView)
+      if (bytes.byteLength === clip.count * 64) walk = new Float32Array(bytes.slice().buffer)
+    }
+    return { parts, document, buffers, textures, walk }
   } catch (error) {
     deletePack(gl, buffers, textures)
     throw error
@@ -183,8 +195,9 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
   const program = makeProgram(gl)
   if (!program) return null
   const controller = new AbortController()
-  const packs = new Map<HqAgentAvatar['body'], AvatarPack>()
-  const requested = new Set<HqAgentAvatar['body']>()
+  const packs = new Map<HqAvatarAssetKey, AvatarPack>()
+  const requested = new Map<HqAvatarAssetKey, Promise<boolean>>()
+  const failed = new Set<HqAvatarAssetKey>()
   const motions = new Map<string, MotionBlend>()
   const locations = ['aPosition', 'aNormal', 'aUv', 'aJoints', 'aWeights'].map(name => gl.getAttribLocation(program, name))
   const uniforms = {
@@ -230,21 +243,50 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
     if (parent >= 0) matrixProduct(joints[parent]!, transform, joints[index]!)
   }
 
+  function applyStudioClip(matrices: Float32Array, cycle: number, weight: number) {
+    const frames = matrices.length / palette.length
+    const frame = (cycle - Math.floor(cycle)) * frames
+    const first = Math.floor(frame)
+    const from = first * palette.length
+    const to = ((first + 1) % frames) * palette.length
+    const fraction = frame - first
+    for (let i = 0; i < palette.length; i++) {
+      const before = matrices[from + i]!
+      const sample = before + (matrices[to + i]! - before) * fraction
+      palette[i] = palette[i]! + (sample - palette[i]!) * weight
+    }
+  }
+
+  function prepare(key: HqAvatarAssetKey, retry = false): Promise<boolean> {
+    if (packs.has(key)) return Promise.resolve(true)
+    if (retry && failed.delete(key)) requested.delete(key)
+    const existing = requested.get(key)
+    if (existing) return existing
+    const asset = assets()?.[key]
+    if (!asset) return Promise.resolve(false)
+    const request = loadPack(gl, asset, controller.signal).then(loaded => {
+      if (controller.signal.aborted) {
+        deletePack(gl, loaded.buffers, loaded.textures)
+        return false
+      }
+      packs.set(key, loaded)
+      onReady()
+      return true
+    }).catch(() => { failed.add(key); return false })
+    requested.set(key, request)
+    return request
+  }
+
   return {
-    retain(ids: ReadonlyMap<string, unknown>) {
-      for (const id of motions.keys()) if (!ids.has(id)) motions.delete(id)
+    prepare,
+    retain(ids: ReadonlyMap<string, unknown>, playerId?: string) {
+      for (const id of motions.keys()) if (id !== playerId && !ids.has(id)) motions.delete(id)
     },
     draw(appearance: HqAgentAvatar, pose: HqAgentPose, viewProjection: Float32Array, time: number, reduced: boolean) {
-      const pack = packs.get(appearance.body)
+      const key = appearance.model ?? appearance.body
+      const pack = packs.get(key)
       if (!pack) {
-        const asset = assets()?.[appearance.body]
-        if (asset && !requested.has(appearance.body)) {
-          requested.add(appearance.body)
-          void loadPack(gl, asset, controller.signal).then(loaded => {
-            if (controller.signal.aborted) deletePack(gl, loaded.buffers, loaded.textures)
-            else { packs.set(appearance.body, loaded); onReady() }
-          }).catch(() => { /* The nameplate stays visible if the asset is unavailable. */ })
-        }
+        if (!requested.has(key)) void prepare(key)
         return null
       }
       const { parts } = pack
@@ -268,7 +310,7 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
 
       const { walk, work, lounge, fish } = motion
       const { strideScale, armSwing, idleRate, offset } = pose.gait
-      const stride = Math.sin(pose.phase) * walk * strideScale
+      const stride = pack.walk ? 0 : Math.sin(pose.phase) * walk * strideScale
       const idleTime = time * idleRate
       const breath = reduced ? 0 : Math.sin(idleTime * 2.1 + offset)
       const seated = work + lounge
@@ -279,7 +321,7 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
       model(pose.x, y, pose.z, 0, 0, motion.yaw, scale, root)
       bend(pivots, 0, 0, stride * .035)
       bend(pivots, 1, lounge * -.35 + work * .11 + breath * .012, stride * -.022, stride * .07)
-      const headWidth = minifigure ? 1 : .94 + (appearance.seed >>> 28) * .008
+      const headWidth = minifigure || 'figure' in parts ? 1 : .94 + (appearance.seed >>> 28) * .008
       bend(pivots, 2, lounge * .22 - work * .12 + breath * .016, 0, breath * .045 * (1 - seated), headWidth)
 
       for (const [side, shoulder, hip] of [[1, 3, 9], [-1, 6, 12]] as const) {
@@ -299,6 +341,8 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
         bend(pivots, hip + 2, swing * .15 - lounge * .18 - Math.max(0, -swing) * .20)
       }
 
+      if (pack.walk && walk > .001) applyStudioClip(pack.walk, pose.phase / (2 * Math.PI), walk)
+
       const seed = appearance.seed
       const coatTint = clothesTints[(seed >>> 8) % clothesTints.length]!
       gl.useProgram(program)
@@ -312,6 +356,8 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
       for (const location of locations) gl.enableVertexAttribArray(location)
       if (minifigure) {
         for (const id of minifigure.meshes) mesh(pack, id, untinted)
+      } else if ('figure' in parts) {
+        for (const id of parts.figure) mesh(pack, id, untinted)
       } else if ('body' in parts) {
         const outfit = seed % parts.clothes.length, shoes = (seed >>> 6) % parts.shoes.length
         const hair = parts.hair[appearance.hairstyle % parts.hair.length]!
@@ -338,7 +384,7 @@ export function createHqAvatarRenderer(gl: WebGLRenderingContext, assets: () => 
     dispose() {
       controller.abort()
       for (const pack of packs.values()) deletePack(gl, pack.buffers, pack.textures)
-      packs.clear(); motions.clear()
+      packs.clear(); motions.clear(); requested.clear(); failed.clear()
       gl.deleteProgram(program)
     },
   }

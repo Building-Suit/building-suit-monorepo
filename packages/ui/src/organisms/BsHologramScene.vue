@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import type { SpatialViewportCamera } from '@building-suit/ux'
-import type { HqAgentPresentation } from '../types/hqAgentsPresentation'
+import type { SpatialGamePose, SpatialViewportCamera } from '@building-suit/ux'
+import type { HqAgentPresentation, HqGameCharacter } from '../types/hqAgentsPresentation'
 import type { HqAvatarAssets, HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { createHologramRenderer } from '../utils/hologramScene'
-import type { HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
+import type { HologramGameFrame, HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
 import { islandWaterDebug } from '../utils/islandWaterConfig'
 
-const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentPresentation[]; avatarAssets?: HqAvatarAssets; executiveLabel?: string; selectedWorkplaceId?: string | null }>(), { opened: false, officeLayerCount: 0, departments: () => [], agents: () => [], executiveLabel: '', selectedWorkplaceId: null })
-const emit = defineEmits<{ activate: []; selectWorkplace: [id: string]; hoverChange: [active: boolean] }>()
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; agents?: readonly HqAgentPresentation[]; avatarAssets?: HqAvatarAssets; executiveLabel?: string; selectedWorkplaceId?: string | null; game?: { avatar: HologramGameFrame['avatar']; paused: boolean; advance: (seconds: number) => SpatialGamePose | null }; canInspectAgents?: boolean }>(), { opened: false, officeLayerCount: 0, departments: () => [], agents: () => [], executiveLabel: '', selectedWorkplaceId: null })
+const emit = defineEmits<{ activate: []; selectWorkplace: [id: string]; selectAgent: [id: string]; hoverChange: [active: boolean]; contextLost: [] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
 let renderer: HologramRenderer | null = null
@@ -16,6 +16,7 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let motion: MediaQueryList | null = null
 let frame = 0, visible = false, elapsed = 0, waterElapsed = 0, lastFrame = 0, disposed = false
+let gameElapsed = 0
 // Offscreen catalogues must not allocate WebGL, geometry or procedural textures.
 let rendererNeeded = true
 let lastPaint = 0, needsDraw = true
@@ -40,6 +41,8 @@ function clearHoverAndShake() {
 }
 function activateAt(clientX: number, clientY: number) {
   if (disposed || unavailable.value || !visible || !renderer) return false
+  const agent = props.game && props.canInspectAgents ? renderer.hitTestAgent(clientX, clientY) : null
+  if (agent) { emit('selectAgent', agent); return true }
   if (renderer.hitTestOrb(clientX, clientY)) { emit('activate'); return true }
   const workplace = renderer.hitTestWorkplace(clientX, clientY)
   if (workplace) { emit('selectWorkplace', workplace); return true }
@@ -63,7 +66,8 @@ function setExcitedAt(clientX: number, clientY: number, active: boolean) {
   }
   return orbHit || workplaceHit
 }
-defineExpose({ activateAt, setExcitedAt })
+function preparePlayer(id: HqGameCharacter) { return renderer?.preparePlayer(id) ?? Promise.resolve(false) }
+defineExpose({ activateAt, setExcitedAt, preparePlayer })
 
 function setAgentLabel(id: string, element: unknown) {
   if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) agentLabels.set(id, element)
@@ -107,8 +111,9 @@ function draw(time: number) {
   const reduced = motion?.matches ?? false
   const openTarget = props.opened ? 1 : 0
   const transitioning = Math.abs(openTarget - openAmount) > 0.001
-  const closeAvatarView = props.camera.zoom > 1.25 && props.agents.some(agent => agent.avatar && props.avatarAssets?.[agent.avatar.body])
-  const minimumFrame = transitioning || excitedTarget || time < constructionUntil || closeAvatarView ? 1000 / 60 : 1000 / 30
+  const closeAvatarView = props.camera.zoom > 1.25 && props.agents.some(agent => agent.avatar && props.avatarAssets?.[agent.avatar.model ?? agent.avatar.body])
+  const playing = Boolean(props.game && !props.game.paused)
+  const minimumFrame = playing || transitioning || excitedTarget || time < constructionUntil || closeAvatarView ? 1000 / 60 : 1000 / 30
   if (!reduced && !needsDraw && lastPaint && time - lastPaint + 0.5 < minimumFrame) {
     requestDraw(false)
     return
@@ -125,9 +130,12 @@ function draw(time: number) {
   sceneLayout.agents = props.agents
   sceneLayout.reducedMotion = reduced
   sceneLayout.waterSeconds = reduced ? 0 : waterElapsed
+  const pose = props.game?.advance(delta)
+  if (pose) gameElapsed += delta
+  sceneLayout.game = pose && props.game ? { pose, avatar: props.game.avatar, seconds: gameElapsed } : undefined
   renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount, opened: props.opened }, sceneLayout)
   updateLabels()
-  if (!motion?.matches) requestDraw(false)
+  if (!reduced || playing) requestDraw(false)
 }
 function updateVisibility() {
   if (!visible || document.hidden) { clearHoverAndShake(); hideLabels() }
@@ -169,6 +177,7 @@ function onContextLost(event: Event) {
   renderer?.dispose(); renderer = null
   rendererNeeded = false
   unavailable.value = true
+  emit('contextLost')
 }
 function onContextRestored() {
   rendererNeeded = true
@@ -180,6 +189,10 @@ watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.came
 })
 watch(() => props.agents, () => { if (typeof window !== 'undefined') requestDraw() }, { deep: true })
 watch(() => props.avatarAssets, () => requestDraw())
+watch(() => props.game, () => {
+  clearHoverAndShake()
+  if (typeof window !== 'undefined') requestDraw()
+})
 watch(() => props.resetVersion, () => {
   elapsed = 0; lastFrame = 0; lastPaint = 0
   openAmount = props.opened ? 1 : 0

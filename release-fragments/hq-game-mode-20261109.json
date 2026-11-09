@@ -1,0 +1,36 @@
+{
+  "id": "hq-game-mode-20261109",
+  "task": "HQ-GAME-MODE-20261109",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/composables/useHqAvatarAssets.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/public/avatars/credits.txt",
+    "apps/company-hq/public/avatars/hq-game-elf.glb",
+    "apps/company-hq/public/avatars/hq-game-ninja.glb",
+    "apps/company-hq/public/avatars/hq-game-pirate.glb",
+    "apps/company-hq/public/avatars/hq-game-witch.glb",
+    "apps/company-hq/public/avatars/hq-game-wizard.glb",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hqAvatarRenderer.ts",
+    "packages/ui/src/utils/hqIslandGame.ts",
+    "packages/ux/src/composables/useSpatialGameMode.ts",
+    "packages/ux/src/index.ts"
+  ],
+  "reason": "Add an optional third-person island mode to private Company HQ. The five playable character packs include Studio walk cycles, and the viewport routes inspection to existing authorized sidebars."
+}
