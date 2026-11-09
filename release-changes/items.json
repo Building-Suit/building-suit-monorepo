@@ -6052,5 +6052,29 @@
       "release-changes/items.json"
     ],
     "reason": "Prepare exact staffing proposals through bounded HR/CEO stages and one immutable founder decision, with visible unavailable canonical publication, scoped proof/continuation gates, and legacy claim/API/journal compatibility; no canonical writer or live hire is enabled."
+  },
+  {
+    "id": "hq-trial-review-plan-cache-20261109",
+    "task": "HQ-TRIAL-REVIEW-PLAN-CACHE-20261109",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/supabase/migrations/20261109124713_hq_trial_review_plan_cache.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "tooling/hq-agent-host/public-repository-db.test.mjs",
+      "tooling/hq-agent-host/TRIAL-REVIEW-PLANNING.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Cache only the unchanged private trial-review query plan, not qualification results, while preserving source bindings, immutable evidence, independent review, ACLs and fail-closed worker gates. No timeout, lease, dispatch, host activation or hosted SQL action."
   }
 ]

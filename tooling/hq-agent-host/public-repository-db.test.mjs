@@ -185,7 +185,8 @@ async function scopeWork(h,claim,rpc,args,agent,head){
  j=await claim();assert.equal(j.context.mode,'worker-trial');assert.equal(j.agent_id,agent)
  return{trial,j}
 }
-async function repositoryFixture(){
+const trialReviewPlanCacheMigration = '20261109124713_hq_trial_review_plan_cache.sql'
+async function repositoryFixture({cachedReview = true} = {}){
  const h=await setup(true,true,true,true),configured=structuredClone(roster)
  await installTaskEvidence(h)
  await h.db.exec('reset role')
@@ -210,6 +211,7 @@ async function repositoryFixture(){
  await h.as('worker')
  for(const name of ['hq_worker_research_claim','hq_worker_role_claim'])assert.equal((await h.rpc(name,[worker,300,1])).job,null)
  await h.db.exec('reset role');await h.db.exec(await readFile(new URL(repositoryMigration,root),'utf8'))
+ if(cachedReview)await h.db.exec(await readFile(new URL(trialReviewPlanCacheMigration,root),'utf8'))
  const roleClaim=async()=>{await h.as('worker');return(await h.rpc('hq_worker_role_claim',[worker,300,1])).job}
  let work=await scopeWork(h,roleClaim,'hq_begin_evaluator_trial',[skills.iris,randomUUID()],'AG-HR-003','AG-HR-001')
  await delivery(h,entryFor(work.j,await output(work.j)));await finishReviews(h,roleClaim,'AG-HR-001','AG-CEO-001')
@@ -530,4 +532,83 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    assert.equal((await scalar(h,'select sum(charged_attempts)::int n from hq_private.repository_reservations')).n,24)
   }))
  }finally{await h.db.close();await oldWorker.close();await futureWorker.close()}
+})
+
+test('trial review plan cache preserves the exact predicate, permissions and current evidence',async t=>{
+ futureWorker=await preparedWorker()
+ const {h}=await repositoryFixture({cachedReview:false})
+ try{
+  await h.db.exec('reset role')
+  const snapshot=async()=>(await h.db.query(`select
+   (select md5(jsonb_agg(to_jsonb(a) order by id)::text) from public.hq_task_artifacts a) artifacts,
+   (select md5(jsonb_agg(to_jsonb(r) order by id)::text) from hq_private.workforce_trial_host_execution_receipts r) host,
+   (select md5(jsonb_agg(to_jsonb(q) order by receipt_id)::text) from hq_private.workforce_qualification_receipts q) qualification`)).rows[0]
+  const metadata=async()=>(await h.db.query(`select oid,proowner,provolatile,prosecdef,proconfig,proacl,
+   proparallel,proleakproof,proisstrict,procost,prorows,proargtypes,prorettype,prokind,proretset
+   from pg_proc where oid='hq_private.trial_review_ready(uuid)'::regprocedure`)).rows[0]
+  const evidenceBefore=await snapshot(),metadataBefore=await metadata()
+  const original=(await h.db.query("select pg_get_functiondef(oid) definition,prosrc from pg_proc where oid='hq_private.trial_review_ready(uuid)'::regprocedure")).rows[0]
+  await h.as('founder');const statusBefore=await h.rpc('hq_workforce_trial_status')
+  await h.db.exec('reset role')
+  // A disposable comparison function, never part of the deployed migration.
+  await h.db.exec(original.definition.replace('FUNCTION hq_private.trial_review_ready(', 'FUNCTION hq_private.trial_review_ready_original('))
+  await h.db.exec(await readFile(new URL(trialReviewPlanCacheMigration,root),'utf8'))
+  await t.test('OID, owner, execution contract and ACL remain exact',async()=>assert.deepEqual(await metadata(),metadataBefore))
+  await t.test('only the procedural plan boundary changes, not the SELECT predicate',async()=>{
+   const candidate=(await h.db.query("select l.lanname,p.prosrc from pg_proc p join pg_language l on l.oid=p.prolang where p.oid='hq_private.trial_review_ready(uuid)'::regprocedure")).rows[0]
+   assert.equal(candidate.lanname,'plpgsql')
+   assert.equal(candidate.prosrc.trim(),'begin\n return ('+original.prosrc.trim().replace(/;$/,'')+');\nend')
+  })
+  await t.test('complete founder trial status remains identical',async()=>{
+   await h.as('founder');assert.deepEqual(await h.rpc('hq_workforce_trial_status'),statusBefore);await h.db.exec('reset role')
+  })
+  const trial=(await h.db.query("select id,skill_file_id,review_job_id from hq_private.workforce_trials where agent_id='AG-HR-003'")).rows[0]
+  const compare=async(expected)=>{
+   const row=(await h.db.query('select hq_private.trial_review_ready_original($1) original,hq_private.trial_review_ready($1) candidate',[trial.id])).rows[0]
+   assert.equal(row.candidate,row.original);assert.equal(row.candidate,expected)
+  }
+  await t.test('valid exact original evaluator evidence remains ready',()=>compare(true))
+  await t.test('all five fixture trials and null or missing IDs match',async()=>{
+   const ids=(await h.db.query('select id from hq_private.workforce_trials')).rows.map(row=>row.id)
+   assert.equal(ids.length,5)
+   for(const id of [...ids,null,'00000000-0000-0000-0000-000000000000']){
+    const row=(await h.db.query('select hq_private.trial_review_ready_original($1) original,hq_private.trial_review_ready($1) candidate',[id])).rows[0]
+    assert.equal(row.candidate,row.original)
+   }
+  })
+  for(const [name,sql,args=[],expectedError]of[
+   ['profile version changed',"update hq_private.brain_files set source_version='2' where file_id=(select profile_file_id from hq_private.agent_roster where id='AG-HR-003')"],
+   ['skill version changed',"update hq_private.brain_files set source_version='2' where file_id=$1",[trial.skill_file_id]],
+   ['reviewer profile version changed',"update hq_private.brain_files set source_version='2' where file_id=(select profile_file_id from hq_private.agent_roster where id='AG-CEO-001')"],
+   ['agent disabled',"update hq_private.agent_roster set enabled=false where id='AG-HR-003'"],
+   ['manager disabled',"update hq_private.agent_roster set enabled=false where id='AG-HR-001'"],
+   ['reviewer disabled',"update hq_private.agent_roster set enabled=false where id='AG-CEO-001'"],
+   ['manager reassigned',"update hq_private.agent_roster set manager_id='AG-RES-001' where id='AG-HR-003'"],
+   ['configured model changed',"update hq_private.agent_roster set model='gpt-6-luna' where id='AG-HR-003'"],
+   ['configured effort changed',"update hq_private.agent_roster set effort='high' where id='AG-HR-003'"],
+   ['agent lifecycle suspended',"update hq_private.agent_roster set lifecycle='suspended' where id='AG-HR-003'"],
+   ['trial failed',"update hq_private.workforce_trials set status='failed' where id=$1",[trial.id]],
+   ['completion after expiry',"update hq_private.workforce_trials set completed_at=expires_at+interval '1 second' where id=$1",[trial.id]],
+   ['immutable host evidence rejects mutation',"update hq_private.workforce_trial_host_execution_receipts set host_returned_model='gpt-6-luna' where trial_id=$1",[trial.id],/HQ_IMMUTABLE_RECORD/],
+   ['review rejection',"update public.hq_agent_jobs set result_text=jsonb_set(result_text::jsonb,'{accepted}','false'::jsonb)::text where id=$1",[trial.review_job_id]],
+   ['review artifact digest differs',"update public.hq_agent_jobs set result_text=jsonb_set(result_text::jsonb,'{artifactDigest}',to_jsonb(repeat('f',64)))::text where id=$1",[trial.review_job_id]],
+   ['head review rejection',"update public.hq_agent_jobs set result_text=jsonb_set(result_text::jsonb,'{accepted}','false'::jsonb)::text where id=(select depends_on from public.hq_agent_jobs where id=$1)",[trial.review_job_id]],
+   ['head review artifact digest differs',"update public.hq_agent_jobs set result_text=jsonb_set(result_text::jsonb,'{artifactDigest}',to_jsonb(repeat('f',64)))::text where id=(select depends_on from public.hq_agent_jobs where id=$1)",[trial.review_job_id]],
+  ]){
+   await t.test(name,async()=>{
+    await h.db.exec('begin')
+    try{
+     if(expectedError)await assert.rejects(()=>h.db.query(sql,args),expectedError)
+     else{await h.db.query(sql,args);await compare(false)}
+    }finally{await h.db.exec('rollback')}
+   })
+   await t.test(name+': fresh reads after rollback',()=>compare(true))
+  }
+  await t.test('all original artifact, host and qualification rows are preserved',async()=>assert.deepEqual(await snapshot(),evidenceBefore))
+  for(const role of ['anon','authenticated','service_role'])await t.test(role+' still cannot call the private helper directly',async()=>{
+   await h.db.exec('set role '+role)
+   try{await assert.rejects(()=>h.db.query('select hq_private.trial_review_ready($1)',[trial.id]),error=>error.code==='42501')}
+   finally{await h.db.exec('reset role')}
+  })
+ }finally{await h.db.close();await futureWorker.close()}
 })
