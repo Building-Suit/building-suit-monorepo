@@ -12,8 +12,12 @@ Supabase or authorize worker, identity, scheduler, or production changes.
 - `.github/workflows/hq-live-dispatch-disposable.yml` builds PostgreSQL 17 with
   the actual `pg_cron` package in a two-job matrix (background workers on/off) and runs
   `node --test tooling/hq-agent-host/live-dispatch-native-check.mjs`. The database
-  runs on an internal Docker network. The script accepts no database URL or
-  credential environment override: its endpoint is always loopback port 55439,
+  runs on an internal Docker network with no host port published. The official
+  Node 26.8.1 binary runs the tests inside the same container; the checked-out
+  repository and installed dependencies are mounted read-only. TCP readiness on
+  port 55439 excludes the entrypoint's temporary socket-only bootstrap server.
+  The script accepts no database URL or
+  credential environment override: its endpoint is always container loopback port 55439,
   database `hq_live_dispatch_disposable`, with fixture-only credentials.
 - The native check intentionally does not match the normal `*.test.mjs` glob.
   Running it requires the disposable container described in the workflow.
