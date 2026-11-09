@@ -6,6 +6,7 @@ on:
   push:
     branches: [stg, main]
 concurrency:
+  # Ref-scoped validation never queues unrelated PRs behind each other.
   # Title/body edits cannot change code and must not cancel its active checks.
   group: verify-${{ github.ref }}-${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata' || 'code' }}
   cancel-in-progress: true
@@ -27,15 +28,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node tooling/git/check-pr.mjs "$PR_NUMBER"
-  review:
-    # A skipped metadata run must never overwrite a required code-check result.
-    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
-    # Keep retarget, synchronize, reopen and protected-push validation complete.
-    # Metadata-only edits still run branch-policy, but reuse existing code work.
-    if: >-
-      github.event_name != 'pull_request' || github.event.action != 'edited' ||
-      github.event.changes.base != null ||
-      (github.event.changes.title == null && github.event.changes.body == null)
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      validate: ${{ steps.plan.outputs.validate }}
+      full: ${{ steps.plan.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - id: plan
+        run: node tooling/ci/plan.mjs
+  unit-review:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -70,6 +81,51 @@ jobs:
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Retain receipt reference comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: receipt-reference-comparisons
+          path: test-results/receipt
+          if-no-files-found: ignore
+          retention-days: 7
+  hq-invariants:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify HQ worker, durable maintenance and release invariants
+        run: |
+          node --test --test-concurrency=2 tooling/hq-agent-host/*.test.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p '*_test.py' -v
+  hq-browser:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Verify mocked HQ task cancellation browser flow
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -94,18 +150,22 @@ jobs:
           path: apps/company-hq/test-results
           if-no-files-found: ignore
           retention-days: 7
-      - name: Verify HQ worker, durable maintenance and release invariants
-        run: |
-          node --test --test-concurrency=2 tooling/hq-agent-host/*.test.mjs
-          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p '*_test.py' -v
-      - name: Retain receipt reference comparisons
-        if: always()
-        uses: actions/upload-artifact@v4
+  release-catalog:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
         with:
-          name: receipt-reference-comparisons
-          path: test-results/receipt
-          if-no-files-found: ignore
-          retention-days: 7
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Verify disposable release catalog transactions and authorization
         run: node tooling/releases/catalog-disposable.mjs
       - name: Verify actual catalog adapter over disposable PostgREST and full SAS schema
@@ -131,65 +191,195 @@ jobs:
           git rev-parse --verify 'HEAD^1'
           git rev-parse --verify 'origin/stg^1'
           node tooling/releases/catalog-postgrest-disposable.mjs
-  verify:
-    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
-    needs: [review, branch-policy]
-    # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
+  review:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
+    needs: [plan, unit-review, hq-invariants, hq-browser, release-catalog]
     if: >-
-      !cancelled() && needs.review.result == 'success' &&
-      (github.event_name == 'push' ||
-       (needs.branch-policy.result == 'success' &&
-        (github.base_ref == 'stg' || github.base_ref == 'main')))
-    concurrency:
-      group: workspace-full-validation${{ github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'codex/shop-suit/usd-production' && '-shop-usd-production' || '' }}
-      cancel-in-progress: false
-      # Keep post-stg validation queued when another PR joins this serial group.
-      queue: max
+      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'edited' || github.event.changes.base != null || (github.event.changes.title == null && github.event.changes.body == null))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-        if: ${{ success() && !cancelled() }}
         with:
-          # Disposable public-feed regressions also replay the preserved bootstrap fragment range.
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Require every review lane to succeed
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node tooling/ci/readiness.mjs review
+  static-checks:
+    needs: [plan, branch-policy]
+    if: >-
+      !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [typecheck, lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
           fetch-depth: 0
           ref: ${{ github.sha }}
       - uses: pnpm/action-setup@v4
-        if: ${{ success() && !cancelled() }}
       - uses: actions/setup-node@v4
-        if: ${{ success() && !cancelled() }}
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-        if: ${{ success() && !cancelled() }}
       - run: pnpm run setup
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm typecheck --concurrency=2
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm lint
-        if: ${{ success() && !cancelled() }}
+      - name: Typecheck or lint in an isolated runner
+        env:
+          CHECK: ${{ matrix.check }}
+        run: |
+          case "$CHECK" in
+            typecheck) pnpm typecheck --concurrency=2 ;;
+            lint) pnpm lint ;;
+            *) exit 1 ;;
+          esac
+  build:
+    needs: [plan, branch-policy]
+    if: >-
+      !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      artifact-id: ${{ steps.build-artifact.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup
       - run: pnpm build --concurrency=2
-        if: ${{ success() && !cancelled() }}
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm test:built-assets
-        if: ${{ success() && !cancelled() }}
+      - name: Package only this run's tested application outputs
+        env:
+          VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$VALIDATION_SHA"
+          printf '%s\n' "$VALIDATION_SHA" > .ci-build-sha
+          find apps -type d -name .output -prune -print0 > /tmp/ci-build-paths
+          test -s /tmp/ci-build-paths
+          printf '.ci-build-sha\0' >> /tmp/ci-build-paths
+          tar --null -T /tmp/ci-build-paths -cf - | gzip -1 > workspace-build.tar.gz
+          sha256sum workspace-build.tar.gz > workspace-build.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        id: build-artifact
+        with:
+          name: workspace-build-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            workspace-build.tar.gz
+            workspace-build.tar.gz.sha256
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+  browser-tests:
+    needs: [plan, build]
+    if: ${{ !cancelled() && needs.plan.outputs.full == 'true' && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - suite: foundation
+            shard: 1/2
+            id: foundation-1
+          - suite: foundation
+            shard: 2/2
+            id: foundation-2
+          - suite: shared
+            shard: 1/2
+            id: shared-1
+          - suite: shared
+            shard: 2/2
+            id: shared-2
+          - suite: changelog
+            shard: 1/1
+            id: changelog
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # A failed-job retry retains its successful producer's output, even when
+      # github.run_attempt advances. Do not resolve an archive from another run.
+      - name: Require the successful producer's exact artifact identity
+        env:
+          BUILD_ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+        run: '[[ "$BUILD_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]'
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
+      - name: Verify and restore this exact run's build
+        env:
+          VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          sha256sum --check workspace-build.tar.gz.sha256
+          tar -xzf workspace-build.tar.gz
+          test "$(cat .ci-build-sha)" = "$VALIDATION_SHA"
+          test "$(git rev-parse HEAD)" = "$VALIDATION_SHA"
       - run: pnpm exec playwright install --with-deps chromium
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm test:e2e
-        if: ${{ success() && !cancelled() }}
-      - name: Verify deployed-only Shop landing changelog discovery
-        if: ${{ success() && !cancelled() }}
-        run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
+      - name: Run every browser obligation on isolated runners
+        env:
+          SUITE: ${{ matrix.suite }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          case "$SUITE" in
+            foundation) config=packages/testing/playwright.config.ts ;;
+            shared) config=packages/testing/playwright.shared-regressions.config.ts ;;
+            changelog) config=apps/shop-suit/tests/e2e/public-changelog.config.ts ;;
+            *) exit 1 ;;
+          esac
+          pnpm exec playwright test -c "$config" --shard="$SHARD"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: browser-results
+          name: browser-results-${{ matrix.id }}
           path: test-results
           retention-days: 7
-      # A cancelled run must never satisfy verify, even if cancelled before checkout.
+  verify:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
+    needs: [plan, branch-policy, review, static-checks, build, browser-tests]
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'edited' || github.event.changes.base != null || (github.event.changes.title == null && github.event.changes.body == null)) &&
+      (github.event_name == 'push' || github.base_ref == 'stg' || github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Require all exact-head validation lanes
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node tooling/ci/readiness.mjs verify
       - name: Reject cancelled validation as readiness evidence
         if: cancelled()
         run: exit 1
