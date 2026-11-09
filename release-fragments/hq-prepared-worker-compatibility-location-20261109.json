@@ -1,0 +1,9 @@
+{
+  "id": "hq-prepared-worker-compatibility-location-20261109",
+  "task": "HQ-DISCOVERY-FAILURE-DIAGNOSTICS-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq/supabase/migrations/20261109013324_hq_repository_worker_compatibility.sql", "tooling/hq-agent-host/proposed-migrations/hq_repository_worker_compatibility.sql", "tooling/hq-agent-host/public-repository-db.test.mjs", "docs/work-packages/company-hq/DISCOVERY-FAILURE-DIAGNOSTICS-20261109.md"],
+  "reason": "Keep unapproved compatibility SQL in the explicit prepared area with unchanged bytes. Preserve active migration parity and historical inventory, load only the proposal in disposable tests, and record actual validation limits without claiming hosted application."
+}

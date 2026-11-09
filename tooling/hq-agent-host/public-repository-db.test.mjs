@@ -92,7 +92,7 @@ async function installTaskEvidence(h,withBudget=true) {
 }
 
 const repositoryMigration='20261108212105_hq_public_repository_read.sql'
-const compatibilityMigration='20261109013324_hq_repository_worker_compatibility.sql'
+const compatibilityMigration=new URL('./proposed-migrations/hq_repository_worker_compatibility.sql',import.meta.url)
 const historicalWorkerDigest='bb6c941f2398b4067d963e9c0de21c53738fa0729f9bb96ee64c89fb7159dd88'
 const compatibleWorkerDigest='5331fdf1b01e935432e2408f81a53b9da7cb4fe66b56dfe9553d36e90b5e9747'
 async function historicalWorker(){
@@ -310,7 +310,7 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    const functionMetadata=()=>scalar(h,`select jsonb_agg(jsonb_build_object('oid',p.oid,'owner',p.proowner,'acl',p.proacl,'name',p.proname,'args',p.proargtypes::text,'return',p.prorettype,'security',p.prosecdef,'config',p.proconfig) order by p.proname) functions from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='hq_private' and p.proname in ('repository_validate_host','repository_source_valid','repository_review_ready')`)
    const metadata=await functionMetadata()
    const definitions=await scalar(h,`select pg_get_functiondef('hq_private.repository_validate_host(public.hq_agent_jobs,jsonb,boolean)'::regprocedure) host,pg_get_functiondef('hq_private.repository_source_valid(uuid,uuid)'::regprocedure) source,pg_get_functiondef('hq_private.repository_review_ready(uuid)'::regprocedure) review`)
-   await h.db.exec(await readFile(new URL(compatibilityMigration,root),'utf8'))
+   await h.db.exec(await readFile(compatibilityMigration,'utf8'))
    assert.deepEqual(await history(),before,'migration must not rewrite a historical row or proof')
    assert.deepEqual(await readiness(),ready,'reviewed historical work and predecessor remain usable')
    assert.equal((await scalar(h,'select hq_private.repository_worker_digest() digest')).digest,historicalWorkerDigest,'legacy singleton stays historical')

@@ -143,3 +143,19 @@ repository attestation regression only when the prepared migration is present.
 It does not clear the PR-stack hold, unrelated aggregate test failures, supported
 runtime verification, hosted CI or deployment authorization. The migration's
 source-drift abort branch is reviewed but not separately fault-injected.
+
+
+## Source publication correction
+
+Draft PR555 publishes the reviewed source only. The compatibility proposal now
+lives at `tooling/hq-agent-host/proposed-migrations/hq_repository_worker_compatibility.sql`,
+with byte-identical SQL. Disposable tests load that explicit proposal. The active
+migration directory and reviewed applied/pending parity inventory are unchanged.
+CI originally caught the uninventoried active file; this move preserves the
+parity gate rather than claiming live application. No SQL was applied.
+
+The complete final local host run reported 459/471 passing, with eleven lifecycle
+fixture timeouts and one symlink-entry timeout; representative baseline runs
+reproduced both categories. The repository compatibility regression is resolved
+by the prepared SQL. A separate run excluding only those two fixture files passed
+457/457. Neither result establishes a complete supported-runtime pass.
