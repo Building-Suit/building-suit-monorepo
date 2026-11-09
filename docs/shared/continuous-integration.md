@@ -28,3 +28,50 @@ Extend the owning suite instead of creating a feature-specific workflow that rep
 Title/body edits retain separate metadata contexts, while code changes and retargets still require full validation. Historical Doctor milestone evidence is not regenerated or declared accepted by this consolidation.
 
 Validation for this change: source review only locally. No local tests, lint, builds, typechecks, browser runs or disposable databases were executed, per the owner’s instruction. GitHub CI on the review PR provides execution evidence; consolidation alone does not repair existing failing application tests.
+
+## Parallel workspace pipeline, 2026-11-09
+
+The workspace workflow is replaced with an explicit validation graph. It retains the
+`Verify workspace` workflow identity and `.github/workflows/ci.yml` path, and the
+required `branch-policy`, `review` and `verify` contexts. Existing independent
+financial, database, mobile, provider and authorization workflows remain intact.
+They are not redundant just because workspace validation also runs.
+
+- `plan` distinguishes metadata edits, normal review and full protected/root
+  validation. Title/body edits retain separate metadata contexts and concurrency
+  groups; retargets and ambiguous edits still validate code.
+- Unit/workspace/provenance, HQ worker invariants, HQ cancellation browsers and
+  disposable release-catalog checks run independently. `review` succeeds only
+  when every lane succeeds. No failure, cancellation or unexpected skip is green.
+- For staging/promotion roots and protected pushes, typecheck, lint and the full
+  application build start independently of review. GitHub-hosted runners isolate
+  their files, ports and disposable databases. The old repository-wide
+  `workspace-full-validation` queue is removed; unrelated PRs and protected
+  pushes no longer serialize behind one another.
+- Build and built-asset checks run once. A one-day artifact carries only generated
+  `.output` directories, a tested-commit marker and archive checksum. Browser jobs
+  download only their own run/attempt artifact and verify its SHA marker and
+  checksum. No cross-run build cache or privileged artifact consumption is added.
+- The existing foundation and shared-regression Playwright configurations each
+  run as two complete shards, on different runners. The deployed-only public
+  changelog suite remains a separate SQL/browser lane. At most four browser jobs
+  run at once. Tests, worker counts, retries, fixtures and per-suite setup/cleanup
+  are unchanged. Shared fixtures are never parallelized inside one runner.
+- `verify` is a fail-closed aggregate over the plan, branch policy (PRs), review,
+  both static checks, build/assets and all browser shards. Only a successful
+  protected-push `verify` can unlock the unchanged release catalog and signed HQ
+  worker publishers. Environment serialization, attestations, schema compatibility,
+  deployment readiness and protected-ref checks are unchanged.
+
+Measured pre-change examples, not promises: PR #561 run `42669363071` took 21m42s
+(6m54s review then 14m39s verify). Staging push `42658162558` queued verify for
+19m30s behind another run, then spent 17m58s in verify; its workflow took 45m17s.
+The redesign removes that global wait and overlaps independent work. Runner quota,
+cache state and application-test duration still affect completion time. Measure
+exact-head runs after rollout before quoting an achieved speedup. Parallel setup
+may increase runner-minutes even when wall-clock time falls.
+
+Guard tests live in `tooling/git/tests/ci-workflow-efficiency.test.mjs`; release
+trigger and protected-verification regressions also exercise publication identity.
+Local validation and the exact GitHub run results belong in the review PR. Passing
+focused tests alone does not establish full workspace or deployment readiness.
