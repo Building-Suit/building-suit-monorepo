@@ -1,0 +1,9 @@
+{
+  "id": "parallel-ci-20261109",
+  "task": "PARALLEL-CI-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/ci.yml", "tooling/ci", "tooling/git/tests/ci-workflow-efficiency.test.mjs", "docs/shared/continuous-integration.md"],
+  "reason": "Replace serial workspace validation with independent lanes and exact-run build reuse for isolated browser shards. Retain all validation obligations, required check names, history, environment serialization and release-publication readiness; no public product behavior or provider configuration changes."
+}
