@@ -1,0 +1,28 @@
+{
+  "id": "hq-realtime-adaptive-activation-20261109",
+  "task": "HQ-REALTIME-ADAPTIVE-ACTIVATION-20261109",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/hq-live-dispatch-wake-disposable.yml",
+    "apps/company-hq/supabase/migrations/20261109182552_hq_live_dispatch_adaptive_activation.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "release-changes/items.json",
+    "tooling/hq-agent-host/LIVE-DISPATCH-ADAPTIVE.md",
+    "tooling/hq-agent-host/live-dispatch-native-fixture.mjs",
+    "tooling/hq-agent-host/live-dispatch-wake-activation-fixture.mjs",
+    "tooling/hq-agent-host/live-dispatch-wake-activation-native-check.mjs",
+    "tooling/hq-agent-host/live-dispatch-wake-activation-source.test.mjs"
+  ],
+  "reason": "Prepare guarded staging activation source and isolated checks for the reviewed adaptive outbox proposal. Pins existing authority and source, preserves events and browser state, and atomically records a fresh unnamed minute watchdog without scheduler-table write grants. No hosted application, task recovery, worker restart or inference retry."
+}
