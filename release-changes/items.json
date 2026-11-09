@@ -6076,5 +6076,31 @@
       "release-changes/items.json"
     ],
     "reason": "Cache only the unchanged private trial-review query plan, not qualification results, while preserving source bindings, immutable evidence, independent review, ACLs and fail-closed worker gates. No timeout, lease, dispatch, host activation or hosted SQL action."
+  },
+  {
+    "id": "hq-realtime-isolation-20261109",
+    "task": "HQ-REALTIME-ISOLATION-20261109",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/LIVE-DISPATCH.md",
+      "tooling/hq-agent-host/proposed-migrations/hq_live_dispatch.sql",
+      "tooling/hq-agent-host/live-dispatch-native-check.mjs",
+      "tooling/hq-agent-host/live-dispatch-native-fixture.mjs",
+      "tooling/hq-agent-host/live-dispatch-native.Dockerfile",
+      ".github/workflows/hq-live-dispatch-disposable.yml",
+      "release-changes/items.json",
+      "tooling/hq-agent-host/live-dispatch-native-source.test.mjs",
+      "tooling/hq-agent-host/live-dispatch-native.md"
+    ],
+    "reason": "Prepare an unapplied owner-only transactional live outbox dispatcher and native PostgreSQL concurrency verification. No hosted activation, new identity access, credentials, task retry or legacy replay."
   }
 ]
