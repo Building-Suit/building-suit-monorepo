@@ -143,6 +143,12 @@ const agentsContent = computed<HqAgentsContent>(() => ({
     recoveryWorking: t('hq.agents.requestProgress.recoveryWorking'),
   },
   workforce: {
+    cancellation: {
+      action: t('hq.agents.workforce.cancellation.action'), title: t('hq.agents.workforce.cancellation.title'),
+      message: t('hq.agents.workforce.cancellation.message'), keep: t('hq.agents.workforce.cancellation.keep'),
+      pending: t('hq.agents.workforce.cancellation.pending'), canceled: t('hq.agents.workforce.cancellation.canceled'),
+      unconfirmed: t('hq.agents.workforce.cancellation.unconfirmed'), unavailable: t('hq.agents.workforce.cancellation.unavailable'),
+    },
     taskBrowser: {
       all: t('hq.agents.workforce.taskBrowser.all'), running: t('hq.agents.workforce.taskBrowser.running'),
       waiting: t('hq.agents.workforce.taskBrowser.waiting'), done: t('hq.agents.workforce.taskBrowser.done'),

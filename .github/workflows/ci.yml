@@ -53,7 +53,13 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           FETCH_BASE_REF: ${{ github.base_ref }}
-        run: git fetch origin "$FETCH_BASE_REF" --no-tags
+        run: |
+          git fetch origin "$FETCH_BASE_REF" --no-tags
+          echo 'Release history after checkout'
+          git rev-parse --is-shallow-repository
+          git show -s --format='%H %P' HEAD origin/stg
+          git cat-file -p origin/stg | sed -n '/^tree /p; /^parent /p'
+          git rev-parse --verify 'origin/stg^1'
       - name: Validate task release fragments
         if: github.event_name == 'pull_request'
         env:
@@ -64,6 +70,30 @@ jobs:
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Verify mocked HQ task cancellation browser flow
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PLAYWRIGHT_USE_BUNDLED: '1'
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+            apps/company-hq packages/ui packages/ux packages/nuxt-layer \
+            packages/design-tokens packages/brand packages/i18n packages/auth \
+            packages/contracts packages/data-access packages/config packages/testing \
+            package.json pnpm-lock.yaml pnpm-workspace.yaml .node-version .github/workflows/ci.yml; then
+            echo "No HQ task-cancellation inputs changed."
+            exit 0
+          fi
+          pnpm --filter @building-suit/company-hq build
+          pnpm --filter @building-suit/company-hq exec playwright test tests/browser/task-cancellation.spec.ts
+      - name: Retain HQ task cancellation browser failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hq-task-cancellation-browser-results
+          path: apps/company-hq/test-results
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Verify HQ worker, durable maintenance and release invariants
         run: |
           node --test --test-concurrency=2 tooling/hq-agent-host/*.test.mjs
@@ -81,7 +111,26 @@ jobs:
       - name: Verify actual catalog adapter over disposable PostgREST and full SAS schema
         env:
           RELEASE_POSTGREST_DISPOSABLE: '1'
-        run: node tooling/releases/catalog-postgrest-disposable.mjs
+          RELEASE_VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          echo 'Release history immediately before catalog validation'
+          git rev-parse --is-shallow-repository
+          git show -s --format='%H %P' HEAD origin/stg
+          git cat-file -p origin/stg | sed -n '/^tree /p; /^parent /p'
+          git replace -l
+          shallow_file="$(git rev-parse --git-path shallow)"
+          if test -f "$shallow_file"; then cat "$shallow_file"; fi
+          # Report override names only, never credential-bearing environment values.
+          node -e 'console.log(Object.keys(process.env).filter(name => name.startsWith("GIT_")).sort().join("\n"))'
+          expected_head="$(git rev-parse HEAD)"
+          test "$expected_head" = "$RELEASE_VALIDATION_SHA"
+          if test "$(git rev-parse --is-shallow-repository)" = true; then
+            git fetch --unshallow --no-tags origin
+          fi
+          test "$(git rev-parse HEAD)" = "$expected_head"
+          git rev-parse --verify 'HEAD^1'
+          git rev-parse --verify 'origin/stg^1'
+          node tooling/releases/catalog-postgrest-disposable.mjs
   verify:
     name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
     needs: [review, branch-policy]

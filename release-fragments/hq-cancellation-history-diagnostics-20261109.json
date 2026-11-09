@@ -1,0 +1,9 @@
+{
+  "id": "hq-cancellation-history-diagnostics-20261109",
+  "task": "HQ-TASK-CANCELLATION-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/ci.yml"],
+  "reason": "Diagnose missing Git parent history in cancellation integration CI. Read-only history evidence and conditional complete-history fetch preserve the exact checkout and all existing release provenance, authorization and deployment gates. No release-policy or provider-setting change."
+}

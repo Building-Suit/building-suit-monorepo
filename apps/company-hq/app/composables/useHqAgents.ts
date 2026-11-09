@@ -1,6 +1,6 @@
 import type { HqAgentPresentation, HqAgentsPresentation, HqChatMessage, HqRequestProgress, HqTaskBrowserRequest, HqTaskBrowserPage, HqTaskGroup, HqTrialCommand, HqTrialPresentation, HqPublicResearchTrialPresentation, HqOrdinaryTrialPresentation, HqRetailTrialPresentation, HqRepositoryTrialPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
 import type { HqFounderAccessPresentation } from '@building-suit/ui/types/hqLayoutPresentation'
-import { provideHqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
+import { provideHqTaskBrowserSource, type HqTaskCancellationResult } from '@building-suit/ui/utils/hqTaskBrowserSource'
 import { hasHqControlCharacters, parseHqAgentSnapshot, type HqAgentSnapshot, type HqBusinessTask } from '#shared/types/agents'
 import { hqCosmeticIdle, hqObservationFresh, hqObservedActivity } from '../utils/hqAgentPresence'
 import { parseHqTaskPage } from '#shared/types/taskBrowser'
@@ -93,7 +93,7 @@ function timestampRemainder(value: string): string {
 /** Founder-scoped event-driven message state. Runtime presence never invents employee work. */
 export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messages?: () => HqAgentMessages) {
   const live = useHqLiveEvents()
-  provideHqTaskBrowserSource({ load: loadTaskPage, detail: loadTaskDetail })
+  provideHqTaskBrowserSource({ load: loadTaskPage, detail: loadTaskDetail, cancel: cancelTask })
   const trials = shallowRef<readonly HqTrialPresentation[]>([])
   const trialPending = ref(false), trialMessage = ref(''), trialMessageAgentId = ref<string | null>(null)
   let trialFeedbackEpoch = 0
@@ -241,6 +241,9 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       if (!disposed && ownedTrial === trialSequence && getAccess().status === 'founder' && accessIdentity(getAccess()) === identity) trialPending.value = false
     }
   }
+  const taskCancellationPending = ref(false)
+  let cancellationSequence = 0
+  let cancellationRequest: AbortController | null = null
   const snapshot = shallowRef<HqAgentSnapshot | null>(null)
   let taskBrowserRevision = 0
   watch(snapshot, () => { taskBrowserRevision += 1 }, { flush: 'sync' })
@@ -337,6 +340,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
           lifecycleLabel: copy?.lifecycle?.(record.lifecycle ?? 'unknown') ?? record.lifecycle,
           connectionLabel: copy?.connection?.(connection) ?? connection }
       }),
+      taskCancellationPending: taskCancellationPending.value,
       taskBrowserRevision,
       tasks: (state?.tasks ?? []).map(projectTask),
       lessons: (state?.lessons ?? []).map(lesson => ({
@@ -361,6 +365,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       assigneeName: snapshot.value?.agents.find(agent => agent.id === task.assigneeId)?.name ?? copy?.autoAssign ?? '',
       statusLabel: copy?.taskStatus?.(task.status) ?? task.status,
       group: taskGroup(task.status),
+      canCancel: ['queued', 'working', 'review'].includes(task.status),
       state: (task.status === 'completed' ? 'complete' : task.status === 'queued' ? 'pending' : task.status === 'working' || task.status === 'review' ? 'active' : 'blocked') as 'complete' | 'pending' | 'active' | 'blocked',
       createdAt: task.createdAt, updatedAt: task.updatedAt, completedAt: task.completedAt, deliverable: task.deliverable ?? '',
       reviews: task.reviewSummary ? [{ id: `${task.id}-review`, reviewer: copy?.reviewLabel ?? '', outcome: copy?.taskStatus?.(task.status) ?? task.status, text: task.reviewSummary }] : [],
@@ -370,7 +375,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   async function fetchTaskPage(query: Record<string, string | number>, signal: AbortSignal) {
     if (!allowed()) throw Error('HQ task access unavailable')
     const identity = scopeIdentity, requestEpoch = epoch
-    const result = await $fetch<unknown>('/api/hq/tasks', { query, headers, signal })
+    const result = await $fetch<unknown>('/api/hq/tasks', { query, headers, signal: AbortSignal.any([signal, AbortSignal.timeout(15_000)]), credentials: 'same-origin', cache: 'no-store', retry: 0 })
     if (!allowed() || scopeIdentity !== identity || epoch !== requestEpoch || signal.aborted) throw Error('HQ task scope changed')
     const page = parseHqTaskPage(result)
     if (!page) throw Error('HQ task page invalid')
@@ -420,6 +425,50 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
     }
   }
 
+  async function cancelTask(id: string): Promise<HqTaskCancellationResult> {
+    if (!allowed() || taskCancellationPending.value || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return 'unavailable'
+    const identity = scopeIdentity, sequence = ++cancellationSequence
+    const request = new AbortController()
+    cancellationRequest = request; taskCancellationPending.value = true
+    let dispatched = false
+    const current = () => allowed() && identity === scopeIdentity && sequence === cancellationSequence && !request.signal.aborted
+    try {
+      // Always reconcile this exact record before a write, including an explicit
+      // retry after an uncertain response. Never fall back to a stale snapshot.
+      const before = await fetchTaskPage({ taskId: id, limit: 1 }, request.signal)
+      if (!current()) return 'unavailable'
+      const task = before.items.find(row => row.id === id)
+      if (task?.status === 'canceled') { void refresh(); void refreshTrials(); return 'canceled' }
+      if (!task || !['queued', 'working', 'review'].includes(task.status)) return 'unavailable'
+      dispatched = true
+      const result = await $fetch<unknown>(`/api/hq/tasks/${id}/cancel`, {
+        method: 'POST', headers, credentials: 'same-origin', cache: 'no-store',
+        retry: 0, signal: AbortSignal.any([request.signal, AbortSignal.timeout(45_000)]),
+      })
+      if (!current()) return 'unavailable'
+      if (!parseHqAgentSnapshot(result)) throw Error('HQ cancellation unconfirmed')
+      const after = await fetchTaskPage({ taskId: id, limit: 1 }, request.signal)
+      if (!current()) return 'unavailable'
+      const confirmed = after.items.some(row => row.id === id && row.status === 'canceled')
+      // Feedback depends on this task's readback, not unrelated trial refreshes.
+      void refresh(); void refreshTrials()
+      return confirmed ? 'canceled' : 'unconfirmed'
+    } catch (error) {
+      if (!current()) return 'unavailable'
+      if ([401, 403].includes(responseStatus(error) ?? 0)) {
+        live.invalidate('access'); invalidate(false); return 'unavailable'
+      }
+      // No automatic POST retry and no optimistic completion. A later explicit
+      // attempt must read the exact task again before it can dispatch anything.
+      return dispatched ? 'unconfirmed' : 'unavailable'
+    } finally {
+      if (sequence === cancellationSequence) {
+        taskCancellationPending.value = false
+        if (cancellationRequest === request) cancellationRequest = null
+      }
+    }
+  }
+
   function accessIdentity(access: HqFounderAccessPresentation): string | null {
     return access.user?.displayName ? JSON.stringify([access.user.displayName, access.user.detailLabel ?? '']) : null
   }
@@ -431,6 +480,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   }
 
   function invalidate(clearAttempts: boolean, reason: MessageReason | null = null) {
+    cancellationSequence += 1; cancellationRequest?.abort(); cancellationRequest = null; taskCancellationPending.value = false
     epoch += 1; controller?.abort(); controller = null; inFlight = null
     refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; snapshot.value = null
     trialSequence += 1; trialFeedbackEpoch += 1; trials.value = []; trialMessage.value = ''; trialMessageAgentId.value = null; trialPending.value = false

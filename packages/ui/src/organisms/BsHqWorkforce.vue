@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import type { HqTaskCancellationResult } from '../utils/hqTaskBrowserSource'
 import BsHqTaskBrowser from './BsHqTaskBrowser.vue'
 import BsHqWorkActivity from '../molecules/BsHqWorkActivity.vue'
 import BsDisclosure from '../molecules/BsDisclosure.vue'
@@ -10,6 +11,10 @@ import type { HqAgentsPresentation, HqTaskPresentation, HqWorkforceContent } fro
 const props = defineProps<{ section: 'tasks' | 'team' | 'learning'; presentation: HqAgentsPresentation; content: HqWorkforceContent; locale?: string; selectedTaskId?: string | null; selectedLessonId?: string | null; browseOnly?: boolean; detailOnly?: boolean }>()
 const emit = defineEmits<{ refresh: []; openTask: [id: string, title?: string]; openLearning: [id: string]; 'update:selectedTaskId': [id: string | null] }>()
 const taskSource = useHqTaskBrowserSource()
+const confirmation = useConfirmation()
+const cancelConfirming = ref(false)
+const cancellationFeedback = ref<HqTaskCancellationResult | null>(null)
+let selectionEpoch = 0, disposed = false
 const localTaskId = ref<string | null>(null)
 const selectedTaskId = computed({ get: () => props.selectedTaskId === undefined ? localTaskId.value : props.selectedTaskId, set: (id: string | null) => { localTaskId.value = id; emit('update:selectedTaskId', id) } })
 const tasks = computed(() => [...(props.presentation.tasks ?? [])].sort((a, b) => {
@@ -19,7 +24,7 @@ const tasks = computed(() => [...(props.presentation.tasks ?? [])].sort((a, b) =
 const detailTask = ref<HqTaskPresentation | null>(null)
 const detailPending = ref(false)
 let detailRequest: AbortController | null = null
-watch(() => [selectedTaskId.value, props.presentation.taskBrowserRevision, props.presentation.status], async () => {
+watch([selectedTaskId, () => props.presentation.taskBrowserRevision, () => props.presentation.status], async () => {
   detailRequest?.abort(); detailTask.value = null; detailPending.value = false
   const id = selectedTaskId.value
   if (!id || !taskSource || props.presentation.status !== 'connected') return
@@ -31,6 +36,21 @@ watch(() => [selectedTaskId.value, props.presentation.taskBrowserRevision, props
   finally { if (!request.signal.aborted) detailPending.value = false }
 }, { immediate: true })
 const selected = computed(() => detailTask.value ?? tasks.value.find(task => task.id === selectedTaskId.value) ?? null)
+watch([selectedTaskId, () => props.presentation.status], () => {
+  selectionEpoch += 1; cancellationFeedback.value = null
+}, { flush: 'sync' })
+async function cancelSelected() {
+  const task = selected.value, copy = props.content.cancellation
+  if (!task?.canCancel || !copy || !taskSource?.cancel || cancelConfirming.value || props.presentation.taskCancellationPending || props.presentation.status !== 'connected') return
+  const expected = selectionEpoch, id = task.id
+  cancelConfirming.value = true; cancellationFeedback.value = null
+  try {
+    const accepted = await confirmation.ask({ title: copy.title, message: `${copy.message}\n\n${task.title}\n${id}`, confirmLabel: copy.action, cancelLabel: copy.keep, tone: 'danger' })
+    if (!accepted || disposed || expected !== selectionEpoch || selected.value?.id !== id || !selected.value.canCancel || props.presentation.status !== 'connected') return
+    const result = await taskSource.cancel(id)
+    if (!disposed && expected === selectionEpoch && selectedTaskId.value === id && props.presentation.status === 'connected') cancellationFeedback.value = result
+  } finally { if (!disposed) cancelConfirming.value = false }
+}
 function selectTask(id: string, title?: string) {
   if (props.browseOnly) emit('openTask', id, title)
   else selectedTaskId.value = id
@@ -53,7 +73,7 @@ function sourceUrl(value: string | undefined): string | undefined {
 function workforceKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape') event.stopPropagation()
 }
-onBeforeUnmount(() => { detailRequest?.abort() })
+onBeforeUnmount(() => { disposed = true; selectionEpoch += 1; detailRequest?.abort() })
 </script>
 
 <template>
@@ -74,6 +94,10 @@ onBeforeUnmount(() => { detailRequest?.abort() })
         <BsButton v-if="!detailOnly" variant="secondary" size="sm" @click="selectedTaskId = null">{{ content.backLabel }}</BsButton>
         <article class="bs-hq-workforce__detail">
           <header><h3 dir="auto">{{ selected.title }}</h3><p class="bs-hq-workforce__status" :data-state="selected.state">{{ selected.statusLabel }}</p><p class="bs-hq-workforce__muted">{{ selected.assigneeName }} · <time :datetime="selected.createdAt">{{ date(selected.createdAt) }}</time></p><p v-if="selected.completedAt && content.completedLabel" class="bs-hq-workforce__muted">{{ content.completedLabel }} · <time :datetime="selected.completedAt">{{ date(selected.completedAt) }}</time></p></header>
+          <section v-if="content.cancellation && taskSource?.cancel && presentation.status === 'connected'" :aria-busy="presentation.taskCancellationPending">
+            <BsButton v-if="selected.canCancel" variant="danger" size="sm" :disabled="presentation.taskCancellationPending" @click="cancelSelected">{{ presentation.taskCancellationPending ? content.cancellation.pending : content.cancellation.action }}</BsButton>
+            <p v-if="cancellationFeedback" class="bs-hq-workforce__notice" role="status">{{ content.cancellation[cancellationFeedback] }}</p>
+          </section>
           <p v-if="selected.error" class="bs-hq-workforce__notice" role="status">{{ selected.error }}</p>
           <section><h4>{{ content.deliverableLabel }}</h4><p v-if="selected.deliverable" class="bs-hq-workforce__prose" dir="auto">{{ selected.deliverable }}</p><p v-else class="bs-hq-workforce__muted">{{ content.pendingDeliverableLabel }}</p></section>
           <section><h4>{{ content.reviewsLabel }}</h4><ul v-if="selected.reviews.length" class="bs-hq-workforce__list"><li v-for="review in selected.reviews" :key="review.id"><strong dir="auto">{{ review.reviewer }} · {{ review.outcome }}</strong><p class="bs-hq-workforce__prose" dir="auto">{{ review.text }}</p></li></ul><p v-else class="bs-hq-workforce__muted">{{ content.pendingReviewLabel }}</p></section>

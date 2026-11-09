@@ -144,6 +144,7 @@ export interface HqAgentsPresentation {
   workActivity?: readonly HqWorkActivity[]
   runtimeOnline: boolean
   lastRuntimeSeenAt?: string
+  taskCancellationPending?: boolean
   taskBrowserRevision?: number
   tasks?: readonly HqTaskPresentation[]
   runningTasks?: readonly HqTaskPresentation[]
@@ -195,6 +196,8 @@ export interface HqOfficeCopy {
 }
 
 export interface HqTaskPresentation {
+  /** UI affordance only. The database remains authoritative. */
+  canCancel?: boolean
   group?: HqTaskGroup
   id: string
   title: string
@@ -228,6 +231,10 @@ export interface HqLessonPresentation {
 }
 
 export interface HqWorkforceContent {
+  cancellation?: {
+    action: string; title: string; message: string; keep: string
+    pending: string; canceled: string; unconfirmed: string; unavailable: string
+  }
   taskBrowser?: HqTaskBrowserCopy
   activity?: HqWorkActivityCopy
   completedLabel?: string
