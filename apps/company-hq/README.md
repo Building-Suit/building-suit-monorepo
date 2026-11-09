@@ -65,6 +65,15 @@ Open `http://127.0.0.1:3101` on that computer. Edits hot-reload. The preview is 
 
 ## Founder login and company plans
 
+The Plans board reads the `Company Plans backlog` table in the Brain note
+`Work Outputs/Work Outputs.md` through a founder-only endpoint. It loads on open
+and uses existing Brain invalidations while open. Keep a stable plan ID and
+record `pending` for saved work, `ongoing` after work actually starts and `done`
+after verifying the result. The optional Source column is a Drive file ID.
+The board displays these records alongside the existing approval and staffing
+records. A Brain backlog row supplies display data only.
+
+
 The founder reviews one CEO/HR-reviewed company plan, including departments, hiring requests and skill requests. Login/registration remain in the selected CEO workplace, opened through the whole sector, its label, the Workplaces picker or account control. The user enters the password, confirms the chosen email and then signs in. No signup or email is sent merely by loading the app. Registration is limited to the configured founder email and requires Supabase email confirmation; it does not auto-confirm or automatically log in.
 
 Private server configuration uses `NUXT_HQ_SUPABASE_URL`, `NUXT_HQ_SUPABASE_PUBLISHABLE_KEY`, `NUXT_HQ_ENVIRONMENT` and `NUXT_HQ_FOUNDER_EMAIL`. The default phase is staging, with URL `https://dpruoncalmwicrqhqelu.supabase.co` and founder email `ceo@building-suit.com`. Supply a publishable/project-matching legacy anon key privately; the app rejects secret/service-role keys. Production is a separate immutable environment/project pair, not an authorized target for this task. No credentials belong in source, chat, notes or logs.

@@ -99,12 +99,15 @@ const content = computed<HqLayoutContent>(() => ({
   companyPlans: {
     title: c('Company plans', 'خطط الشركة'),
     board: {
-      discussion: c('Pending discussion', 'بانتظار النقاش'),
-      preparation: c('In preparation', 'قيد الإعداد'),
+      brainLabel: c('Company Brain', 'ذاكرة الشركة'),
+      brainUnavailable: c('Saved plans are unavailable.', 'الخطط المحفوظة غير متاحة.'),
+      sourceLabel: c('Open source plan', 'افتح الخطة الأصلية'),
+      discussion: c('Pending', 'بانتظار البدء'),
+      preparation: c('Ongoing', 'قيد التنفيذ'),
       blocked: c('Blocked', 'متوقفة'),
       done: c('Done', 'منتهية'),
       empty: c('No notes in this column.', 'لا توجد ملاحظات في هذا العمود.'),
-      description: c('Open a note to see the proposal and its current status. Done means the decision is closed.', 'افتح ملاحظة للاطلاع على المقترح وحالته. تعني «منتهية» أن القرار قد حُسم.'),
+      description: c('Saved plans show recorded progress. For proposals, Done means the decision is closed.', 'تعرض الخطط المحفوظة التقدم المسجل. وتعني «منتهية» للمقترحات أن القرار قد حُسم.'),
     },
     executiveLabel: c('CEO workspace', 'مساحة المدير التنفيذي'),
     loginTitle: c('Founder login', 'دخول المؤسس'),
@@ -283,6 +286,11 @@ const workforceContent = computed<HqWorkforceContent>(() => ({
 const catalogueTeamContent = computed<HqLayoutContent>(() => ({ ...content.value, agents: { ...chatContent.value, workforce: workforceContent.value } }))
 const plansExample = computed<HqCompanyPlansPresentation>(() => ({
   status: 'ready', pending: false,
+  backlog: { status: 'ready', plans: [{
+    id: 'catalogue-backlog-plan', status: 'ongoing',
+    title: c('Sample HQ follow-up', 'متابعة توضيحية للمقر'),
+    summary: c('Check the agreed milestones and record the outcome.', 'راجع المراحل المتفق عليها وسجّل النتيجة.'),
+  }] },
   plans: [{
     id: 'catalogue-plan', revision: 1, status: 'ready', legacy: false,
     title: c('Sample onboarding plan', 'خطة تأهيل توضيحية'),

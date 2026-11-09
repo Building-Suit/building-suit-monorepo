@@ -310,6 +310,15 @@
       "bytes": 3980,
       "md5": "0619ff9ff09839514f4e841fc5365de4",
       "sha256": "b2d9b94326418acbe1816050c596160f42ac773df5a2bb02453941eadff02451"
+    },
+    {
+      "file": "20261109032511_hq_activity_web_push.sql",
+      "phase": "activity-web-push-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261109032511_hq_activity_web_push.sql",
+      "bytes": 12694,
+      "md5": "89841c8ab6133ea3dc30e6b183c26166",
+      "sha256": "477c94172709003051f3474db0c8a6838b339763ef1fa3fcaf9df80e9f3fdf34"
     }
   ]
 }

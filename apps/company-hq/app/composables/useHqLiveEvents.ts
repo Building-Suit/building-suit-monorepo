@@ -1,4 +1,5 @@
 export type HqLiveTopic = 'brain' | 'company' | 'agents' | 'access'
+export type HqActivityTopic = Exclude<HqLiveTopic, 'access'>
 export interface HqLivePresence { observedAt: string; agentId: string | null; taskId: string | null }
 type ResetReason = 'scope' | 'offline'
 interface Listener { refresh: () => unknown | Promise<unknown>; reset?: (reason: ResetReason) => void }
@@ -15,6 +16,7 @@ function createLiveEvents() {
   let connection: AbortController | null = null
   let retry: ReturnType<typeof setTimeout> | null = null
   let resuming: Promise<void> | null = null
+  const activityListeners = new Set<(topic: HqActivityTopic) => void>()
   const presenceListeners = new Set<(value: HqLivePresence) => void>()
 
   const visibleOnline = () => mounted && !document.hidden && navigator.onLine
@@ -130,7 +132,14 @@ function createLiveEvents() {
                 readySnapshot()
               }
               else if (event === 'presence' && ready) notifyPresence(data)
-              else if (event === 'brain' || event === 'company' || event === 'agents') invalidate(event)
+              else if (event === 'brain' || event === 'company' || event === 'agents') {
+                invalidate(event)
+                if (ready) {
+                  for (const listener of activityListeners) {
+                    try { listener(event) } catch { /* Display errors do not restart the stream. */ }
+                  }
+                }
+              }
               else if (event === 'access') { receivedAccess = true; stop(); invalidate('access') }
             }
             event = ''; frameSize = 0; hasData = false; data = ''
@@ -220,7 +229,11 @@ function createLiveEvents() {
     presenceListeners.add(listener)
     return () => { presenceListeners.delete(listener) }
   }
-  return { mount, acquire, release, subscribe, subscribePresence, setFounder, invalidate }
+  function subscribeActivity(listener: (topic: HqActivityTopic) => void) {
+    activityListeners.add(listener)
+    return () => { activityListeners.delete(listener) }
+  }
+  return { mount, acquire, release, subscribe, subscribePresence, subscribeActivity, setFounder, invalidate }
 }
 
 // Nuxt creates one app per SSR request and one per browser tab. Weak keys keep
@@ -244,6 +257,11 @@ export function useHqLiveEvents() {
     invalidate: events.invalidate,
     subscribe(topic: HqLiveTopic, refresh: Listener['refresh'], clear?: Listener['reset']) {
       const unsubscribe = events.subscribe(topic, refresh, clear)
+      subscriptions.push(unsubscribe)
+      return unsubscribe
+    },
+    subscribeActivity(listener: (topic: HqActivityTopic) => void) {
+      const unsubscribe = events.subscribeActivity(listener)
       subscriptions.push(unsubscribe)
       return unsubscribe
     },
