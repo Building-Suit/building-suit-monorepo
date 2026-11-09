@@ -1,3 +1,5 @@
+import { mkdtempSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -15,8 +17,6 @@ test('HQ staging migration sources match the reviewed applied set and preserve t
   assert.match(result.stdout, /17 applied baseline migrations; 22 pending forward migration/)
 })
 
-import { mkdtempSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 
 test('repository compatibility pending inventory rejects altered bindings and source bytes', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'hq-parity-'))
