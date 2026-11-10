@@ -6216,5 +6216,35 @@
       "tooling/hq-agent-host/public-repository-db.test.mjs"
     ],
     "reason": "Reuse the exact private skill-evidence SELECT plan and serialize per-identity trial-status reads with a retained fresh follow-up. Preserve qualification predicates, authorization, immutable evidence, worker fences and every existing native/browser obligation. No result cache, timeout increase, hosted SQL, worker recovery or claim of incident causation."
+  },
+  {
+    "id": "hq-database-read-amplification-20261110",
+    "task": "HQ-DATABASE-READ-AMPLIFICATION-20261110",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/hq-live-dispatch-disposable.yml",
+      "apps/company-hq/supabase/migrations/20261110140432_hq_trial_status_projection.sql",
+      "apps/company-hq/supabase/migrations/20261110140541_hq_founder_shared_authorization.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "apps/company-hq/tests/unit/founder-bind-db.test.mjs",
+      "tooling/hq-agent-host/claim-query-budget-native-check.mjs",
+      "tooling/hq-agent-host/claim-query-budget-workflow.test.mjs",
+      "tooling/hq-agent-host/trial-status-projection-checks.mjs",
+      "tooling/hq-agent-host/trial-status-projection-db.test.mjs",
+      "tooling/hq-agent-host/CLAIM-QUERY-BUDGET.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Reuse current ordinary qualification evidence within each founder status projection and allow already-bound founder readers to share the invitation lock while retaining revocation serialization, first-binding locks and fresh authority checks. Preserve evidence, API shape, ACLs and immutable records. Verify synthetic full-response parity and native races at unchanged timeouts. No production, worker recovery, qualification grant or persistent result cache."
   }
 ]

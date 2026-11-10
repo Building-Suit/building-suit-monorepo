@@ -6,6 +6,7 @@ import { performance } from 'node:perf_hooks'
 import { setTimeout as delay } from 'node:timers/promises'
 import { preparedWorker, setFutureWorker, repositoryFixture, founder, session, workerUser, workerSession, worker } from './public-repository-db-fixture.mjs'
 import { verify, evidence, agent, skill, predicate, prepareQueuedTrial, observeClaim } from './claim-query-budget-checks.mjs'
+import { tenWorkerFixture,verifyStatusProjection } from './trial-status-projection-checks.mjs'
 const require=createRequire(new URL('../../package.json',import.meta.url))
 const { Client }=require('pg')
 const clients=[]
@@ -31,6 +32,8 @@ test('native concurrent status and claim retain snapshot freshness and lock beha
  const adapter={query:(...args)=>db.query(...args),exec:sql=>db.query(sql),close:async()=>{}}
  const f=await repositoryFixture({database:adapter}),{h}=f
  await prepareQueuedTrial(f)
+ await verify(h)
+ await tenWorkerFixture(f)
  const sample=async()=>{
   const times={statusMs:[],claimMs:[]};let claimed
   for(let i=0;i<3;i++){
@@ -40,7 +43,7 @@ test('native concurrent status and claim retain snapshot freshness and lock beha
   return {times,claimed}
  }
  const baseline=await sample()
- await verify(h)
+ await verifyStatusProjection(h,{report:value=>t.diagnostic(JSON.stringify({projection:value}))})
  const candidate=await sample()
  assert.deepEqual(candidate.claimed,baseline.claimed)
  t.diagnostic(JSON.stringify({engine:'native PostgreSQL',observationsOnly:true,baseline:baseline.times,candidate:candidate.times}))
@@ -49,7 +52,14 @@ test('native concurrent status and claim retain snapshot freshness and lock beha
  const status=await connect('hq-plan-status'),claimer=await connect('hq-plan-claim'),hold=await connect('hq-plan-lock'),observer=await connect('hq-plan-observer')
  const pid=async c=>(await c.query('select pg_backend_pid() pid')).rows[0].pid
  const pids=[await pid(status),await pid(claimer)]
- const fresh=async(expected)=>assert.equal((await db.query(predicate,[agent,skill])).rows[0].value,expected)
+ const fresh=async(expected)=>{
+  assert.equal((await db.query(predicate,[agent,skill])).rows[0].value,expected)
+  await as(status,'founder')
+  const projected=(await status.query('select public.hq_workforce_trial_status() result')).rows[0].result.find(row=>row.agentId===agent)
+  assert.equal(projected.qualified,expected,'assembled status observes committed binding freshness')
+  assert.equal(projected.ordinary.qualified,expected)
+  assert.equal(projected.repository.freezeEligible,expected)
+ }
  for(let i=0;i<7;i++)await fresh(true)
  // Warmed plan observes committed changes, does not see another session's dirty
  // update, and sees rollback restoration. No result or transaction snapshot cache.
@@ -65,6 +75,30 @@ test('native concurrent status and claim retain snapshot freshness and lock beha
  await fresh(true)
  const queue=async()=>(await db.query('select id,status,started_at,worker_id,lease_token from public.hq_agent_jobs order by id')).rows
  const beforeQueue=await queue()
+ // Bounded realistic overlap: four tabs, office observations and a rolled-back
+ // claim. Keep the actual 8s cap; timings are observations, never a relaxed SLA.
+ const tabs=await Promise.all(Array.from({length:4},(_,i)=>connect('hq-status-tab-'+i)))
+ const office=await connect('hq-status-office')
+ for(const client of [...tabs,office]){await as(client,'founder');await client.query("set statement_timeout='8s'")}
+ await as(claimer,'worker');await claimer.query("set statement_timeout='8s'")
+ const observations=[]
+ for(let round=0;round<3;round++){
+  await claimer.query('begin')
+  try{
+   const start=performance.now()
+   const replies=await Promise.all([
+    ...tabs.map(client=>client.query('select public.hq_workforce_trial_status() result')),
+    office.query('select public.hq_office_observations() result'),
+    claimer.query('select public.hq_worker_repository_claim($1,300,1) result',[worker]),
+   ])
+   for(const response of replies.slice(0,4))assert.equal(response.rows[0].result.length,10)
+   assert.equal(replies[5].rows[0].result.job.agent_id,agent)
+   observations.push(performance.now()-start)
+  }finally{await claimer.query('rollback')}
+ }
+ t.diagnostic(JSON.stringify({tenWorkerConcurrentBatchMs:observations,concurrentSessions:6,statementTimeoutMs:8000}))
+ assert.deepEqual(await queue(),beforeQueue)
+
  await as(status,'founder');await as(claimer,'worker')
  await status.query('begin');await claimer.query('begin')
  await hold.query('begin; lock table hq_private.agent_roster in access exclusive mode')

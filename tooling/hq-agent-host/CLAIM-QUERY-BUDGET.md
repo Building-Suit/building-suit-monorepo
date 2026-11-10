@@ -73,3 +73,64 @@ Docker/PostgreSQL are unavailable.
 Publication and deployment remain separate. Keep the real queued task, journals,
 immutable receipts and fail-closed worker state intact; do not recreate or retry
 work merely to benchmark this change.
+
+## Database read amplification follow-up (10 November)
+
+The later staging optimization adds two forward migrations without changing the
+8-second hosted statement budget or adding speculative indexes:
+
+- `20261110140432_hq_trial_status_projection.sql` evaluates the current assigned
+  skill evidence in one MATERIALIZED statement-local projection. Base and ordinary
+  trial output reuse those verdicts and their separately filtered next-skill
+  selections. Repository readiness reuses the ordinary verdict; nested repository
+  receipt/source/review validation still runs. No persistent/session result cache
+  or client-supplied qualification is accepted. Research, retail, JSON order/shape,
+  volatile founder checks, private function identity/ACLs, and command authority
+  remain. Exact predecessor hashes refuse unexpected schema drift.
+- `20261110140541_hq_founder_shared_authorization.sql` uses an invitation SHARE
+  lock only for an already-bound user with matching existing membership. Readers
+  can overlap while invitation revocation still conflicts. Every shared path
+  terminates after a fresh `founder_uid()` check, including denial, so it cannot
+  upgrade to an exclusive lock. First binding and missing-membership repair retain
+  their original exclusive lock, session recheck, idempotent insert and final
+  authorization. No permission, invitation, membership or Auth row is created by
+  the migration itself.
+
+The disposable status suite has 18 roster entries, ten workers, 500 unrelated
+Brain sources and actual generated ordinary proof,
+Research/retail wrappers, and a separately generated repository qualification.
+Each state compares the complete old/new response across 31 mutations, including
+all excluded lifecycles, disabled manager/reviewer, model/effort/department drift,
+profile/skill source changes, missing/duplicate/empty skills and rejected review.
+It verifies current session/invitation/membership denial, function metadata and
+unchanged immutable receipts. A disposable instrument counted evidence calls at
+38→10 without repository receipts and 40→12 with one repository qualification.
+The extra two calls retain nested repository proof checks; this is not a universal
+one-call claim. PGlite warm timings are noisy: the ordinary ten-worker sample was
+279.97→266.24ms, and the repository-qualified sample median was 398.08→364.28ms. These
+observations do not demonstrate that the historical hosted timeout is resolved.
+
+Commands:
+
+- `node --test tooling/hq-agent-host/trial-status-projection-db.test.mjs`
+- `node --test apps/company-hq/tests/unit/founder-bind-db.test.mjs`
+- `node --test tooling/hq-agent-host/claim-query-budget-workflow.test.mjs apps/company-hq/tests/unit/staging-migration-parity.test.mjs`
+
+Native CI retains the existing four Realtime matrix legs and uses one explicit
+leg for independent fresh claim/status and founder databases. The status harness
+checks six concurrent sessions (four status readers, office observations and a
+rolled-back claim) over three finite batches at an 8-second statement timeout,
+plus committed/rolled-back evidence freshness and observed lock waits. Founder
+native tests require `HQ_FOUNDER_NATIVE=1` and the fixed disposable database;
+absence of native execution is reported as skipped locally, never a race pass.
+The container has no published port or hosted credential. Both native failures
+propagate, and all test containers are removed by the always-run cleanup.
+
+Staging application is authorized separately from implementation. A Git merge or
+branch mapping is not evidence that SQL deployed. Before applying, verify project
+`dpruoncalmwicrqhqelu`, live predecessor fingerprints, migration history and the
+existing provider deployer. Do not replay an already-applied migration. After
+application verify history plus actual function definitions/OIDs/ACLs, then use
+an existing authenticated staging session and finite read-only requests if one
+is available. Do not synthesize the real founder's JWT or use claims/task creation
+as a benchmark. Production and worker recovery remain outside this change.

@@ -14,7 +14,7 @@ test('HQ staging migration sources match the reviewed applied set and preserve t
     encoding: 'utf8',
   })
   assert.equal(result.status, 0, result.stderr || result.stdout)
-  assert.match(result.stdout, /17 applied baseline migrations; 27 pending forward migration/)
+  assert.match(result.stdout, /17 applied baseline migrations; 29 pending forward migration/)
 })
 
 
@@ -24,7 +24,7 @@ test('compatibility and review-plan inventories reject altered bindings and sour
     const manifestPath = 'apps/company-hq/supabase/staging-migration-parity.json'
     const validator = 'apps/company-hq/supabase/verify-staging-migration-parity.mjs'
     const manifest = JSON.parse(readFileSync(path.join(root, manifestPath), 'utf8'))
-    const indices = ['repository-worker-compatibility-review-only', 'trial-review-plan-cache-review-only', 'skill-evidence-plan-reuse-review-only', 'live-dispatch-activation', 'live-dispatch-adaptive-activation'].map(phase => manifest.pendingMigrations.findIndex(row => row.phase === phase))
+    const indices = ['repository-worker-compatibility-review-only', 'trial-review-plan-cache-review-only', 'skill-evidence-plan-reuse-review-only', 'trial-status-projection', 'founder-shared-authorization', 'live-dispatch-activation', 'live-dispatch-adaptive-activation'].map(phase => manifest.pendingMigrations.findIndex(row => row.phase === phase))
     assert.ok(indices.every(index => index >= 0))
     const paths = new Set([manifestPath, validator,
       'supabase/legacy/company-hq/migrations/' + manifest.archivedUnapplied.file,

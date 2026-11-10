@@ -46,3 +46,20 @@ timeout() { shift 3; "$@"; }
     assert.equal(result.status, code, result.stderr)
   }
 })
+
+test('founder race checks use a separate fixed disposable database and propagate failure',()=>{
+ const founderStep=workflow.match(/ {6}- name: Prove founder authorization concurrency\n([\s\S]*?)(?= {6}- name:)/)[1]
+ assert.match(founderStep,/if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'/)
+ assert.match(founderStep,/POSTGRES_DB=hq_founder_bind_disposable/)
+ assert.match(founderStep,/-e HQ_FOUNDER_NATIVE=1/)
+ assert.match(founderStep,/apps\/company-hq\/tests\/unit\/founder-bind-db.test.mjs/)
+ assert.doesNotMatch(founderStep,/--publish|--network[= ]host|(?:^|\s)-p\s|secrets\./)
+ assert.match(workflow,/docker rm -f hq-founder-bind-fixture \|\| true/)
+ assert.ok(workflow.split('  workflow_dispatch:')[0].includes("'apps/company-hq/tests/unit/founder-bind-db.test.mjs'"))
+ const founderScript=founderStep.split('        run: |\n')[1].replace(/^ {10}/gm,'')
+ const stub=`docker(){ if [[ "$*" == *"node --test apps/company-hq/tests/unit/founder-bind-db.test.mjs"* ]]; then return "$FIXTURE_EXIT"; fi; if [[ "$*" == *"SELECT current_setting"* ]]; then printf '170011\\n'; fi; return 0; }; timeout(){ shift 3; "$@"; }\n`
+ for(const code of [0,42]){
+  const result=spawnSync('bash',['--noprofile','--norc','-e','-o','pipefail','-c',stub+founderScript],{encoding:'utf8',env:{...process.env,FIXTURE_EXIT:String(code),GITHUB_WORKSPACE:'/disposable-fixture'}})
+  assert.equal(result.status,code,result.stderr)
+ }
+})
