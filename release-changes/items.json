@@ -6302,5 +6302,26 @@
       "release-changes/items.json"
     ],
     "reason": "Reuse and bound repository review proof planning, rejecting only already-impossible trial states while preserving the exact transformed proof, current worker compatibility, statement snapshot, private ACLs and unchanged timeout. Verify both generated worker versions, immutable evidence, full status parity and bounded native repeated four-reader batches. No result cache, hosted data mutation or production action."
+  },
+  {
+    "id": "hq-staffing-request-coalescing-20261110",
+    "task": "HQ-STAFFING-REQUEST-COALESCING-20261110",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/company-hq/app/composables/useHqStaffing.ts",
+      "apps/company-hq/tests/unit/staffing-refresh.test.mjs",
+      "docs/work-packages/company-hq/HQ-STAFFING-REQUEST-COALESCING-20261110.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Coalesce only not-yet-dispatched staffing reads requested in the same microtask turn. Retain eager initial availability, stream-ready recovery and fresh follow-up reads for invalidations after dispatch. No server authority, cache, payload, schema, provider or production changes. Synthetic actual-composable/hub fixtures measure request reduction; live billed CPU savings are unmeasured."
   }
 ]

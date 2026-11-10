@@ -44,7 +44,19 @@ export function useHqStaffing(getAccess: () => HqFounderAccessPresentation) {
     workflows: (snapshot.value?.workflows ?? []).map(row => ({ ...row, statusLabel: labels[row.status] ?? row.status,
       blockerLabel: labels[row.blocker] ?? 'Setup or current-source verification required' })) }))
   function clear(retainAttempts = false) { epoch++; controller?.abort(); controller = null; snapshot.value = null; status.value = 'unavailable'; pending.value = false; message.value = undefined; if (!retainAttempts) attempts.clear() }
-  async function refresh() {
+  let scheduledRefresh: Promise<void> | null = null
+  function refresh(): Promise<void> {
+    // Both live topics and startup hooks can request the same snapshot in one
+    // turn. Share only work not dispatched yet; an event after dispatch still
+    // marks the active read dirty and gets the existing fresh follow-up.
+    if (scheduledRefresh) return scheduledRefresh
+    scheduledRefresh = Promise.resolve().then(() => {
+      scheduledRefresh = null
+      return runRefresh()
+    })
+    return scheduledRefresh
+  }
+  async function runRefresh() {
     if (disposed || getAccess().status !== 'founder' || getAccess().pending || pending.value) return
     if (refreshing) { refreshQueued = true; return refreshing }
     const generation = epoch, owner = identity()
