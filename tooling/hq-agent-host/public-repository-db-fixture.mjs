@@ -9,8 +9,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID, createHash } from 'node:crypto'
 import { fake } from './test-cli.mjs'
-import { deliverWorkerEntry, invokeCodex, failedToolEvidence, checkRepositoryContract } from './worker.mjs'
-import { REQUIRED_RPCS } from './maintenance.mjs'
+import { deliverWorkerEntry, invokeCodex } from './worker.mjs'
 import { PUBLIC_REPOSITORY_MANIFEST, PUBLIC_REPOSITORY_MANIFEST_DIGEST } from './departmentWorkflow.mjs'
 
 const require = createRequire(new URL('../../apps/company-hq/package.json', import.meta.url))

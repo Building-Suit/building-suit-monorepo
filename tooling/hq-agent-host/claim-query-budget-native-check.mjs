@@ -29,7 +29,7 @@ test('native concurrent status and claim retain snapshot freshness and lock beha
  const prepared=await preparedWorker();setFutureWorker(prepared);t.after(()=>prepared.close())
  const db=await connect('hq-plan-installer')
  const adapter={query:(...args)=>db.query(...args),exec:sql=>db.query(sql),close:async()=>{}}
- const f=await repositoryFixture({database:adapter}),{h,claim}=f
+ const f=await repositoryFixture({database:adapter}),{h}=f
  await prepareQueuedTrial(f)
  const sample=async()=>{
   const times={statusMs:[],claimMs:[]};let claimed
