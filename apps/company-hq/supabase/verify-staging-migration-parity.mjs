@@ -29,6 +29,8 @@ const repositoryRead = pending.filter(row => row.phase === 'public-repository-re
 const repositoryCompatibility = pending.filter(row => row.phase === 'repository-worker-compatibility-review-only')
 const activityWebPush = pending.filter(row => row.phase === 'activity-web-push-review-only')
 const trialReviewPlanCache = pending.filter(row => row.phase === 'trial-review-plan-cache-review-only')
+const skillEvidencePlanReuse = pending.filter(row => row.phase === 'skill-evidence-plan-reuse-review-only')
+if (skillEvidencePlanReuse.length !== 1 || skillEvidencePlanReuse.some(row => row.file !== '20261110002441_hq_skill_evidence_plan_reuse.sql' || row.status !== 'source-only-live-approval-required' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown skill evidence plan reuse source')
 const liveDispatch = pending.filter(row => row.phase === 'live-dispatch-activation')
 const adaptiveDispatch = pending.filter(row => row.phase === 'live-dispatch-adaptive-activation')
 if (adaptiveDispatch.length !== 1 || adaptiveDispatch.some(row => row.file !== '20261109182552_hq_live_dispatch_adaptive_activation.sql' || row.status !== 'approved-source-not-deployed' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown adaptive dispatch activation source')
@@ -82,7 +84,7 @@ const contract2Sources = [
   }
 ]
 if (phase1.length !== 1 || phase1.some(row => row.status !== 'approved-source-not-deployed' || !/^\d{14}_hq_worker_admission_fence\.sql$/.test(row.file))) failures.push('approved phase-1 fence inventory changed')
-if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length + resume.length + trialContext.length + staffing.length + taskEvidence.length + taskBrowser.length + qualificationBudget.length + publicDiscovery.length + researchStatus.length + evaluatorQualification.length + retailDiscovery.length + repositoryRead.length + repositoryCompatibility.length + activityWebPush.length + trialReviewPlanCache.length + liveDispatch.length + adaptiveDispatch.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
+if (pending.length !== phase1.length + phase2.length + trialDelivery.length + trialSkills.length + compatibility.length + resume.length + trialContext.length + staffing.length + taskEvidence.length + taskBrowser.length + qualificationBudget.length + publicDiscovery.length + researchStatus.length + evaluatorQualification.length + retailDiscovery.length + repositoryRead.length + repositoryCompatibility.length + activityWebPush.length + trialReviewPlanCache.length + skillEvidencePlanReuse.length + liveDispatch.length + adaptiveDispatch.length || ![0,6].includes(phase2.length)) failures.push('incomplete or unknown pending migration phase')
 for (const [index,row] of phase2.entries()) {
   if (row.status !== 'source-only-live-approval-required' || row.file !== contract2Sources[index].file || row.proposal !== contract2Sources[index].proposal) failures.push('contract-2 source/order differs from reviewed proposals')
 }
@@ -108,7 +110,7 @@ for (const expected of pending) {
       || canonical.split(start)[1]?.split(end)[0] !== proposal) failures.push('adaptive activation differs from exact reviewed proposal')
     continue
   }
-  if (expected.phase === 'live-dispatch-activation' || expected.phase === 'admission-resume-review-only' || expected.phase === 'task-browser-review-only' || expected.phase === 'qualification-query-budget-review-only' || expected.phase === 'public-discovery-mcp-review-only' || expected.phase === 'public-research-status-review-only' || expected.phase === 'evaluator-qualification-review-only' || expected.phase === 'public-retail-discovery-review-only' || expected.phase === 'public-repository-read-review-only' || expected.phase === 'activity-web-push-review-only' || expected.phase === 'trial-review-plan-cache-review-only') continue
+  if (expected.phase === 'live-dispatch-activation' || expected.phase === 'admission-resume-review-only' || expected.phase === 'task-browser-review-only' || expected.phase === 'qualification-query-budget-review-only' || expected.phase === 'public-discovery-mcp-review-only' || expected.phase === 'public-research-status-review-only' || expected.phase === 'evaluator-qualification-review-only' || expected.phase === 'public-retail-discovery-review-only' || expected.phase === 'public-repository-read-review-only' || expected.phase === 'activity-web-push-review-only' || expected.phase === 'trial-review-plan-cache-review-only' || expected.phase === 'skill-evidence-plan-reuse-review-only') continue
   const proposal = readFileSync(path.join(root, expected.proposal))
   const canonical = readFileSync(path.join(migrationsDir, expected.file))
   if (['contract2-review-only', 'trial-delivery-review-only', 'trial-skills-review-only', 'worker-status-compatibility', 'trial-context-review-only', 'staffing-approval-review-only', 'task-evidence-context-review-only', 'repository-worker-compatibility-review-only'].includes(expected.phase)) {

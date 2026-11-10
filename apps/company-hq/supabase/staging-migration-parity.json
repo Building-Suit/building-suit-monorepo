@@ -346,6 +346,15 @@
       "phase": "live-dispatch-adaptive-activation",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261109182552_hq_live_dispatch_adaptive_activation.sql"
+    },
+    {
+      "file": "20261110002441_hq_skill_evidence_plan_reuse.sql",
+      "bytes": 3243,
+      "md5": "4fd973b4452cad2913a27d7d27ce9e42",
+      "sha256": "d74391ea4cc734279e2a257224b4d58ecf055bae763c9a38229bda6ac36f4b11",
+      "phase": "skill-evidence-plan-reuse-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261110002441_hq_skill_evidence_plan_reuse.sql"
     }
   ]
 }
