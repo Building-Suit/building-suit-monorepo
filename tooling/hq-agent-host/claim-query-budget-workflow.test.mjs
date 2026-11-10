@@ -63,3 +63,22 @@ test('founder race checks use a separate fixed disposable database and propagate
   assert.equal(result.status,code,result.stderr)
  }
 })
+
+test('trial review planning runs cold native checks in a fresh fixed database and propagates failure', () => {
+  const reviewStep = workflow.match(/ {6}- name: Prove trial review planning with four cold sessions\n([\s\S]*?)(?= {6}- name:)/)[1]
+  assert.match(reviewStep, /if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'/)
+  assert.match(reviewStep, /--name hq-trial-review-fixture --network hq-live-dispatch-fixture/)
+  assert.match(reviewStep, /POSTGRES_DB=hq_trial_review_planning_disposable/)
+  assert.match(reviewStep, /tooling\/hq-agent-host\/trial-review-planning-native-check.mjs/)
+  assert.match(reviewStep, /330s docker exec/)
+  assert.doesNotMatch(reviewStep, /--publish|--network[= ]host|(?:^|\s)-p\s|secrets\./)
+  assert.match(workflow, /docker rm -f hq-trial-review-fixture \|\| true/)
+  const reviewScript = reviewStep.split('        run: |\n')[1].replace(/^ {10}/gm, '')
+  const stub = `docker(){ if [[ "$*" == *"node --test tooling/hq-agent-host/trial-review-planning-native-check.mjs"* ]]; then return "$FIXTURE_EXIT"; fi; if [[ "$*" == *"SELECT current_setting"* ]]; then printf '170011\\n'; fi; return 0; }; timeout(){ shift 3; "$@"; }\n`
+  for (const code of [0, 42]) {
+    const result = spawnSync('bash', ['--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', stub + reviewScript], {
+      encoding: 'utf8', env: { ...process.env, FIXTURE_EXIT: String(code), GITHUB_WORKSPACE: '/disposable-fixture' },
+    })
+    assert.equal(result.status, code, result.stderr)
+  }
+})

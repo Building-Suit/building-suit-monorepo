@@ -105,10 +105,29 @@ jobs:
           timeout --signal=TERM --kill-after=10s 120s docker exec -w /workspace/repository -e HQ_FOUNDER_NATIVE=1 \
             hq-founder-bind-fixture node --test apps/company-hq/tests/unit/founder-bind-db.test.mjs
           test "$(docker exec hq-founder-bind-fixture psql -U postgres -d hq_founder_bind_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove trial review planning with four cold sessions
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          # Fresh database for the exact passed/canceled/evaluator lifecycle mix.
+          # Reuse the pinned 17.11 image and isolated network; never publish ports.
+          docker run -d --name hq-trial-review-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_trial_review_planning_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-trial-review-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_trial_review_planning_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 330s docker exec -w /workspace/repository \
+            hq-trial-review-fixture node --test tooling/hq-agent-host/trial-review-planning-native-check.mjs
+          test "$(docker exec hq-trial-review-fixture psql -U postgres -d hq_trial_review_planning_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
       - name: Disposable scheduler diagnostics
         if: failure()
         run: |
           docker logs --tail 80 hq-live-dispatch-fixture
+          docker logs --tail 80 hq-trial-review-fixture || true
           docker exec -e PGOPTIONS='-c statement_timeout=5000' hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -c 'SELECT pid,usename,application_name,state,wait_event_type,wait_event,pg_blocking_pids(pid) AS blockers FROM pg_stat_activity WHERE datname=current_database()'
           docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -c 'SELECT jobid,status,return_message FROM cron.job_run_details ORDER BY runid DESC LIMIT 10'
       - name: Remove disposable database
@@ -116,5 +135,6 @@ jobs:
         run: |
           docker rm -f hq-claim-budget-fixture || true
           docker rm -f hq-founder-bind-fixture || true
+          docker rm -f hq-trial-review-fixture || true
           docker rm -f hq-live-dispatch-fixture || true
           docker network rm hq-live-dispatch-fixture || true

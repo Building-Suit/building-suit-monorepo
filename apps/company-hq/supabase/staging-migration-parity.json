@@ -373,6 +373,15 @@
       "phase": "founder-shared-authorization",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261110140541_hq_founder_shared_authorization.sql"
+    },
+    {
+      "file": "20261110160612_hq_trial_review_planning.sql",
+      "bytes": 4686,
+      "md5": "a095dfa5ff360a7d7c53719a25cff9cf",
+      "sha256": "cb5a3fa868b497095a81eba4329d17eb4ca4513bdb7d2aaab20f383bba03018d",
+      "phase": "trial-review-planning",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261110160612_hq_trial_review_planning.sql"
     }
   ]
 }
