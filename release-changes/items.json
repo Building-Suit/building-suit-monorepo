@@ -6246,5 +6246,33 @@
       "release-changes/items.json"
     ],
     "reason": "Reuse current ordinary qualification evidence within each founder status projection and allow already-bound founder readers to share the invitation lock while retaining revocation serialization, first-binding locks and fresh authority checks. Preserve evidence, API shape, ACLs and immutable records. Verify synthetic full-response parity and native races at unchanged timeouts. No production, worker recovery, qualification grant or persistent result cache."
+  },
+  {
+    "id": "hq-trial-review-planning-20261110",
+    "task": "HQ-TRIAL-REVIEW-PLANNING-20261110",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/hq-live-dispatch-disposable.yml",
+      "apps/company-hq/supabase/migrations/20261110160612_hq_trial_review_planning.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "tooling/hq-agent-host/TRIAL-REVIEW-PLANNING.md",
+      "tooling/hq-agent-host/trial-review-planning-checks.mjs",
+      "tooling/hq-agent-host/trial-review-planning-db.test.mjs",
+      "tooling/hq-agent-host/trial-review-planning-native-check.mjs",
+      "tooling/hq-agent-host/claim-query-budget-workflow.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Bound cold review-query planning and skip only logically impossible review states while retaining the exact authoritative proof, stable statement snapshot, private execution contract and unchanged timeout. Verify the observed ten-worker lifecycle mix, real generated proof, four-session native concurrency, setting restoration and evidence freshness. No hosted data mutation, result cache or production action."
   }
 ]
