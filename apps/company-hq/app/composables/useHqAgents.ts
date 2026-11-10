@@ -99,12 +99,43 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
   let trialFeedbackEpoch = 0
   let trialSequence = 0
   const trialAttempts = new Map<string, { identity: string | null; requestKey: string }>()
-  async function refreshTrials() {
-    if (getAccess().status !== 'founder') { trials.value = []; return }
+  let trialRefresh: { identity: string | null; epoch: number; controller: AbortController; dirty: boolean; promise: Promise<void> } | null = null
+  function resetTrialRefresh() {
+    if (trialRefresh) { trialRefresh.dirty = false; trialRefresh.controller.abort(); trialRefresh = null }
+  }
+  function refreshTrials(): Promise<void> {
+    if (!allowed()) {
+      if (getAccess().status !== 'founder') trials.value = []
+      return Promise.resolve()
+    }
     const identity = accessIdentity(getAccess()), trialEpoch = epoch
+    if (trialRefresh && (trialRefresh.identity !== identity || trialRefresh.epoch !== trialEpoch)) resetTrialRefresh()
+    if (trialRefresh) {
+      trialRefresh.dirty = true
+      return trialRefresh.promise
+    }
+    const queue = { identity, epoch: trialEpoch, controller: new AbortController(), dirty: true, promise: Promise.resolve() }
+    const current = () => trialRefresh === queue && allowed() && epoch === trialEpoch && accessIdentity(getAccess()) === identity
+    // All read sources share this queue. A caller arriving during a snapshot
+    // waits through a fresh follow-up, including reads requested after a write.
+    queue.promise = Promise.resolve().then(async () => {
+      try {
+        while (queue.dirty && current()) {
+          queue.dirty = false
+          await readTrials(identity, trialEpoch, queue.controller.signal)
+        }
+      } finally { if (trialRefresh === queue) trialRefresh = null }
+    })
+    trialRefresh = queue
+    return queue.promise
+  }
+  async function readTrials(identity: string | null, trialEpoch: number, signal: AbortSignal) {
     try {
-      const result = await $fetch<unknown>('/api/hq/trials', { headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' } })
-      if (getAccess().status !== 'founder' || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
+      const result = await $fetch<unknown>('/api/hq/trials', {
+        headers: { 'X-HQ-Access': '1', 'X-HQ-Brain': '1' }, retry: 0,
+        signal: AbortSignal.any([signal, AbortSignal.timeout(45_000)]),
+      })
+      if (signal.aborted || !allowed() || accessIdentity(getAccess()) !== identity || epoch !== trialEpoch) return
       if (!Array.isArray(result) || result.length > 50 || result.some(row => !row || typeof row.agentId !== 'string'
         || typeof row.eligible !== 'boolean' || typeof row.qualified !== 'boolean' || typeof row.receiptIssued !== 'boolean'
         || typeof row.reviewComplete !== 'boolean' || !(row.skillFileId === null || typeof row.skillFileId === 'string')
@@ -119,7 +150,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
         return { ...row, ...(research ? { publicResearch: research } : {}), ...(retail ? { publicRetail: retail } : {}), ...(ordinary ? { ordinary } : {}), ...(repository ? { repository } : {}) }
       }) as HqTrialPresentation[]
     } catch {
-      if (getAccess().status === 'founder' && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trials.value = []
+      if (!signal.aborted && allowed() && accessIdentity(getAccess()) === identity && epoch === trialEpoch) trials.value = []
     }
   }
   async function trialCommand(command: HqTrialCommand) {
@@ -481,7 +512,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
 
   function invalidate(clearAttempts: boolean, reason: MessageReason | null = null) {
     cancellationSequence += 1; cancellationRequest?.abort(); cancellationRequest = null; taskCancellationPending.value = false
-    epoch += 1; controller?.abort(); controller = null; inFlight = null
+    epoch += 1; resetTrialRefresh(); controller?.abort(); controller = null; inFlight = null
     refreshQueued = false; pending.value = false; refreshing.value = false; sending.value = false; snapshot.value = null
     trialSequence += 1; trialFeedbackEpoch += 1; trials.value = []; trialMessage.value = ''; trialMessageAgentId.value = null; trialPending.value = false
     status.value = 'unavailable'; messageReason.value = reason
@@ -515,7 +546,7 @@ export function useHqAgents(getAccess: () => HqFounderAccessPresentation, messag
       if (sending.value) return Promise.resolve(false)
       // An explicit write takes priority over a replaceable background GET.
       // Its aborted response cannot overwrite the write's newer epoch.
-      epoch += 1; controller?.abort(); controller = null; inFlight = null
+      epoch += 1; resetTrialRefresh(); controller?.abort(); controller = null; inFlight = null
       refreshQueued = true
     }
     const expected = epoch, identity = scopeIdentity, request = new AbortController()

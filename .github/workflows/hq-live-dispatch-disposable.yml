@@ -3,9 +3,15 @@ on:
   pull_request:
     paths:
       - '.github/workflows/hq-live-dispatch-disposable.yml'
-      - 'tooling/hq-agent-host/live-dispatch-native*'
+      - 'tooling/hq-agent-host/*.mjs'
+      - 'tooling/hq-agent-host/live-dispatch-native.Dockerfile'
+      - 'tooling/hq-agent-host/test-fixtures/**'
+      - 'tooling/hq-agent-host/bootstrap/admission-pause.sql'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - 'tooling/hq-agent-host/proposed-migrations/hq_live_dispatch.sql'
       - 'apps/company-hq/supabase/migrations/**'
+      - 'apps/company-hq/tests/unit/founder-bind-db.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -65,6 +71,40 @@ jobs:
           # Upstream patch releases intentionally retain SQL extversion 1.6.
           # The image provenance above identifies the implementation separately.
           test "$(docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -Atc "SELECT current_setting('server_version_num') || ':' || extversion FROM pg_extension WHERE extname='pg_cron'")" = '170011:1.6'
+      - name: Prove claim query budget and concurrent freshness
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          # Independent database and container; no host port or hosted credential.
+          # TCP readiness excludes the image entrypoint's bootstrap server.
+          docker run -d --name hq-claim-budget-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_claim_budget_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-claim-budget-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_claim_budget_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 240s docker exec -w /workspace/repository \
+            hq-claim-budget-fixture node --test tooling/hq-agent-host/claim-query-budget-native-check.mjs
+          test "$(docker exec hq-claim-budget-fixture psql -U postgres -d hq_claim_budget_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove founder authorization concurrency
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          docker run -d --name hq-founder-bind-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_founder_bind_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-founder-bind-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_founder_bind_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 120s docker exec -w /workspace/repository -e HQ_FOUNDER_NATIVE=1 \
+            hq-founder-bind-fixture node --test apps/company-hq/tests/unit/founder-bind-db.test.mjs
+          test "$(docker exec hq-founder-bind-fixture psql -U postgres -d hq_founder_bind_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
       - name: Disposable scheduler diagnostics
         if: failure()
         run: |
@@ -74,5 +114,7 @@ jobs:
       - name: Remove disposable database
         if: always()
         run: |
+          docker rm -f hq-claim-budget-fixture || true
+          docker rm -f hq-founder-bind-fixture || true
           docker rm -f hq-live-dispatch-fixture || true
           docker network rm hq-live-dispatch-fixture || true

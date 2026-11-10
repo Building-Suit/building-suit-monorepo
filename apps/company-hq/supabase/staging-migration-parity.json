@@ -346,6 +346,33 @@
       "phase": "live-dispatch-adaptive-activation",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261109182552_hq_live_dispatch_adaptive_activation.sql"
+    },
+    {
+      "file": "20261110002441_hq_skill_evidence_plan_reuse.sql",
+      "bytes": 3243,
+      "md5": "4fd973b4452cad2913a27d7d27ce9e42",
+      "sha256": "d74391ea4cc734279e2a257224b4d58ecf055bae763c9a38229bda6ac36f4b11",
+      "phase": "skill-evidence-plan-reuse-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261110002441_hq_skill_evidence_plan_reuse.sql"
+    },
+    {
+      "file": "20261110140432_hq_trial_status_projection.sql",
+      "bytes": 17831,
+      "md5": "5bc0eb7cf80edb48b4e79f2cfc5ff5bc",
+      "sha256": "6d582be5973c80f0b587e73d4a8f98a7b5f0b70f58cb9006e937a86af3144d67",
+      "phase": "trial-status-projection",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261110140432_hq_trial_status_projection.sql"
+    },
+    {
+      "file": "20261110140541_hq_founder_shared_authorization.sql",
+      "bytes": 3038,
+      "md5": "dd5e0d2bb58b9facac8f2905ce2503a0",
+      "sha256": "b43a5e69d1e4779979e065eb761e06dd0acc1d8aa74fa0a60983808e108bc54f",
+      "phase": "founder-shared-authorization",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261110140541_hq_founder_shared_authorization.sql"
     }
   ]
 }
