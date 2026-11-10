@@ -138,3 +138,49 @@ jobs:
           docker rm -f hq-trial-review-fixture || true
           docker rm -f hq-live-dispatch-fixture || true
           docker network rm hq-live-dispatch-fixture || true
+  repository-review-planning:
+    name: Native repository review planning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start isolated repository review database
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          # Same pinned PostgreSQL 17.11/Node runtime; this fixture needs no cron.
+          # A separate job avoids extending the existing four isolation jobs.
+          docker build --target runtime -t hq-repository-review-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
+          docker network create --internal hq-repository-review-fixture
+          docker run -d --name hq-repository-review-fixture --network hq-repository-review-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_repository_review_planning_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-repository-review-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_repository_review_planning_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+      - name: Prove repository review cold and repeated concurrency
+        run: |
+          timeout --signal=TERM --kill-after=10s 390s docker exec -w /workspace/repository \
+            hq-repository-review-fixture node --test tooling/hq-agent-host/repository-review-planning-native-check.mjs
+          test "$(docker exec hq-repository-review-fixture psql -U postgres -d hq_repository_review_planning_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Repository review diagnostics
+        if: failure()
+        run: |
+          docker logs --tail 80 hq-repository-review-fixture
+          docker exec -e PGOPTIONS='-c statement_timeout=5000' hq-repository-review-fixture psql -U postgres -d hq_repository_review_planning_disposable -c 'SELECT pid,usename,application_name,state,wait_event_type,wait_event,pg_blocking_pids(pid) AS blockers FROM pg_stat_activity WHERE datname=current_database()'
+      - name: Remove repository review database
+        if: always()
+        run: |
+          docker rm -f hq-repository-review-fixture || true
+          docker network rm hq-repository-review-fixture || true
