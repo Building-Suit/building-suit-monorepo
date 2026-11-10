@@ -82,3 +82,40 @@ test('trial review planning runs cold native checks in a fresh fixed database an
     assert.equal(result.status, code, result.stderr)
   }
 })
+
+test('repository review uses an independent fixed native job and propagates assertion failure', () => {
+  const job = workflow.match(/ {2}repository-review-planning:\n([\s\S]*)$/)[1]
+  assert.match(job, /timeout-minutes: 15/)
+  assert.match(job, /docker build --target runtime .*live-dispatch-native.Dockerfile/)
+  assert.match(job, /docker network create --internal hq-repository-review-fixture/)
+  assert.match(job, /--name hq-repository-review-fixture --network hq-repository-review-fixture/)
+  assert.match(job, /POSTGRES_DB=hq_repository_review_planning_disposable/)
+  assert.match(job, /test "\$RUNNER_ENVIRONMENT" = github-hosted/)
+  assert.match(job, /if: always\(\)[\s\S]*docker rm -f hq-repository-review-fixture/)
+  assert.doesNotMatch(job, /--publish|--network[= ]host|(?:^|\s)-p\s|secrets\.|continue-on-error/)
+  const step = job.match(/ {6}- name: Prove repository review cold and repeated concurrency\n([\s\S]*?)(?= {6}- name:)/)[1]
+  assert.match(step, /390s docker exec/)
+  assert.match(step, /'170011'/)
+  const script = step.split('        run: |\n')[1].replace(/^ {10}/gm, '')
+  const stub = `docker(){ if [[ "$*" == *"node --test tooling/hq-agent-host/repository-review-planning-native-check.mjs"* ]]; then return "$FIXTURE_EXIT"; fi; if [[ "$*" == *"SELECT current_setting"* ]]; then printf '170011\\n'; fi; return 0; }; timeout(){ shift 3; "$@"; }\n`
+  for (const code of [0, 42]) {
+    const result = spawnSync('bash', ['--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', stub + script], {
+      encoding: 'utf8', env: { ...process.env, FIXTURE_EXIT: String(code), GITHUB_WORKSPACE: '/disposable-fixture' },
+    })
+    assert.equal(result.status, code, result.stderr)
+  }
+})
+
+test('repository native test pins the target and retains the eight-second cap and repeated batches', () => {
+  const source = readFileSync(new URL('./repository-review-planning-native-check.mjs', import.meta.url), 'utf8')
+  assert.match(source, /const database = 'hq_repository_review_planning_disposable'/)
+  assert.match(source, /host: '127.0.0.1', port: 5432/)
+  assert.match(source, /version: '170011'/)
+  assert.doesNotMatch(source, /process\.env|connectionString|DATABASE_URL/)
+  assert.match(source, /Array.from\(\{ length: 4 \}/)
+  assert.match(source, /connect\(`hq-repository-\$\{phase\}-\$\{i\}`, 8000\)/)
+  assert.match(source, /round <= 3/)
+  assert.match(source, /candidate-cold/)
+  assert.match(source, /candidate-repeated/)
+  assert.match(source, /repository\.qualified, true/)
+})

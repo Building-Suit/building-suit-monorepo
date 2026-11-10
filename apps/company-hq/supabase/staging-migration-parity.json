@@ -382,6 +382,15 @@
       "phase": "trial-review-planning",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261110160612_hq_trial_review_planning.sql"
+    },
+    {
+      "file": "20261110165424_hq_repository_review_planning.sql",
+      "bytes": 4257,
+      "md5": "6534240a61568f0046b0d8695c6e66a5",
+      "sha256": "881ca222c5e4ddbc1d8e5d7fa1681029935cc9bb06fa767ccd9faefd562d35ad",
+      "phase": "repository-review-planning",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261110165424_hq_repository_review_planning.sql"
     }
   ]
 }
