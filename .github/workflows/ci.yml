@@ -48,6 +48,13 @@ jobs:
     needs: [plan]
     if: needs.plan.outputs.validate == 'true'
     runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +67,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
       - name: Fetch protected branch history for release classification
         if: github.event_name == 'pull_request'
         env:
@@ -78,8 +89,7 @@ jobs:
           RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node tooling/releases/check.mjs
       - run: pnpm check
-      # Control-plane node tests render the health UI with Playwright.
-      - run: pnpm exec playwright install --with-deps chromium
+      # The verified image supplies browsers for the control-plane UI node tests.
       - run: pnpm test
       - name: Retain receipt reference comparisons
         if: always()
@@ -113,6 +123,13 @@ jobs:
     needs: [plan]
     if: needs.plan.outputs.validate == 'true'
     runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +142,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
       - name: Verify mocked HQ task cancellation browser flow
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -246,6 +266,13 @@ jobs:
     if: >-
       !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
     runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     outputs:
       artifact-id: ${{ steps.build-artifact.outputs.artifact-id }}
@@ -260,6 +287,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
       - run: pnpm run setup
       - run: pnpm build --concurrency=2
         env:
@@ -291,6 +322,14 @@ jobs:
     needs: [plan, build]
     if: ${{ !cancelled() && needs.plan.outputs.full == 'true' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    # Changelog keeps its real Docker SQL setup on the host; its browser server
+    # still runs in the same image, without access to the host Docker socket.
+    container:
+      image: ${{ matrix.suite != 'changelog' && 'mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb' || '' }}
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -317,12 +356,18 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        if: matrix.suite != 'changelog'
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
       # A failed-job retry retains its successful producer's output, even when
       # github.run_attempt advances. Do not resolve an archive from another run.
       - name: Require the successful producer's exact artifact identity
@@ -341,8 +386,8 @@ jobs:
           tar -xzf workspace-build.tar.gz
           test "$(cat .ci-build-sha)" = "$VALIDATION_SHA"
           test "$(git rev-parse HEAD)" = "$VALIDATION_SHA"
-      - run: pnpm exec playwright install --with-deps chromium
       - name: Run every browser obligation on isolated runners
+        if: matrix.suite != 'changelog'
         env:
           SUITE: ${{ matrix.suite }}
           SHARD: ${{ matrix.shard }}
@@ -354,6 +399,18 @@ jobs:
             *) exit 1 ;;
           esac
           pnpm exec playwright test -c "$config" --shard="$SHARD"
+      - name: Run changelog SQL on the host and browsers in the pinned image
+        if: matrix.suite == 'changelog'
+        run: node tooling/ci/changelog-browser.mjs
+      - name: Clean up the changelog browser container
+        if: always() && matrix.suite == 'changelog'
+        run: |
+          if [[ "${CI_CHANGELOG_CONTAINER:-}" =~ ^ci-changelog-[a-z0-9-]+$ ]]; then
+            existing="$(docker container ls --all --filter "name=^/${CI_CHANGELOG_CONTAINER}$" --format '{{.Names}}')"
+            if [[ "$existing" == "$CI_CHANGELOG_CONTAINER" ]]; then
+              docker rm --force "$CI_CHANGELOG_CONTAINER"
+            fi
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
