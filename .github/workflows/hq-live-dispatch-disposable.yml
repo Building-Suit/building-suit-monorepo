@@ -204,5 +204,5 @@ jobs:
       - name: Remove repository review database
         if: always()
         run: |
-          docker rm -f hq-repository-v2-v1 hq-repository-v2-historical hq-repository-review-fixture || true
+          docker rm -f hq-repository-review-fixture hq-repository-v2-v1 hq-repository-v2-historical || true
           docker network rm hq-repository-review-fixture || true
