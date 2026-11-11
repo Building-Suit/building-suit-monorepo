@@ -10,7 +10,7 @@ const image = `mcr.microsoft.com/playwright:v${version}-resolute@sha256:aebd85bc
 const runtime = () => ({
   nodeVersion, requiredNodeVersion: nodeVersion, expectedVersion: version, actualVersion: version,
   imageInfo: { driverVersion: version, dockerImageName: `mcr.microsoft.com/playwright:v${version}-resolute` },
-  browsersPath: '/ms-playwright', platform: 'linux', arch: 'x64', osId: 'ubuntu', osVersion: '26.04',
+  browsersPath: '/ms-playwright', platform: 'linux', arch: 'x64', uid: 1001, osId: 'ubuntu', osVersion: '26.04',
 })
 
 test('pinned runtime rejects mismatched packages, images, browsers, Node and platform', () => {
@@ -19,7 +19,7 @@ test('pinned runtime rejects mismatched packages, images, browsers, Node and pla
     { nodeVersion: '24.22.1' }, { expectedVersion: `^${version}` }, { actualVersion: '1.61.0' },
     { imageInfo: undefined }, { imageInfo: { ...runtime().imageInfo, driverVersion: '1.61.0' } },
     { imageInfo: { ...runtime().imageInfo, dockerImageName: `mcr.microsoft.com/playwright:v${version}-noble` } },
-    { browsersPath: '/tmp/browser-cache' }, { platform: 'darwin' }, { arch: 'arm64' },
+    { browsersPath: '/tmp/browser-cache' }, { platform: 'darwin' }, { arch: 'arm64' }, { uid: 0 },
     { osId: 'debian' }, { osVersion: '24.04' },
   ]) assert.throws(() => assertPlaywrightRuntime({ ...runtime(), ...patch }))
 })
@@ -29,7 +29,7 @@ test('image, shell, runtime proof and immutable artifact contract cover all brow
   const jobs = Object.fromEntries([...workflow.matchAll(/^ {2}([a-z-]+):\n([\s\S]*?)(?=^ {2}[a-z-]+:|$(?![\s\S]))/gm)].map(match => [match[1], match[2]]))
   for (const id of ['unit-review', 'hq-browser', 'build', 'browser-tests']) {
     assert.ok(jobs[id].includes(`image: ${image}`), id)
-    assert.match(jobs[id], /options: --init --shm-size=1g/)
+    assert.match(jobs[id], /options: --user 1001 --init --shm-size=1g/)
     assert.match(jobs[id], /defaults:\n {6}run:\n {8}shell: bash/)
     assert.match(jobs[id], /node-version-file: \.node-version/)
     assert.match(jobs[id], /pnpm install --frozen-lockfile/)

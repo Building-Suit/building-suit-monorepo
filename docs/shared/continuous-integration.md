@@ -96,8 +96,10 @@ releases. `actions/setup-node` still reads `.node-version` (26.8.1); the image's
 bundled Node 24 does not replace it. pnpm 10.33.0, frozen-lockfile installation,
 all tests, shard configuration and artifact identity/checksum rules remain.
 Container scripts explicitly use Bash, including the existing artifact-ID guard.
-`--init --shm-size=1g` provides process reaping and shared memory without host IPC,
-privileged mode or additional capabilities. Fixtures remain local and synthetic.
+`--user 1001 --init --shm-size=1g` matches GitHub workspace ownership, runs
+without root, and provides process reaping and shared memory without host IPC,
+privileged mode or additional capabilities. Git ownership protection stays enabled;
+no wildcard safe-directory exception is added. Fixtures remain local and synthetic.
 
 `tooling/ci/playwright-runtime.mjs` fails before tests when the image, installed
 Playwright, root manifest, Node, OS or browser path disagree. It also launches the

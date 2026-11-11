@@ -13,6 +13,7 @@ export function assertPlaywrightRuntime(runtime) {
   assert.equal(runtime.browsersPath, '/ms-playwright', 'Use the preinstalled image browsers')
   assert.equal(runtime.platform, 'linux')
   assert.equal(runtime.arch, 'x64')
+  assert.equal(runtime.uid, 1001, 'Run as the GitHub workspace owner, never root')
   assert.equal(runtime.osId, 'ubuntu')
   assert.equal(runtime.osVersion, '26.04', 'Build and consume artifacts on the same Ubuntu release')
   return true
@@ -34,6 +35,7 @@ async function main() {
     browsersPath: process.env.PLAYWRIGHT_BROWSERS_PATH,
     platform: process.platform,
     arch: process.arch,
+    uid: process.getuid(),
     osId: os.ID,
     osVersion: os.VERSION_ID,
   })
