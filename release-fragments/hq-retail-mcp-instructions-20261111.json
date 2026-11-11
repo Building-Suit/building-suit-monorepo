@@ -12,12 +12,23 @@
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "tooling/hq-agent-host/worker.mjs",
+    ".github/workflows/hq-live-dispatch-disposable.yml",
+    "apps/company-hq/supabase/migrations/20261111033000_hq_retail_assignment_context.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "docs/work-packages/company-hq/HQ-RETAIL-MCP-INSTRUCTIONS-20261111.md",
+    "tooling/hq-agent-host/discovery-worker.test.mjs",
     "tooling/hq-agent-host/public-repository-db-fixture.mjs",
     "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
     "tooling/hq-agent-host/repository-worker-compatibility-v2-native-check.mjs",
     "tooling/hq-agent-host/repository-worker-compatibility-v2.test.mjs",
-    "docs/work-packages/company-hq/HQ-RETAIL-MCP-INSTRUCTIONS-20261111.md"
+    "tooling/hq-agent-host/retail-assignment-context-checks.mjs",
+    "tooling/hq-agent-host/retail-assignment-context-native-check.mjs",
+    "tooling/hq-agent-host/retail-discovery-db.test.mjs",
+    "tooling/hq-agent-host/test-cli.mjs",
+    "tooling/hq-agent-host/test-fixtures/README.md",
+    "tooling/hq-agent-host/worker.mjs"
   ],
-  "reason": "Promote only the already reviewed exact worker after authenticated additive compatibility proof. Preserve historical fixture evidence and prohibit new repository qualification; bounded acknowledgment SQL and final checks remain draft work."
+  "reason": "Promote the exact previously reviewed worker after authenticated additive compatibility proof; add only bounded acknowledgment context behind unchanged qualification checks. Preserve V1 evidence and V2 qualification denial. Publication remains paused for repository privacy impact review."
 }

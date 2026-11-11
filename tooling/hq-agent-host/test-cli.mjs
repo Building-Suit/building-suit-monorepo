@@ -2,7 +2,7 @@
 import { mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-export async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',versionProbe={},appServer={},eventsByModel={}}={}){
+export async function fake(events,action,{meeting=false,cliVersion='codex-cli 0.159.2',versionProbe={},appServer={},eventsByModel={},promptIncludes=[],promptExcludes=[]}={}){
  const directory=await mkdtemp(join(tmpdir(),'hq-mock-cli-'));const bin=join(directory,'mock-codex')
  await writeFile(bin,`#!/usr/bin/env node
 import {readFile} from 'node:fs/promises';
@@ -31,6 +31,7 @@ if(args[0]==='app-server'){
  if(${JSON.stringify(appServer.override===true)})send({method:'thread/settings/updated',params:{threadId,threadSettings:{model:'gpt-6-luna',modelProvider:'openai',reasoningEffort:'medium'}}});
  return}
  if(req.method==='turn/start'){if(!start||req.params.threadId!==threadId||Object.keys(req.params).sort().join(',')!=='input,threadId'||!req.params.input?.[0]?.text?.includes('untrusted data'))process.exit(79);
+ if(!${JSON.stringify(promptIncludes)}.every(value=>req.params.input[0].text.includes(value))||${JSON.stringify(promptExcludes)}.some(value=>req.params.input[0].text.includes(value)))process.exit(82);
  send({id:req.id,result:{turn:{id:turnId,status:'inProgress',items:[]}}});send({method:'turn/started',params:{threadId,turn:{id:turnId,status:'inProgress',items:[]}}});
  for(const event of ${JSON.stringify(appServer.events??[])})send({method:event.method,params:{threadId,turnId,...event.params}});
  if(!${JSON.stringify(appServer.noAnswer===true)})send({method:'item/completed',params:{threadId,turnId,item:{type:'agentMessage',id:'item_1',text:'Synthetic trial result'}}});
@@ -41,6 +42,7 @@ if(args[0]==='app-server'){
 let prompt='';for await(const c of process.stdin)prompt+=c;
 if(!args.includes('--ignore-user-config')||!args.includes('--strict-config')||!['gpt-6.1-sol','gpt-6.1-terra','gpt-6-luna','gpt-6-astra'].some(model=>args.includes(model))||!args.includes('model_reasoning_effort="medium"')||process.env.HQ_WORKER_PASSWORD||process.env.OPENAI_API_KEY||process.env.HQ_BRAIN_GOOGLE_PRIVATE_KEY) {process.stdout.write(JSON.stringify({type:'error',message:'boundary-failed'})+'\\n');process.exit(1)}
 if(!prompt.includes('profile_source_1')||!prompt.includes('untrusted data'))process.exit(1);
+if(!${JSON.stringify(promptIncludes)}.every(value=>prompt.includes(value))||${JSON.stringify(promptExcludes)}.some(value=>prompt.includes(value)))process.exit(82);
 if(${JSON.stringify(meeting)}&&(!args.includes('web_search="disabled"')||args[args.indexOf('--sandbox')+1]!=='read-only'||!args.includes('mcp_servers={}')||!args.includes('shell_tool')||!args.includes('browser_use')||!prompt.includes('actual named employee Noah (AG-HR-002)')||!prompt.includes('conversation from supplied context only')||prompt.includes('You are Steve, the CEO')))process.exit(1);
 const selected=['gpt-6-astra','gpt-6.1-sol','gpt-6.1-terra','gpt-6-luna'].find(model=>args.includes(model));const byModel=${JSON.stringify(eventsByModel)};const values=byModel[selected]??${JSON.stringify(events)};for(const event of values){const bytes=Buffer.from(JSON.stringify(event)+'\\n');for(let i=0;i<bytes.length;i+=7)process.stdout.write(bytes.subarray(i,i+7));}
 }

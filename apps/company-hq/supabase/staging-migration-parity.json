@@ -400,6 +400,15 @@
       "phase": "repository-worker-compatibility-v2-review-only",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261111020000_hq_repository_worker_compatibility_v2.sql"
+    },
+    {
+      "file": "20261111033000_hq_retail_assignment_context.sql",
+      "bytes": 2502,
+      "md5": "62786af73d2028a9fa5cac9eef90a386",
+      "sha256": "a7fce2cd130b44ec2c2ec85f8149666c177b4a745d41a57ece4aa60bea02b701",
+      "phase": "retail-assignment-context",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261111033000_hq_retail_assignment_context.sql"
     }
   ]
 }
