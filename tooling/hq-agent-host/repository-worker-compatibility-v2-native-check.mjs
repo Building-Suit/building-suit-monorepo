@@ -79,7 +79,7 @@ test(`native exact-pair v2 preserves ${selected} evidence, qualifications and at
  await verifySqlFirstProductionWorker()
  const client=await connect('hq-repository-v2-installer')
  const identity=(await client.query(`select current_database() name,current_user username,
-  inet_server_addr()::text address,current_setting('server_version_num') version,
+  host(inet_server_addr()) address,current_setting('server_version_num') version,
   to_regnamespace('hq_private') private_schema,to_regnamespace('auth') auth_schema,
   to_regnamespace('extensions') extensions_schema,to_regnamespace('realtime') realtime_schema,
   (select count(*)::int from pg_roles where rolname in ('anon','authenticated','service_role')) fixture_roles,
