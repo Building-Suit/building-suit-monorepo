@@ -4,6 +4,8 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { resolve, sep } from 'node:path'
 
+export const playwrightImage = 'mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb'
+
 export function assertPlaywrightRuntime(runtime) {
   assert.equal(runtime.nodeVersion, runtime.requiredNodeVersion, 'Use the repository Node version')
   assert.match(runtime.expectedVersion, /^\d+\.\d+\.\d+$/, 'Pin an exact Playwright version')

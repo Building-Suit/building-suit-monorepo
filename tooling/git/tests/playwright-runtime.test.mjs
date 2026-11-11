@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { assertPlaywrightRuntime } from '../../ci/playwright-runtime.mjs'
+import { assertPlaywrightRuntime, playwrightImage } from '../../ci/playwright-runtime.mjs'
 
 const manifest = JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
 const version = manifest.devDependencies['@playwright/test']
@@ -27,8 +27,9 @@ test('pinned runtime rejects mismatched packages, images, browsers, Node and pla
 test('image, shell, runtime proof and immutable artifact contract cover all browser lanes and builder', () => {
   const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8')
   const jobs = Object.fromEntries([...workflow.matchAll(/^ {2}([a-z-]+):\n([\s\S]*?)(?=^ {2}[a-z-]+:|$(?![\s\S]))/gm)].map(match => [match[1], match[2]]))
+  assert.equal(playwrightImage, image)
   for (const id of ['unit-review', 'hq-browser', 'build', 'browser-tests']) {
-    assert.ok(jobs[id].includes(`image: ${image}`), id)
+    assert.ok(jobs[id].includes(id === 'browser-tests' ? `image: \${{ matrix.suite != 'changelog' && '${image}' || '' }}` : `image: ${image}`), id)
     assert.match(jobs[id], /options: --user 1001 --init --shm-size=1g/)
     assert.match(jobs[id], /defaults:\n {6}run:\n {8}shell: bash/)
     assert.match(jobs[id], /node-version-file: \.node-version/)
@@ -43,4 +44,8 @@ test('image, shell, runtime proof and immutable artifact contract cover all brow
   assert.ok(jobs['browser-tests'].includes('[[ "$BUILD_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]'))
   assert.match(jobs['browser-tests'], /artifact-ids: \$\{\{ needs.build.outputs.artifact-id \}\}/)
   assert.match(jobs['browser-tests'], /sha256sum --check workspace-build.tar.gz.sha256/)
+  assert.match(jobs['browser-tests'], /persist-credentials: false/)
+  assert.match(jobs['browser-tests'], /name: Verify pinned browser runtime and required tools\n {8}if: matrix.suite != 'changelog'/)
+  assert.match(jobs['browser-tests'], /name: Run changelog SQL on the host and browsers in the pinned image\n {8}if: matrix.suite == 'changelog'\n {8}run: node tooling\/ci\/changelog-browser.mjs/)
+  assert.match(jobs['browser-tests'], /if: always\(\) && matrix.suite == 'changelog'/)
 })

@@ -4,6 +4,6 @@
   "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
   "classification": "internal",
   "disposition": "internal",
-  "paths": [".github/workflows/ci.yml", "tooling/ci/playwright-runtime.mjs", "tooling/git/tests/playwright-runtime.test.mjs", "docs/shared/continuous-integration.md"],
+  "paths": [".github/workflows/ci.yml", "tooling/ci/playwright-runtime.mjs", "tooling/ci/changelog-browser.mjs", "tooling/git/tests/playwright-runtime.test.mjs", "tooling/git/tests/changelog-browser.test.mjs", "docs/shared/continuous-integration.md"],
   "reason": "Use the pinned official Playwright runtime for workspace browser validation and its artifact producer to avoid repeated Ubuntu apt DNS failures. Preserve Node, pnpm, lockfile, all checks and shards, exact-run artifacts, publication gates and existing provider configuration."
 }
