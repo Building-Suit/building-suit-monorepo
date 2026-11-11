@@ -52,14 +52,13 @@ production baseline acknowledgment guard; that guard is not changed here.
 - Final scoped lint, complete repository aggregates and independent review remain pending.
   Earlier passing checks on the lost checkout do not verify this reconstructed head.
 
-## Rollout hold and limits
+## Rollout and limits
 
-Publication and merging are paused while the owner's new repository-private
-request is evaluated. No phase-2 branch or PR has been published. Public GitHub
-repository reads and worker release retrieval require separate compatibility
-review before resuming; no credentials or broader grants are introduced here.
+The owner chose to keep the repository public and lifted the temporary privacy
+hold. A fresh GitHub read confirmed public visibility and unchanged stg bba65d19
+before resuming. No credentials or broader grants are introduced here.
 
-After the hold is cleared, use only the existing GitHub/stg integration. Recheck
+Use only the existing GitHub/stg integration. Recheck
 fresh source/base/provider state, all required exact-head CI and five-minute merge
 spacing. Observe hosted acknowledgment SQL application and worker publisher/adoption.
 The V2 worker is safe with older acknowledgment SQL: it simply lacks the added
