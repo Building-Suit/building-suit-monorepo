@@ -57,3 +57,22 @@ The migration pins predecessor bodies and attributes and fails closed on drift.
 It takes the existing queue advisory lock and uses a bounded DDL lock timeout.
 The source parity inventory marks it pending, not applied. A local passing test
 cannot establish hosted deployment, current identity or production readiness.
+
+
+## Native verification addition (pending CI)
+
+The existing native repository-review CI job now reuses its built PostgreSQL
+17.11 image and internal-only network for two fresh clusters, one for each legacy
+worker. It runs the same exact V2 semantic checks as PGlite with a fixed localhost
+connection and fresh database/schema assertions. A separate session holds the
+queue advisory lock; the migration must demonstrably wait, fail with its existing
+five-second lock timeout, and leave no changed definitions or data. After release,
+the exact migration must apply and the positive/negative/drift/qualification and
+rollback checks run. No credentials or hosted connection input is accepted.
+
+Old job and test limits remain unchanged. Each new container invocation is
+bounded at 150 seconds, with immediate cleanup and a final always-cleanup step.
+Expected incremental runtime is roughly one to three minutes, not measured until
+CI finishes. Native coverage must not be claimed before that exact-head step
+succeeds. The historical BB6 source is also an inert, SHA-pinned test fixture,
+not a runtime dependency or a reason to install Git in the test image.

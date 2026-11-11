@@ -174,6 +174,28 @@ jobs:
           timeout --signal=TERM --kill-after=10s 390s docker exec -w /workspace/repository \
             hq-repository-review-fixture node --test tooling/hq-agent-host/repository-review-planning-native-check.mjs
           test "$(docker exec hq-repository-review-fixture psql -U postgres -d hq_repository_review_planning_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove exact-pair migration, qualification separation and lock rollback
+        run: |
+          # Reuse the built image/network, but each case gets a fresh cluster so
+          # global fixture roles and historical evidence cannot cross cases.
+          for legacy in v1 historical; do
+            container="hq-repository-v2-$legacy"
+            docker run -d --name "$container" --network hq-repository-review-fixture \
+              --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+              -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+              -e POSTGRES_DB=hq_repository_compatibility_v2_disposable \
+              -e HQ_REPOSITORY_COMPATIBILITY_CASE="$legacy" hq-repository-review-fixture
+            ready=false
+            for attempt in $(seq 1 60); do
+              if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres -d hq_repository_compatibility_v2_disposable; then ready=true; break; fi
+              sleep 1
+            done
+            test "$ready" = true
+            timeout --signal=TERM --kill-after=10s 150s docker exec -w /workspace/repository \
+              "$container" node --test tooling/hq-agent-host/repository-worker-compatibility-v2-native-check.mjs
+            test "$(docker exec "$container" psql -U postgres -d hq_repository_compatibility_v2_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+            docker rm -f "$container"
+          done
       - name: Repository review diagnostics
         if: failure()
         run: |
@@ -182,5 +204,5 @@ jobs:
       - name: Remove repository review database
         if: always()
         run: |
-          docker rm -f hq-repository-review-fixture || true
+          docker rm -f hq-repository-v2-v1 hq-repository-v2-historical hq-repository-review-fixture || true
           docker network rm hq-repository-review-fixture || true

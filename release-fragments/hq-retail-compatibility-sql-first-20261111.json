@@ -18,7 +18,11 @@
     "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
     "tooling/hq-agent-host/repository-worker-compatibility-v2.test.mjs",
     "tooling/hq-agent-host/test-fixtures/retail-v2-worker.mjs.txt",
-    "docs/work-packages/company-hq/HQ-RETAIL-COMPATIBILITY-SQL-FIRST-20261111.md"
+    "docs/work-packages/company-hq/HQ-RETAIL-COMPATIBILITY-SQL-FIRST-20261111.md",
+    ".github/workflows/hq-live-dispatch-disposable.yml",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2-native-check.mjs",
+    "tooling/hq-agent-host/test-fixtures/repository-historical-worker.mjs.txt"
   ],
   "reason": "Reviewed exact-pair forward compatibility with old production worker bytes retained; inert candidate fixture excluded from release; preserve V1 receipts/rollback and deny candidate qualification. No hosted SQL or runtime activation in source work."
 }
