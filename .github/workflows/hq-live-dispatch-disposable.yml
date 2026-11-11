@@ -196,6 +196,23 @@ jobs:
             test "$(docker exec "$container" psql -U postgres -d hq_repository_compatibility_v2_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
             docker rm -f "$container"
           done
+      - name: Prove bounded retail acknowledgment and atomic lock refusal
+        run: |
+          # Reuse the pinned image and internal network in a fresh isolated cluster.
+          docker run -d --name hq-retail-assignment-fixture --network hq-repository-review-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_retail_assignment_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-retail-assignment-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_retail_assignment_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 180s docker exec -w /workspace/repository \
+            hq-retail-assignment-fixture node --test tooling/hq-agent-host/retail-assignment-context-native-check.mjs
+          test "$(docker exec hq-retail-assignment-fixture psql -U postgres -d hq_retail_assignment_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+          docker rm -f hq-retail-assignment-fixture
       - name: Repository review diagnostics
         if: failure()
         run: |
@@ -205,4 +222,5 @@ jobs:
         if: always()
         run: |
           docker rm -f hq-repository-review-fixture hq-repository-v2-v1 hq-repository-v2-historical || true
+          docker rm -f hq-retail-assignment-fixture || true
           docker network rm hq-repository-review-fixture || true

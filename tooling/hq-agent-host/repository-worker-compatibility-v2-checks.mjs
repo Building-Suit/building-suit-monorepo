@@ -242,8 +242,9 @@ export async function verifyRepositoryWorkerCompatibilityV2({database=null,histo
  }finally{await h?.db.close();await prepared.close();await old?.close();await candidateWorker.close()}
 }
 
-export async function verifySqlFirstProductionWorker(){
+export async function verifyReviewedProductionWorker(){
  const production=await readFile(new URL('./worker.mjs',import.meta.url))
- assert.equal(hash(production),compatibleWorkerDigest,'SQL-first deployment must retain the reviewed v1 production worker')
- assert.deepEqual(production,await readFile(new URL('./test-fixtures/repository-compatible-worker.mjs.txt',import.meta.url)))
+ assert.equal(hash(production),candidateDigest,'worker deployment must use the exact reviewed and SQL-admitted v2 candidate')
+ assert.deepEqual(production,await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url)))
+ assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
 }

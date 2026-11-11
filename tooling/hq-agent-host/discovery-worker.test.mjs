@@ -4,7 +4,7 @@ import {fake} from './test-cli.mjs'
 import assert from 'node:assert/strict'
 import {createHash,randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
-import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,checkRoleContract,stageInstructions,invokeCodex,failedToolEvidence,validateTaskAckOutput} from './worker.mjs'
+import {discoveryToolReceipt,trialAppServerPlan,discoveryMcpSetting,deliverWorkerEntry,checkResearchContract,checkRoleContract,stageInstructions,invokeCodex,failedToolEvidence,validateTaskAckOutput,webAllowed} from './worker.mjs'
 const hash=x=>createHash('sha256').update(x).digest('hex')
 const fixture=(excerpt='Literal public business location.')=>{
  const text='Title: Public business\nURL: https://business.org/\nHighlights:\n'+excerpt
@@ -255,4 +255,50 @@ for(const protocol of ['exec','app-server'])for(const metadata of ['structured_c
  if(metadata!=='structuredContent')item.result.structured_content={private:'provider response'}
  if(metadata!=='structured_content')item.result.structuredContent={private:'provider response'}
  const failure=await invokeFailure(protocol,job,[item]);assert.equal(failure.code,'provider-mcp-evidence-invalid');assert.deepEqual(failedToolEvidence(failure),[])
+})
+
+
+for(const category of ['clothing','footwear','homewares'])test(`retail ${category} start context describes a validated assignment without granting a tool`,()=>{
+ const job=pilotJob();job.context.mode='task-start';delete job.context.publicDiscoveryPermit
+ job.context.publicDiscoveryAssignment={version:1,policyId:retailPolicy,category,taskId:job.context.task.id,agentId:job.agent_id,bindingDigest:'a'.repeat(64),qualificationValidated:true,toolExecutionAllowed:false}
+ const text=stageInstructions(job)
+ assert.match(text,new RegExp('bounded retail assignment for category '+category))
+ assert.match(text,/does not grant tools or execution during acknowledgment/)
+ assert.match(text,/later task-work permit controls any tool use/)
+ assert.equal(webAllowed(job),false)
+ assert.deepEqual(trialAppServerPlan(job,'/private',[]).params.config.mcp_servers,{})
+ for(const mutate of [
+  x=>delete x.context.publicDiscoveryAssignment,
+  x=>x.context.task.attempt=1,
+  x=>x.context.mode='task-work',
+  x=>x.agent_id='AG-HR-002',
+  x=>x.context.publicDiscoveryAssignment.version=2,
+  x=>x.context.publicDiscoveryAssignment.policyId='unreviewed',
+  x=>x.context.publicDiscoveryAssignment.category='unbounded',
+  x=>x.context.publicDiscoveryAssignment.taskId='other-task',
+  x=>x.context.publicDiscoveryAssignment.agentId='AG-HR-002',
+  x=>x.context.publicDiscoveryAssignment.bindingDigest='invalid',
+  x=>x.context.publicDiscoveryAssignment.qualificationValidated=false,
+  x=>x.context.publicDiscoveryAssignment.toolExecutionAllowed=true,
+ ]){
+  const changed=structuredClone(job);mutate(changed)
+  assert.doesNotMatch(stageInstructions(changed),/The host validated this task's bounded retail assignment/)
+ }
+})
+
+for(const protocol of ['exec','app-server'])test(`${protocol} actual launch prompt requires the fixed MCP once and forbids tool-less fallback`,async()=>{
+ const job=pilotJob(),{item}=fixture(),category='clothing'
+ Object.assign(job.context.publicDiscoveryPermit,{policyId:retailPolicy,category})
+ Object.assign(item.result.structured_content,{policyId:retailPolicy,category})
+ const promptIncludes=['you must invoke it exactly once with empty arguments {}','If the tool is not exposed, stop and report tool unavailable','do not claim research, retry, substitute another tool or fall back to another model','Never repeat the tool after an error or budget denial.']
+ const events=[{type:'turn.started'},{type:'item.completed',item:{type:'mcp_tool_call',...item}},{type:'item.completed',item:{type:'agent_message',text:'Bounded public evidence.'}},{type:'turn.completed'}]
+ const options={promptIncludes}
+ if(protocol==='app-server'){
+  job.context.mode='worker-trial'
+  job.context.supervisedTrial={id:randomUUID(),taskId:job.context.task.id,agentId:job.agent_id,managerId:'AG-RES-001',skillFileId:'skill_fixture_01',scope:'public-retail-tool-trial-v1',toolPolicyId:retailPolicy,category,status:'active',bindingDigest:'a'.repeat(64),expiresAt:new Date(Date.now()+60000).toISOString(),externalActionsAllowed:false,publishingAllowed:false}
+  const appItem={...item,type:'mcpToolCall',result:{content:item.result.content,structuredContent:item.result.structured_content}}
+  Object.assign(options,{cliVersion:'codex-cli 0.160.0',appServer:{publicDiscovery:true,publicDiscoveryCategory:category,events:[{method:'item/completed',params:{item:appItem}}],turnItems:[appItem]}})
+ }
+ const result=await fake(events,config=>invokeCodex({...config,id:'generated-worker'},job,[],AbortSignal.timeout(5000)),options)
+ assert.equal(result.evidence.length,1);assert.equal(result.evidence[0].queryId,'new-cairo-retail-clothing-v1')
 })

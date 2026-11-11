@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import { setTimeout as delay } from 'node:timers/promises'
 import {
- verifyRepositoryWorkerCompatibilityV2,verifySqlFirstProductionWorker,
+ verifyRepositoryWorkerCompatibilityV2,verifyReviewedProductionWorker,
 } from './repository-worker-compatibility-v2-checks.mjs'
 
 // Each case runs in its own fresh container: fixture roles are cluster-wide.
@@ -85,7 +85,7 @@ async function verifyQueueLockTimeout(sql,report,{observerFault=false}={}){
 
 test(`native exact-pair v2 preserves ${selected} evidence, qualifications and atomic lock refusal`,{timeout:140000},async t=>{
  t.after(async()=>{await Promise.all([...clients].map(client=>client.end().catch(()=>{})))})
- await verifySqlFirstProductionWorker()
+ await verifyReviewedProductionWorker()
  const client=await connect('hq-repository-v2-installer')
  const identity=(await client.query(`select current_database() name,current_user username,
   host(inet_server_addr()) address,current_setting('server_version_num') version,
