@@ -391,6 +391,15 @@
       "phase": "repository-review-planning",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261110165424_hq_repository_review_planning.sql"
+    },
+    {
+      "file": "20261111020000_hq_repository_worker_compatibility_v2.sql",
+      "bytes": 8007,
+      "md5": "c0ca2fe82cf98558162b7ee85dd19b88",
+      "sha256": "6259a67b2633173b3d7e34d5184b120921dc3b6dc322fd5f18e23abfbc1cc053",
+      "phase": "repository-worker-compatibility-v2-review-only",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261111020000_hq_repository_worker_compatibility_v2.sql"
     }
   ]
 }
