@@ -1,0 +1,23 @@
+{
+  "id": "hq-retail-mcp-instructions-20261111",
+  "task": "HQ-RETAIL-MCP-INSTRUCTIONS-20261111",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/worker.mjs",
+    "tooling/hq-agent-host/public-repository-db-fixture.mjs",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2-native-check.mjs",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2.test.mjs",
+    "docs/work-packages/company-hq/HQ-RETAIL-MCP-INSTRUCTIONS-20261111.md"
+  ],
+  "reason": "Promote only the already reviewed exact worker after authenticated additive compatibility proof. Preserve historical fixture evidence and prohibit new repository qualification; bounded acknowledgment SQL and final checks remain draft work."
+}
