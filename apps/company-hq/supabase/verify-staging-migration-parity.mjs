@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isDeepStrictEqual } from 'node:util'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const manifestPath = path.join(root, 'apps/company-hq/supabase/staging-migration-parity.json')
@@ -10,8 +11,30 @@ const digest = (algorithm, bytes) => createHash(algorithm).update(bytes).digest(
 const migrationsDir = path.join(root, 'apps/company-hq/supabase/migrations')
 const activeNames = readdirSync(migrationsDir).filter(name => name.endsWith('.sql')).sort()
 const pending = manifest.pendingMigrations || []
-const expectedNames = [...manifest.appliedMigrations, ...pending].map(row => row.file).sort()
+const recovered = manifest.recoveredAppliedMigrations || []
+const expectedNames = [...manifest.appliedMigrations, ...pending, ...recovered].map(row => row.file).sort()
 const failures = []
+
+// Historical source recovery, not a new forward operation or a fabricated Git
+// origin. Pin the observed one-statement ledger bytes independently of editable
+// inventory hashes. Never query, repair, or replay the hosted ledger here.
+const recoveredSource = {
+  file: '20261111013758_hq_retire_meetings_and_voice_greeting.sql',
+  bytes: 11060,
+  md5: '6991a79261ccf83eef863251d0d11583',
+  sha256: '06f92be9097abc12b585eb8ef1e51ae23b9bd3e0f343f55b7310565d66d9a8ef',
+  provenance: 'apps/company-hq/supabase/recovered-migrations/20261111013758.json',
+}
+const recoveredProvenance = {
+  schemaVersion: 1, environment: 'staging', projectRef: 'dpruoncalmwicrqhqelu',
+  migrationVersion: '20261111013758', migrationName: 'hq_retire_meetings_and_voice_greeting',
+  source: { type: 'hosted-migration-ledger', table: 'supabase_migrations.schema_migrations', column: 'statements', statementCount: 1, statementIndex: 1 },
+  verification: { observedOn: '2026-11-11', bytes: recoveredSource.bytes, lineFeeds: 177, md5: recoveredSource.md5, sha256: recoveredSource.sha256, matchingLiveFunctionBodies: 5 },
+  gitOrigin: { commit: null, status: 'not-found-in-inspected-history' },
+}
+if (manifest.projectRef !== recoveredProvenance.projectRef || !isDeepStrictEqual(recovered, [recoveredSource])) failures.push('unknown or altered recovered applied migration inventory')
+const provenance = JSON.parse(readFileSync(path.join(root, recoveredSource.provenance), 'utf8'))
+if (!isDeepStrictEqual(provenance, recoveredProvenance)) failures.push('recovered migration provenance differs from observed staging ledger evidence')
 
 // Phase 2 is an explicitly unmerged source-preparation stack. This inventory
 // never asserts a hosted migration or authorizes deployment/merge.
@@ -106,7 +129,7 @@ if (manifest.schemaVersion !== 1 || manifest.environment !== 'staging') failures
 if (activeNames.length !== expectedNames.length || activeNames.some((name, index) => name !== expectedNames[index])) {
   failures.push(`active migration set differs from reviewed staging baseline (expected ${expectedNames.length}, found ${activeNames.length})`)
 }
-for (const expected of [...manifest.appliedMigrations, ...pending]) {
+for (const expected of [...manifest.appliedMigrations, ...pending, ...recovered]) {
   const bytes = readFileSync(path.join(migrationsDir, expected.file))
   if (bytes.length !== expected.bytes || digest('md5', bytes) !== expected.md5 || digest('sha256', bytes) !== expected.sha256) {
     failures.push(`migration differs from its reviewed source: ${expected.file}`)
@@ -147,5 +170,5 @@ if (failures.length) {
   console.error(failures.join('\n'))
   process.exitCode = 1
 } else {
-  console.log(`Staging source parity verified: ${manifest.appliedMigrations.length} applied baseline migrations; ${pending.length} pending forward migration(s); archived unapplied SQL preserved.`)
+  console.log(`Staging source parity verified: ${manifest.appliedMigrations.length} applied baseline migrations; ${pending.length} pending forward migration(s); ${recovered.length} recovered applied migration(s); archived unapplied SQL preserved.`)
 }
