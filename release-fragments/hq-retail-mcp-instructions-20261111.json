@@ -30,5 +30,5 @@
     "tooling/hq-agent-host/test-fixtures/README.md",
     "tooling/hq-agent-host/worker.mjs"
   ],
-  "reason": "Promote the exact previously reviewed worker after authenticated additive compatibility proof; add only bounded acknowledgment context behind unchanged qualification checks. Preserve V1 evidence and V2 qualification denial. Publication remains paused for repository privacy impact review."
+  "reason": "Promote the exact previously reviewed worker after authenticated additive compatibility proof; add only bounded acknowledgment context behind unchanged qualification checks. Preserve V1 evidence and V2 qualification denial. The owner retained public repository visibility and lifted the publication hold."
 }
