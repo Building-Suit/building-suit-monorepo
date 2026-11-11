@@ -410,5 +410,14 @@
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261111033000_hq_retail_assignment_context.sql"
     }
+  ],
+  "recoveredAppliedMigrations": [
+    {
+      "file": "20261111013758_hq_retire_meetings_and_voice_greeting.sql",
+      "bytes": 11060,
+      "md5": "6991a79261ccf83eef863251d0d11583",
+      "sha256": "06f92be9097abc12b585eb8ef1e51ae23b9bd3e0f343f55b7310565d66d9a8ef",
+      "provenance": "apps/company-hq/supabase/recovered-migrations/20261111013758.json"
+    }
   ]
 }
