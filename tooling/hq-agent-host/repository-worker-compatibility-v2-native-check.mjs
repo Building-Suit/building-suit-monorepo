@@ -25,7 +25,7 @@ async function connect(name){
 }
 async function close(client){await client.end();clients.delete(client)}
 
-async function verifyQueueLockTimeout(sql,report){
+async function verifyQueueLockTimeout(sql,report,{observerFault=false}={}){
  const holder=await connect('hq-repository-v2-lock-holder')
  const contender=await connect('hq-repository-v2-lock-contender')
  const observer=await connect('hq-repository-v2-lock-observer')
@@ -55,6 +55,7 @@ async function verifyQueueLockTimeout(sql,report){
   }
   assert.ok(blocked,'observe the exact migration waiting on the held queue advisory lock')
   assert.equal(settled,false,'migration cannot pass the queue fence while its lock is held')
+  if(observerFault)throw new Error('synthetic observer failure while migration is blocked')
   const result=await pending
   assert.equal(result.ok,false,'the unchanged migration lock timeout must reject contention')
   assert.equal(result.code,'55P03','require native lock_not_available, not a client or statement timeout')
@@ -66,11 +67,19 @@ async function verifyQueueLockTimeout(sql,report){
   report({engine:'PostgreSQL 17.11',case:selected,observedWait:blocked.wait_event,errorCode:result.code,
    elapsedMs:performance.now()-started,lockTimeoutMs:5000,timingsAreObservations:true})
  }finally{
-  // Even an assertion failure releases the holder and rolls back the contender.
-  await holder.query('rollback').catch(()=>{})
-  await pending?.catch(()=>{})
-  await contender.query('rollback').catch(()=>{})
-  await Promise.all([holder,contender,observer].map(close))
+  // Keep the holder locked until the bounded pending migration has refused.
+  // Releasing it first could let the migration COMMIT after an observer failure.
+  try {
+   if(pending){
+    const result=await pending
+    assert.equal(result.ok,false,'cleanup must not release a still-running migration')
+    assert.equal(result.code,'55P03','cleanup retains the queue fence until native lock timeout')
+   }
+  } finally {
+   await contender.query('rollback').catch(()=>{})
+   await holder.query('rollback').catch(()=>{})
+   await Promise.all([holder,contender,observer].map(close))
+  }
  }
 }
 
@@ -94,7 +103,12 @@ test(`native exact-pair v2 preserves ${selected} evidence, qualifications and at
  await verifyRepositoryWorkerCompatibilityV2({
   database:adapter,historical:selected==='historical',
   testStep:(name,run)=>t.test(name,run),report:value=>t.diagnostic(value),
-  beforeApply:({sql})=>verifyQueueLockTimeout(sql,value=>t.diagnostic(JSON.stringify(value))),
+  beforeApply:async({sql})=>{
+   await assert.rejects(()=>verifyQueueLockTimeout(sql,()=>{},{observerFault:true}),
+    /synthetic observer failure while migration is blocked/)
+   t.diagnostic('Observer-failure cleanup retained the queue fence until lock timeout.')
+   await verifyQueueLockTimeout(sql,value=>t.diagnostic(JSON.stringify(value)))
+  },
  })
  // Shared checks prove timeout atomicity, normal apply, semantic parity, all
  // qualification outcomes and rollback using the same SQL on both engines.
