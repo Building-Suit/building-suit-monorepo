@@ -78,3 +78,39 @@ Guard tests live in `tooling/git/tests/ci-workflow-efficiency.test.mjs`; release
 trigger and protected-verification regressions also exercise publication identity.
 Local validation and the exact GitHub run results belong in the review PR. Passing
 focused tests alone does not establish full workspace or deployment readiness.
+
+## Preinstalled workspace browser runtime, 2026-11-11
+
+`unit-review`, `hq-browser`, `build` and every `browser-tests` shard use the same
+official Microsoft Playwright `v1.62.1-resolute` image, pinned to OCI index digest
+`sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb`.
+The index and its Linux/amd64 manifest were verified against the official MCR
+registry. The image supplies Chromium, its headless shell, fonts and OS libraries;
+these jobs no longer run `playwright install --with-deps` or contact Ubuntu apt
+mirrors at runtime. This addresses the repeated DNS failure in staging run
+`43036447641`, not a failing product assertion.
+
+The builder and browser consumers share Ubuntu 26.04, architecture, image digest
+and the repository's Node version so restored native artifacts do not cross OS
+releases. `actions/setup-node` still reads `.node-version` (26.8.1); the image's
+bundled Node 24 does not replace it. pnpm 10.33.0, frozen-lockfile installation,
+all tests, shard configuration and artifact identity/checksum rules remain.
+Container scripts explicitly use Bash, including the existing artifact-ID guard.
+`--init --shm-size=1g` provides process reaping and shared memory without host IPC,
+privileged mode or additional capabilities. Fixtures remain local and synthetic.
+
+`tooling/ci/playwright-runtime.mjs` fails before tests when the image, installed
+Playwright, root manifest, Node, OS or browser path disagree. It also launches the
+bundled Chromium and checks a local page. Git, Bash, OpenSSL and flock must be
+available. A dependency upgrade must update the image version and independently
+verify its digest, update the workflow guard test, then run complete workspace
+validation. Never silently install missing browser dependencies or substitute a
+host browser. Review image/OS screenshot differences instead of automatically
+updating reference images or relaxing assertions.
+
+The image is about 998 MB compressed per cold amd64 pull; it trades repeated apt
+and browser downloads for a versioned MCR pull. It is a reliability improvement,
+not a guaranteed wall-clock reduction. MCR, package and GitHub access remain
+required. Measure the full run and runner usage. The Docker/Postgres validation,
+specialist workflows and both publication jobs are unchanged. No settings,
+permissions, resolver changes, bypasses or test exemptions are introduced.
