@@ -409,6 +409,15 @@
       "phase": "retail-assignment-context",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261111033000_hq_retail_assignment_context.sql"
+    },
+    {
+      "file": "20261112140052_hq_bounded_employee_parallelism.sql",
+      "bytes": 5515,
+      "md5": "d897b71363a2859576a0f287d326a85f",
+      "sha256": "d13979bbb0ab91d3fd4227d5e7924bba2b33423b24c50b28c38e42827191d54c",
+      "phase": "bounded-employee-parallelism",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261112140052_hq_bounded_employee_parallelism.sql"
     }
   ],
   "recoveredAppliedMigrations": [

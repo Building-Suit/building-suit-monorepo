@@ -25,7 +25,7 @@ test('claim uncertainty drains started work and never claims again',async()=>{
   await tick();assert.equal(done,false);release.resolve();await checked;assert.equal(claims,2)
 })
 test('duplicate active employee is rejected without starting duplicate inference',async()=>{
-  const release=defer();let executions=0,claims=0
+  const release=defer();let executions=0
   const run=drainWorkerJobs({capacity:2,admitting:()=>true,idle:()=>{},claim:async()=>({job:{id:'same',agent_id:'a'}}),work:async()=>{executions++;await release.promise}})
   const checked=assert.rejects(run,/duplicate-active-job/);await tick();release.resolve();await checked;assert.equal(executions,1)
 })
