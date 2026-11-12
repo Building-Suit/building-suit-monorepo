@@ -6381,5 +6381,93 @@
       "apps/company-hq/tests/unit/staging-migration-parity.test.mjs"
     ],
     "reason": "Bound existing employee execution to two independent jobs while preserving per-employee queues, dependent handoffs, qualification, receipts, maintenance and serial legacy callers. Part 2 only; no customer contact or new tool authority."
+  },
+  {
+    "id": "shop-owner-assistant-chat",
+    "task": "SS-OWNER-ASSISTANT-CHAT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/.env.example",
+      "apps/shop-suit/README.md",
+      "apps/shop-suit/app/composables/useShopAssistant.ts",
+      "apps/shop-suit/app/layouts/default.vue",
+      "apps/shop-suit/app/pages/assistant.vue",
+      "apps/shop-suit/app/utils/shopAssistantCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/nuxt.config.ts",
+      "apps/shop-suit/package.json",
+      "apps/shop-suit/server/api/assistant",
+      "apps/shop-suit/server/utils/shopAssistantActions.ts",
+      "apps/shop-suit/server/utils/shopAssistantAgent.ts",
+      "apps/shop-suit/server/utils/shopAssistantProposal.ts",
+      "apps/shop-suit/server/utils/shopAssistantRequest.ts",
+      "apps/shop-suit/server/utils/shopAssistantScope.ts",
+      "apps/shop-suit/supabase/migrations/20261112192758_confirm_shop_assistant_expense.sql"
+    ],
+    "reason": "The shop owner can use multilingual text to ask about their shop and review and confirm a paid expense in the current location.",
+    "notes": {
+      "title": {
+        "en": "Shop Suit Assistant",
+        "ar": "مساعد شوب سوت"
+      },
+      "summary": {
+        "en": "Ask the assistant in your own words to find products, check stock or summarize how your location is doing.",
+        "ar": "اكتب للمساعد بطريقتك عشان تلاقي منتج، تراجع المخزون أو تشوف ملخص شغل الفرع."
+      },
+      "details": {
+        "en": "Where the assistant is enabled, shop owners can chat in their preferred language, open supported Shop Suit screens, and review and confirm a paid expense before it’s saved.",
+        "ar": "لو المساعد متاح عندك، تقدر كصاحب متجر تكتب باللغة اللي تفضّلها، وتفتح الشاشات المتاحة من المحادثة، وتراجع تفاصيل المصروف المدفوع قبل ما تأكّد تسجيله."
+      }
+    },
+    "sources": [
+      "shop-owner-assistant-chat"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/assistant.vue",
+        "contains": "<BsAssistantChatPage"
+      },
+      {
+        "path": "apps/shop-suit/server/utils/shopAssistantActions.ts",
+        "contains": "scope.client.rpc('confirm_assistant_expense', {"
+      }
+    ]
+  },
+  {
+    "id": "shop-owner-assistant-chat-support",
+    "task": "SS-OWNER-ASSISTANT-CHAT",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/app/types/shopCrmRpc.ts",
+      "apps/shop-suit/playwright.assistant.config.ts",
+      "apps/shop-suit/supabase/tests/shop_assistant_expense.sql",
+      "apps/shop-suit/tests",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsAssistantChatPage.vue",
+      "packages/ui/src/types/assistantChatPresentation.ts",
+      "packages/ux/src/controllers/createSicsScale.ts",
+      "pnpm-lock.yaml",
+      "release-changes/items.json",
+      "tooling/database/test-shop-local.mjs"
+    ],
+    "reason": "Shared chat presentation, route registration, database contracts, dependency locking and verification support the owner workflow in Shop Suit."
   }
 ]

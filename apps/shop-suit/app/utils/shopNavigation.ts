@@ -1,15 +1,17 @@
 import { businessModeSupportsProducts, businessModeSupportsServices } from './businessMode'
 import type { BusinessMode } from './businessMode'
+import { shopAssistantTitle } from './shopAssistantCopy'
 
 // Canonical menu names and order for the shell and permission presentation.
 export const shopShellCopy = (isArabic: boolean) => isArabic
   ? { dashboard: 'التقارير ونظرة عامة', daily: 'العمل اليومي', manage: 'إدارة النشاط', pos: 'نقطة البيع', cashShifts: 'ورديات الخزنة', invoices: 'الفواتير', products: 'المنتجات', catalogSetup: 'إعداد الكتالوج والاستيراد', services: 'الخدمات', appointments: 'التقويم والمواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', collapseMenu: 'طي القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة', loading: 'جاري تحميل المتجر…', signOutFailed: 'تعذّر تسجيل الخروج. حاول مرة أخرى.' }
   : { dashboard: 'Reports & overview', daily: 'Daily work', manage: 'Business management', pos: 'Point of sale', cashShifts: 'Cashier shifts', invoices: 'Invoices', products: 'Products', catalogSetup: 'Catalog setup & import', services: 'Services', appointments: 'Calendar & appointments', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', billing: 'Subscription & billing', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', collapseMenu: 'Collapse sidebar', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry', loading: 'Loading shop…', signOutFailed: 'Could not sign out. Please try again.' }
 
-export function shopNavigation(mode: BusinessMode, locale: string, t: (key: string) => string) {
+export function shopNavigation(mode: BusinessMode, locale: string, t: (key: string) => string, includeAssistant = false) {
   const copy = shopShellCopy(locale === 'ar')
   return [
     { key: 'daily', label: copy.daily, links: [
+      ...(includeAssistant ? [{ to: '/assistant', label: shopAssistantTitle(locale === 'ar'), icon: 'chat' }] : []),
       ...(businessModeSupportsServices(mode) ? [{ to: '/appointments', label: copy.appointments, icon: 'invoice' }] : []),
       { to: '/pos', label: copy.pos, icon: 'cash' },
       { to: '/customers', label: t('customers.title'), icon: 'user' },

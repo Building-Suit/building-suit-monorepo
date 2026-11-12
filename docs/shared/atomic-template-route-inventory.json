@@ -30,6 +30,7 @@
     "BsWorkspaceShell": "packages/ui/src/templates/BsWorkspaceShell.vue",
     "BsRoutingPolicyPage": "packages/ui/src/templates/BsRoutingPolicyPage.vue",
     "BsProjectRegistryPage": "packages/ui/src/templates/BsProjectRegistryPage.vue",
+    "BsAssistantChatPage": "packages/ui/src/templates/BsAssistantChatPage.vue",
     "BsTaskDetailPage": "packages/ui/src/templates/BsTaskDetailPage.vue",
     "BsOperationsDashboardPage": "packages/ui/src/templates/BsOperationsDashboardPage.vue",
     "BsCataloguePage": "packages/ui/src/templates/BsCataloguePage.vue",
@@ -3462,6 +3463,23 @@
       "purpose": "shop-commodity-pricing"
     },
     {
+      "source": "apps/shop-suit/app/pages/assistant.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAssistantChatPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAssistantChatPage"
+      ],
+      "destination": "packages/ui/src/templates/BsAssistantChatPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useShopAssistant.ts",
+      "dependencies": [
+        "@building-suit/ui/types/assistantChatPresentation"
+      ],
+      "purpose": "shop-owner-assistant"
+    },
+    {
       "source": "apps/company-hq/app/app.vue",
       "kind": "root",
       "currentSharedTemplates": [
@@ -3653,6 +3671,7 @@
     "BsSupplyPlanningPage",
     "BsWeighingSetupPage",
     "BsCommodityPricingPage",
-    "BsHqLayoutPage"
+    "BsHqLayoutPage",
+    "BsAssistantChatPage"
   ]
 }
