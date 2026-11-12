@@ -244,7 +244,8 @@ export async function verifyRepositoryWorkerCompatibilityV2({database=null,histo
 
 export async function verifyReviewedProductionWorker(){
  const production=await readFile(new URL('./worker.mjs',import.meta.url))
- assert.equal(hash(production),candidateDigest,'worker deployment must use the exact reviewed and SQL-admitted v2 candidate')
- assert.deepEqual(production,await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url)))
+ assert.equal(hash(production),'d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9','worker deployment must use the exact reviewed and SQL-admitted parallel candidate')
+ assert.equal(hash(await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url))),candidateDigest,'historical v2 fixture remains immutable')
+ assert.ok((await readFile(new URL('20261112140052_hq_bounded_employee_parallelism.sql',root),'utf8')).includes(hash(production)))
  assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
 }

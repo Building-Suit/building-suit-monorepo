@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createServer } from 'node:net'
 import { maintenanceGate, checkApiContract, checkStaffingContract } from './maintenance.mjs'
-/** Private, sequential HQ queue consumer. No inbound listener or idle work polling. */
+/** Private, bounded HQ queue consumer. No inbound listener or idle work polling. */
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
 import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, realpath } from 'node:fs/promises'
@@ -42,6 +42,47 @@ const LEARNING_ERRORS = new Set(['learning-invalid-record','learning-invalid-dig
   'learning-cas-required','learning-scope-required','learning-readback-conflict',
   'learning-readback-version-conflict','learning-readback-media-conflict','learning-readback-entry-conflict'])
 export const codeOf = error => error instanceof WorkerProblem ? error.code : LEARNING_ERRORS.has(error?.code) ? error.code : 'worker-unavailable'
+
+/** Claims stay serial; independent leased jobs run at most twice in parallel.
+ * A failure stops admission and settles every started job before the caller can
+ * release its durable in-flight marker or enter maintenance. SQL owns ordering. */
+export async function drainWorkerJobs({ capacity = 1, admitting, claim, work, idle }) {
+  requireValue(capacity === 1 || capacity === 2, 'invalid-worker-capacity')
+  const active = new Map(), agents = new Map(), completed = []
+  let failure
+  const reap = () => {
+    for (const result of completed.splice(0)) {
+      active.delete(result.id); agents.delete(result.agent)
+    }
+  }
+  const settle = async () => { await Promise.race(active.values()); reap(); if (failure) throw failure }
+  try {
+    while (admitting()) {
+      reap()
+      if (failure) throw failure
+      if (active.size >= capacity) { await settle(); continue }
+      const result = await claim(active.size)
+      requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
+      if (!result.job) {
+        if (active.size) { await settle(); continue }
+        idle(result.next_wake_at); break
+      }
+      const job = result.job
+      reap() // Delivery may finish while the serialized claim is in flight.
+      requireValue(!active.has(job.id), 'duplicate-active-job')
+      // SQL can commit delivery before its HTTP response reaches this host.
+      // Wait for the prior local delivery scope, not another employee turn.
+      if (agents.has(job.agent_id)) { await active.get(agents.get(job.agent_id)); reap(); if (failure) throw failure }
+      agents.set(job.agent_id, job.id)
+      active.set(job.id, Promise.resolve().then(() => work(job)).then(
+        () => { const result = { id: job.id, agent: job.agent_id }; completed.push(result); return result },
+        error => { failure ||= error; const result = { id: job.id, agent: job.agent_id, error }; completed.push(result); return result }))
+    }
+  } catch (error) { failure = error }
+  const remaining = await Promise.all(active.values())
+  failure ||= remaining.find(result => result.error)?.error
+  if (failure) throw failure
+}
 
 /** Classify in memory and emit only fixed codes, never provider diagnostic text. */
 export function providerErrorCode(value) {
@@ -1206,7 +1247,7 @@ export async function start(adapters = {}) {
     try { await file.writeFile('Operator must reconcile uncertain queue/journal outcome.\n'); await file.sync() } finally { await file.close() }
     await syncState()
   } })
-  let roleClaims = false, repositoryClaims=false
+  let roleClaims = false, repositoryClaims=false, parallelClaims=false
   async function compatible() {
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
@@ -1216,6 +1257,7 @@ export async function start(adapters = {}) {
     checkResearchContract(status)
     roleClaims = checkRoleContract(status)
     repositoryClaims = checkRepositoryContract(status)
+    parallelClaims = status.parallelClaims === 1 && status.parallelCapacity === 2
     return status
   }
   if (process.argv.includes('--release-preflight')) {
@@ -1392,21 +1434,20 @@ export async function start(adapters = {}) {
       drainRequested = false; clearTimeout(wakeTimer)
       if (rosterDirty) { rosterDirty = false; await roster.sync(config.id, AbortSignal.timeout(180_000)) }
       if (!gate.snapshot().paused) await publishLessons()
-      while (connected && !stopping && !gate.snapshot().paused) {
-        // Preserve ordinary queue ordering/expired-lease cleanup. Only an idle,
-        // still-admitting drain may begin a separate staffing claim.
-        let result = await api.rpc(repositoryClaims?'hq_worker_repository_claim':roleClaims?'hq_worker_role_claim':'hq_worker_research_claim', workerClaimInput(config.id))
-        requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
-        if (!result.job && !stopping && !gate.snapshot().paused) {
-          const staffing = await api.rpc('hq_worker_staffing_claim', { p_worker_id: config.id })
-          requireValue(record(staffing) && Object.hasOwn(staffing, 'job'), 'invalid-claim')
-          if (staffing.job) result = staffing
-        }
-        requireValue(record(result) && Object.hasOwn(result, 'job'), 'invalid-claim')
-        if (!result.job) { wakeOnce(result.next_wake_at); break }
-        await work(result.job)
-        if (!gate.snapshot().paused) await publishLessons()
+      await drainWorkerJobs({
+        capacity: parallelClaims ? 2 : 1,
+        admitting: () => connected && !stopping && !gate.snapshot().paused,
+        claim: () => api.rpc(parallelClaims ? 'hq_worker_parallel_claim' : repositoryClaims ? 'hq_worker_repository_claim' : roleClaims ? 'hq_worker_role_claim' : 'hq_worker_research_claim', workerClaimInput(config.id)),
+        work,
+        idle: wakeOnce,
+      })
+      // Staffing and Brain publication remain exclusive, outside the pool.
+      if (connected && !stopping && !gate.snapshot().paused) {
+        const staffing = await api.rpc('hq_worker_staffing_claim', { p_worker_id: config.id })
+        requireValue(record(staffing) && Object.hasOwn(staffing, 'job'), 'invalid-claim')
+        if (staffing.job) { await work(staffing.job); drainRequested = true }
       }
+      if (!gate.snapshot().paused) await publishLessons()
     }
   }
   function requestDrain() {

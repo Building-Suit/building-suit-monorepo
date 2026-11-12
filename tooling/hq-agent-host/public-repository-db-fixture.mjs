@@ -102,7 +102,7 @@ async function preparedWorker(){
   const packaged=release.match(/^FILES = \((.+)\)$/m)?.[1]?.match(/'[^']+'/g)?.map(value=>value.slice(1,-1))
   assert.deepEqual(packaged,['worker.mjs','workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs','departmentWorkflow.mjs'],'release allowlist must exclude the inert fixture and all test directories')
   assert.equal(typeof invokeCodex,'function')
-  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),'7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40','production source stays pinned separately from the legacy evidence fixture')
+  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),'d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9','production source stays pinned separately from the legacy evidence fixture')
   assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
   const bytes=await readFile(new URL('./test-fixtures/repository-compatible-worker.mjs.txt',import.meta.url))
   assert.equal(hash(bytes),compatibleWorkerDigest,'legacy evidence fixture must remain the exact reviewed v1 worker')
