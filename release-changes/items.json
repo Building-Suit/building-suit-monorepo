@@ -6352,5 +6352,34 @@
       "tooling/hq-agent-host/retirement-reconciliation-workflow.test.mjs"
     ],
     "reason": "Restore exact already-applied HQ staging migration bytes from the saved ledger, with independently pinned provenance and explicit unknown Git origin. Test real CLI no-replay selection, first-application effects, rollback and existing worker/receipt boundaries in disposable databases. No ledger repair, rewritten historical SQL, hosted execution, worker recovery, deployment bypass or production promotion."
+  },
+  {
+    "id": "hq-employee-teamwork-20261112",
+    "task": "HQ-EMPLOYEE-TEAMWORK-20261112",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/hq-agent-host/worker.mjs",
+      "tooling/hq-agent-host/employee-teamwork.test.mjs",
+      "tooling/hq-agent-host/parallel-queue-db.test.mjs",
+      "tooling/hq-agent-host/public-repository-db-fixture.mjs",
+      "tooling/hq-agent-host/EMPLOYEE-TEAMWORK.md",
+      "apps/company-hq/supabase/migrations/20261112140052_hq_bounded_employee_parallelism.sql",
+      "release-changes/items.json",
+      "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
+      "apps/company-hq/supabase/functions/_shared/database.types.ts",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs"
+    ],
+    "reason": "Bound existing employee execution to two independent jobs while preserving per-employee queues, dependent handoffs, qualification, receipts, maintenance and serial legacy callers. Part 2 only; no customer contact or new tool authority."
   }
 ]

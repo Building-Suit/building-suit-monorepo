@@ -1041,6 +1041,10 @@ export type Database = {
             }
             Returns: Json
           }
+      hq_worker_parallel_claim: {
+        Args: { p_lease_seconds: number; p_meeting_protocol: number; p_worker_id: string }
+        Returns: Json
+      }
       hq_worker_finish: {
         Args: {
           p_error: string
