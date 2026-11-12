@@ -14093,6 +14093,21 @@ export type Database = {
         }
         Returns: Json
       }
+      confirm_assistant_expense: {
+        Args: {
+          p_amount: number
+          p_category_id: string
+          p_expected_category_name: string
+          p_expected_currency: string
+          p_expected_location_name: string
+          p_expense_date: string
+          p_location_id: string
+          p_request_id: string
+          p_shop_id: string
+          p_title: string
+        }
+        Returns: string
+      }
       correct_location_sale: {
         Args: {
           p_effective_at: string

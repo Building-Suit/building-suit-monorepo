@@ -60,7 +60,14 @@ const shopOptions = computed(() => shops.value.map(shop => ({ id: shop.id, label
 const locationOptions = computed(() => activeLocations.value.map(location => ({ id: location.id, label: location.name })))
 
 const copy = computed(() => shopShellCopy(isArabic.value))
-const groups = computed(() => shopNavigation(current.value?.business_mode ?? 'mixed', locale.value, t))
+const assistantEnabled = String(useRuntimeConfig().public.shopAssistantEnabled) === 'true'
+const showAssistant = computed(() => assistantEnabled && isOwner.value)
+const groups = computed(() => shopNavigation(current.value?.business_mode ?? 'mixed', locale.value, t, showAssistant.value))
+const mobileLinks = computed(() => [
+  ...(showAssistant.value ? [{ to: '/assistant', label: isArabic.value ? 'المساعد' : 'Assistant', icon: 'chat' }] : []),
+  ...(groups.value[0]?.links.filter(link => link.to !== '/assistant').slice(0, 3) ?? []),
+  { to: '/dashboard', label: copy.value.reports, icon: 'dashboard' },
+])
 
 await loadShops()
 
@@ -91,5 +98,5 @@ const shellHeaderScopes = computed(() => [
 function selectShellScope(key: string, value: string | null) { if (!value) return; if (key === 'workspace') return selectShop(value); if (key === 'location') return selectLocation(value) }
 </script>
 <template>
-  <BsWorkspaceShell variant="shop" :sidebar-plan="sidebarSubscription ? { name: sidebarSubscription.planName, status: planStatus, detail: planDetail, actionLabel: copy.billing, to: '/billing' } : undefined" home-path="/dashboard" product-name="Shop Suit" :groups="groups" :settings-links="settingsLinks" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, collapse: copy.collapseMenu, navigation: copy.shop, dashboard: copy.dashboard }" :logo="{ kind: 'product', assetPrefix: '/brand/shop-suit' }" :context-scope="shops.length ? { key: 'workspace', value: currentId, label: copy.shop, options: shopOptions } : undefined" :header-scopes="shellHeaderScopes" :account="{ actions: settingsLinks, name: fullName, email: user?.email || currentMembership?.email || undefined, avatarUrl, details: accountDetails, label: copy.account, signOut: copy.logout, pending: signingOut, error: signOutError }" :state="{ loading, error: Boolean(loadError), title: copy.loadFailed, description: showErrorDetails ? loadError || undefined : undefined, retry: copy.retry }" feedback @scope="selectShellScope" @retry="loadShops({ force: true })" @sign-out="logout"><slot /></BsWorkspaceShell>
+  <BsWorkspaceShell variant="shop" :sidebar-plan="sidebarSubscription ? { name: sidebarSubscription.planName, status: planStatus, detail: planDetail, actionLabel: copy.billing, to: '/billing' } : undefined" home-path="/dashboard" product-name="Shop Suit" :groups="groups" :settings-links="settingsLinks" :mobile-links="mobileLinks" :labels="{ close: copy.closeMenu, open: copy.openMenu, collapse: copy.collapseMenu, navigation: copy.shop, dashboard: copy.dashboard }" :logo="{ kind: 'product', assetPrefix: '/brand/shop-suit' }" :context-scope="shops.length ? { key: 'workspace', value: currentId, label: copy.shop, options: shopOptions } : undefined" :header-scopes="shellHeaderScopes" :account="{ actions: settingsLinks, name: fullName, email: user?.email || currentMembership?.email || undefined, avatarUrl, details: accountDetails, label: copy.account, signOut: copy.logout, pending: signingOut, error: signOutError }" :state="{ loading, error: Boolean(loadError), title: copy.loadFailed, description: showErrorDetails ? loadError || undefined : undefined, retry: copy.retry }" feedback @scope="selectShellScope" @retry="loadShops({ force: true })" @sign-out="logout"><slot /></BsWorkspaceShell>
 </template>

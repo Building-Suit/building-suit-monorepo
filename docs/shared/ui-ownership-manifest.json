@@ -904,6 +904,15 @@
       "migrationStatus": "implementation qualification in progress"
     },
     {
+      "family": "owner-assistant-chat",
+      "owner": "packages/ui",
+      "components": [
+        "BsAssistantChatPage"
+      ],
+      "adapterBoundary": "Shared UI renders escaped bidirectional conversation text, controlled composer and explicit proposal review. Shop supplies scope, translated copy, receipt and allowlisted route projections, and owns request lifecycles, server authorization and expense commands.",
+      "migrationStatus": "implemented-local"
+    },
+    {
       "family": "weighing-setup",
       "owner": "packages/ui",
       "components": [

@@ -84,7 +84,9 @@ export function createSicsScale(options: { serial?: ScaleSerialAccess; timeoutMs
   }
   async function connect(serialOptions: ScaleSerialOptions, expectedSerial: string) {
     if (!state.canConnect || state.status === 'connecting' || closing || cleanupFailed) throw new Error('SCALE_BUSY')
-    const candidate = options.serial ?? (typeof navigator !== 'undefined' ? (navigator as Navigator & { serial?: ScaleSerialAccess }).serial : undefined)
+    const candidate = options.serial ?? (typeof navigator !== 'undefined' && 'serial' in navigator
+      ? navigator.serial as ScaleSerialAccess | undefined
+      : undefined)
     if (!candidate) throw new Error('SCALE_BROWSER_UNSUPPORTED')
     if (!serialOptions || typeof serialOptions !== 'object' || typeof expectedSerial !== 'string' || !expectedSerial || expectedSerial.length > 64 || Object.keys(serialOptions).some(key => !['baudRate','dataBits','stopBits','parity','flowControl'].includes(key))
       || ![1200,2400,4800,9600,19200,38400,57600,115200].includes(serialOptions.baudRate) || ![7,8].includes(serialOptions.dataBits)

@@ -1,0 +1,32 @@
+{
+  "id": "shop-owner-assistant-chat-support",
+  "task": "SS-OWNER-ASSISTANT-CHAT",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/app/types/shopCrmRpc.ts",
+    "apps/shop-suit/playwright.assistant.config.ts",
+    "apps/shop-suit/supabase/tests/shop_assistant_expense.sql",
+    "apps/shop-suit/tests",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsAssistantChatPage.vue",
+    "packages/ui/src/types/assistantChatPresentation.ts",
+    "packages/ux/src/controllers/createSicsScale.ts",
+    "pnpm-lock.yaml",
+    "release-changes/items.json",
+    "tooling/database/test-shop-local.mjs"
+  ],
+  "reason": "Shared chat presentation, route registration, database contracts, dependency locking and verification support the owner workflow in Shop Suit."
+}

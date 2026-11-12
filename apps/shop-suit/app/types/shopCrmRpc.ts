@@ -826,6 +826,21 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      confirm_assistant_expense: {
+        Args: {
+          p_request_id: string
+          p_shop_id: string
+          p_location_id: string
+          p_category_id: string
+          p_title: string
+          p_amount: number
+          p_expense_date: string
+          p_expected_category_name: string
+          p_expected_currency: string
+          p_expected_location_name: string
+        }
+        Returns: string
+      }
       void_expense: {
         Args: {
           p_request_id: string
