@@ -16,9 +16,13 @@ interface ChatEntry {
   createdAt: string
 }
 
+export const shopHqActionDestinations = ['sales', 'reports', 'products', 'inventory', 'expenses', 'appointments', 'customers'] as const
+export type ShopHqActionDestination = typeof shopHqActionDestinations[number]
+
 export type ShopHqChatMessage = ChatEntry & (
   | { kind: 'message'; role: 'user' | 'assistant'; text: string }
   | { kind: 'receipt'; role: 'assistant'; link: { destination: 'receipt'; saleId: string } }
+  | { kind: 'action'; role: 'assistant'; link: { destination: ShopHqActionDestination } }
   | { kind: 'clarification'; role: 'assistant'; outcome: ShopHqChatClarification }
   | { kind: 'status'; role: 'assistant'; status: 'failed' | 'expired' | 'revoked' }
 )

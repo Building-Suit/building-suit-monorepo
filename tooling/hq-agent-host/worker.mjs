@@ -1471,6 +1471,7 @@ export async function start(adapters = {}) {
     try {
       shop = startShopConnector(shopConfig, {
         inference: adapters.shopInference,
+        recallEnabled: Boolean(adapters.shopInference),
         readDocs: shopBrainReader(brain),
         admit: shopAdmitting,
         run: async action => {

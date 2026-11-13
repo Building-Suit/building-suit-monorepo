@@ -2,6 +2,26 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
+for (const [locale, width] of [['en', 1440], ['ar', 390]] as const) {
+  test(`privacy settings open from the Shop menu in ${locale}`, async ({ page }) => {
+    const arabic = locale === 'ar'
+    const privacySettings = arabic ? 'إعدادات الخصوصية' : 'Privacy settings'
+    await page.setViewportSize({ width, height: 850 })
+    await pilotFixture(page, locale)
+    await fixtureGoto(page, '/dashboard')
+    await expect(page.locator('.bs-privacy-reopen')).toHaveCount(0)
+
+    if (width < 1024) await page.locator('.bs-app-shell__mobile-trigger').click()
+    await page.getByRole('button', { name: arabic ? 'الإعدادات' : 'Settings', exact: true }).click()
+    await page.getByRole('link', { name: privacySettings, exact: true }).click()
+    await expect(page).toHaveURL(/\/privacy$/)
+    await page.getByRole('main').getByRole('button', { name: privacySettings, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: arabic ? 'خيارات الخصوصية' : 'Privacy choices' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('main').getByRole('button', { name: privacySettings, exact: true })).toBeFocused()
+  })
+}
+
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
   test(`shared workspace navigation and card surfaces: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 })

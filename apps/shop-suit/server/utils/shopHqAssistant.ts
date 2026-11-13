@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ShopHqChatHistory } from '../../shared/shopHqChat'
+import { shopHqActionDestinations, type ShopHqChatHistory } from '../../shared/shopHqChat'
 
 export const hqAssistantSelection = { shopId: z.uuid(), locationId: z.uuid() }
 export const hqAssistantAccess = z.object({ enabled: z.boolean(), agentName: z.string().min(1).max(120), queueAvailable: z.boolean() })
@@ -13,6 +13,7 @@ const clarification = z.discriminatedUnion('kind', [
 const update = z.discriminatedUnion('kind', [
   z.object({ sequence: z.int().positive(), kind: z.literal('reply'), text: z.string().min(1).max(2_000) }),
   z.object({ sequence: z.int().positive(), kind: z.literal('receipt'), invoiceId: z.uuid() }),
+  z.object({ sequence: z.int().positive(), kind: z.literal('action'), destination: z.enum(shopHqActionDestinations) }),
   z.object({ sequence: z.int().positive(), kind: z.literal('clarification'), outcome: clarification }),
 ])
 export const hqAssistantJob = z.object({
@@ -31,6 +32,8 @@ const historyMessage = z.discriminatedUnion('kind', [
   z.object({ ...historyEntry, kind: z.literal('message'), role: z.enum(['user', 'assistant']), text: z.string().min(1).max(2_000) }),
   z.object({ ...historyEntry, kind: z.literal('receipt'), role: z.literal('assistant'),
     link: z.object({ destination: z.literal('receipt'), saleId: z.uuid() }) }),
+  z.object({ ...historyEntry, kind: z.literal('action'), role: z.literal('assistant'),
+    link: z.object({ destination: z.enum(shopHqActionDestinations) }) }),
   z.object({ ...historyEntry, kind: z.literal('clarification'), role: z.literal('assistant'), outcome: clarification }),
   z.object({ ...historyEntry, kind: z.literal('status'), role: z.literal('assistant'), status: z.enum(['failed', 'expired', 'revoked']) }),
 ])

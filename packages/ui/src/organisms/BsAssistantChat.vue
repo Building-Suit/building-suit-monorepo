@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, useId, watch } from 'vue'
-import type { BsAssistantChatCopy, BsAssistantChatView } from '../types/assistantChatPresentation'
+import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch } from 'vue'
+import type { BsAssistantChatCopy, BsAssistantChatMessage, BsAssistantChatView } from '../types/assistantChatPresentation'
 
 const props = defineProps<{ copy: BsAssistantChatCopy; view: BsAssistantChatView; maximumLength: number; preview?: boolean; compact?: boolean }>()
 const draft = defineModel<string>('draft', { required: true })
@@ -14,6 +14,58 @@ const proposalTitleId = useId()
 const authorizationTitleId = useId()
 const composerBlocked = computed(() => Boolean(props.view.pending || props.view.proposal || props.view.canSend === false))
 const sendable = computed(() => !composerBlocked.value && Boolean(draft.value.trim()) && draft.value.length <= props.maximumLength)
+const now = ref(Date.now())
+let clock: ReturnType<typeof setInterval> | undefined
+
+const formatters = computed(() => {
+  const setting = props.view.messageTime
+  if (!setting) return
+  const { locale, timeZone } = setting
+  return {
+    day: new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }),
+    date: new Intl.DateTimeFormat(locale, { timeZone, dateStyle: 'medium' }),
+    time: new Intl.DateTimeFormat(locale, { timeZone, timeStyle: 'short' }),
+    relative: new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' }),
+  }
+})
+
+function dayNumber(format: Intl.DateTimeFormat, time: number) {
+  const parts = format.formatToParts(time)
+  const year = Number(parts.find(part => part.type === 'year')?.value)
+  const month = Number(parts.find(part => part.type === 'month')?.value)
+  const day = Number(parts.find(part => part.type === 'day')?.value)
+  return Date.UTC(year, month - 1, day) / 86_400_000
+}
+
+type TranscriptRow = { type: 'day'; key: string; text: string }
+  | { type: 'message'; key: number; message: BsAssistantChatMessage; time?: string; exactTime?: string }
+
+const transcriptRows = computed<TranscriptRow[]>(() => {
+  const rows: TranscriptRow[] = []
+  const format = formatters.value
+  const today = format && dayNumber(format.day, now.value)
+  let previousDay: number | undefined
+  for (const message of props.view.messages) {
+    const row: Extract<TranscriptRow, { type: 'message' }> = { type: 'message', key: message.id, message }
+    const time = message.createdAt ? Date.parse(message.createdAt) : NaN
+    if (format && today !== undefined && Number.isFinite(time)) {
+      const day = dayNumber(format.day, time)
+      if (day !== previousDay) {
+        const offset = day - today
+        rows.push({ type: 'day', key: `day-${message.id}`, text: offset === 0 || offset === -1
+          ? format.relative.format(offset, 'day') : format.date.format(time) })
+        previousDay = day
+      }
+      const minutes = Math.max(0, Math.floor((now.value - time) / 60_000))
+      row.time = minutes < 60 ? format.relative.format(-minutes, minutes ? 'minute' : 'second')
+        : minutes < 1_440 ? format.relative.format(-Math.floor(minutes / 60), 'hour')
+          : format.relative.format(-Math.floor(minutes / 1_440), 'day')
+      row.exactTime = format.time.format(time)
+    }
+    rows.push(row)
+  }
+  return rows
+})
 
 function submit() {
   if (sendable.value) emit('send')
@@ -38,15 +90,20 @@ function scrollToLatest(animate = false) {
   region.scrollTo({ top: region.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
 }
 
-onMounted(() => scrollToLatest())
+onMounted(() => {
+  scrollToLatest()
+  if (props.view.messageTime) clock = setInterval(() => { now.value = Date.now() }, 30_000)
+})
+onUnmounted(() => clearInterval(clock))
 watch(
   [
     () => props.view.messages[0]?.id,
     () => props.view.messages.at(-1)?.id,
     () => props.view.messages.at(-1)?.outcome,
+    () => props.view.messages.at(-1)?.links?.length,
     () => props.view.typing,
   ],
-  async ([first, last, , typing], [previousFirst, previousLast, , previousTyping]) => {
+  async ([first, last, , , typing], [previousFirst, previousLast, , , previousTyping]) => {
     const region = transcript.value
     if (!region) return
     const { scrollTop, scrollHeight, clientHeight } = region
@@ -117,15 +174,27 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
         :css="Boolean(compact)"
         class="bs-assistant-chat__messages"
       >
-        <li v-for="message in view.messages" :key="message.id" class="bs-assistant-chat__message" :data-role="message.role">
-          <strong>{{ copy[message.role] }}</strong>
-          <p dir="auto">{{ message.text }}</p>
-          <p v-if="message.outcome" dir="auto">{{ message.outcome }}</p>
-          <BsLink v-if="message.link" :to="message.link.to" variant="standalone">
-            {{ message.link.label }}
-            <BsIcon name="arrowRight" :size="16" directional />
-          </BsLink>
-        </li>
+        <template v-for="row in transcriptRows" :key="row.key">
+          <li v-if="row.type === 'day'" class="bs-assistant-chat__day">{{ row.text }}</li>
+          <li v-else class="bs-assistant-chat__message" :data-role="row.message.role">
+            <strong>{{ copy[row.message.role] }}</strong>
+            <p v-if="row.message.text" dir="auto">{{ row.message.text }}</p>
+            <p v-if="row.message.outcome" dir="auto">{{ row.message.outcome }}</p>
+            <div v-if="row.message.link || row.message.links?.length" class="bs-assistant-chat__links">
+              <BsLink v-if="row.message.link" :to="row.message.link.to" variant="standalone">
+                {{ row.message.link.label }}
+                <BsIcon name="arrowRight" :size="16" directional />
+              </BsLink>
+              <BsLink v-for="link in row.message.links" :key="link.to" :to="link.to" variant="standalone">
+                {{ link.label }}
+                <BsIcon name="arrowRight" :size="16" directional />
+              </BsLink>
+            </div>
+            <time v-if="row.time" class="bs-assistant-chat__time" :datetime="row.message.createdAt">
+              <bdi>{{ row.exactTime }}</bdi> <span aria-hidden="true">·</span> <bdi>{{ row.time }}</bdi>
+            </time>
+          </li>
+        </template>
         <li v-if="view.typing" key="typing" class="bs-assistant-chat__message bs-assistant-chat__typing" aria-hidden="true">
           <span /><span /><span />
         </li>
@@ -282,18 +351,42 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
   font-weight: var(--bs-weight-semibold);
 }
 
+.bs-assistant-chat__day,
+.bs-assistant-chat__time {
+  color: var(--bs-text-muted);
+  font-size: .75rem;
+}
+
+.bs-assistant-chat__day {
+  justify-self: center;
+  padding: var(--bs-space-1) var(--bs-space-2);
+  background: var(--bs-surface-muted);
+  border-radius: var(--bs-radius-chip);
+  text-transform: capitalize;
+}
+
+.bs-assistant-chat__time {
+  justify-self: end;
+  text-align: end;
+}
+
 .bs-assistant-chat__message p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.65;
 }
 
-.bs-assistant-chat__message a {
+.bs-assistant-chat__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bs-space-1) var(--bs-space-3);
+  margin-block-start: var(--bs-space-1);
+}
+
+.bs-assistant-chat__links a {
   display: inline-flex;
-  justify-self: start;
   align-items: center;
   gap: var(--bs-space-1);
-  margin-block-start: var(--bs-space-1);
 }
 
 .bs-assistant-chat__typing {
@@ -416,15 +509,16 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
 .bs-assistant-chat[data-compact] {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   border: 0;
   border-radius: 0;
 }
 
 .bs-assistant-chat[data-compact] .bs-assistant-chat__transcript {
   flex: 1 1 auto;
-  min-height: 9rem;
-  max-height: min(38dvh, 24rem);
+  min-height: 0;
+  max-height: none;
   padding: var(--bs-space-3);
 }
 

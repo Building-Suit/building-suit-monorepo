@@ -60,6 +60,7 @@ export function shopSettingsNavigation(isArabic: boolean, includeBilling: boolea
   return [
     { to: '/website-builder', label: isArabic ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
     ...SHOP_SETTINGS_SECTIONS.map((section, index) => ({ to: `/settings/${section}`, label: labels[index]!, icon: icons[index]! })),
+    { to: '/privacy', label: isArabic ? 'إعدادات الخصوصية' : 'Privacy settings', icon: 'lock' },
     ...(includeBilling ? [{ to: '/billing', label: shopShellCopy(isArabic).billing, icon: 'wallet' }] : []),
   ]
 }

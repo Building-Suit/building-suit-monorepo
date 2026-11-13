@@ -4,6 +4,10 @@ As a shop owner, select the branch where the work should happen and open the flo
 
 Each active shop has a stable employee assignment in the Shop Suit Agents department. The head dispatches each saved request to that shop's available employee. The employee posts replies in the same chat. The head reviews reports in batches and assigns corrections where needed. The employee appends any correction to the original request.
 
+Ask for a page by name, for example `عاوز افتح المبيعات`. The agent replies with a direct link to Sales. For an unclear request, it gives two or three useful options. The chat groups messages by date and shows their times. Privacy settings are in the Shop settings menu.
+
+The agent can use relevant earlier owner messages and stated preferences from the current authorized conversation. Turning the agent off ends that authorization for future recall. Saved chat history remains available to the owner.
+
 For a service sale, send the customer's name and services. Include the amount and method if the customer already paid in full. For example, with a matching test customer, published services priced at 200 total, and an open cash shift:
 
 > عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.

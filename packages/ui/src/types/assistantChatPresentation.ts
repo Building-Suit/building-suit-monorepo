@@ -7,8 +7,10 @@ export interface BsAssistantChatMessage {
   id: number
   role: 'user' | 'assistant' | 'receipt'
   text: string
+  createdAt?: string
   outcome?: string
   link?: BsAssistantChatLink
+  links?: readonly BsAssistantChatLink[]
 }
 
 export interface BsAssistantChatCopy {
@@ -41,6 +43,7 @@ export interface BsAssistantChatView {
   state: 'ready' | 'loading' | 'denied' | 'unavailable' | 'noLocation'
   context: readonly { label: string; value: string }[]
   messages: readonly BsAssistantChatMessage[]
+  messageTime?: { locale: string; timeZone: string }
   proposal: { title: string; fields: readonly { label: string; value: string }[] } | null
   delegation?: {
     enabled: boolean

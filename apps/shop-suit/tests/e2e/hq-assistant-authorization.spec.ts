@@ -8,7 +8,7 @@ const jobId = 'ac1884b0-d3a8-4d8a-8f77-586eb01ee7cd'
 const priorJob = 'bc1884b0-d3a8-4d8a-8f77-586eb01ee7cd'
 
 for (const locale of ['en', 'ar'] as const) {
-  test(`floating HQ chat saves history across navigation, reload and authorization changes in ${locale}`, async ({ page }) => {
+  test(`floating HQ chat saves history across navigation, reload and authorization changes in ${locale}`, async ({ page }, testInfo) => {
     const ar = locale === 'ar'
     await page.setViewportSize({ width: ar ? 390 : 1440, height: 850 })
     if (ar) await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -20,7 +20,7 @@ for (const locale of ['en', 'ar'] as const) {
     const enable = page.getByRole('button', { name: ar ? 'أوافق وأفعّل المساعد' : 'Authorize and enable' })
     const composer = page.getByRole('textbox', { name: ar ? 'رسالتك' : 'Your message' })
     const prompt = ar ? 'عميل اسمه أحمد محمد عمل شعر ودقن' : 'A customer named Ahmed Mohamed got a haircut and beard trim.'
-    const reply = ar ? 'تحب تسجّل البيع في الفرع ده؟' : 'Is this sale for the current branch?'
+    const reply = ar ? 'سجّل البيع في الفرع الحالي.' : 'Record the sale at the current branch.'
     const recent = ar ? 'رسالة محفوظة' : 'Saved message'
     const earlier = ar ? 'رسالة أقدم' : 'Earlier saved message'
     const changes: boolean[] = []
@@ -28,7 +28,7 @@ for (const locale of ['en', 'ar'] as const) {
     let queueAvailable = true
     let submissions = 0
     let earlierReads = 0
-    const reducedMotionReply = Promise.withResolvers<undefined>()
+    const acceptRequest = Promise.withResolvers<undefined>()
 
     await page.route('**/api/assistant/hq/access', route => {
       const request = route.request().postDataJSON()
@@ -59,7 +59,7 @@ for (const locale of ['en', 'ar'] as const) {
       expect(route.request().postDataJSON()).toEqual({
         shopId: 'shop-1', locationId: 'location-1', requestId: expect.stringMatching(/^[0-9a-f-]{36}$/), message: prompt,
       })
-      if (ar) await reducedMotionReply.promise
+      await acceptRequest.promise
       submissions++
       return route.fulfill({ status: 202, json: { jobId } })
     })
@@ -82,29 +82,18 @@ for (const locale of ['en', 'ar'] as const) {
     await page.screenshot({ path: `${evidence}/hq-assistant-floating-${locale}.png`, animations: 'disabled' })
 
     await enable.click()
-    if (!ar) {
-      const now = new Date()
-      await page.clock.install({ time: now })
-      await page.clock.pauseAt(new Date(now.getTime() + 1000))
-    }
     await composer.fill(prompt)
     await composer.press('Enter')
-    if (!ar) {
-      await expect(page.getByRole('log').getByText(prompt)).toBeVisible()
-      await expect(page.getByRole('status').filter({ hasText: 'Shop Suit Agent is typing' })).toHaveCount(1)
-      await expect(page.getByRole('log').getByText(reply)).toHaveCount(0)
-      await page.clock.runFor(750)
-      await page.clock.resume()
-    } else {
-      try {
-        const typing = page.getByRole('log').locator('.bs-assistant-chat__typing')
-        await expect(typing).toBeVisible()
-        await expect(typing.locator('span').first()).toHaveCSS('animation-name', 'none')
-      } finally {
-        reducedMotionReply.resolve(undefined)
-      }
+    try {
+      const typing = page.getByRole('log').locator('.bs-assistant-chat__typing')
+      await expect(typing).toBeVisible()
+      if (ar) await expect(typing.locator('span').first()).toHaveCSS('animation-name', 'none')
+    } finally {
+      acceptRequest.resolve(undefined)
     }
     await expect(page.getByRole('log').getByText(reply)).toBeVisible()
+    await expect(page.getByRole('log').locator('time').last()).toHaveAttribute('datetime', createdAt)
+    await page.screenshot({ path: testInfo.outputPath(`floating-assistant-${locale}.png`), animations: 'disabled' })
     expect(submissions).toBe(1)
 
     await close.click()

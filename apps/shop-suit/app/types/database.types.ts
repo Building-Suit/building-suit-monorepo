@@ -15746,6 +15746,10 @@ export type Database = {
         Args: { p_job_id: string; p_location_id: string; p_shop_id: string }
         Returns: Json
       }
+      shop_hq_assistant_recall: {
+        Args: { p_job_id: string; p_lease_token: string }
+        Returns: Json
+      }
       shop_hq_assistant_recent: {
         Args: { p_location_id: string; p_shop_id: string }
         Returns: Json

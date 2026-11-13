@@ -137,7 +137,14 @@ const floatingAssistant = computed<BsShellAssistantChat>(() => ({
     loadEarlier: isArabic.value ? 'عرض الرسائل الأقدم' : 'Load earlier messages',
     typing: isArabic.value ? 'المساعد يكتب الرد' : 'Assistant is typing',
   },
-  view: { ...assistantExampleView.value, messages: assistantExampleView.value.messages.slice(0, 1), typing: true, canSend: false, showComposer: false },
+  view: {
+    ...assistantExampleView.value,
+    messages: assistantExampleView.value.messages.map((message, index) => ({
+      ...message, createdAt: index === 0 ? '2026-10-12T10:00:00Z' : '2026-10-12T10:01:00Z',
+    })),
+    messageTime: { locale: isArabic.value ? 'ar-EG' : 'en-EG', timeZone: 'Africa/Cairo' },
+    typing: true, canSend: false, showComposer: false,
+  },
   maximumLength: 2000,
   launcherLabel: isArabic.value ? 'افتح المحادثة التوضيحية' : 'Open sample conversation',
   closeLabel: ui('close'),
