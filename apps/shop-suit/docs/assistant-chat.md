@@ -12,9 +12,9 @@ If Shop Suit needs another detail, reply in chat. When the sale succeeds, choose
 
 ## Managed worker setup
 
-The feature starts disabled. Apply the current Shop Suit database migrations and follow the [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). Worker registration admits authorized requests at the database. When the correct worker is connected, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable registered workers and the app flag to pause processing.
+The feature starts disabled. Apply the current Shop Suit database migrations and follow the [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). The existing HQ worker can synchronize staffing while the Shop queue remains disabled. After the worker has an approved inference adapter and the queue has been enabled explicitly, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable the queue and the app flag to pause processing.
 
-Existing active shops are backfilled by migration. Shop creation and activation provision the employee automatically. HQ reads the staffing roster with a dedicated metadata-only identity from the corresponding Shop environment. See the [department charter](https://drive.google.com/file/d/1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY/view).
+Existing active shops are backfilled by migration. Shop creation and activation provision the employee automatically. The HQ worker uses one scoped Shop identity to send staffing metadata to the existing HQ founder office. See the [department charter](https://drive.google.com/file/d/1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY/view).
 
 Shop Suit saves chat requests briefly so employees can act, review can recover after a disconnect, and owners can reconnect. Private Realtime signals carry no chat or sale content. Shop Suit authenticates each result read separately. Account, shop, or branch changes clear the browser view and load the new scope. Review and checkout are fenced to the authorized job. Completed sales remain in Shop Suit after the chat transcript expires.
 

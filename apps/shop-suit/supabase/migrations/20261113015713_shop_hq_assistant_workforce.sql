@@ -16,27 +16,37 @@ create table shop_private.hq_assistant_department (
 );
 insert into shop_private.hq_assistant_department default values;
 
-create table shop_private.hq_assistant_staff_readers (
-  auth_user_id uuid primary key references auth.users(id) on delete cascade,
-  enabled boolean not null
-);
 alter table shop_private.hq_assistant_employees enable row level security;
 alter table shop_private.hq_assistant_department enable row level security;
-alter table shop_private.hq_assistant_staff_readers enable row level security;
-revoke all on table shop_private.hq_assistant_employees, shop_private.hq_assistant_department,
-  shop_private.hq_assistant_staff_readers from public, anon, authenticated, service_role;
+revoke all on table shop_private.hq_assistant_employees, shop_private.hq_assistant_department
+from public, anon, authenticated, service_role;
 
 insert into shop_private.hq_assistant_employees (shop_id) select id from public.shops;
-create function shop_private.hq_assistant_provision_employee() returns trigger
+create function shop_private.hq_assistant_roster_changed() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  insert into shop_private.hq_assistant_employees (shop_id) values (new.id) on conflict (shop_id) do nothing;
-  return new;
+  if tg_op = 'INSERT' then
+    insert into shop_private.hq_assistant_employees (shop_id) values (new.id) on conflict (shop_id) do nothing;
+    if new.status <> 'active' then return null; end if;
+  elsif tg_op = 'DELETE' then
+    if old.status <> 'active' then return null; end if;
+  elsif (old.status = 'active') = (new.status = 'active') and (
+    new.status <> 'active' or (old.name, old.portal_id) is not distinct from (new.name, new.portal_id)
+  ) then
+    return null;
+  end if;
+  perform realtime.send('{}'::jsonb, 'staff', 'shop-hq-assistant-jobs', true);
+  return null;
 end;
 $$;
-create trigger shop_hq_assistant_provision_employee after insert on public.shops
-for each row execute function shop_private.hq_assistant_provision_employee();
+create trigger shop_hq_assistant_roster_changed
+after insert or update of name, status, portal_id or delete on public.shops
+for each row execute function shop_private.hq_assistant_roster_changed();
+
+alter table shop_private.hq_assistant_workers
+  add column queue_enabled boolean not null default false,
+  add constraint hq_assistant_workers_queue_requires_registration check (enabled or not queue_enabled);
 
 alter table shop_private.hq_assistant_jobs
   add column employee_id uuid references shop_private.hq_assistant_employees(id) on delete cascade,
@@ -163,6 +173,12 @@ as $$
 declare v_receipt jsonb;
 begin
   v_receipt := shop_private.hq_assistant_enqueue_validated(p_shop_id,p_location_id,p_request_id,p_messages);
+  if not exists (
+    select 1 from shop_private.hq_assistant_workers worker
+    where worker.queue_enabled and shop_private.hq_assistant_is_worker(worker.auth_user_id)
+  ) then
+    raise exception 'SHOP_HQ_ASSISTANT_QUEUE_DISABLED' using errcode = '55000';
+  end if;
   update shop_private.hq_assistant_jobs job
   set owner_message = p_messages->-1->>'content', transcript_expires_at = job.created_at + interval '15 minutes'
   where job.id = (v_receipt->>'jobId')::uuid and job.state = 'queued' and job.stage = 'waiting'
@@ -323,13 +339,28 @@ begin
 end;
 $$;
 
+create function shop_private.hq_assistant_require_queue_worker() returns uuid
+language plpgsql volatile set search_path = ''
+as $$
+declare v_worker uuid := shop_private.hq_assistant_require_worker();
+begin
+  if not exists (
+    select 1 from shop_private.hq_assistant_workers worker
+    where worker.auth_user_id = v_worker and worker.queue_enabled
+  ) then
+    raise exception 'SHOP_HQ_ASSISTANT_QUEUE_DISABLED' using errcode = '42501';
+  end if;
+  return v_worker;
+end;
+$$;
+
 create function public.shop_hq_assistant_dispatch() returns jsonb
 language plpgsql security definer set search_path = ''
 as $$
 declare v_job shop_private.hq_assistant_jobs%rowtype; v_employee uuid;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  perform shop_private.hq_assistant_require_worker();
+  perform shop_private.hq_assistant_require_queue_worker();
   perform shop_private.hq_assistant_cleanup();
   for v_job in
     select job.* from shop_private.hq_assistant_jobs job
@@ -361,7 +392,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype; v_token uuid;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   perform shop_private.hq_assistant_cleanup();
   for v_job in
     select * from shop_private.hq_assistant_jobs job
@@ -440,7 +471,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype; v_digest bytea; v_sale_pending boolean;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   if p_succeeded is null or (p_succeeded and not shop_private.hq_assistant_valid_intent(p_intent))
     or (not p_succeeded and p_intent is not null and p_intent <> 'null'::jsonb) then
     raise exception 'SHOP_HQ_ASSISTANT_INVALID_RESULT' using errcode = '22023';
@@ -485,7 +516,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   perform shop_private.hq_assistant_cleanup();
   select * into v_job from shop_private.hq_assistant_jobs job
   where job.stage = 'sale_pending' and job.worker_id = v_worker and job.lease_expires_at > clock_timestamp()
@@ -507,7 +538,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype; v_action jsonb;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   select * into v_job from shop_private.hq_assistant_jobs job where job.id = p_job_id
     and job.transcript_expires_at > clock_timestamp()
   for update;
@@ -567,7 +598,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype; v_token uuid; v_head uuid; v_batch jsonb := '[]';
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   perform shop_private.hq_assistant_cleanup();
   select head_id into v_head from shop_private.hq_assistant_department;
   for v_job in
@@ -601,7 +632,7 @@ as $$
 declare v_worker uuid; v_job shop_private.hq_assistant_jobs%rowtype; v_digest bytea; v_fix boolean;
 begin
   perform shop_private.hq_assistant_queue_lock();
-  v_worker := shop_private.hq_assistant_require_worker();
+  v_worker := shop_private.hq_assistant_require_queue_worker();
   if p_approved is null or (p_approved and p_feedback is not null)
     or (p_feedback is not null and (octet_length(p_feedback) > 2000 or p_feedback !~ '[^[:space:]]')) then
     raise exception 'SHOP_HQ_ASSISTANT_INVALID_REVIEW' using errcode = '22023';
@@ -634,84 +665,7 @@ begin
 end;
 $$;
 
-create function shop_private.register_shop_hq_assistant_staff_reader(p_auth_user_id uuid,p_enabled boolean)
-returns void language plpgsql security definer set search_path = ''
-as $$
-begin
-  perform shop_private.hq_assistant_queue_lock();
-  if p_enabled is false then
-    update shop_private.hq_assistant_staff_readers set enabled = false where auth_user_id = p_auth_user_id;
-    return;
-  end if;
-  if p_enabled is null or not exists (
-    select 1 from auth.users actor
-    where actor.id = p_auth_user_id and actor.email_confirmed_at is not null and actor.deleted_at is null
-      and not coalesce(actor.is_anonymous,false) and (actor.banned_until is null or actor.banned_until <= statement_timestamp())
-      and not exists (select 1 from shop_private.hq_assistant_workers worker where worker.auth_user_id = actor.id)
-      and not exists (
-        select 1 from public.profiles profile join public.shop_memberships membership on membership.profile_id = profile.id
-        where profile.user_id = actor.id
-      )
-  ) then
-    raise exception 'SHOP_HQ_ASSISTANT_TECHNICAL_ACCOUNT_REQUIRED' using errcode = '22023';
-  end if;
-  insert into shop_private.hq_assistant_staff_readers (auth_user_id,enabled) values (p_auth_user_id,true)
-  on conflict (auth_user_id) do update set enabled = true;
-end;
-$$;
-
--- Both technical allowlists are distinct from merchant identities. Worker
--- disablement immediately fences pending writes even if that user is enabled again.
-create or replace function shop_private.hq_assistant_is_worker(p_actor uuid) returns boolean
-language sql stable set search_path = ''
-as $$
-  select exists (
-    select 1
-    from shop_private.hq_assistant_workers worker
-    join auth.users actor on actor.id = worker.auth_user_id
-    where worker.auth_user_id = p_actor and worker.enabled
-      and actor.email_confirmed_at is not null and actor.deleted_at is null
-      and not coalesce(actor.is_anonymous, false)
-      and (actor.banned_until is null or actor.banned_until <= statement_timestamp())
-      and not exists (
-        select 1 from shop_private.hq_assistant_staff_readers reader where reader.auth_user_id = actor.id
-      )
-      and not exists (
-        select 1
-        from public.profiles profile
-        join public.shop_memberships membership on membership.profile_id = profile.id
-        where profile.user_id = actor.id and membership.removed_at is null
-      )
-  );
-$$;
-
-create or replace function shop_private.hq_assistant_is_owner(p_actor uuid, p_shop uuid, p_location uuid default null)
-returns boolean language sql volatile set search_path = ''
-as $$
-  select not exists (
-    select 1 from shop_private.hq_assistant_workers worker where worker.auth_user_id = p_actor
-  ) and not exists (
-    select 1 from shop_private.hq_assistant_staff_readers reader where reader.auth_user_id = p_actor
-  ) and exists (
-    select 1
-    from auth.users actor
-    join public.profiles profile on profile.user_id = actor.id
-    join public.shop_memberships membership on membership.profile_id = profile.id
-    join public.shops shop on shop.id = membership.shop_id and shop.portal_id = profile.portal_id
-    join public.portals portal on portal.id = shop.portal_id
-    where actor.id = p_actor and actor.deleted_at is null and not coalesce(actor.is_anonymous, false)
-      and (actor.banned_until is null or actor.banned_until <= statement_timestamp())
-      and shop.id = p_shop and shop.status = 'active'
-      and profile.status = 'active' and membership.role = 'owner' and membership.status = 'active'
-      and membership.removed_at is null and portal.key = 'shop-crm' and portal.is_active
-    for share of actor, profile, membership, shop, portal
-  ) and (p_location is null or exists (
-    select 1 from public.shop_locations location
-    where location.id = p_location and location.shop_id = p_shop and location.status = 'active'
-    for share
-  ));
-$$;
-
+-- Disablement fences active writes before an operator can re-enable the worker.
 create or replace function shop_private.register_shop_hq_assistant_worker(p_auth_user_id uuid,p_enabled boolean)
 returns void language plpgsql security definer set search_path = ''
 as $$
@@ -719,7 +673,7 @@ begin
   perform shop_private.hq_assistant_queue_lock();
   if p_enabled is false then
     update shop_private.hq_assistant_workers
-      set enabled = false, changed_at = clock_timestamp() where auth_user_id = p_auth_user_id;
+      set enabled = false, queue_enabled = false, changed_at = clock_timestamp() where auth_user_id = p_auth_user_id;
     update shop_private.hq_assistant_jobs set lease_expires_at = clock_timestamp()
       where worker_id = p_auth_user_id and stage in ('employee','sale_pending','reviewing');
     perform shop_private.hq_assistant_cleanup();
@@ -730,9 +684,6 @@ begin
     where actor.id = p_auth_user_id and actor.email_confirmed_at is not null and actor.deleted_at is null
       and not coalesce(actor.is_anonymous, false)
       and (actor.banned_until is null or actor.banned_until <= statement_timestamp())
-      and not exists (
-        select 1 from shop_private.hq_assistant_staff_readers reader where reader.auth_user_id = actor.id
-      )
       and not exists (
         select 1 from public.profiles profile
         join public.shop_memberships membership on membership.profile_id = profile.id
@@ -747,27 +698,41 @@ begin
 end;
 $$;
 
+-- Roster registration is sufficient for metadata delivery. Work execution
+-- requires a separate explicit, database-side operator action.
+create function shop_private.set_shop_hq_assistant_queue_enabled(p_auth_user_id uuid,p_enabled boolean)
+returns void language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform shop_private.hq_assistant_queue_lock();
+  if p_enabled is null or not shop_private.hq_assistant_is_worker(p_auth_user_id) then
+    raise exception 'SHOP_HQ_ASSISTANT_TECHNICAL_ACCOUNT_REQUIRED' using errcode = '22023';
+  end if;
+  update shop_private.hq_assistant_workers
+  set queue_enabled = p_enabled, changed_at = clock_timestamp()
+  where auth_user_id = p_auth_user_id and queue_enabled is distinct from p_enabled;
+  if not found then return; end if;
+  if not p_enabled then
+    update shop_private.hq_assistant_jobs set lease_expires_at = clock_timestamp()
+    where worker_id = p_auth_user_id and stage in ('employee','sale_pending','reviewing');
+    perform shop_private.hq_assistant_cleanup();
+  end if;
+  perform shop_private.hq_assistant_signal_staff();
+end;
+$$;
+
 create function public.shop_hq_assistant_staff(p_after_employee_id uuid default null,p_limit integer default 50)
 returns jsonb language plpgsql security definer set search_path = ''
 as $$
 declare v_staff jsonb;
 begin
-  if coalesce(auth.jwt()->>'is_anonymous','false') = 'true' or not exists (
-    select 1 from shop_private.hq_assistant_staff_readers reader join auth.users actor on actor.id = reader.auth_user_id
-    where reader.auth_user_id = auth.uid() and reader.enabled
-      and actor.email_confirmed_at is not null and actor.deleted_at is null and not coalesce(actor.is_anonymous,false)
-      and (actor.banned_until is null or actor.banned_until <= statement_timestamp())
-      and not exists (select 1 from shop_private.hq_assistant_workers worker where worker.auth_user_id = actor.id)
-      and not exists (
-        select 1 from public.profiles profile join public.shop_memberships membership on membership.profile_id = profile.id
-        where profile.user_id = actor.id and membership.removed_at is null
-      )
-  ) then raise exception 'SHOP_HQ_ASSISTANT_STAFF_READER_REQUIRED' using errcode = '42501'; end if;
+  perform shop_private.hq_assistant_require_worker();
 
   select coalesce(jsonb_agg(jsonb_build_object('employeeId',staff.id,'employeeTemplate','shop-suit-agent-v1',
     'shopId',staff.shop_id,'shopName',staff.name,'state',staff.state) order by staff.id),'[]'::jsonb) into v_staff
   from (
-    select employee.id, employee.shop_id, shop.name,
+    select employee.id, employee.shop_id,
+      coalesce(nullif(left(btrim(regexp_replace(shop.name, '[[:cntrl:][:space:]]+', ' ', 'g')), 200), ''), 'Shop Suit') as name,
       case when exists (
         select 1 from shop_private.hq_assistant_jobs job
         where job.employee_id = employee.id and job.stage <> 'closed' and job.expires_at > clock_timestamp()
@@ -783,13 +748,14 @@ begin
 end;
 $$;
 
-revoke all on function shop_private.hq_assistant_provision_employee(), shop_private.hq_assistant_signal_owner(uuid),
+revoke all on function shop_private.hq_assistant_roster_changed(), shop_private.hq_assistant_signal_owner(uuid),
   shop_private.hq_assistant_signal_staff(), shop_private.hq_assistant_current_consent(shop_private.hq_assistant_jobs),
   shop_private.hq_assistant_latest_action(jsonb), shop_private.hq_assistant_append_update(uuid,jsonb),
   shop_private.hq_assistant_owner_projection(shop_private.hq_assistant_jobs),
-  shop_private.hq_assistant_require_worker(), shop_private.assert_shop_hq_sale_job(uuid,uuid),
+  shop_private.hq_assistant_require_worker(), shop_private.hq_assistant_require_queue_worker(),
+  shop_private.set_shop_hq_assistant_queue_enabled(uuid,boolean), shop_private.assert_shop_hq_sale_job(uuid,uuid),
   shop_private.hq_assistant_complete_sale_stage(uuid,jsonb), shop_private.hq_assistant_append_receipt(uuid,uuid),
-  shop_private.hq_assistant_close_sale_attempt(uuid,jsonb), shop_private.register_shop_hq_assistant_staff_reader(uuid,boolean)
+  shop_private.hq_assistant_close_sale_attempt(uuid,jsonb)
 from public,anon,authenticated,service_role;
 
 revoke all on function public.shop_hq_assistant_enqueue(uuid,uuid,uuid,jsonb), public.shop_hq_assistant_recent(uuid,uuid),

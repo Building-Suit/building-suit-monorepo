@@ -1,23 +1,21 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import { chmod, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 
-import { readApprovedDocs, validateIntent, validateMessages, validateReview } from './model.mjs'
-import { createOllamaAdapter } from './ollama.mjs'
-import { publishApprovedDocs } from './publish-docs.mjs'
-import { readConfig, startWorker } from './worker.mjs'
+import {
+  readShopConnectorConfig, startShopConnector,
+  validateIntent, validateMessages, validateReview,
+} from './departmentWorkflow.mjs'
+import { shopBrainReader, shopConnectorSettings } from './worker.mjs'
 
-const env = {
-  SHOP_HQ_SUPABASE_URL: 'https://jvvelvftpfnlogalgxgv.supabase.co',
-  SHOP_HQ_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
-  SHOP_HQ_WORKER_EMAIL: 'worker@example.invalid',
-  SHOP_HQ_WORKER_PASSWORD: 'fixture-password',
-  SHOP_HQ_INFERENCE_ADAPTER: 'ollama',
-  SHOP_HQ_OLLAMA_MODEL: 'fixture:tag',
-  SHOP_HQ_OLLAMA_MODEL_DIGEST: 'a'.repeat(64),
+const config = {
+  url: 'https://jvvelvftpfnlogalgxgv.supabase.co',
+  key: 'sb_publishable_fixture',
+  email: 'worker@example.invalid',
+  password: 'fixture-password',
 }
 const messages = [{ role: 'user', content: 'عميل اسمه احمد محمد عمل شعر ودقن ودفع ٣٠٠ كاش' }]
 const intent = {
@@ -31,48 +29,62 @@ const intent = {
   reply: 'حاضر، هسجل الخدمات.',
 }
 
-test('configuration requires verified Shop projects and an explicitly approved inference backend', () => {
-  assert.equal(readConfig(env).url, env.SHOP_HQ_SUPABASE_URL)
-  assert.equal(readConfig(env).model, env.SHOP_HQ_OLLAMA_MODEL)
+test('the HQ connector requires a verified Shop origin and an explicitly supplied inference adapter', () => {
+  assert.deepEqual(readShopConnectorConfig(config), config)
   for (const url of [
     'https://fgdzjnsbcxfbiuogbmom.supabase.co/',
     'http://127.0.0.1:61321',
     'http://localhost:61321',
-  ]) assert.equal(readConfig({ ...env, SHOP_HQ_SUPABASE_URL: url }).url, url.replace(/\/$/, ''))
+  ]) assert.equal(readShopConnectorConfig({ ...config, url }).url, url.replace(/\/$/, ''))
   for (const url of [
-    'https://jkdncdexqcymwbihwdhp.supabase.co',
+    'https://dpruoncalmwicrqhqelu.supabase.co',
     'https://jvvelvftpfnlogalgxgv.supabase.co.example.invalid',
     'https://jvvelvftpfnlogalgxgv.supabase.co/rest/v1',
     'http://localhost:54321',
-  ]) assert.throws(() => readConfig({ ...env, SHOP_HQ_SUPABASE_URL: url }), /unapproved/)
-  assert.throws(() => readConfig({ ...env, SHOP_HQ_SUPABASE_PUBLISHABLE_KEY: 'sb_secret_fixture' }), /publishable/)
-  assert.throws(() => readConfig({ ...env, SHOP_HQ_INFERENCE_ADAPTER: '', OPENAI_API_KEY: 'unused' }), /SHOP_HQ_INFERENCE_ADAPTER/)
-  assert.throws(() => readConfig({ ...env, SHOP_HQ_OLLAMA_MODEL: 'fixture:cloud' }), /approved-local-model/)
-  assert.throws(() => readConfig({ ...env, SHOP_HQ_OLLAMA_MODEL_DIGEST: 'unused' }), /approved-local-model/)
-  assert.throws(() => readConfig({ ...env, SHOP_HQ_DOCS_FILE: 'relative.md' }), /absolute/)
-  const moduleConfig = readConfig({ ...env, SHOP_HQ_INFERENCE_ADAPTER: 'module', SHOP_HQ_INFERENCE_MODULE: '/approved/inference.mjs' })
-  assert.equal(moduleConfig.inferenceModule, '/approved/inference.mjs')
-  assert.equal(moduleConfig.model, undefined)
+  ]) assert.throws(() => readShopConnectorConfig({ ...config, url }), /unapproved/)
+  assert.throws(() => readShopConnectorConfig({ ...config, key: 'sb_secret_fixture' }), /publishable/)
+  assert.throws(() => readShopConnectorConfig({ ...config, password: '' }), /credentials/)
+  assert.throws(() => startShopConnector(config), /inference-adapter-required/)
 })
 
-test('the operator-approved docs snapshot is re-read without following links', async t => {
-  const directory = await mkdtemp(join(tmpdir(), 'shop-hq-docs-'))
-  t.after(() => rm(directory, { force: true, recursive: true }))
-  const docsFile = join(directory, 'shop.md')
-  const sourceFile = join(directory, 'export.md')
-  await writeFile(sourceFile, 'Shop Suit v1.2.3 adds saved receipts.')
-  await publishApprovedDocs(sourceFile, docsFile)
-  assert.match(await readApprovedDocs(docsFile), /v1.2.3/)
-  await writeFile(sourceFile, 'Shop Suit v1.2.4 adds service search.')
-  await publishApprovedDocs(sourceFile, docsFile)
-  assert.match(await readApprovedDocs(docsFile), /v1.2.4/)
-  const symlinkPath = join(directory, 'other.md')
-  await symlink(docsFile, symlinkPath)
-  await assert.rejects(readApprovedDocs(symlinkPath))
-  await assert.rejects(publishApprovedDocs(symlinkPath, docsFile))
-  await writeFile(sourceFile, Buffer.alloc(24_001))
-  await assert.rejects(publishApprovedDocs(sourceFile, docsFile))
-  assert.match(await readApprovedDocs(docsFile), /v1.2.4/)
+test('the private Shop identity is mapped to its HQ environment and fails closed', async t => {
+  const state = await mkdtemp(join(tmpdir(), 'shop-hq-config-'))
+  t.after(() => rm(state, { force: true, recursive: true }))
+  const hq = { state, url: 'https://dpruoncalmwicrqhqelu.supabase.co', email: 'hq@example.invalid', password: 'hq-fixture-long-password-123' }
+  const { key, email } = config
+  const shop = { key, email, password: 'shop-fixture-long-password-123' }
+  const path = join(state, 'shop-connector.json')
+  assert.equal(await shopConnectorSettings(hq), null)
+  await writeFile(path, JSON.stringify(shop), { mode: 0o600 })
+  assert.deepEqual(await shopConnectorSettings(hq), { ...shop, url: config.url })
+  assert.equal((await shopConnectorSettings({ ...hq, url: 'https://nkpvskyugnnnozepbwzb.supabase.co' })).url,
+    'https://fgdzjnsbcxfbiuogbmom.supabase.co')
+  await assert.rejects(shopConnectorSettings({ ...hq, email }), /configuration-invalid/)
+  await assert.rejects(shopConnectorSettings({ ...hq, url: config.url }), /configuration-invalid/)
+  await chmod(path, 0o644)
+  await assert.rejects(shopConnectorSettings(hq), /configuration-invalid/)
+  await rm(path)
+  await symlink('not-an-approved-target', path)
+  await assert.rejects(shopConnectorSettings(hq), /configuration-invalid/)
+})
+
+test('the existing Brain reader only supplies the approved Shop references at their current revisions', async () => {
+  let revision = 'current Shop guidance'
+  let badSource = false
+  const controller = new AbortController()
+  const read = shopBrainReader(async ({ brain_files }, signal) => {
+    assert.equal(signal, controller.signal)
+    assert.equal(brain_files.length, 6)
+    assert.equal(new Set(brain_files.map(file => file.id)).size, 6)
+    return brain_files.map(({ id }, index) => ({
+      id: badSource && index === 0 ? 'unexpected-id' : id, name: 'Shop reference', text: revision,
+    }))
+  })
+  assert.match(await read({ signal: controller.signal }), /current Shop guidance/)
+  revision = 'updated Shop guidance'
+  assert.match(await read({ signal: controller.signal }), /updated Shop guidance/)
+  badSource = true
+  await assert.rejects(read({ signal: controller.signal }), /shop-brain-unavailable/)
 })
 
 test('worker validates employee proposals, head review, and input bounds', () => {
@@ -96,36 +108,98 @@ test('worker validates employee proposals, head review, and input bounds', () =>
   assert.throws(() => validateMessages([{ role: 'user', content: 'ش'.repeat(1_001) }]), /invalid-job-messages/)
 })
 
-test('Ollama uses only the installed pinned loopback model and structured prompts', async () => {
-  const config = readConfig(env)
-  const requests = []
-  let digest = config.modelDigest
-  const adapter = await createOllamaAdapter(config, async (url, request) => {
-    assert.equal(new URL(url).origin, 'http://127.0.0.1:11434')
-    assert.equal(request.redirect, 'error')
-    if (url.endsWith('/api/tags')) return Response.json({ models: [{ name: config.model, digest }] })
-    assert.equal(new URL(url).pathname, '/api/chat')
-    const body = JSON.parse(request.body)
-    requests.push(body)
-    const content = JSON.stringify(requests.length === 1 ? intent : { approved: true, feedback: null })
-    return Response.json({ done: true, done_reason: 'stop', model: config.model, message: { role: 'assistant', content } })
+test('staff-only sync pages metadata, coalesces calls, and reports only real overflow', async t => {
+  const calls = []
+  const snapshots = []
+  const shopId = '00000000-0000-4000-8000-000000000001'
+  const rows = Array.from({ length: 2_001 }, (_, index) => ({
+    employeeId: '00000000-0000-4000-8000-' + String(index + 1).padStart(12, '0'),
+    employeeTemplate: 'shop-suit-agent-v1',
+    shopId,
+    shopName: 'Shop ' + String(index + 1),
+    state: index === 0 ? 'busy' : 'idle',
+  }))
+  let count = 2_000
+  let repeatCursor = false
+  let stopped = false
+  let staffSignals = 0
+  const sockets = []
+  class StaffSocket extends EventTarget {
+    constructor() {
+      super()
+      sockets.push(this)
+      queueMicrotask(() => this.dispatchEvent(new Event('open')))
+    }
+
+    frame(event, payload, ref, topic = 'realtime:shop-hq-assistant-jobs') {
+      this.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ event, payload, ref, topic }) }))
+    }
+
+    send(text) {
+      const join = JSON.parse(text)
+      assert.equal(join.event, 'phx_join')
+      assert.equal(join.payload.config.private, true)
+      assert.equal(join.payload.access_token, 'staff-fixture-session')
+      queueMicrotask(() => this.frame('phx_reply', { status: 'ok' }, join.ref))
+    }
+
+    close() { this.dispatchEvent(new Event('close')) }
+  }
+  const connector = startShopConnector(config, {
+    api: {
+      async access() { return { accessToken: 'staff-fixture-session', expiresAt: Date.now() + 3_600_000 } },
+      async rpc(name, { p_after_employee_id: after, p_limit: limit }) {
+        assert.equal(name, 'shop_hq_assistant_staff')
+        assert.equal(limit, 100)
+        calls.push(after)
+        const from = after === null ? 0 : rows.findIndex(row => row.employeeId === after) + 1
+        const start = repeatCursor && after !== null ? from - 1 : from
+        return rows.slice(start, Math.min(start + limit, count))
+      },
+      async stop() { stopped = true },
+    },
+    Socket: StaffSocket,
+    admit() { assert.fail('staff-only mode checked job admission') },
+    run() { assert.fail('staff-only mode attempted to drain jobs') },
+    publishStaff: async staff => { snapshots.push(staff) },
+    staffChanged() { staffSignals++ },
   })
-  const signal = AbortSignal.timeout(1_000)
-  const docs = 'Shop Suit v1.2.4 adds service search.'
-  const employee = { id: 'local-employee', template: 'shop-suit-agent-v1' }
-  assert.deepEqual(await adapter.inferEmployee({ employee, messages, feedback: null, docs, signal }), intent)
-  assert.deepEqual(await adapter.reviewEmployee({ messages, intent, outcome: null, docs, signal }), { approved: true, feedback: null })
-  assert.equal(requests[0].tools, undefined)
-  assert.equal(requests[0].stream, false)
-  assert.equal(requests[0].truncate, false)
-  assert.equal(requests[0].shift, false)
-  assert.equal(requests[0].format.additionalProperties, false)
-  assert.deepEqual(requests[0].messages.slice(1), messages)
-  assert.doesNotMatch(requests[0].messages[0].content, /local-employee/)
-  assert.match(requests[1].messages[0].content, /Mariam/)
-  digest = 'b'.repeat(64)
-  await assert.rejects(adapter.inferEmployee({ employee, messages, feedback: null, docs, signal }), /approved-local-model-not-installed/)
-  assert.equal(requests.length, 2)
+  t.after(connector.stop)
+
+  await waitFor(() => sockets.length === 1)
+  const [socket] = sockets
+  socket.frame('broadcast', { event: 'staff' })
+  assert.equal(staffSignals, 0)
+  socket.frame('system', { status: 'ok', extension: 'system', message: 'Replication connection established' })
+  await waitFor(() => staffSignals === 1)
+  socket.frame('broadcast', { event: 'staff' })
+  socket.frame('broadcast', { event: 'jobs' })
+  socket.frame('broadcast', { event: 'staff' }, undefined, 'realtime:other')
+  socket.frame('broadcast', { event: 'unrelated' })
+  connector.wake()
+  assert.equal(staffSignals, 3)
+  assert.equal(calls.length, 0)
+
+  const first = connector.syncStaff()
+  assert.equal(connector.syncStaff(), first)
+  assert.equal(await first, true)
+  assert.equal(calls.length, 21)
+  assert.equal(calls[0], null)
+  assert.equal(calls[20], rows[1_999].employeeId)
+  assert.equal(snapshots[0].length, 2_000)
+  assert.deepEqual(snapshots[0][0], { employeeId: rows[0].employeeId, shopName: 'Shop 1', state: 'busy' })
+
+  count = 2_001
+  assert.equal(await connector.syncStaff(), true)
+  assert.equal(snapshots[1], null)
+  repeatCursor = true
+  await assert.rejects(connector.syncStaff(), /invalid-Shop-staff-row/)
+  assert.equal(snapshots.length, 2)
+  await connector.stop()
+  assert.equal(stopped, true)
+  assert.equal(await connector.syncStaff(), false)
+  socket.frame('broadcast', { event: 'staff' })
+  assert.equal(staffSignals, 3)
 })
 
 async function waitFor(condition) {
@@ -162,6 +236,9 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
   const jobs = [jobFor(1)]
   const receipt = { sequence: 2, kind: 'receipt', invoiceId: '00000000-0000-4000-8000-000000000005' }
   let finishRetry
+  let admitted = false
+  let schedulingAllowed = false
+  let schedulerCalls = 0
 
   class FixtureSocket extends EventTarget {
     constructor(url) {
@@ -194,7 +271,18 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
     }
   }
 
-  const stop = startWorker(readConfig(env), {
+  const connector = startShopConnector(config, {
+    admit: () => admitted,
+    async run(action) {
+      schedulerCalls++
+      if (!schedulingAllowed) return false
+      await action()
+      return true
+    },
+    readDocs: async ({ signal }) => {
+      assert.equal(signal.aborted, false)
+      return 'Shop Suit v1.2.4 adds service search.'
+    },
     Socket: FixtureSocket,
     log: event => logs.push(event),
     inference: {
@@ -202,6 +290,10 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
         lifecycle.push('employee')
         assert.deepEqual(input.employee, { id: identity.employeeId, template: identity.employeeTemplate })
         assert.deepEqual(input.messages, messages)
+        assert.equal(input.docs, 'Shop Suit v1.2.4 adds service search.')
+        assert.equal(input.schema.additionalProperties, false)
+        assert.equal(input.signal.aborted, false)
+        assert.match(input.instructions, /original script/)
         if (input.feedback) {
           assert.equal(input.feedback, 'Clarify the confirmation.')
           assert.deepEqual(input.outcome, { kind: 'receipt' })
@@ -215,7 +307,11 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
         lifecycle.push('head-review')
         assert.deepEqual(input.head, { id: identity.headId, agentId: identity.headAgentId })
         assert.deepEqual(input.messages, messages)
+        assert.equal(input.docs, 'Shop Suit v1.2.4 adds service search.')
+        assert.equal(input.schema.additionalProperties, false)
+        assert.equal(input.signal.aborted, false)
         assert.deepEqual(input.outcome, { kind: 'receipt' })
+        assert.match(input.instructions, /Mariam/)
         const approve = input.intent.reply !== intent.reply
         return { approved: approve, feedback: approve ? null : 'Clarify the confirmation.' }
       },
@@ -224,7 +320,7 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
       const body = JSON.parse(request.body)
       const path = new URL(url).pathname
       if (path === '/auth/v1/token') {
-        assert.deepEqual(body, { email: env.SHOP_HQ_WORKER_EMAIL, password: env.SHOP_HQ_WORKER_PASSWORD })
+        assert.deepEqual(body, { email: config.email, password: config.password })
         return Response.json({ access_token: 'fixture-session', refresh_token: 'fixture-refresh', expires_in: 3600 })
       }
       assert.equal(request.headers.authorization, 'Bearer fixture-session')
@@ -279,11 +375,22 @@ test('Head assigns, employee publishes, executes, then Head batch reviews and re
       }
     },
   })
-  t.after(stop)
+  t.after(connector.stop)
 
   await waitFor(() => sockets.length === 1)
   assert.deepEqual(lifecycle, [])
   sockets[0].ready()
+  await delay(20)
+  assert.equal(schedulerCalls, 0)
+  assert.deepEqual(lifecycle, [])
+  admitted = true
+  connector.wake()
+  await waitFor(() => schedulerCalls === 1)
+  await delay(20)
+  assert.equal(schedulerCalls, 1)
+  assert.deepEqual(lifecycle, [])
+  schedulingAllowed = true
+  connector.wake()
   await waitFor(() => jobs[0].state === 'completed')
   const steps = ['head-dispatch', 'employee', 'employee-publish', 'worker-execute', 'head-review', 'employee', 'employee-publish', 'head-review']
   assert.deepEqual(lifecycle, steps)

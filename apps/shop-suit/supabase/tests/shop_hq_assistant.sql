@@ -1,7 +1,7 @@
 -- Synthetic accounts and jobs only. The Shop SQL runners roll back this file.
 create temporary table hq_assistant_accounts as
 select gen_random_uuid() as owner_id, gen_random_uuid() as outsider_id,
-  gen_random_uuid() as worker_id, gen_random_uuid() as other_worker_id, gen_random_uuid() as reader_id;
+  gen_random_uuid() as worker_id, gen_random_uuid() as other_worker_id;
 
 insert into auth.users (
   id, email, encrypted_password, aud, role, email_confirmed_at,
@@ -9,7 +9,7 @@ insert into auth.users (
 )
 select actor, actor::text || '@hq-assistant.invalid', 'x', 'authenticated', 'authenticated',
   now(), '{}'::jsonb, '{}'::jsonb, now(), now()
-from hq_assistant_accounts, unnest(array[owner_id, outsider_id, worker_id, other_worker_id, reader_id]) as account(actor);
+from hq_assistant_accounts, unnest(array[owner_id, outsider_id, worker_id, other_worker_id]) as account(actor);
 
 -- The SQL fixture invokes no provider scheduler. Hosted/local operators
 -- bootstrap technical accounts through the private registration routine.
@@ -19,8 +19,7 @@ select actor, true from hq_assistant_accounts, unnest(array[worker_id, other_wor
 select set_config('hq_test.owner', owner_id::text, true),
   set_config('hq_test.outsider', outsider_id::text, true),
   set_config('hq_test.worker', worker_id::text, true),
-  set_config('hq_test.other_worker', other_worker_id::text, true),
-  set_config('hq_test.reader', reader_id::text, true)
+  set_config('hq_test.other_worker', other_worker_id::text, true)
 from hq_assistant_accounts;
 
 select set_config('request.jwt.claim.sub', current_setting('hq_test.owner'), true),
@@ -28,7 +27,6 @@ select set_config('request.jwt.claim.sub', current_setting('hq_test.owner'), tru
 set local role authenticated;
 select set_config('hq_test.shop', public.create_owner_shop('HQ assistant fixture', 'mixed'::public.business_mode)::text, true);
 reset role;
-select shop_private.register_shop_hq_assistant_staff_reader(current_setting('hq_test.reader')::uuid,true);
 select set_config('hq_test.location', id::text, true)
   from public.shop_locations where shop_id = current_setting('hq_test.shop')::uuid and is_default;
 with branch as (
@@ -64,6 +62,8 @@ begin
     end if;
   end loop;
   if has_function_privilege('authenticated', 'shop_private.register_shop_hq_assistant_worker(uuid,boolean)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'shop_private.set_shop_hq_assistant_queue_enabled(uuid,boolean)', 'EXECUTE')
+    or has_function_privilege('service_role', 'shop_private.set_shop_hq_assistant_queue_enabled(uuid,boolean)', 'EXECUTE')
     or has_table_privilege('authenticated', 'shop_private.hq_assistant_jobs', 'SELECT')
     or has_table_privilege('service_role', 'shop_private.hq_assistant_jobs', 'SELECT') then
     raise exception 'Private HQ assistant queue or registration exposed';
@@ -76,7 +76,72 @@ begin
 end;
 $$;
 
+-- Staff notifications use the existing private topic and carry no shop data.
+do $$
+declare
+  v_shop uuid := current_setting('hq_test.shop')::uuid;
+  v_disposable_shop uuid;
+  v_count integer;
+begin
+  select count(*) into v_count from realtime.messages
+    where topic = 'shop-hq-assistant-jobs' and event = 'staff';
+  if v_count = 0 then raise exception 'Shop creation did not wake the staff publisher'; end if;
+  update public.shops set name = name where id = v_shop;
+  update public.shops set name = E'HQ assistant\nrename' where id = v_shop;
+  update public.shops set status = 'suspended' where id = v_shop;
+  update public.shops set name = E'HQ assistant\nfixture' where id = v_shop;
+  update public.shops set status = 'active' where id = v_shop;
+  insert into public.shops(portal_id,name)
+    select portal_id,'HQ staffing removal fixture' from public.shops where id = v_shop returning id into v_disposable_shop;
+  delete from public.shop_locations where shop_id = v_disposable_shop;
+  delete from public.shops where id = v_disposable_shop;
+  if (select count(*) from realtime.messages where topic = 'shop-hq-assistant-jobs' and event = 'staff') <> v_count + 5
+    or exists (select 1 from realtime.messages where topic = 'shop-hq-assistant-jobs' and event = 'staff'
+      and (not private or payload is distinct from jsonb_build_object('id',id))) then
+    raise exception 'Roster changes leaked data or woke the publisher at the wrong times';
+  end if;
+end;
+$$;
+
 select set_config('realtime.topic', 'shop-hq-assistant-jobs', true);
+select set_config('request.jwt.claim.sub', current_setting('hq_test.worker'), true);
+set local role authenticated;
+do $$
+declare v_rpc text;
+begin
+  if not public.shop_hq_assistant_can_receive() or not exists (
+    select 1 from realtime.messages where topic = 'shop-hq-assistant-jobs' and event = 'staff'
+  ) or jsonb_array_length(public.shop_hq_assistant_staff()) = 0 then
+    raise exception 'Staff-only worker lost roster or private Realtime access';
+  end if;
+  foreach v_rpc in array array['shop_hq_assistant_dispatch','shop_hq_assistant_claim',
+    'shop_hq_assistant_sale_claim','shop_hq_assistant_review_claim'] loop
+    begin
+      execute format('select public.%I()',v_rpc);
+      raise exception 'Staff-only worker could call %',v_rpc;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+end;
+$$;
+select set_config('request.jwt.claim.sub', current_setting('hq_test.owner'), true);
+do $$
+declare v_shop uuid := current_setting('hq_test.shop')::uuid;
+begin
+  perform public.shop_hq_assistant_authorize(v_shop,true);
+  begin
+    perform public.shop_hq_assistant_enqueue(v_shop,current_setting('hq_test.location')::uuid,
+      gen_random_uuid(),'[{"role":"user","content":"Blocked while only roster is enabled"}]');
+    raise exception 'Staff-only setup activated the owner queue';
+  exception when object_not_in_prerequisite_state then
+    if sqlerrm <> 'SHOP_HQ_ASSISTANT_QUEUE_DISABLED' then raise; end if;
+  end;
+  perform public.shop_hq_assistant_authorize(v_shop,false);
+end;
+$$;
+reset role;
+select shop_private.set_shop_hq_assistant_queue_enabled(current_setting('hq_test.worker')::uuid,true);
+select shop_private.set_shop_hq_assistant_queue_enabled(current_setting('hq_test.other_worker')::uuid,true);
 set local role authenticated;
 do $$
 declare
@@ -267,20 +332,23 @@ begin
 end;
 $$;
 
-select set_config('request.jwt.claim.sub', current_setting('hq_test.reader'), true);
 do $$
-declare v_staff jsonb;
+declare
+  v_employee_id uuid := current_setting('hq_test.employee')::uuid;
+  v_staff jsonb;
 begin
-  v_staff := public.shop_hq_assistant_staff();
-  if not exists (
-    select 1 from jsonb_array_elements(v_staff) item
-    where item->>'employeeId' = current_setting('hq_test.employee') and item->>'state' = 'busy'
-  ) then raise exception 'Head staffing status did not show a busy per-Shop employee'; end if;
-  begin
-    perform public.shop_hq_assistant_dispatch();
-    raise exception 'Staff reader could dispatch a job';
-  exception when insufficient_privilege then null;
-  end;
+  select item into v_staff from jsonb_array_elements(public.shop_hq_assistant_staff()) item
+  where item->>'employeeId' = v_employee_id::text;
+  if v_staff is distinct from jsonb_build_object('employeeId',v_employee_id,
+    'employeeTemplate','shop-suit-agent-v1','shopId',current_setting('hq_test.shop'),
+    'shopName','HQ assistant fixture','state','busy')
+    or exists (
+      select 1 from jsonb_array_elements(public.shop_hq_assistant_staff(v_employee_id,1)) item
+      where (item->>'employeeId')::uuid <= v_employee_id
+    )
+    or jsonb_array_length(public.shop_hq_assistant_staff(null,1)) > 1 then
+    raise exception 'Worker staffing projection or cursor incorrect';
+  end if;
 end;
 $$;
 
@@ -293,6 +361,11 @@ declare
   v_job uuid := current_setting('hq_test.job')::uuid;
   v_reply jsonb;
 begin
+  begin
+    perform public.shop_hq_assistant_staff();
+    raise exception 'Shop owner read the cross-shop staffing roster';
+  exception when insufficient_privilege then null;
+  end;
   v_reply := public.shop_hq_assistant_job(v_shop, v_location, v_job);
   if v_reply is distinct from '{"state":"completed","updates":[{"sequence":1,"kind":"reply","text":"حاضر"}],"reviewPending":true}'::jsonb
     or public.shop_hq_assistant_recent(v_shop,v_location)->0->>'ownerMessage' is distinct from 'عميل اسمه احمد محمد عمل شعر ودقن'
@@ -311,6 +384,11 @@ $$;
 select set_config('request.jwt.claim.sub', current_setting('hq_test.outsider'), true);
 do $$
 begin
+  begin
+    perform public.shop_hq_assistant_staff();
+    raise exception 'Unregistered account read the staffing roster';
+  exception when insufficient_privilege then null;
+  end;
   if public.shop_hq_assistant_can_receive_owner(current_setting('realtime.topic'))
     or exists (select 1 from realtime.messages where topic = current_setting('realtime.topic')) then
     raise exception 'Outsider could join the owner reply topic';
@@ -424,6 +502,24 @@ end;
 $$;
 reset role;
 
+-- Queue-only disablement keeps roster access and requires explicit re-enable.
+select shop_private.set_shop_hq_assistant_queue_enabled(current_setting('hq_test.worker')::uuid,false);
+select shop_private.set_shop_hq_assistant_queue_enabled(current_setting('hq_test.other_worker')::uuid,false);
+set local role authenticated;
+do $$
+begin
+  if not public.shop_hq_assistant_can_receive() or jsonb_array_length(public.shop_hq_assistant_staff()) = 0 then
+    raise exception 'Queue disablement removed roster access';
+  end if;
+  begin
+    perform public.shop_hq_assistant_claim();
+    raise exception 'Queue-disabled worker retained job authority';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+reset role;
+
 -- Test the DB admission switch and one-day deletion without waiting on Cron.
 select shop_private.register_shop_hq_assistant_worker(current_setting('hq_test.worker')::uuid, false);
 select shop_private.register_shop_hq_assistant_worker(current_setting('hq_test.other_worker')::uuid, false);
@@ -433,6 +529,11 @@ begin
   if public.shop_hq_assistant_can_receive() then
     raise exception 'Disabled worker kept Realtime authority';
   end if;
+  begin
+    perform public.shop_hq_assistant_staff();
+    raise exception 'Disabled worker read the staffing roster';
+  exception when insufficient_privilege then null;
+  end;
   perform set_config('request.jwt.claim.sub', current_setting('hq_test.owner'), true);
   begin
     perform public.shop_hq_assistant_enqueue(current_setting('hq_test.shop')::uuid,

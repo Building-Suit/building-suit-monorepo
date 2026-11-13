@@ -7,8 +7,8 @@ insert into auth.users (id, email, encrypted_password, aud, role, email_confirme
 select actor, actor::text || '@hq-sale.invalid', 'x', 'authenticated', 'authenticated', now(), '{}', '{}', now(), now()
 from hq_service_fixture, unnest(array[owner_id, worker_id, other_worker_id]) person(actor);
 
-insert into shop_private.hq_assistant_workers(auth_user_id, enabled)
-select actor, true from hq_service_fixture, unnest(array[worker_id, other_worker_id]) person(actor);
+insert into shop_private.hq_assistant_workers(auth_user_id, enabled, queue_enabled)
+select actor, true, true from hq_service_fixture, unnest(array[worker_id, other_worker_id]) person(actor);
 
 select set_config('hq_sale.owner', owner_id::text, true), set_config('hq_sale.worker', worker_id::text, true),
   set_config('hq_sale.other_worker', other_worker_id::text, true) from hq_service_fixture;
