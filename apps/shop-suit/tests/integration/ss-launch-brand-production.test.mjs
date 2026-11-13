@@ -19,7 +19,7 @@ test('production Shop serves canonical public assets and renders the Shop favico
     await import(new URL('apps/shop-suit/.output/server/index.mjs', root))
     const chunkUrl = new URL('apps/shop-suit/.output/server/chunks/nitro/nitro.mjs', root)
     const source = await readFile(chunkUrl, 'utf8')
-    const exportName = source.match(/useNitroApp as (\w+)/)?.[1]
+    const exportName = source.match(/\buseNitroApp as ([$\w]+)\s*[,}]/u)?.[1]
     assert.ok(exportName, 'built Nitro exposes its request pipeline')
     const chunk = await import(chunkUrl)
     app = chunk[exportName]()

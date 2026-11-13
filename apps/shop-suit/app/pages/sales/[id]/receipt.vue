@@ -14,7 +14,7 @@ const receiptTranslate = useReceiptTranslation()
 const saleId = computed(() => String(route.params.id ?? ''))
 const chosenLanguage = ref<'en' | 'ar' | null>(null)
 const paperSize = ref<ReceiptPaperSize>('thermal_80')
-const printed = ref(route.query.origin !== 'pos')
+const printed = ref(route.query.origin !== 'pos' && route.query.origin !== 'assistant')
 const { sharing, shareError, shareReceipt, downloadReceiptImage } = useSaleReceiptShare()
 
 const { data: receipt, pending, error, refresh } = useShopQuery(

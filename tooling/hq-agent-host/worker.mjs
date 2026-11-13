@@ -5,14 +5,14 @@ import { maintenanceGate, checkApiContract, checkStaffingContract } from './main
 import { spawn } from 'node:child_process'
 import { createHash, createSign, randomUUID } from 'node:crypto'
 import { mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, realpath } from 'node:fs/promises'
-import { createReadStream } from 'node:fs'
+import { constants, createReadStream } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { delimiter, isAbsolute, join, resolve } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createWorkforceRoster, managerForAgent, modelTierForAgent, validateStaffingProfileDraft } from './workforceRoster.mjs'
 import { createBrainPublisher } from './brainPublisher.mjs'
-import { workerExecutionBlock, discoveryMcpConfig, DISCOVERY_MCP_TOOL, DISCOVERY_MCP_POLICY, DISCOVERY_RETAIL_POLICY, DISCOVERY_RETAIL_CATEGORIES, researchDiscoveryTrialAllowed, supervisedTrialAllowed, discoveryResultSources, repositoryMcpConfig, repositoryToolResult, PUBLIC_REPOSITORY_POLICY, repositoryTrialAllowed, PUBLIC_REPOSITORY_TOOL as PUBLIC_REPOSITORY_MCP_TOOL } from './departmentWorkflow.mjs'
+import { MAX_DOC_BYTES, readShopConnectorConfig, startShopConnector, workerExecutionBlock, discoveryMcpConfig, DISCOVERY_MCP_TOOL, DISCOVERY_MCP_POLICY, DISCOVERY_RETAIL_POLICY, DISCOVERY_RETAIL_CATEGORIES, researchDiscoveryTrialAllowed, supervisedTrialAllowed, discoveryResultSources, repositoryMcpConfig, repositoryToolResult, PUBLIC_REPOSITORY_POLICY, repositoryTrialAllowed, PUBLIC_REPOSITORY_TOOL as PUBLIC_REPOSITORY_MCP_TOOL } from './departmentWorkflow.mjs'
 
 /** Narrow official Resend HTTPS adapter. No account-admin MCP or model secret.
  * Only an explicitly approved connection test can reach this code. */
@@ -375,6 +375,61 @@ async function privateDirectory(directory) {
   const info = await stat(directory)
   requireValue(info.isDirectory() && (info.mode & 0o077) === 0 && (!process.getuid || info.uid === process.getuid()), 'private-state-directory-required')
 }
+
+const SHOP_BY_HQ_PROJECT = {
+  'https://dpruoncalmwicrqhqelu.supabase.co': 'https://jvvelvftpfnlogalgxgv.supabase.co',
+  'https://nkpvskyugnnnozepbwzb.supabase.co': 'https://fgdzjnsbcxfbiuogbmom.supabase.co',
+}
+const SHOP_BRAIN_SOURCES = [
+  '1t5KTpZe9QZQY3CFuVHvoxyktclKVLhO0', // Shop Suit product reference
+  '1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY', // Shop Suit Agents charter
+  '1dRw5dB5BmuCOw8pI8sHZ72yKxWl9nNmj', // Department Head
+  '13_y6A2QU36G5ehOL1nZIjAb5yEGjoMOC', // Shop employee template
+  '1_rsYjekX3bLtGFewKCG4cZrtX_7WW51b', // Dispatch and batch review
+  '14cEuByYfJyLt5Rv53zy7E09rUTMNuO63', // Shop service sale and reply
+]
+
+/** Opt in with the existing service's private state directory. No shell,
+ * provider credential, arbitrary document ID or cross-project JWT reuse. */
+export async function shopConnectorSettings(config) {
+  let file
+  try {
+    file = await open(join(config.state, 'shop-connector.json'), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
+  } catch (error) {
+    if (error.code === 'ENOENT') return null
+    throw problem('shop-connector-configuration-invalid')
+  }
+  try {
+    const info = await file.stat()
+    requireValue(info.isFile() && (info.mode & 0o077) === 0 && info.size <= 8192
+      && (!process.getuid || info.uid === process.getuid()), 'shop-connector-configuration-invalid')
+    const bytes = Buffer.alloc(8193)
+    const { bytesRead } = await file.read(bytes)
+    requireValue(bytesRead === info.size, 'shop-connector-configuration-invalid')
+    const input = record(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, bytesRead))))
+    requireValue(input && Object.keys(input).sort().join(',') === 'email,key,password'
+      && typeof input.password === 'string' && input.password.length >= 24
+      && typeof input.email === 'string' && input.email.toLowerCase() !== config.email?.toLowerCase()
+      && input.password !== config.password, 'shop-connector-configuration-invalid')
+    return readShopConnectorConfig({ ...input, url: SHOP_BY_HQ_PROJECT[config.url] })
+  } catch {
+    throw problem('shop-connector-configuration-invalid')
+  } finally { await file.close() }
+}
+
+/** Use HQ's existing ancestry/revision checks and only the approved Shop notes. */
+export function shopBrainReader(brain) {
+  return async ({ signal }) => {
+    const files = await brain({ brain_files: SHOP_BRAIN_SOURCES.map(id => ({ id })) }, signal)
+    requireValue(Array.isArray(files) && files.length === SHOP_BRAIN_SOURCES.length
+      && files.every((file, index) => file?.id === SHOP_BRAIN_SOURCES[index]
+        && typeof file.name === 'string' && typeof file.text === 'string' && file.text.trim()), 'shop-brain-unavailable')
+    const text = files.map(file => file.name + '\n' + file.text).join('\n\n')
+    requireValue(Buffer.byteLength(text) <= MAX_DOC_BYTES, 'shop-brain-context-too-large')
+    return text
+  }
+}
+
 function journalStore(config) {
   const path = id => { requireValue(UUID.test(id), 'invalid-job'); return join(config.state, id + '.json') }
   return {
@@ -1297,6 +1352,10 @@ export async function start(adapters = {}) {
   const invoke = adapters.invoke || invokeCodex
   const roster = adapters.roster || createWorkforceRoster({ readBrain: brain, rpc: (name, body) => api.rpc(name, body) })
   const publisher = createBrainPublisher(config)
+  let shopConfig = null
+  try { shopConfig = await shopConnectorSettings(config) }
+  catch { log('shop-connector-configuration-invalid') }
+  let shop, shopStaffDirty = false, shopStaffTimer, shopStaffPublishing, shopWorking = false
   const managed = process.env.HQ_RELEASE_MANAGED === '1'
   let release = null
   if (managed) {
@@ -1373,7 +1432,7 @@ export async function start(adapters = {}) {
           }
           if (command.action === 'resume') {
             requireValue(ready && activeJobs === 0, 'release-not-ready')
-            gate.resume(); requestDrain()
+            gate.resume(); requestDrain(); shop?.wake(); scheduleShopStaff()
           }
           requireValue(['drain', 'status', 'resume'].includes(command.action), 'invalid-control')
           client.end(JSON.stringify({ protocol: 1, pid: process.pid, release, ready, activeJobs, contract: ready ? 2 : null, ...gate.snapshot() }) + '\n')
@@ -1386,6 +1445,55 @@ export async function start(adapters = {}) {
   let socket, connected = false, joinedChannel = false, replicationReady = false, stopping = false, connecting = false, drainRequested = false, draining = null
   let sequence = 0, joinRef, pendingHeartbeat, connectionFailures = 0
   let reconnectTimer, heartbeatTimer, presenceTimer, joinTimer, wakeTimer
+  function shopAdmitting() {
+    const status = gate.snapshot()
+    return connected && !stopping && !draining && !status.paused && !status.uncertain && !status.busy
+  }
+  function scheduleShopStaff() {
+    if (!shopStaffDirty || shopStaffTimer || shopStaffPublishing || !shopAdmitting()) return
+    shopStaffTimer = setTimeout(() => {
+      shopStaffTimer = undefined
+      if (!shopAdmitting()) return
+      shopStaffDirty = false
+      shopStaffPublishing = gate.run(async () => {
+        try { await shop.syncStaff() }
+        catch { log('shop-staff-sync-unavailable') }
+      }).finally(() => {
+        shopStaffPublishing = undefined
+        if (drainRequested) requestDrain()
+        shop?.wake()
+        scheduleShopStaff()
+      })
+    }, 750)
+  }
+  function connectShop() {
+    if (shop || !shopConfig || stopping) return
+    try {
+      shop = startShopConnector(shopConfig, {
+        inference: adapters.shopInference,
+        readDocs: shopBrainReader(brain),
+        admit: shopAdmitting,
+        run: async action => {
+          if (!shopAdmitting()) return false
+          shopWorking = true
+          try { return await gate.run(action) }
+          finally {
+            shopWorking = false
+            if (drainRequested) requestDrain()
+            scheduleShopStaff()
+          }
+        },
+        publishStaff: async staff => {
+          requireValue(accepted(await api.rpc('hq_worker_sync_shop_staff', {
+            p_worker_id: config.id, p_staff: staff,
+          })), 'shop-staff-sync-rejected')
+        },
+        staffChanged: () => { shopStaffDirty = true; scheduleShopStaff() },
+        log: event => log('shop-' + event),
+      })
+      if (!adapters.shopInference) log('shop-staff-only')
+    } catch { log('shop-connector-unavailable') }
+  }
   const send = (event, payload, topic = TOPIC, ref = String(++sequence)) => {
     if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ topic, event, payload, ref, ...(topic === TOPIC ? { join_ref: joinRef } : {}) }))
     return ref
@@ -1540,7 +1648,7 @@ export async function start(adapters = {}) {
   }
   function requestDrain() {
     drainRequested = true
-    if (!connected || stopping || draining || gate.snapshot().paused || gate.snapshot().uncertain) return
+    if (!connected || stopping || draining || shopWorking || shopStaffPublishing || gate.snapshot().paused || gate.snapshot().uncertain) return
     draining = gate.run(async () => {
       // Flush intent before any recovery/roster/claim/publication side effect.
       // A process crash can lose a claim response even before a job journal exists.
@@ -1552,6 +1660,8 @@ export async function start(adapters = {}) {
     }).catch(error => { log(codeOf(error)); reconnect() }).finally(() => {
       draining = null
       if (connected && drainRequested && !stopping && !gate.snapshot().paused) requestDrain()
+      shop?.wake()
+      scheduleShopStaff()
     })
   }
   async function presence() {
@@ -1561,8 +1671,19 @@ export async function start(adapters = {}) {
   function queueReady() {
     if (connected || !joinedChannel || !replicationReady || stopping) return
     clearTimeout(joinTimer); rosterDirty = true; connected = true; connectionFailures = 0; log('queue-connected')
-    void gate.run(presence).catch(() => {}); presenceTimer = setInterval(() => { if (connected) void gate.run(presence).catch(() => {}) }, 60_000)
+    void checkPresence()
+    presenceTimer = setInterval(() => { if (connected) void checkPresence() }, 60_000)
     requestDrain()
+    connectShop()
+    scheduleShopStaff()
+  }
+  async function checkPresence() {
+    try { await gate.run(presence) } catch { /* Reconnect handles a failed heartbeat. */ }
+    finally {
+      if (drainRequested) requestDrain()
+      shop?.wake()
+      scheduleShopStaff()
+    }
   }
   async function connect() {
     if (connecting || stopping) return
@@ -1612,8 +1733,11 @@ export async function start(adapters = {}) {
   async function stop() {
     if (stopping) return
     gate.pause(); stopping = true; connected = false; clearTimeout(reconnectTimer); clearTimeout(wakeTimer); clearTimeout(joinTimer)
+    clearTimeout(shopStaffTimer)
     clearInterval(heartbeatTimer); clearInterval(presenceTimer)
     try { socket?.close() } catch { /* No listener remains. */ }
+    await shop?.stop()
+    await shopStaffPublishing
     await draining
     while (gate.snapshot().busy) await wait(50)
     api.stop(); control?.close(); log('worker-stopped')

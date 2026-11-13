@@ -20,8 +20,10 @@ test('all four policies have aligned EN/AR sections, metadata and revision dates
         for (const value of section[field] ?? []) assert.ok(value.trim())
       }
     })
-    assert.equal(en.updated, key === 'privacy' ? '15 October 2026' : ['terms','refund'].includes(key) ? '14 October 2026' : '13 October 2026')
-    assert.equal(ar.updated, key === 'privacy' ? '15 أكتوبر 2026' : ['terms','refund'].includes(key) ? '14 أكتوبر 2026' : '13 أكتوبر 2026')
+    const revision = key === 'privacy' || key === 'terms'
+      ? ['13 November 2026', '13 نوفمبر 2026']
+      : key === 'refund' ? ['14 October 2026', '14 أكتوبر 2026'] : ['13 October 2026', '13 أكتوبر 2026']
+    assert.deepEqual([en.updated, ar.updated], revision)
   }
 })
 

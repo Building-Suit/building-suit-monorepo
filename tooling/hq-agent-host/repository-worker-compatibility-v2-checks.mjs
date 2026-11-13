@@ -1,17 +1,22 @@
 /** Identical synthetic compatibility assertions for PGlite and fixed native PostgreSQL. */
 import assert from 'node:assert/strict'
-import { readFile, mkdtemp, readdir, copyFile, writeFile, rm } from 'node:fs/promises'
+import { readFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { randomUUID } from 'node:crypto'
+import { checkRepositoryWorkerCompatibility as checkProductionWorker, invokeCodex as invokeProductionWorker } from './worker.mjs'
 import {
- root,worker,hash,setFutureWorker,repositoryFixture,
+ root,worker,hash,setFutureWorker,repositoryFixture,materializeLegacyWorker,
  compatibilityMigration,historicalWorkerDigest,compatibleWorkerDigest,fixedModuleDigest,
  repositoryWork,repositoryItem,output,entryFor,delivery,finishReviews,scalar,transaction,rejects,freeze,sourcePreset,sourceSha,
 } from './public-repository-db-fixture.mjs'
 
 const candidateDigest='7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40'
+const parallelDigest='d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9'
+const parallelMigration=new URL('20261112140052_hq_bounded_employee_parallelism.sql',root)
+const emailCompatibilityMigration=new URL('20261113070000_hq_resend_test_worker_compatibility.sql',root)
+const shopCompatibilityMigration=new URL('20261113023924_hq_shop_suit_worker_compatibility.sql',root)
 async function preparedVersion(filename,digest){
  const directory=await mkdtemp(join(tmpdir(),'hq-compatibility-v2-'))
  try{
@@ -20,10 +25,7 @@ async function preparedVersion(filename,digest){
   const release=await readFile(new URL('./release.py',import.meta.url),'utf8')
   assert.deepEqual(release.match(/^FILES = \((.+)\)$/m)?.[1]?.match(/'[^']+'/g)?.map(value=>value.slice(1,-1)),
    ['worker.mjs','workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs','departmentWorkflow.mjs'],'release excludes inert fixtures')
-  for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs'){
-   await copyFile(new URL(file,import.meta.url),join(directory,file))
-  }
-  await writeFile(join(directory,'worker.mjs'),bytes)
+  await materializeLegacyWorker(directory,bytes)
   const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
   return{...module,invoke:module.invokeCodex,close:()=>rm(directory,{recursive:true,force:true})}
  }catch(error){await rm(directory,{recursive:true,force:true});throw error}
@@ -95,7 +97,7 @@ export async function verifyRepositoryWorkerCompatibilityV2({database=null,histo
   const candidateOutput=await output(candidate.j,{repository:true,events:[wire.event],invoke:invokeCodex})
   assert.equal(hash(await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url))),candidateDigest)
   assert.equal(candidateOutput.modelBindingEvidence.workerSourceDigest,candidateDigest)
-  assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
+  assert.equal(candidateOutput.modelBindingEvidence.publicRepositoryPolicy.moduleSha256,fixedModuleDigest)
   const validate=proof=>scalar(h,'select hq_private.repository_validate_host(j,$2::jsonb,true) from public.hq_agent_jobs j where j.id=$1',[candidate.j.id,JSON.stringify(proof)])
   await assert.rejects(()=>validate(candidateOutput.modelBindingEvidence),/HQ_REPOSITORY_HOST_INVALID/)
   const beforeMigrationStatus=await status(h),beforeHistory=await history(h),sql=await readFile(migration,'utf8')
@@ -239,13 +241,69 @@ export async function verifyRepositoryWorkerCompatibilityV2({database=null,histo
   assert.deepEqual(await ready(h,candidate.trial,candidateArtifact),{source:false,review:false})
   await h.as('founder');assert.deepEqual(await h.rpc('hq_issue_repository_qualification',[legacy.trial.trialId]),qualification)
   report('Exact current bytes, legacy evidence/status, qualification separation, drift guards and worker-first rollback verified in the disposable database.')
+  await testStep('Shop connector admits the exact new pair without expanding qualification',async()=>{
+   await h.db.exec('reset role')
+   await h.db.exec(sql)
+   await h.db.exec(await readFile(parallelMigration,'utf8'))
+   const baseline=await status(h)
+   const productionPair=await verifyReviewedProductionWorker()
+   const newWire=repositoryItem(candidate.j)
+   const newOutput=await output(candidate.j,{repository:true,events:[newWire.event],invoke:invokeProductionWorker})
+   assert.equal(newOutput.modelBindingEvidence.workerSourceDigest,productionPair.workerSourceDigest)
+   assert.equal(newOutput.modelBindingEvidence.publicRepositoryPolicy.moduleSha256,productionPair.moduleSha256)
+   await assert.rejects(()=>checkProductionWorker(baseline),/repository-worker-incompatible/)
+   await assert.rejects(()=>validate(newOutput.modelBindingEvidence),/HQ_REPOSITORY_HOST_INVALID/)
+   const before=await history(h)
+   const beforeShopDefinitions=await definitions(h),beforeShopMetadata=await metadata(h)
+   const connectorSql=await readFile(shopCompatibilityMigration,'utf8')
+   const source=beforeShopDefinitions.get(modified[1])
+   await h.db.exec('begin')
+   try{
+    await h.db.exec(source.definition.replace(source.source,()=>source.source+'\n'))
+    await assert.rejects(()=>h.db.exec(connectorSql),/HQ_SHOP_CONNECTOR_SOURCE_PREDECESSOR_MISMATCH/)
+   }finally{await h.db.exec('rollback')}
+   assert.deepEqual(await definitions(h),beforeShopDefinitions)
+   assert.deepEqual(await status(h),baseline,'refusal must also roll back the pair addition')
+   await h.db.exec('reset role')
+   await h.db.exec(connectorSql)
+   const shopAccepted=await status(h)
+   const shopPair={workerSourceDigest:'ba4a8a2323f088dbadec551710896247dddec6e4863ac1a49eff8711a74ba572',moduleSha256:'ee1485139fca3bff250c72266b269a4261d0097852437eb353f3f8e3099b8e58'}
+   assert.deepEqual(shopAccepted.repositoryWorkerCompatibilityV2.sourcePairs,[...baseline.repositoryWorkerCompatibilityV2.sourcePairs,shopPair])
+   await assert.rejects(()=>checkProductionWorker(shopAccepted),/repository-worker-incompatible/)
+   assert.deepEqual(await metadata(h),beforeShopMetadata)
+   await h.db.exec('reset role')
+   await h.db.exec(await readFile(emailCompatibilityMigration,'utf8'))
+   const accepted=await status(h)
+   assert.deepEqual(accepted.repositoryWorkerCompatibilityV2.sourcePairs,[...shopAccepted.repositoryWorkerCompatibilityV2.sourcePairs,productionPair])
+   assert.equal(accepted.emailConnectionTests,1)
+   assert.deepEqual(accepted.repositoryWorkerCompatibility,baseline.repositoryWorkerCompatibility)
+   const afterShopDefinitions=await definitions(h)
+   assert.deepEqual(afterShopDefinitions.get(modified[4]),beforeShopDefinitions.get(modified[4]),'qualification issuance remains byte-identical')
+   await assert.doesNotReject(()=>checkProductionWorker(accepted))
+   await assert.doesNotReject(()=>prepared.checkRepositoryWorkerCompatibility(accepted))
+   await validate(newOutput.modelBindingEvidence)
+   await validate(candidateOutput.modelBindingEvidence)
+   for(const pair of [
+    {workerSourceDigest:productionPair.workerSourceDigest,moduleSha256:fixedModuleDigest},
+    {workerSourceDigest:parallelDigest,moduleSha256:productionPair.moduleSha256},
+   ]){
+    const allowed=await scalar(h,'select hq_private.repository_worker_pair_allowed_v2($1,$2) allowed',[pair.workerSourceDigest,pair.moduleSha256])
+    assert.equal(allowed.allowed,false,'a worker and workflow from separate releases cannot be combined')
+   }
+   await transaction(h,()=>rejects(h,async()=>{await h.as('founder');return h.rpc('hq_issue_repository_qualification',[candidate.trial.trialId])},/HQ_REPOSITORY_QUALIFICATION_WORKER_REQUIRED/))
+   assert.deepEqual(await history(h),before,'admitting the connector leaves historical receipts and qualification unchanged')
+  })
  }finally{await h?.db.close();await prepared.close();await old?.close();await candidateWorker.close()}
 }
 
 export async function verifyReviewedProductionWorker(){
  const production=await readFile(new URL('./worker.mjs',import.meta.url))
- assert.equal(hash(production),'a49e872084b0a1373fa0f70f7b0e122f58aa32e88af25695cfcff56a960d5c14','worker deployment must use the exact reviewed and SQL-admitted email-test candidate')
  assert.equal(hash(await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url))),candidateDigest,'historical v2 fixture remains immutable')
- assert.ok((await readFile(new URL('20261112213001_hq_resend_test_worker_compatibility.sql',root),'utf8')).includes(hash(production)))
- assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
+ const pair={workerSourceDigest:hash(production),moduleSha256:hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url)))}
+ const migration=await readFile(emailCompatibilityMigration,'utf8')
+ assert.deepEqual([...migration.matchAll(/'workerSourceDigest','([a-f0-9]{64})',\s*'moduleSha256','([a-f0-9]{64})'/g)].at(-1)?.slice(1),
+  [pair.workerSourceDigest,pair.moduleSha256],'worker deployment must use the exact reviewed and SQL-admitted Shop connector pair')
+ assert.notEqual(pair.workerSourceDigest,parallelDigest)
+ assert.notEqual(pair.moduleSha256,fixedModuleDigest)
+ return pair
 }

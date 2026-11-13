@@ -228,9 +228,11 @@ const { selectedId: focusedTargetId, select: focusTarget, clear: clearFocus, ref
 const brainVisible = computed(() => focusedTargetId.value === 'brain')
 const selectedWorkplaceId = computed(() => focusedTargetId.value?.startsWith('workplace:') ? focusedTargetId.value.slice(10) : null)
 const selectedWorkplace = computed(() => availableWorkplaces.value.find(workplace => workplace.id === selectedWorkplaceId.value) ?? null)
+const externalOfficeRoster = computed(() => Boolean(props.departments?.find(department => department.id === selectedWorkplaceId.value)?.externalRoster))
 const selectedWorkplaceAgents = computed<readonly HqAgentPresentation[]>(() => {
   if (!selectedWorkplace.value) return []
   if (selectedWorkplace.value.executive) return agentsState.value.agents.filter(agent => agent.role === 'ceo')
+  if (externalOfficeRoster.value) return agentsState.value.agents.filter(agent => agent.departmentId === selectedWorkplaceId.value)
   const assigned = officeLayout.value.offices.find(office => office.id === selectedWorkplaceId.value)?.agents
   return (assigned ?? agentsState.value.agents.filter(agent => agent.departmentId === selectedWorkplaceId.value)).map<HqAgentPresentation>(agent =>
     agentsState.value.agents.find(runtime => runtime.id === agent.id) ?? { id: agent.id, name: agent.name, role: 'agent', departmentId: selectedWorkplaceId.value, deskIndex: null, activity: 'unknown' })
@@ -262,7 +264,8 @@ const coverTeam = computed(() => teamVisible.value && Boolean(selectedAgent.valu
   && (compactWorkspace.value || viewportSize.value.width <= 760))
 const officeCopy = computed(() => props.content.workplaces.office)
 const officeTabs = computed(() => officeCopy.value ? [
-  { value: 'overview', label: officeCopy.value.overview }, { value: 'tasks', label: props.content.agents?.workforce?.tasksLabel ?? officeCopy.value.runningTasks },
+  { value: 'overview', label: officeCopy.value.overview },
+  ...(externalOfficeRoster.value ? [] : [{ value: 'tasks', label: props.content.agents?.workforce?.tasksLabel ?? officeCopy.value.runningTasks }]),
   { value: 'calendar', label: officeCopy.value.calendar }, { value: 'settings', label: officeCopy.value.settings },
 ] : [])
 const officeRosterKnown = computed(() => selectedWorkplace.value?.executive ? agentsState.value.status === 'connected' : officeLayout.value.offices.find(office => office.id === selectedWorkplaceId.value)?.agents !== undefined)
@@ -666,7 +669,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
             <template v-if="founderAccess.status !== 'founder' && (officeSection === 'overview' || officeSection === 'tasks')"><BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email,password) => emit('login',email,password)" @register="(email,password) => emit('register',email,password)" /></template>
             <template v-else-if="officeSection === 'overview'">
               <p v-if="agentsState.pending" class="bs-hq-layout__workplace-description" role="status">{{ officeCopy.loading }}</p>
-              <BsHqOfficeOverview :agents="selectedWorkplaceAgents" :observations="officeRosterKnown ? agentsState.observations : undefined" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" @select-agent="openAgent" />
+              <BsHqOfficeOverview :agents="selectedWorkplaceAgents" :observations="officeRosterKnown && !externalOfficeRoster ? agentsState.observations : undefined" :copy="officeCopy" :locale="content.agents?.locale" :tasks="externalOfficeRoster ? undefined : agentsState.officeTasks" @select-agent="openAgent" />
             </template>
             <section v-else-if="officeSection === 'tasks'" class="bs-hq-layout__office-tasks">
               <BsHqTaskBrowser v-if="agentsState.status === 'connected' && taskSource && content.agents?.workforce?.taskBrowser && officeRosterKnown" :key="selectedWorkplace.id" :source="taskSource" :revision="agentsState.taskBrowserRevision" :copy="content.agents.workforce.taskBrowser" :agents="agentsState.agents" :office-id="selectedWorkplace.executive ? 'executive' : selectedWorkplace.id" :locale="content.agents.locale" @select="openRecord('task', $event.id, $event.title)" />

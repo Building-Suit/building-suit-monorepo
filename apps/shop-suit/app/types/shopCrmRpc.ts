@@ -1,4 +1,26 @@
 // Product RPC contract for the dedicated Shop project public schema.
+type ShopHqAssistantAccess = { enabled: boolean; agentName: 'Shop Suit Agent' }
+type ShopHqAssistantMessage = { role: 'user' | 'assistant'; content: string }
+type ShopHqAssistantIntent =
+  | { kind: 'reply'; customerName: null; customerPhone: null; services: []; paymentMethod: null; paidAmount: null; paymentReceived: false; reply: string }
+  | { kind: 'service_sale'; customerName: string; customerPhone: string | null; services: string[]; paymentMethod: 'cash' | 'card' | 'transfer' | null; paidAmount: number | null; paymentReceived: boolean; reply: string }
+type ShopHqAssistantClarification =
+  | { kind: 'customer_missing' | 'customer_ambiguous' | 'service_missing' | 'service_ambiguous'; query: string }
+  | { kind: 'payment_missing'; total: number; currency: string }
+  | { kind: 'cash_shift_required' | 'sale_details_required' | 'sale_unavailable' }
+  | { kind: 'amount_mismatch'; total: number; currency: string }
+type ShopHqAssistantAction =
+  | { sequence: number; kind: 'receipt'; invoiceId: string }
+  | { sequence: number; kind: 'clarification'; outcome: ShopHqAssistantClarification }
+type ShopHqAssistantJob = {
+  state: 'queued' | 'working' | 'completed' | 'failed' | 'expired' | 'revoked'
+  updates: ({ sequence: number; kind: 'reply'; text: string } | ShopHqAssistantAction)[]
+  reviewPending: boolean
+}
+type ShopHqAssistantEmployee = { employeeId: string; employeeTemplate: 'shop-suit-agent-v1' }
+type ShopHqAssistantHead = { headId: string; headAgentId: 'AG-SHOP-001' }
+type ShopHqAssistantLease = { jobId: string; leaseToken: string }
+
 export type ShopRpcDatabase = {
   public: {
     Tables: Record<string, never>
@@ -840,6 +862,70 @@ export type ShopRpcDatabase = {
           p_expected_location_name: string
         }
         Returns: string
+      }
+      shop_hq_assistant_access: {
+        Args: { p_shop_id: string }
+        Returns: ShopHqAssistantAccess
+      }
+      shop_hq_assistant_authorize: {
+        Args: { p_shop_id: string; p_enabled: boolean }
+        Returns: ShopHqAssistantAccess
+      }
+      shop_hq_assistant_enqueue: {
+        Args: { p_shop_id: string; p_location_id: string; p_request_id: string; p_messages: ShopHqAssistantMessage[] }
+        Returns: { jobId: string }
+      }
+      shop_hq_assistant_job: {
+        Args: { p_shop_id: string; p_location_id: string; p_job_id: string }
+        Returns: ShopHqAssistantJob
+      }
+      shop_hq_assistant_recent: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: (ShopHqAssistantJob & { jobId: string; requestId: string; ownerMessage: string | null })[]
+      }
+      shop_hq_assistant_can_receive: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      shop_hq_assistant_can_receive_owner: {
+        Args: { p_topic: string }
+        Returns: boolean
+      }
+      shop_hq_assistant_dispatch: {
+        Args: Record<string, never>
+        Returns: (ShopHqAssistantEmployee & ShopHqAssistantHead & { jobId: string }) | null
+      }
+      shop_hq_assistant_claim: {
+        Args: Record<string, never>
+        Returns: (ShopHqAssistantLease & ShopHqAssistantEmployee & {
+          messages: ShopHqAssistantMessage[]; feedback: string | null; outcome: ShopHqAssistantAction | null
+        }) | null
+      }
+      shop_hq_assistant_finish: {
+        Args: { p_job_id: string; p_lease_token: string; p_intent: ShopHqAssistantIntent | null; p_succeeded: boolean }
+        Returns: boolean
+      }
+      shop_hq_assistant_sale_claim: {
+        Args: Record<string, never>
+        Returns: ShopHqAssistantLease | null
+      }
+      shop_hq_assistant_execute_sale: {
+        Args: { p_job_id: string; p_lease_token: string }
+        Returns: { kind: 'receipt'; invoiceId: string } | ShopHqAssistantClarification
+      }
+      shop_hq_assistant_review_claim: {
+        Args: Record<string, never>
+        Returns: (ShopHqAssistantLease & ShopHqAssistantEmployee & ShopHqAssistantHead & {
+          messages: ShopHqAssistantMessage[]; intent: ShopHqAssistantIntent; outcome: ShopHqAssistantAction | null
+        })[]
+      }
+      shop_hq_assistant_review_finish: {
+        Args: { p_job_id: string; p_lease_token: string; p_approved: boolean; p_feedback: string | null }
+        Returns: boolean
+      }
+      shop_hq_assistant_staff: {
+        Args: { p_after_employee_id?: string | null; p_limit?: number }
+        Returns: (ShopHqAssistantEmployee & { shopId: string; shopName: string; state: 'idle' | 'busy' })[]
       }
       void_expense: {
         Args: {

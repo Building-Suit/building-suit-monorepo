@@ -122,14 +122,14 @@ test('new signed worker pair preserves predecessor pairs and exact module; drift
  const h=await fixture()
  try{
   await h.db.exec('reset role')
-  const old=[{workerSourceDigest:'7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'},{workerSourceDigest:'a49e872084b0a1373fa0f70f7b0e122f58aa32e88af25695cfcff56a960d5c14',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'}]
+  const old=[{workerSourceDigest:'7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'},{workerSourceDigest:'d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'},{workerSourceDigest:'ba4a8a2323f088dbadec551710896247dddec6e4863ac1a49eff8711a74ba572',moduleSha256:'ee1485139fca3bff250c72266b269a4261d0097852437eb353f3f8e3099b8e58'}]
   await h.db.exec(`create function hq_private.repository_worker_pairs_v2() returns jsonb language sql immutable security invoker set search_path='' as $$select '${JSON.stringify(old)}'::jsonb$$`)
-  const sql=await readFile(new URL('20261112213001_hq_resend_test_worker_compatibility.sql',root),'utf8')
+  const sql=await readFile(new URL('20261113070000_hq_resend_test_worker_compatibility.sql',root),'utf8')
   await h.db.exec(sql)
   const pairs=(await h.db.query('select hq_private.repository_worker_pairs_v2() p')).rows[0].p
-  assert.deepEqual(pairs.slice(0,2),old)
+  assert.deepEqual(pairs.slice(0,3),old)
   const {createHash}=await import('node:crypto');const sha=async file=>createHash('sha256').update(await readFile(new URL(file,import.meta.url))).digest('hex')
-  assert.deepEqual(pairs[2],{workerSourceDigest:await sha('./worker.mjs'),moduleSha256:await sha('./departmentWorkflow.mjs')})
+  assert.deepEqual(pairs[3],{workerSourceDigest:await sha('./worker.mjs'),moduleSha256:await sha('./departmentWorkflow.mjs')})
   await assert.rejects(()=>h.db.exec(sql),/PREDECESSOR_MISMATCH/);await h.db.exec('rollback')
  }finally{await h.db.close()}
 })

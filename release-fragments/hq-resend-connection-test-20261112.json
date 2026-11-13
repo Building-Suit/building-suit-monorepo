@@ -23,7 +23,7 @@
     "apps/company-hq/server/utils/hqAgents.ts",
     "apps/company-hq/server/utils/hqEmailTests.ts",
     "apps/company-hq/supabase/migrations/20261112213000_hq_resend_connection_test.sql",
-    "apps/company-hq/supabase/migrations/20261112213001_hq_resend_test_worker_compatibility.sql",
+    "apps/company-hq/supabase/migrations/20261113070000_hq_resend_test_worker_compatibility.sql",
     "apps/company-hq/supabase/staging-migration-parity.json",
     "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
     "apps/company-hq/tests/browser/email-connection-component.mjs",

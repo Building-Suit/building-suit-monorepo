@@ -6469,5 +6469,177 @@
       "tooling/database/test-shop-local.mjs"
     ],
     "reason": "Shared chat presentation, route registration, database contracts, dependency locking and verification support the owner workflow in Shop Suit."
+  },
+  {
+    "id": "shop-hq-assigned-agent",
+    "task": "SS-HQ-ASSIGNED-AGENT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/.env.example",
+      "apps/shop-suit/app/composables/useShopAssistant.ts",
+      "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+      "apps/shop-suit/app/pages/assistant.vue",
+      "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+      "apps/shop-suit/app/utils/legal.ts",
+      "apps/shop-suit/app/utils/shopAssistantCopy.ts",
+      "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/nuxt.config.ts",
+      "apps/shop-suit/server/api/assistant/hq",
+      "apps/shop-suit/server/utils/shopAssistantRequest.ts",
+      "apps/shop-suit/server/utils/shopHqAssistant.ts",
+      "apps/shop-suit/supabase/migrations/20261113001708_shop_hq_assistant_queue.sql",
+      "apps/shop-suit/supabase/migrations/20261113015713_shop_hq_assistant_workforce.sql",
+      "apps/shop-suit/supabase/migrations/20261113015737_shop_hq_assistant_service_sales.sql"
+    ],
+    "reason": "A Building Suit employee handles owner-authorized Shop Suit requests, posts results in chat, and sends the printable receipt for a completed service sale.",
+    "notes": {
+      "title": {
+        "en": "Building Suit shop agent",
+        "ar": "مساعد المتجر من Building Suit"
+      },
+      "summary": {
+        "en": "Ask Building Suit to record a paid service sale and send its receipt in chat.",
+        "ar": "اطلب من Building Suit تسجيل عملية بيع خدمة مدفوعة وإرسال الإيصال في المحادثة."
+      },
+      "details": {
+        "en": "Where the managed agent is available, owners can authorize Building Suit to handle service sale requests. When Shop Suit can verify the details and payment, the employee posts a link to the printable receipt. Follow-up corrections appear in the same chat.",
+        "ar": "عند توفر المساعد المُدار، يقدر صاحب المتجر يفوّض Building Suit لتنفيذ طلبات بيع الخدمات. لما Shop Suit يتحقق من التفاصيل والدفع، الموظف يرسل رابط الإيصال القابل للطباعة. أي تصحيح بعد المراجعة يظهر في نفس المحادثة."
+      }
+    },
+    "sources": [
+      "shop-hq-assigned-agent"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/server/api/assistant/hq/requests.post.ts",
+        "contains": "scope.client.rpc('shop_hq_assistant_enqueue', {"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useShopAssistant.ts",
+        "contains": "/receipt?origin=assistant"
+      }
+    ]
+  },
+  {
+    "id": "shop-hq-assigned-agent-support",
+    "task": "SS-HQ-ASSIGNED-AGENT",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/company-hq/app/composables/useHqShopSuitStaff.ts",
+      "apps/company-hq/app/pages/index.vue",
+      "apps/company-hq/server/api/hq/shop-suit-staff.get.ts",
+      "apps/company-hq/shared/shopSuitStaff.ts",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/app/types/shopCrmRpc.ts",
+      "apps/shop-suit/playwright.assistant.config.ts",
+      "apps/shop-suit/playwright.hq-assistant.config.ts",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/tests",
+      "docs/shared/ui-ownership-manifest.json",
+      "package.json",
+      "packages/ui/src/templates/BsAssistantChatPage.vue",
+      "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "packages/ui/src/types/assistantChatPresentation.ts",
+      "packages/ui/src/types/hqLayoutPresentation.ts",
+      "release-changes/items.json",
+      "tooling/database/test-shop-local.mjs",
+      "apps/company-hq/supabase/migrations/20261113023602_hq_shop_suit_staff_snapshot.sql",
+      "apps/company-hq/supabase/migrations/20261113023924_hq_shop_suit_worker_compatibility.sql",
+      "apps/company-hq/supabase/staging-migration-parity.json",
+      "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+      "apps/company-hq/tests/unit/shop-suit-staff-bff.test.mjs",
+      "apps/company-hq/tests/unit/shop-suit-staff-db.test.mjs",
+      "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+      "tooling/hq-agent-host/departmentWorkflow.mjs",
+      "tooling/hq-agent-host/shopConnector.test.mjs",
+      "tooling/hq-agent-host/worker.mjs",
+      "tooling/hq-agent-host/public-repository-db-fixture.mjs",
+      "tooling/hq-agent-host/public-repository-db.test.mjs",
+      "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
+      "tooling/hq-agent-host/test-fixtures/README.md",
+      "tooling/hq-agent-host/test-fixtures/repository-legacy-departmentWorkflow.mjs.txt",
+      "apps/company-hq/tests/browser/workforce-fixture.ts",
+      "packages/testing/e2e/palette.spec.ts",
+      "tooling/hq-shop-agent-host"
+    ],
+    "reason": "Shared chat and HQ office presentation, private staffing metadata, database contracts and verification support the Shop Suit rollout."
+  },
+  {
+    "id": "shop-assistant-branch-sales-without-gateway",
+    "task": "SS-ASSISTANT-STAGING-REPAIR",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/server/api/assistant/chat.post.ts",
+      "apps/shop-suit/server/utils/shopAssistantBranchSales.ts",
+      "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs"
+    ],
+    "reason": "The assistant answers explicit daily branch sales questions from the authorized Shop report when the external model is unavailable.",
+    "notes": {
+      "title": {
+        "en": "Daily sales in Shop assistant",
+        "ar": "مبيعات اليوم في مساعد المتجر"
+      },
+      "summary": {
+        "en": "Ask the assistant for today’s sales at the selected branch, even when the AI provider is unavailable.",
+        "ar": "اسأل المساعد عن مبيعات اليوم في الفرع المحدد حتى لو مزوّد الذكاء الاصطناعي مش متاح."
+      },
+      "details": {
+        "en": "The assistant uses the branch report for direct daily sales questions in English and Egyptian Arabic and links to Reports.",
+        "ar": "المساعد بيرد على الأسئلة المباشرة عن مبيعات اليوم بالإنجليزي والعربي المصري من تقرير الفرع، وبيفتح لك رابط التقارير."
+      }
+    },
+    "sources": [
+      "shop-assistant-branch-sales-without-gateway"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/server/api/assistant/chat.post.ts",
+        "contains": "const branchSales = await tryShopAssistantBranchSales(scope, input.messages)"
+      },
+      {
+        "path": "apps/shop-suit/server/utils/shopAssistantBranchSales.ts",
+        "contains": "const report = await getAssistantOperatingReport(scope, 'day')"
+      }
+    ]
+  },
+  {
+    "id": "shop-assistant-branch-sales-support",
+    "task": "SS-ASSISTANT-STAGING-REPAIR",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
+      "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "The report fixtures verify branch scope and actual sales totals, and the release inventory records the Shop assistant change."
   }
 ]

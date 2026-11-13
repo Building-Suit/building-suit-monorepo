@@ -109,11 +109,16 @@ const { agents, trialCommand, send: sendCeoMessage, refresh: refreshAgents } = u
   lifecycle: value => agentLabel('lifecycles', value), connection: value => agentLabel('connections', value),
 }))
 const { presentation: emailConnection, command: emailConnectionCommand } = useHqEmailConnectionTest(() => access.value)
+const shopStaff = useHqShopSuitStaff(() => access.value.status === 'founder')
+function refreshWorkforce() {
+  void refreshAgents()
+  void shopStaff.refresh()
+}
 const labeledAgents = computed<HqAgentsPresentation>(() => ({
   ...agents.value,
-  agents: agents.value.agents.map(agent => ({ ...agent,
+  agents: [...agents.value.agents, ...shopStaff.agents.value].map(agent => ({ ...agent,
     avatar: hqAvatarForAgent(agent.id),
-    roleLabel: employeeRoleLabel(agent), activityLabel: t(`hq.agents.activities.${agent.activity}`),
+    roleLabel: employeeRoleLabel(agent), activityLabel: agent.activityLabel ?? t(`hq.agents.activities.${agent.activity}`),
     departmentName: localizedDepartments.value.find(department => department.id === agent.departmentId)?.name
       ?? (agent.role === 'ceo' ? companyPlansCopy.value.executiveLabel : agent.departmentName ? agentLabel('departments', agent.departmentName) : undefined),
   })),
@@ -227,7 +232,10 @@ const agentsContent = computed<HqAgentsContent>(() => ({
     loadingLabel: t('hq.agents.workforce.loadingLabel'), unavailableLabel: t('hq.agents.workforce.unavailableLabel'),
   },
 }))
-const localizedDepartments = computed<readonly HqDepartmentOffice[]>(() => departments.value.map(department => ({
+const localizedDepartments = computed<readonly HqDepartmentOffice[]>(() => [
+  ...departments.value,
+  ...(shopStaff.department.value ? [shopStaff.department.value] : []),
+].map(department => ({
   ...department,
   name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name,
 })))
@@ -355,4 +363,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :email-connection="emailConnection" @email-connection-command="emailConnectionCommand" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :email-connection="emailConnection" @email-connection-command="emailConnectionCommand" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshWorkforce" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>

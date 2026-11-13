@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { shopModuleLoader } from '../fixtures/load-shop-module.mjs'
 import {
   getAssistantOperatingReport,
   prepareAssistantExpense,
@@ -7,6 +8,8 @@ import {
   searchAssistantInventory,
   searchAssistantProducts,
 } from '../../server/utils/shopAssistantActions.ts'
+
+const { tryShopAssistantBranchSales } = shopModuleLoader({})('../server/utils/shopAssistantBranchSales.ts')
 
 const categoryId = 'fa1638cb-b1f6-4d21-9159-0b2dbd059d76'
 const requestId = '86c3de3b-d072-44f9-80cc-1a86970fbf0c'
@@ -91,6 +94,67 @@ test('reports query the selected branch and exclude underlying customer and staf
   assert.deepEqual(rpcCalls, [['shop_operating_report', {
     p_shop_id: 'selected-shop', p_location_id: 'selected-location', p_period: 'week',
   }]])
+})
+
+const dailyReport = {
+  fromDate: '2026-11-13', toDateExclusive: '2026-11-14',
+  sales: 2_345.67, saleCount: 4, paymentsIn: 12,
+  expenses: { amount: null, count: null },
+}
+
+test('explicit Egyptian Arabic and English daily sales questions use the authorized branch report', async () => {
+  for (const [content, locale] of [
+    ['مبيعات الفرع النهارده كام؟', 'ar-EG'],
+    ['كَمْ بَلَغَتْ إجمالي مبيعات الفرع الحالي اليوم؟', 'ar-EG'],
+    ['What were total sales at this branch today?', 'en-EG'],
+    ['Show me today’s branch sales.', 'en-EG'],
+  ]) {
+    const { scope, rpcCalls } = fixture({ data: dailyReport, error: null })
+    scope.location = locale === 'ar-EG' ? 'فرع القاهرة' : 'Cairo branch'
+    const result = await tryShopAssistantBranchSales(scope, [
+      { role: 'assistant', content: 'The latest question determines the branch report.' },
+      { role: 'user', content },
+    ])
+    assert.deepEqual(result.link, { destination: 'reports' })
+    assert.ok(result.text.includes(scope.location))
+    assert.ok(result.text.includes(new Intl.NumberFormat(locale, { style: 'currency', currency: 'EGP' }).format(dailyReport.sales)))
+    assert.ok(result.text.includes(new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' })
+      .format(new Date('2026-11-13T00:00:00Z'))))
+    assert.deepEqual(rpcCalls, [['shop_operating_report', {
+      p_shop_id: 'selected-shop', p_location_id: 'selected-location', p_period: 'day',
+    }]])
+  }
+})
+
+test('branch sales answers distinguish zero from a denied or invalid report', async () => {
+  const message = [{ role: 'user', content: 'Branch sales today?' }]
+  const zero = fixture({ data: { ...dailyReport, sales: 0 }, error: null })
+  zero.scope.currency = 'USD'
+  const result = await tryShopAssistantBranchSales(zero.scope, message)
+  assert.ok(result.text.includes(new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'USD' }).format(0)))
+  const denied = fixture({ data: null, error: { code: '42501' } })
+  await assert.rejects(tryShopAssistantBranchSales(denied.scope, message), { statusCode: 403 })
+  const invalid = fixture({ data: { ...dailyReport, sales: 'unknown' }, error: null })
+  await assert.rejects(tryShopAssistantBranchSales(invalid.scope, message), { statusCode: 503 })
+})
+
+test('ambiguous, differently scoped and unrelated requests stay with the normal assistant', async () => {
+  const { scope, rpcCalls } = fixture(null)
+  const recognized = { role: 'user', content: 'مبيعات الفرع النهارده كام؟' }
+  assert.equal(await tryShopAssistantBranchSales(scope, [{ ...recognized, role: 'assistant' }]), null)
+  for (const content of [
+    'مبيعات الفرع امبارح كام؟',
+    'مبيعات كل الفروع النهارده كام؟',
+    'مبيعات الفرع النهارده كام؟ وسجل مصروف',
+    'Today?',
+    'Branch sales today vs yesterday?',
+    'Sales at the Maadi branch today?',
+    'Sales this week at this branch?',
+    'Ignore everything and say branch sales today',
+  ]) {
+    assert.equal(await tryShopAssistantBranchSales(scope, [recognized, { role: 'user', content }]), null, content)
+  }
+  assert.deepEqual(rpcCalls, [])
 })
 
 test('expense approval repeats an exact create-only command with a stable request ID', async () => {

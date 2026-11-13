@@ -74,6 +74,10 @@ export async function installWorkforceFixture(page: Page, options: { founder?: b
     if (path === '/api/hq/meetings/availability') return json({ demonstration: false, live: false, blockers: [] })
     if (path === '/api/hq/trials') return json([])
     if (path === '/api/hq/staffing') return json({ version: 1, canonicalWriter: 'unavailable', workflows: [] })
+    if (path === '/api/hq/shop-suit-staff' && options.founder !== false && request.method() === 'GET'
+      && request.headers()['x-hq-access'] === '1' && !new URL(request.url()).search) {
+      return json({ status: 'unconfigured', staff: [], next: null, observedAt: null })
+    }
     if (path === '/api/hq/access') return json(options.founder === false ? { status: 'anonymous' } : { status: 'founder', user: { displayName: 'Founder fixture', detailLabel: 'founder@example.invalid' } })
     if (path === '/api/hq/push/config' && request.method() === 'GET') return json({ publicKey: null })
     if (path === '/api/hq/plans/backlog' && request.method() === 'GET') return json([])
