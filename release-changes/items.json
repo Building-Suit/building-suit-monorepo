@@ -6578,5 +6578,68 @@
       "tooling/hq-shop-agent-host"
     ],
     "reason": "Shared chat and HQ office presentation, private staffing metadata, database contracts and verification support the Shop Suit rollout."
+  },
+  {
+    "id": "shop-assistant-branch-sales-without-gateway",
+    "task": "SS-ASSISTANT-STAGING-REPAIR",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/server/api/assistant/chat.post.ts",
+      "apps/shop-suit/server/utils/shopAssistantBranchSales.ts",
+      "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs"
+    ],
+    "reason": "The assistant answers explicit daily branch sales questions from the authorized Shop report when the external model is unavailable.",
+    "notes": {
+      "title": {
+        "en": "Daily sales in Shop assistant",
+        "ar": "مبيعات اليوم في مساعد المتجر"
+      },
+      "summary": {
+        "en": "Ask the assistant for today’s sales at the selected branch, even when the AI provider is unavailable.",
+        "ar": "اسأل المساعد عن مبيعات اليوم في الفرع المحدد حتى لو مزوّد الذكاء الاصطناعي مش متاح."
+      },
+      "details": {
+        "en": "The assistant uses the branch report for direct daily sales questions in English and Egyptian Arabic and links to Reports.",
+        "ar": "المساعد بيرد على الأسئلة المباشرة عن مبيعات اليوم بالإنجليزي والعربي المصري من تقرير الفرع، وبيفتح لك رابط التقارير."
+      }
+    },
+    "sources": [
+      "shop-assistant-branch-sales-without-gateway"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/server/api/assistant/chat.post.ts",
+        "contains": "const branchSales = await tryShopAssistantBranchSales(scope, input.messages)"
+      },
+      {
+        "path": "apps/shop-suit/server/utils/shopAssistantBranchSales.ts",
+        "contains": "const report = await getAssistantOperatingReport(scope, 'day')"
+      }
+    ]
+  },
+  {
+    "id": "shop-assistant-branch-sales-support",
+    "task": "SS-ASSISTANT-STAGING-REPAIR",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
+      "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "The report fixtures verify branch scope and actual sales totals, and the release inventory records the Shop assistant change."
   }
 ]

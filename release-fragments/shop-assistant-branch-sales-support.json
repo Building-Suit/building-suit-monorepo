@@ -1,0 +1,20 @@
+{
+  "id": "shop-assistant-branch-sales-support",
+  "task": "SS-ASSISTANT-STAGING-REPAIR",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
+    "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "The report fixtures verify branch scope and actual sales totals, and the release inventory records the Shop assistant change."
+}
