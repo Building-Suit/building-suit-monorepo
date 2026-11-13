@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
-import {authenticatedWorkerFixture,worker,founder,workerUser,workerSession,session,root} from './public-repository-db-fixture.mjs'
+import {authenticatedWorkerFixture,worker,founder,session,root} from './public-repository-db-fixture.mjs'
 import {EMAIL_TEST_SENDER,EMAIL_TEST_DOMAIN_ID,emailTestDigest,emailTestConfigured,runApprovedEmailTest,drainApprovedEmailTest} from './worker.mjs'
 const env={HQ_RESEND_TEST_ENABLED:'1',HQ_RESEND_SENDING_KEY:'re_synthetic_test_key_not_real',HQ_RESEND_DOMAIN_ID:EMAIL_TEST_DOMAIN_ID,HQ_RESEND_KEY_PERMISSION:'sending_access'}
 const message={sender:EMAIL_TEST_SENDER,recipient:'recipient@example.invalid',subject:'Internal connection test',body:'Synthetic Arabic مرحبا test. No customer outreach.'}
@@ -122,7 +122,7 @@ test('new signed worker pair preserves predecessor pairs and exact module; drift
  const h=await fixture()
  try{
   await h.db.exec('reset role')
-  const old=[{workerSourceDigest:'7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'},{workerSourceDigest:'d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'}]
+  const old=[{workerSourceDigest:'7096b79833132b46cefbe464738a9f3671acbd29666e7dcbc8c3761573783c40',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'},{workerSourceDigest:'a49e872084b0a1373fa0f70f7b0e122f58aa32e88af25695cfcff56a960d5c14',moduleSha256:'bd27db64a57f547c608dc552a25fa7196d33bf908392da82659e91941c1a1976'}]
   await h.db.exec(`create function hq_private.repository_worker_pairs_v2() returns jsonb language sql immutable security invoker set search_path='' as $$select '${JSON.stringify(old)}'::jsonb$$`)
   const sql=await readFile(new URL('20261112213001_hq_resend_test_worker_compatibility.sql',root),'utf8')
   await h.db.exec(sql)
