@@ -1,8 +1,8 @@
 import { useShopMutation } from './useShopMutation'
 import { useShopQueryCache } from './useShopQueryCache'
 
-const privateReads = new Set(['/api/website/customer-portal', '/api/website/booking/options', '/api/website/booking/manage', '/api/website/booking/slots'])
-/** Cookie-authenticated website reads remain nonpersistent and are revalidated on every request. */
+const privateReads = new Set(['/api/website/catalog', '/api/website/customer-portal', '/api/website/booking/options', '/api/website/booking/manage', '/api/website/booking/slots'])
+/** Website transport reads are nonpersistent and revalidated per request; private cookies stay scoped to their endpoints. */
 export function useShopRequest() {
   const request = useRequestFetch()
   const queries = useShopQueryCache()

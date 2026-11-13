@@ -1,0 +1,9 @@
+{
+  "id": "hq-company-plans-board-20261108",
+  "task": "HQ-COMPANY-PLANS-BOARD-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/organisms/BsHqPlanBoard.vue", "packages/ui/src/templates/BsHqLayoutPage.vue", "apps/company-hq/app/pages/index.vue", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ moves Learning into the Brain sidebar and presents existing company and staffing proposals on a Kanban board with record details. Local source only, with browser verification and publication unrun."
+}

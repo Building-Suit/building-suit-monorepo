@@ -1,0 +1,14 @@
+{
+  "id": "doctor-reception-integration-diagnostic-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+    "apps/doctor-suit/tests/operations-browser-evidence.mjs",
+    "apps/doctor-suit/tests/unit/operations-browser-evidence.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/reception-integration-diagnostic-2026-10-29.md"
+  ],
+  "reason": "Bounded, fixed-schema reception failure diagnostics and exact-source consolidation evidence. Preserves failed acceptance, original assertions and deadlines; exposes no credentials, form values, markup, arbitrary exception text or domain approval. No product behavior or public release registration changes."
+}

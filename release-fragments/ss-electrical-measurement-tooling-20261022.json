@@ -1,0 +1,21 @@
+{
+  "id": "ss-electrical-measurement-tooling-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/database/test-shop-local.mjs",
+    "tooling/database/test-shop-measurement-local.mjs",
+    "tooling/database/shop-measurement-schema-disposable.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Add measurement SQL checks to the existing fixed local Shop runner and maintain private release provenance. Shared tooling bookkeeping changes no other product behavior or entitlements."
+}

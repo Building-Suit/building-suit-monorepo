@@ -1,5 +1,7 @@
 # Supplier accrual subledger — V2-IMP-009
 
+2026-10-22 update: native independent-session **AP retries and overlapping allocations passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Status: implemented locally for review on 2026-09-25. Not deployed, not hosted-verified, and not accountant-accepted.
 
 ## Approved policy and boundary

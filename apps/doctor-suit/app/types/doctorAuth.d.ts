@@ -1,3 +1,15 @@
+import type { createPracticeFinancialReportController } from '../utils/practiceFinancialReportController'
+import type { createPracticeMoneyController } from '../utils/practiceMoneyController'
+import type { createPracticeBillingController } from '../utils/practiceBillingController'
+import type{createOperationalReportReader}from'../utils/operationalReports'
+import type{createImportController}from'../utils/syntheticImport'
+import type{createFulfillmentController}from'../utils/operationalFulfillment'
+import type{createMessageOutboxReader}from'../utils/messageOutbox'
+import type{createContactPreferencesController}from'../utils/contactPreferencesController'
+import type{createWorklistsController}from'../utils/worklistsController'
+import type{createWaitlistController}from'../utils/waitlistController'
+import type {createConsultationsController} from '../utils/consultationsController'
+import type {createClinicalReleaseController} from '../utils/clinicalReleaseController'
 import type{createManualReportController}from'../utils/manualReconciliationController'
 import type{createManualPaymentController}from'../utils/manualPaymentController'
 import type { createDoctorAuditController } from '../utils/auditController'
@@ -12,8 +24,22 @@ import type { createDoctorTeamController } from '../utils/teamController'
 import type { createDoctorInvitationController } from '../utils/invitationController'
 import type { createDoctorPatientsController } from '../utils/patientsController'
 import type { DoctorLocationContext } from '../utils/locationContext'
+import type { createClinicalController } from '../utils/clinicalController'
 declare module '#app' {
   interface NuxtApp {
+    $doctorOperationalReports:ReturnType<typeof createOperationalReportReader>
+    $doctorImportPreview:ReturnType<typeof createImportController>
+    $doctorFulfillment:ReturnType<typeof createFulfillmentController>
+    $doctorFinancialReport: ReturnType<typeof createPracticeFinancialReportController>
+    $doctorPracticeMoney: ReturnType<typeof createPracticeMoneyController>
+    $doctorPracticeBilling: ReturnType<typeof createPracticeBillingController>
+    $doctorOutbox: ReturnType<typeof createMessageOutboxReader>
+    $doctorContactPreferences:ReturnType<typeof createContactPreferencesController>
+    $doctorWorklists:ReturnType<typeof createWorklistsController>
+    $doctorWaitlist:ReturnType<typeof createWaitlistController>
+    $doctorConsultations:ReturnType<typeof createConsultationsController>
+    $doctorClinicalRelease:ReturnType<typeof createClinicalReleaseController>
+    $doctorClinical:ReturnType<typeof createClinicalController>
     $doctorManualReport: ReturnType<typeof createManualReportController>
     $doctorManualPayment: ReturnType<typeof createManualPaymentController>
     $doctorAudit: ReturnType<typeof createDoctorAuditController>

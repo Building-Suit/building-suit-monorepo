@@ -1,0 +1,462 @@
+{
+  "task": "DOS-M4-002",
+  "status": "latest executed sourcef655 has API36 background/resume failure; priorf297 passed both required emulators; actual foreground-transition observations added for fresh CI",
+  "source_candidate": "Each retained CI receipt binds its own exact source head and APK digest; this packet does not grant aggregate acceptance.",
+  "command": "node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
+  "runner": "GitHub-owned disposable Android emulator",
+  "planned_api_levels": [
+    29,
+    36
+  ],
+  "planned_cases": [
+    "cold-launch-signed-out",
+    "cold-deep-link-signed-out",
+    "hardware-back-workspace",
+    "background-resume-signed-out",
+    "unknown-deep-link-denied"
+  ],
+  "apk_binding": [
+    "sourceHead",
+    "apkSha256",
+    "debug variant",
+    "synthetic application ID"
+  ],
+  "execution_artifact": "doctor-android-device-<api>-<head>/device-<api>.json",
+  "physical_device_evidence": false,
+  "clinical_approval": false,
+  "offline_clinical_approval": false,
+  "store_upload": false,
+  "acceptance": "latest native matrix failed at sourcef655; historicalf297 synthetic pass retained; physical/qualified/task acceptance open",
+  "first_execution": {
+    "source_head": "c08fc8b018453823699912efbd29661f9f5e275a",
+    "run_id": 39852312601,
+    "android_build": "failed during android-actions/setup-android@v3; full log diagnosis pending completed run archive",
+    "apk_compiled": false,
+    "device_runs": "skipped because compilation/setup failed",
+    "acceptance": false
+  },
+  "diagnosed_execution": {
+    "source_head": "8ac87d7600303942f21cc7caf775add47ddb66f9",
+    "run_id": 39853801884,
+    "result": "failed before APK compilation",
+    "cause": "setup-android@v3 defaults to tools platform-tools; sdkmanager reports Failed to find package tools",
+    "fix": "explicit supported platform-tools package; compile platform36/build-tools36 remain mandatory",
+    "apk_compiled": false,
+    "device_cases": "unrun; dependent job skipped",
+    "acceptance": false
+  },
+  "compiled_execution": {
+    "source_head": "40e593e1e3100809f1e7d285a25202e7c4735443",
+    "run_id": 39854146344,
+    "android_build_job": 120087831655,
+    "apk_compilation": "passed",
+    "api29": {
+      "job": 120089162652,
+      "result": "failed at cold-launch-signed-out; subsequent cases unrun"
+    },
+    "api36": {
+      "job": 120089162578,
+      "result": "first four sequential cases passed; unknown-deep-link-denied failed"
+    },
+    "aggregate_acceptance": false,
+    "followup": "retain rejected destination across lifecycle retry; add bounded engine/category diagnostics; both API cases remain mandatory"
+  },
+  "runtime_receipts": {
+    "run_id": 39855576196,
+    "source_head": "a384d7bed8019941553e758f981cb68ec104015d",
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "a384d7bed8019941553e758f981cb68ec104015d",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "3c34a804a0065114554c5e89a3d624f60d25ab9dc432ceeb48dcd4e61472f4af",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "a384d7bed8019941553e758f981cb68ec104015d",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "3c34a804a0065114554c5e89a3d624f60d25ab9dc432ceeb48dcd4e61472f4af",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-launch-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "aggregate_acceptance": false,
+    "limitation": "API36/WebView133 passes five synthetic journeys. API29/WebView74 fails cold launch; four cases remain unrun. No narrower OS/renderer claim, replaced matrix, physical evidence or clinical approval is invented."
+  },
+  "latest_runtime_receipts": {
+    "run_id": 39857297615,
+    "source_head": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+    "android_build_job": 120098716790,
+    "build": "passed",
+    "device_jobs": {
+      "29": 120100452656,
+      "36": 120100452702
+    },
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "ad7c29074848e34dd1a60136d21a334e9f8a222861872b0ef529dcc194bb55c6",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "ad7c29074848e34dd1a60136d21a334e9f8a222861872b0ef529dcc194bb55c6",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-launch-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "aggregate_acceptance": false,
+    "limitation": "Fresh hierarchy observations confirm API36/WebView133 passes all five cases; API29/WebView74 fails cold launch, four cases unrun. Visible package/WebView and no fixed client issue category do not identify a confirmed root cause. Mandatory matrix unchanged; no physical/qualified/clinical approval."
+  },
+  "verified_runtime_receipts": {
+    "run_id": 40015081233,
+    "source_head": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+    "android_build_job": 120625132272,
+    "device_jobs": {
+      "29": 120626171302,
+      "36": 120626171167
+    },
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "4bff8322b5b0c2c57648f480b00eb1eb474418e00338fa4df8de6e2455012660",
+        "api": 29,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "4bff8322b5b0c2c57648f480b00eb1eb474418e00338fa4df8de6e2455012660",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "emulator_matrix_acceptance": true,
+    "task_acceptance": false,
+    "limitation": "Five signed-out synthetic navigation/lifecycle cases pass on both planned emulators. No native sign-in, physical device, visual/accessibility qualification, clinical/offline/distribution or milestone acceptance."
+  },
+  "latest_execution_followup": {
+    "source_head": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+    "run_id": 40017225361,
+    "build": "passed",
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "51e94d08e82e8ae29d2697244fee9063c863ef4032ba706fa9793a7ca5930fb1",
+        "api": 29,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "51e94d08e82e8ae29d2697244fee9063c863ef4032ba706fa9793a7ca5930fb1",
+        "api": 36,
+        "accepted": false,
+        "stage": "background-resume-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": false,
+          "syntheticPackageVisible": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "aggregate_acceptance": false,
+    "observation": "API29 passes five; API36 passes firstthree then background/resume fails, leaving denial unrun. Final hierarchy has neither owned package nor WebView; no fixed client error is captured. Exact cause not proven.",
+    "followup": "Require an observed non-owned foreground after the single HOME event, then observed owned foreground after the single resume launch. Keep all five cases; bounded observation is not an action retry."
+  }
+}

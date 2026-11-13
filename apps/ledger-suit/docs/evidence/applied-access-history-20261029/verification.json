@@ -1,0 +1,58 @@
+{
+  "task": "LEDGER-HISTORY-20261029",
+  "observed_at": "2026-10-29T13:37:45.731338+00:00",
+  "parent_ledger_sha": "2b5ffe8aa655f299303f064ac0cc95dbbe61e334",
+  "native_project": "ledger-access-history-20261029",
+  "database_port": 60922,
+  "postgres_version": "17.6",
+  "supabase_cli": "2.116.0",
+  "provider_sql_shims": false,
+  "api_services_started": false,
+  "migrations": {
+    "count": 109,
+    "manifest_sha256": "63eafe13decafb4dcc1980b34e8e43035af83fc4ccac7e90e27559f672ed5acd",
+    "prior_108_files_unchanged": true,
+    "clean_local_replay": "pass"
+  },
+  "before_restoration_sql": {
+    "files": 66,
+    "assertions": 1996,
+    "result": "pass"
+  },
+  "focused_access_contract": {
+    "files": 1,
+    "assertions": 12,
+    "result": "pass"
+  },
+  "final_clean_sql": {
+    "files": 67,
+    "assertions": 2008,
+    "wall_seconds": 21,
+    "result": "pass"
+  },
+  "unit_tests": {
+    "pass": 130,
+    "fail": 0,
+    "skip": 0
+  },
+  "workspace_boundaries": "pass",
+  "design_tokens": "pass",
+  "changed_script_eslint_no_ignore": "pass",
+  "initial_clean_sql_failure": {
+    "affected_suites": 8,
+    "cause": "Postgres-owned temporary test helper functions relied on implicit PUBLIC EXECUTE.",
+    "fix": "Explicit execution for named pg_temp helpers and only the authenticated/anonymous roles exercised; all semantic assertions retained.",
+    "application_permission_change": false,
+    "published_migration_rewritten": false
+  },
+  "pg_prove": {
+    "source": "docker.io/supabase/pg_prove:3.36",
+    "digest": "sha256:eda7c5e68719e9c8287e78c017118407b48df904a51c935f5ab6098b8c0bc6bc"
+  },
+  "scope_limits": [
+    "No hosted access, migration metadata mutation or provider settings change.",
+    "Complete live missing-version list remains unverified after denied read.",
+    "New-head GitHub CI and then-current staging reconciliation remain required.",
+    "No staging/main merge or review approval."
+  ]
+}

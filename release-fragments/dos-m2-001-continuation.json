@@ -1,0 +1,9 @@
+{
+  "id": "dos-m2-001-continuation",
+  "task": "DOS-M2-001",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md"],
+  "reason": "Record explicit owner authorization for synthetic M2 engineering and separate task PRs while preserving the original clinical review packet and all unresolved qualified clinical/catalogue approval fields. No operational or professional activation."
+}

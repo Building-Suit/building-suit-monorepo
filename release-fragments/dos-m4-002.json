@@ -1,0 +1,15 @@
+{
+  "id": "dos-m4-002",
+  "task": "DOS-M4-002",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+  ],
+  "reason": "Prepare the owner-requested separate Android-first synthetic shell using shared presentation and versioned context contracts. Clinical, private offline data, provider and real-device/release acceptance remain gated; no operational activation is implied."
+}

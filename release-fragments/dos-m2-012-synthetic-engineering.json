@@ -1,0 +1,19 @@
+{
+  "id": "dos-m2-012-synthetic-engineering",
+  "task": "DOS-M2-012",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/app/utils/clinicalReleaseController.ts",
+    "apps/doctor-suit/app/utils/clinicalReleaseRepository.ts",
+    "apps/doctor-suit/supabase/migrations/20261020003207_clinical_m2_012.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-012.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-012.md"
+  ],
+  "reason": "Implement isolated recipient controller for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

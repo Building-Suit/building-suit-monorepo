@@ -1,0 +1,3 @@
+// Identical pure clinical DTO/synthetic validation shared by the owning web/native clients.
+export {clinicalUuid, clinicalObject, emptyClinicalSnapshot, validClinicalSegments, validClinicalSnapshot, clinicalDirectory, clinicalDetail, verifyClinicalDetail, clinicalCommandResult, clinicalReleased, verifyClinicalExport} from '@building-suit/contracts'
+export type {ClinicalStatus, ClinicalAction, ClinicalObservation, ClinicalSegment, ClinicalPrescription, ClinicalOrder, ClinicalResult, ClinicalSnapshot, ClinicalRow, ClinicalDirectory, ClinicalVersion, ClinicalDetail, ClinicalCommandResult, ClinicalReleased} from '@building-suit/contracts'

@@ -1,0 +1,9 @@
+{
+  "id": "hq-task-cancellation-browser-ci-20261109",
+  "task": "HQ-TASK-CANCELLATION-BROWSER-CI-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/ci.yml", "docs/work-packages/company-hq/HQ-TASK-CANCELLATION-20261109.md"],
+  "reason": "Run the private HQ mocked task-cancellation browser regression in the existing review job only when relevant inputs change, reusing setup and Chromium. Preserve all existing gates, permissions, timeouts and publication behavior."
+}

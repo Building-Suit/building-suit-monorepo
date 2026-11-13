@@ -1,0 +1,23 @@
+{
+  "id": "ss-electrical-settings-consumer-qualification-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/ux/src/composables/useControlFocus.ts",
+    "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+    "packages/testing/e2e/settings-menu-focus.spec.ts",
+    "apps/shop-suit/docs/electrical-supply",
+    "release-changes/items.json"
+  ],
+  "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched."
+}

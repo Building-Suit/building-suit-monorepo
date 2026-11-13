@@ -1,0 +1,9 @@
+{
+  "id": "hq-task-browser-20261108",
+  "task": "HQ-TASK-BROWSER-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "packages/ux", "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue", "docs/shared/ui-ownership-manifest.json", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ Office/header task browser with status sections and tabs, bounded lazy summary windows and on-demand details. Full totals/history require the prepared, unapplied founder-only read migration; the local fallback explicitly labels bounded snapshots incomplete. Direct primary-checkout source work only; checks, rendered acceptance, hosted mutation and publication unrun. No public Suit behavior or activation change."
+}

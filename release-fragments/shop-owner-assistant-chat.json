@@ -1,0 +1,43 @@
+{
+  "id": "shop-owner-assistant-chat",
+  "task": "SS-OWNER-ASSISTANT-CHAT",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/.env.example",
+    "apps/shop-suit/README.md",
+    "apps/shop-suit/app/composables/useShopAssistant.ts",
+    "apps/shop-suit/app/layouts/default.vue",
+    "apps/shop-suit/app/pages/assistant.vue",
+    "apps/shop-suit/app/utils/shopAssistantCopy.ts",
+    "apps/shop-suit/app/utils/shopNavigation.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/nuxt.config.ts",
+    "apps/shop-suit/package.json",
+    "apps/shop-suit/server/api/assistant",
+    "apps/shop-suit/server/utils/shopAssistantActions.ts",
+    "apps/shop-suit/server/utils/shopAssistantAgent.ts",
+    "apps/shop-suit/server/utils/shopAssistantProposal.ts",
+    "apps/shop-suit/server/utils/shopAssistantRequest.ts",
+    "apps/shop-suit/server/utils/shopAssistantScope.ts",
+    "apps/shop-suit/supabase/migrations/20261112192758_confirm_shop_assistant_expense.sql"
+  ],
+  "reason": "The shop owner can use multilingual text to ask about their shop and review and confirm a paid expense in the current location.",
+  "notes": {
+    "title": {
+      "en": "Shop Suit Assistant",
+      "ar": "مساعد شوب سوت"
+    },
+    "summary": {
+      "en": "Ask the assistant in your own words to find products, check stock or summarize how your location is doing.",
+      "ar": "اكتب للمساعد بطريقتك عشان تلاقي منتج، تراجع المخزون أو تشوف ملخص شغل الفرع."
+    },
+    "details": {
+      "en": "Where the assistant is enabled, shop owners can chat in their preferred language, open supported Shop Suit screens, and review and confirm a paid expense before it’s saved.",
+      "ar": "لو المساعد متاح عندك، تقدر كصاحب متجر تكتب باللغة اللي تفضّلها، وتفتح الشاشات المتاحة من المحادثة، وتراجع تفاصيل المصروف المدفوع قبل ما تأكّد تسجيله."
+    }
+  }
+}

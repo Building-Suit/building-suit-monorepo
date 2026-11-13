@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Character Studio</title>
+<style>
+  :root { color-scheme: dark; font: 15px system-ui, sans-serif; background: #111923; color: #f4f5f7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: clamp(12px, 2.5vw, 28px); }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(225px, 285px); gap: 14px; max-width: 1720px; margin: auto; }
+  header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: end; gap: 14px; flex-wrap: wrap; }
+  h1, h2, p { margin: 0; }
+  h1 { margin-bottom: 4px; font-size: clamp(1.45rem, 3vw, 2.1rem); font-weight: 650; }
+  h2 { font-size: 1rem; }
+  p, small { color: #b8c2d1; line-height: 1.5; }
+  .viewer, aside { min-width: 0; border: 1px solid #374657; border-radius: 14px; background: #192432; }
+  .viewer { overflow: hidden; align-self: start; }
+  .stage { position: relative; background: radial-gradient(ellipse at 50% 43%, #3b4a5c, #1b2938 79%); }
+  canvas { display: block; width: 100%; height: clamp(340px, calc(100dvh - 188px), 920px); cursor: grab; touch-action: none; }
+  canvas:active { cursor: grabbing; }
+  .labels { display: grid; grid-template-columns: repeat(2, 1fr); position: absolute; inset: auto 0 12px; pointer-events: none; text-align: center; color: #eef0f5; font-weight: 620; }
+  .stage::before { content: ""; position: absolute; inset: 16px auto 40px 50%; width: 1px; background: #b8c2d126; pointer-events: none; }
+  #error { position: absolute; inset: 40% 12px auto; text-align: center; background: #111923; padding: 12px; }
+  .actions, nav { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  nav { padding: 10px; justify-content: center; border-top: 1px solid #374657; }
+  button, a.action, select { font: inherit; font-size: .83rem; border: 1px solid #506177; border-radius: 7px; background: #243346; color: #f4f5f7; padding: 7px 10px; }
+  button, a.action { text-decoration: none; cursor: pointer; }
+  button:hover, button[aria-pressed="true"], a.action:hover { border-color: #e6b265; color: #f7cb8d; }
+  button:disabled { opacity: .55; cursor: default; }
+  :focus-visible { outline: 2px solid #e6b265; outline-offset: 2px; }
+  canvas:focus-visible { outline-offset: -3px; }
+  aside { align-self: start; max-height: calc(100dvh - 106px); overflow: auto; overscroll-behavior: contain; }
+  .panel-head { position: sticky; inset-block-start: 0; z-index: 1; display: grid; gap: 7px; padding: 14px; background: #192432; border-bottom: 1px solid #374657; }
+  .panel-head p, .credits, .field span, .field output { font-size: .82rem; }
+  details { border-bottom: 1px solid #374657; }
+  summary { cursor: pointer; font-weight: 620; padding: 12px 14px; }
+  .fields { display: grid; gap: 11px; padding: 0 14px 14px; }
+  .field { display: grid; gap: 4px; }
+  .field select, .field input { width: 100%; min-width: 0; }
+  .field input { margin: 0; accent-color: #e6b265; }
+  .field output { color: #b8c2d1; }
+  .credits { padding: 14px; }
+  .credits a { color: #efc88e; }
+  .credits p + p { margin-top: 5px; }
+  @media (max-width: 690px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+    aside { max-height: none; }
+    .panel-head { position: static; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Character Studio</h1>
+      <p>Dress and customize both bodies with the same controls.</p>
+    </div>
+    <div class="actions">
+      <a class="action" href="dummy-character.glb" download>Download library GLB</a>
+      <button id="export" disabled>Export current pair</button>
+    </div>
+  </header>
+  <section class="viewer" aria-label="Side-by-side character preview">
+    <div class="stage">
+      <canvas id="stage" tabindex="0" aria-label="Use arrow keys or drag to orbit, and plus or minus to zoom both models."></canvas>
+      <div class="labels"><span>Male body</span><span>Female body</span></div>
+      <p id="error" role="status" hidden>3D preview unavailable. Open the library GLB in a 3D viewer.</p>
+    </div>
+    <nav aria-label="Shared view controls">
+      <button data-yaw="0" aria-pressed="true">Front</button>
+      <button data-yaw="0.62" aria-pressed="false">Three-quarter</button>
+      <button data-yaw="1.57079633" aria-pressed="false">Side</button>
+      <button data-yaw="3.14159265" aria-pressed="false">Back</button>
+      <button id="zoom-out" aria-label="Zoom out">−</button>
+      <button id="zoom-in" aria-label="Zoom in">+</button>
+      <button id="head" aria-pressed="false">Head detail</button>
+      <button id="reset-view">Reset view</button>
+    </nav>
+  </section>
+  <aside aria-labelledby="controls">
+    <div class="panel-head">
+      <h2 id="controls">Shared controls</h2>
+      <p>Each selection applies to both bodies.</p>
+      <div class="actions">
+        <button id="formal">Formal</button><button id="casual">Casual</button><button id="base">Base bodies</button>
+      </div>
+    </div>
+    <details open><summary>Appearance</summary><div class="fields" id="appearance"></div></details>
+    <details open><summary>Body and face shapes</summary><div class="fields" id="shapes"></div></details>
+    <details><summary>Asset credits</summary><div class="credits" id="credits"></div></details>
+  </aside>
+</main>
+<script>
+const encoded = /*STUDIO_GLB*/null
+const canvas = document.querySelector('#stage')
+const error = document.querySelector('#error')
+const $ = id => document.getElementById(id)
+const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value))
+
+async function start() {
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: true })
+  if (!gl || !encoded) throw new Error('WebGL 2 and the local asset library are required')
+  const compressed = typeof Uint8Array.fromBase64 === 'function' ? Uint8Array.fromBase64(encoded) : Uint8Array.from(atob(encoded), char => char.charCodeAt(0))
+  const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+  const jsonLength = new DataView(bytes.buffer).getUint32(12, true)
+  const model = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + jsonLength)))
+  const binary = bytes.subarray(28 + jsonLength)
+  const { avatars, slots, morphs, defaults } = model.extras.studio
+  const selections = { ...defaults }, strengths = {}
+  const geometry = new Map(), textures = new Map()
+
+  function shader(type, source) {
+    const shader = gl.createShader(type)
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader))
+    return shader
+  }
+
+  const vertex = shader(gl.VERTEX_SHADER, `#version 300 es
+    layout(location = 0) in vec3 point;
+    layout(location = 1) in vec3 normal;
+    layout(location = 2) in vec2 texcoord;
+    uniform mat4 projection, camera;
+    out vec3 surfaceNormal, surfacePosition;
+    out vec2 uv;
+    void main() {
+      surfaceNormal = normal;
+      surfacePosition = point;
+      uv = texcoord;
+      gl_Position = projection * camera * vec4(point, 1.0);
+    }`)
+  const fragment = shader(gl.FRAGMENT_SHADER, `#version 300 es
+    precision highp float;
+    uniform vec3 eye;
+    uniform vec4 pigment;
+    uniform sampler2D image;
+    uniform bool textured, mask;
+    uniform float alphaCutoff;
+    in vec3 surfaceNormal, surfacePosition;
+    in vec2 uv;
+    out vec4 color;
+    void main() {
+      vec4 diffuse = pigment * (textured ? texture(image, uv) : vec4(1.0));
+      if (mask && diffuse.a < alphaCutoff) discard;
+      vec3 n = normalize(surfaceNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+      vec3 key = normalize(vec3(-0.7, 1.05, 0.8));
+      vec3 fill = normalize(vec3(0.8, 0.15, -0.65));
+      vec3 viewDirection = normalize(eye - surfacePosition);
+      float light = 0.64 + max(dot(n, key), 0.0) * 0.41 + max(dot(n, fill), 0.0) * 0.15;
+      float gloss = pow(max(dot(n, normalize(key + viewDirection)), 0.0), 25.0) * 0.035;
+      color = vec4(diffuse.rgb * light + gloss, 1.0);
+    }`)
+  const program = gl.createProgram()
+  gl.attachShader(program, vertex)
+  gl.attachShader(program, fragment)
+  gl.linkProgram(program)
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program))
+  gl.deleteShader(vertex)
+  gl.deleteShader(fragment)
+  gl.useProgram(program)
+  const uniforms = Object.fromEntries(['projection', 'camera', 'eye', 'pigment', 'image', 'textured', 'mask', 'alphaCutoff']
+    .map(name => [name, gl.getUniformLocation(program, name)]))
+  gl.enable(gl.DEPTH_TEST)
+  gl.clearColor(0, 0, 0, 0)
+
+  function bufferView(id) {
+    const view = model.bufferViews[id]
+    return binary.subarray(view.byteOffset, view.byteOffset + view.byteLength)
+  }
+
+  function access(id) {
+    const a = model.accessors[id], data = bufferView(a.bufferView)
+    const type = a.componentType === 5125 ? Uint32Array : Float32Array
+    return new type(data.buffer, data.byteOffset, data.byteLength / type.BYTES_PER_ELEMENT)
+  }
+
+  function sparse(id) {
+    const data = model.accessors[id].sparse
+    const indices = bufferView(data.indices.bufferView), values = bufferView(data.values.bufferView)
+    const indexType = data.indices.componentType === 5123 ? Uint16Array : Uint32Array
+    return [new indexType(indices.buffer, indices.byteOffset, data.count),
+      new Float32Array(values.buffer, values.byteOffset, data.count * 3)]
+  }
+
+  function geometryFor(index) {
+    if (geometry.has(index)) return geometry.get(index)
+    const mesh = model.meshes[index], primitive = mesh.primitives[0]
+    const vao = gl.createVertexArray()
+    gl.bindVertexArray(vao)
+    const attributes = ['POSITION', 'NORMAL', 'TEXCOORD_0'].map((key, location) => {
+      const source = access(primitive.attributes[key]), buffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+      gl.bufferData(gl.ARRAY_BUFFER, source, location < 2 ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW)
+      gl.vertexAttribPointer(location, location === 2 ? 2 : 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(location)
+      return { source, buffer }
+    })
+    const indices = access(primitive.indices), element = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, element)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW)
+    const item = {
+      vao, attributes, element, indices, count: indices.length,
+      material: primitive.material, names: mesh.extras?.targetNames ?? [],
+      targets: (primitive.targets ?? []).map(target => [sparse(target.POSITION), sparse(target.NORMAL)]),
+      shapeKey: '', coverageKey: '',
+    }
+    geometry.set(index, item)
+    return item
+  }
+
+  function weight(name) {
+    const separator = name.lastIndexOf('-')
+    const value = strengths[name.slice(0, separator)] || 0
+    return name.endsWith('-min') ? Math.max(0, -value) : Math.max(0, value)
+  }
+
+  function updateShape(item) {
+    const weights = item.names.map(weight), key = weights.join(',')
+    if (item.shapeKey === key) return
+    item.shapeKey = key
+    for (let attribute = 0; attribute < 2; attribute++) {
+      const { source, buffer } = item.attributes[attribute]
+      const current = new Float32Array(source)
+      weights.forEach((amount, target) => {
+        if (!amount) return
+        const [indices, values] = item.targets[target][attribute]
+        for (let i = 0; i < indices.length; i++) {
+          for (let axis = 0; axis < 3; axis++) current[indices[i] * 3 + axis] += values[i * 3 + axis] * amount
+        }
+      })
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, current)
+    }
+  }
+
+  function parts(avatar) {
+    return slots.slice(1).flatMap(([key]) => {
+      const choice = avatar.slots[key][selections[key]]
+      return choice ? [choice] : []
+    })
+  }
+
+  function visibleFaces(indices, selected) {
+    const hidden = new Set(selected.flatMap(choice => choice.hide ?? []))
+    return hidden.size ? indices.filter((_, i) => !hidden.has(Math.floor(i / 3))) : indices
+  }
+
+  function maskBody(item, selected) {
+    const key = selected.filter(choice => choice.hide).map(choice => choice.mesh).join(',')
+    if (item.coverageKey === key) return
+    item.coverageKey = key
+    const indices = visibleFaces(item.indices, selected)
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, item.element)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW)
+    item.count = indices.length
+  }
+
+  function textureFor(id) {
+    if (!textures.has(id)) {
+      const image = model.images[model.textures[id].source]
+      textures.set(id, null)
+      createImageBitmap(new Blob([bufferView(image.bufferView)], { type: image.mimeType })).then(bitmap => {
+        const texture = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+        gl.generateMipmap(gl.TEXTURE_2D)
+        bitmap.close()
+        textures.set(id, texture)
+        requestDraw()
+      }).catch(reason => console.error('Could not decode asset texture', reason))
+    }
+    return textures.get(id)
+  }
+
+  function render(index, material, covered) {
+    const item = geometryFor(index)
+    gl.bindVertexArray(item.vao)
+    updateShape(item)
+    if (covered) maskBody(item, covered)
+    const info = model.materials[material ?? item.material], pbr = info.pbrMetallicRoughness
+    const color = pbr.baseColorFactor.map((value, i) => i < 3 ? value ** (1 / 2.2) : value)
+    const id = pbr.baseColorTexture?.index
+    const texture = id === undefined ? null : textureFor(id)
+    gl.uniform4fv(uniforms.pigment, color)
+    gl.uniform1i(uniforms.textured, Boolean(texture))
+    gl.uniform1i(uniforms.mask, info.alphaMode === 'MASK')
+    gl.uniform1f(uniforms.alphaCutoff, info.alphaCutoff ?? 0.5)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.uniform1i(uniforms.image, 0)
+    gl.drawElements(gl.TRIANGLES, item.count, gl.UNSIGNED_INT, 0)
+  }
+
+  const unit = v => v.map(value => value / Math.hypot(...v))
+  const cross = ([a, b, c], [d, e, f]) => [b * f - c * e, c * d - a * f, a * e - b * d]
+  const dot = (a, b) => a.reduce((sum, value, i) => sum + value * b[i], 0)
+  function lookAt(eye, targetY) {
+    const z = unit([eye[0], eye[1] - targetY, eye[2]])
+    const x = unit(cross([0, 1, 0], z)), y = cross(z, x)
+    return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1])
+  }
+
+  const angles = [...document.querySelectorAll('[data-yaw]')]
+  let yaw = 0, pitch = 0, zoom = 1, detail = false, scheduled = false, drag = null
+  function draw() {
+    scheduled = false
+    const dpr = Math.min(devicePixelRatio || 1, 2)
+    const width = Math.max(2, Math.round(canvas.clientWidth * dpr))
+    const height = Math.max(1, Math.round(canvas.clientHeight * dpr))
+    if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height }
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    const half = Math.floor(width / 2), aspect = half / height
+    const distance = (detail ? Math.max(1.05, 0.64 / aspect) : Math.max(4.65, 2.9 / aspect)) / zoom
+    const f = 1 / Math.tan(0.5 / 2), near = 0.01, far = 50
+    gl.uniformMatrix4fv(uniforms.projection, false, new Float32Array([
+      f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) / (near - far), -1, 0, 0, 2 * far * near / (near - far), 0,
+    ]))
+    avatars.forEach((avatar, i) => {
+      const targetY = detail ? avatar.top - 0.12 : 0.86
+      const eye = [Math.sin(yaw) * distance * Math.cos(pitch), targetY + Math.sin(pitch) * distance, Math.cos(yaw) * distance * Math.cos(pitch)]
+      gl.uniformMatrix4fv(uniforms.camera, false, lookAt(eye, targetY))
+      gl.uniform3fv(uniforms.eye, eye)
+      gl.viewport(i * half, 0, half, height)
+      const selected = parts(avatar)
+      render(avatar.body, avatar.slots.skin[selections.skin].material, selected)
+      for (const choice of selected) {
+        for (const mesh of choice.meshes ?? [choice.mesh]) render(mesh, choice.material)
+      }
+    })
+  }
+
+  function requestDraw() {
+    if (!scheduled) {
+      scheduled = true
+      requestAnimationFrame(draw)
+    }
+  }
+
+  const selectors = {}
+  for (const [key, label] of slots) {
+    const wrapper = document.createElement('label')
+    wrapper.className = 'field'
+    const heading = document.createElement('span')
+    heading.textContent = label
+    const select = document.createElement('select')
+    if (key !== 'skin') select.add(new Option('None', '-1'))
+    avatars[0].slots[key].forEach((item, i) => select.add(new Option(item.label, i)))
+    select.value = selections[key]
+    select.addEventListener('change', () => { selections[key] = Number(select.value); requestDraw() })
+    selectors[key] = select
+    wrapper.append(heading, select)
+    $('appearance').append(wrapper)
+  }
+
+  const sliders = {}
+  for (const [key, label, lower, upper] of morphs) {
+    const wrapper = document.createElement('label')
+    wrapper.className = 'field'
+    const heading = document.createElement('span')
+    heading.textContent = label
+    const input = document.createElement('input')
+    input.type = 'range'; input.min = -1; input.max = 1; input.step = 0.05; input.value = 0
+    const output = document.createElement('output')
+    output.textContent = 'Neutral'
+    input.addEventListener('input', () => {
+      const value = Number(input.value)
+      strengths[key] = value
+      output.textContent = value === 0 ? 'Neutral' : `${value < 0 ? lower : upper} · ${Math.round(Math.abs(value) * 100)}%`
+      requestDraw()
+    })
+    sliders[key] = { input, output }
+    wrapper.append(heading, input, output)
+    $('shapes').append(wrapper)
+  }
+
+  function preset(values) {
+    for (const [key, select] of Object.entries(selectors)) {
+      selections[key] = values[key] ?? -1
+      select.value = selections[key]
+    }
+    for (const [key, { input, output }] of Object.entries(sliders)) {
+      strengths[key] = 0; input.value = 0; output.textContent = 'Neutral'
+    }
+    requestDraw()
+  }
+
+  for (const item of model.asset.extras.credits) {
+    const line = document.createElement('p'), link = document.createElement('a')
+    link.href = item.source
+    link.textContent = item.name
+    line.append(link, ` · ${item.author} · ${item.license}`)
+    if (item.changes) line.append(`. ${item.changes}`)
+    $('credits').append(line)
+  }
+
+  function turn(angle, tilt, active) {
+    yaw = angle; pitch = clamp(tilt, -0.65, 0.65)
+    for (const button of angles) button.setAttribute('aria-pressed', String(button === active))
+    requestDraw()
+  }
+  function changeZoom(factor) { zoom = clamp(zoom * factor, 0.65, 2.4); requestDraw() }
+  function resetView() { zoom = 1; detail = false; $('head').setAttribute('aria-pressed', 'false'); turn(0, 0, angles[0]) }
+
+  $('formal').onclick = () => preset(defaults)
+  $('casual').onclick = () => preset({ ...defaults, outfit: 0, hair: 0 })
+  $('base').onclick = () => preset({ skin: 1, eyes: 0, mouthDetail: 0 })
+  for (const button of angles) button.onclick = () => turn(Number(button.dataset.yaw), 0, button)
+  $('head').onclick = () => { detail = !detail; zoom = 1; $('head').setAttribute('aria-pressed', String(detail)); requestDraw() }
+  $('reset-view').onclick = resetView
+  $('zoom-in').onclick = () => changeZoom(1.2)
+  $('zoom-out').onclick = () => changeZoom(1 / 1.2)
+  canvas.onpointerdown = event => {
+    if (event.button !== 0 || drag) return
+    drag = { id: event.pointerId, x: event.clientX, y: event.clientY }
+    canvas.setPointerCapture(event.pointerId)
+  }
+  canvas.onpointermove = event => {
+    if (event.pointerId !== drag?.id) return
+    turn(yaw - (event.clientX - drag.x) * 0.009, pitch + (event.clientY - drag.y) * 0.006)
+    drag.x = event.clientX; drag.y = event.clientY
+  }
+  canvas.onlostpointercapture = () => { drag = null }
+  canvas.addEventListener('wheel', event => {
+    event.preventDefault()
+    changeZoom(Math.exp(-clamp(event.deltaY, -150, 150) * 0.002))
+  }, { passive: false })
+  canvas.onkeydown = event => {
+    const keys = {
+      ArrowLeft: () => turn(yaw - 0.14, pitch), ArrowRight: () => turn(yaw + 0.14, pitch),
+      ArrowUp: () => turn(yaw, pitch + 0.1), ArrowDown: () => turn(yaw, pitch - 0.1),
+      '+': () => changeZoom(1.2), '=': () => changeZoom(1.2), '-': () => changeZoom(1 / 1.2), Home: resetView,
+    }
+    if (Object.hasOwn(keys, event.key)) { event.preventDefault(); keys[event.key]() }
+  }
+
+  function exportPair() {
+    const copy = structuredClone(model)
+    const chunks = [binary]
+    let length = binary.length
+    function appendIndices(values) {
+      const bufferView = copy.bufferViews.push({ buffer: 0, byteOffset: length, byteLength: values.byteLength, target: 34963 }) - 1
+      chunks.push(values); length += values.byteLength
+      return copy.accessors.push({ bufferView, componentType: 5125, count: values.length, type: 'SCALAR' }) - 1
+    }
+    const nodes = []
+    function addNode(index, avatar, material, masked) {
+      const source = copy.meshes[index]
+      let mesh = index
+      if (material !== undefined || masked) {
+        const primitive = { ...source.primitives[0] }
+        if (material !== undefined) primitive.material = material
+        if (masked) primitive.indices = appendIndices(masked)
+        mesh = copy.meshes.push({ ...source, primitives: [primitive] }) - 1
+      }
+      const weights = source.extras?.targetNames?.map(weight)
+      nodes.push(copy.nodes.push({ mesh, name: `${avatar.label} · ${source.name}`, translation: [avatar.x, 0, 0], ...(weights ? { weights } : {}) }) - 1)
+    }
+    for (const avatar of avatars) {
+      const selected = parts(avatar)
+      const primitive = model.meshes[avatar.body].primitives[0]
+      addNode(avatar.body, avatar, avatar.slots.skin[selections.skin].material, visibleFaces(access(primitive.indices), selected))
+      for (const option of selected) for (const mesh of option.meshes ?? [option.mesh]) addNode(mesh, avatar, option.material)
+    }
+    copy.scenes = [{ name: 'Selected character pair', nodes }]
+    copy.scene = 0
+    copy.buffers[0].byteLength = length
+    const json = new TextEncoder().encode(JSON.stringify(copy))
+    const padding = new Uint8Array((4 - json.byteLength % 4) % 4).fill(32)
+    const jsonSize = json.byteLength + padding.byteLength
+    const header = new DataView(new ArrayBuffer(20)), binHeader = new DataView(new ArrayBuffer(8))
+    ;[0x46546c67, 2, 28 + jsonSize + length, jsonSize, 0x4e4f534a].forEach((value, i) => header.setUint32(i * 4, value, true))
+    binHeader.setUint32(0, length, true); binHeader.setUint32(4, 0x004e4942, true)
+    const url = URL.createObjectURL(new Blob([header.buffer, json, padding, binHeader.buffer, ...chunks], { type: 'model/gltf-binary' }))
+    const link = document.createElement('a')
+    link.href = url; link.download = 'character-studio-pair.glb'; link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+  }
+
+  $('export').onclick = exportPair
+  $('export').disabled = false
+  canvas.addEventListener('webglcontextlost', () => { error.hidden = false })
+  new ResizeObserver(requestDraw).observe(canvas)
+  draw()
+}
+start().catch(reason => { error.hidden = false; console.error(reason) })
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "id": "hq-team-organization-map-20261108",
+  "task": "HQ-TEAM-ORGANIZATION-MAP-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "packages/ux/src/composables/usePanZoomViewport.ts", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ Team follows the light department-card reference with a central CEO medallion, searchable roster views, and free two-axis transform panning without canvas scrollbars. Local source only; browser verification and publication unrun."
+}

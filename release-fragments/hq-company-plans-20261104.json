@@ -1,0 +1,34 @@
+{
+  "id": "hq-company-plans-20261104",
+  "task": "HQ-COMPANY-PLANS-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHqCompanyPlans.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/package.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "README.md",
+    "pnpm-lock.yaml",
+    "release-changes/items.json"
+  ],
+  "reason": "Add internal founder signup/email-confirmation/login and trusted one-time Auth UID membership, complete CEO/HR-reviewed company-plan decisions, reserved existing CEO workspace and approved empty department offices/roads on footprint-safe concentric rings with 2.4-second visual construction and finite-floor growth. Exact-revision/idempotent approval atomically records one decision and every new department; hiring/skill requests do not execute staff. The HQ import alone seeds legacy HR, not the complete current company roster; newer approved Brain records are not automatically synchronized. Legacy HR is seeded with 2026-11-03 date precision and null original reviews, not invented Auth identity. Service-only publication is a foundation, with no live CEO/HR execution/publisher connected. Standalone 20261104194233 migration applied successfully to staging dpruoncalmwicrqhqelu; historical 20261103194908 remains unapplied and production untouched. The founder reports GitHub unconnected; integration/Automatic branching dashboard state is unverified, with OFF as policy only and migration-history review still required. No signup/email/login/API/browser/runtime validation, tests/build/lint/typecheck/boundary/release checks or tester/reviewer agents ran under founder direction. No public product activation/release, deployment, app Brain write, new staff, model execution or spending."
+}

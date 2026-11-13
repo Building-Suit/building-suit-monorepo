@@ -12,7 +12,7 @@ const receiptTemplate = await readFile(new URL('../../../../packages/ui/src/temp
 const printController = await readFile(new URL('../../../../packages/ux/src/composables/useDocumentPrint.ts', import.meta.url), 'utf8')
 const salePage = await readFile(new URL('../../app/pages/sales/[id]/index.vue', import.meta.url), 'utf8')
 const posPage = await readFile(new URL('../../app/pages/pos.vue', import.meta.url), 'utf8')
-const settingsPage = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
+const settingsPage = await readFile(new URL('../../app/pages/settings/[[section]].vue', import.meta.url), 'utf8')
 
 const receipt = {
   version: 1,
@@ -139,7 +139,7 @@ test('thermal/A4 print and share actions are connected from POS completion and s
   assert.match(receiptPage, /<BsReceiptPage\b/)
   assert.match(receiptPage, /shareReceipt/)
   assert.match(presentation, /reprintLabel/)
-  assert.match(posPage, /sales\/\$\{completedId\}\/receipt/)
+  assert.match(posPage, /await posReceipt\.completed\(completedId!\)/)
   assert.match(salePage, /receipt\.reprint/)
   assert.match(salePage, /receipt\.share/)
   assert.match(settingsPage, /save_document_settings/)

@@ -1,0 +1,7 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {validClinicalSegments} from '../../app/utils/clinical.ts'
+import {prescription} from '../clinical-fixtures.mjs'
+test('M2-007 as-needed schedules have no inferred repeat cadence',()=>{const rx=prescription();assert.equal(validClinicalSegments(rx.segments,rx.start_date,rx.end_date),true);rx.segments[0].interval_minutes=60;assert.equal(validClinicalSegments(rx.segments,rx.start_date,rx.end_date),false)})
+test('M2-007 overlap, unknown timezone, invalid dates and duplicate clock anchors are rejected',()=>{const rx=prescription();assert.equal(validClinicalSegments([...rx.segments,...rx.segments],rx.start_date,rx.end_date),false);for(const patch of [{timezone:'Invalid/Zone'},{start_date:'2026-02-31'},{end_date:'2026-10-19'},{kind:'weekdays',weekdays:[1,1],times:['10:00']}])assert.equal(validClinicalSegments([{...rx.segments[0],...patch}],rx.start_date,rx.end_date),false)})
+test('M2-007 explicit interval and weekday segments require their own clock anchors',()=>{const rx=prescription();const base=rx.segments[0];assert.equal(validClinicalSegments([{...base,kind:'interval',interval_minutes:120,times:['10:00']}],rx.start_date,rx.end_date),true);assert.equal(validClinicalSegments([{...base,kind:'interval',interval_minutes:'120',times:['10:00']}],rx.start_date,rx.end_date),false);assert.equal(validClinicalSegments([{...base,kind:'weekdays',weekdays:[1,4],times:['10:00','18:00']}],rx.start_date,rx.end_date),true)})

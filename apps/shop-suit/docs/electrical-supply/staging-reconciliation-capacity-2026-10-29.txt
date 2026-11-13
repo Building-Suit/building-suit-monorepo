@@ -1,0 +1,21 @@
+[WebServer] (node:214272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:214280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:214288) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en (4.5s)
+  ✓   2 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, ar (4.0s)
+  ✓   3 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 500 active, en (3.9s)
+  ✓   4 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 500 active, ar (4.4s)
+  ✓   5 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 1000 active, en (4.0s)
+  ✓   6 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 1000 active, ar (4.1s)
+  ✓   7 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 2000 active, en (4.7s)
+  ✓   8 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 2000 active, ar (4.1s)
+  ✓   9 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:64:3 › shared service catalog retains fixed server pages: en (3.9s)
+  ✓  10 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:64:3 › shared service catalog retains fixed server pages: ar (3.2s)
+
+  10 passed (43.3s)

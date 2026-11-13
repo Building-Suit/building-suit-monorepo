@@ -1,0 +1,10 @@
+Electrical measured merchant journey: PASS
+Physical reel merchant journey: PASS
+shop_electrical_native_journey: PASS in schema fixture; provider acceptance separate
+Configuration/stock race: PASS; second session rechecks prepared status after ordered write-lock wait; no stock or partial movement
+Physical reel cashier race: PASS; one10m cut committed from15m, waiting cashier rolled back; exactly5m and one cut remain
+Order reservation races: PASS; competing holds, reservation-first sale and cashier-first product/currency barrier and distinct collection requests serialize without over-allocation, duplicate issuance or deadlock
+Supplier order receipt races: PASS; distinct six-of-ten requests issue one receipt, identical final four requests share one receipt; ten reels, two invoices and original cost remain
+Scale capture races: PASS; duplicate requests share one capture, competing drafts bind it once, and a waiting capture rechecks retired device approval without stock or partial sale changes
+Commodity price races: PASS; identical approvals share one event, stale rule edits reject, retirement-first issuance rolls back, and sale-first issuance retains the exact original source and revised premium
+PASS: 120 Shop business migrations, exact conversion/configuration/RLS/legacy tests and JS/SQL registry conformance. Provider stand-ins; full Supabase acceptance remains separate.

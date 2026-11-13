@@ -1,0 +1,18 @@
+{
+  "id": "dos-m4-002-android-ci",
+  "task": "DOS-M4-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/doctor-android.yml"
+  ],
+  "reason": "Give the separate synthetic Android package a focused owned build/emulator workflow and candidate-bound failure receipts. All native and existing Doctor service checks remain; no distribution or clinical activation."
+}

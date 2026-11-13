@@ -1,0 +1,34 @@
+{
+  "id": "hq-public-discovery-mcp-20261108",
+  "task": "HQ-PUBLIC-DISCOVERY-MCP-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/server/api/hq/research-trials.post.ts",
+    "apps/company-hq/server/api/hq/research-trials/qualification.post.ts",
+    "apps/company-hq/server/utils/hqAgents.ts",
+    "apps/company-hq/supabase/migrations/20261108153026_hq_public_discovery_mcp.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/research-trials-bff.test.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "tooling/hq-agent-host/README.md",
+    "tooling/hq-agent-host/departmentWorkflow.mjs",
+    "tooling/hq-agent-host/discovery-mcp.test.mjs",
+    "tooling/hq-agent-host/discovery-worker.test.mjs",
+    "tooling/hq-agent-host/lifecycle.test.mjs",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "tooling/hq-agent-host/symlink-entry.test.mjs",
+    "tooling/hq-agent-host/test-cli.mjs",
+    "tooling/hq-agent-host/worker.mjs"
+  ],
+  "reason": "Add a restricted argument-free public Research MCP pilot with literal partial source evidence, request-scoped claim fencing and independently reviewed current qualification. Preserve the five-module runtime, legacy API proof and durable delivery. Canonical publication and genuine live qualification remain separate operational gates; no outreach or general browsing is enabled."
+}

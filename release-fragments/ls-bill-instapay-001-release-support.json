@@ -1,0 +1,19 @@
+{
+  "id": "ls-bill-instapay-001-release-support",
+  "task": "LS-BILL-INSTAPAY-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json",
+    "apps/ledger-suit/docs"
+  ],
+  "reason": "Maintain curated private provenance and recovery/qualification records for the Ledger payment-method transition. Other consumers receive no checkout, provider, activation or hosted changes."
+}

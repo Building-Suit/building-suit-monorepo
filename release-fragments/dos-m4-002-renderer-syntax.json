@@ -1,0 +1,16 @@
+{
+  "id": "dos-m4-002-renderer-syntax",
+  "task": "DOS-M4-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/nuxt.config.ts",
+    "apps/doctor-suit/mobile/doctor/README.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+  ],
+  "reason": "Constrain mobile bundled syntax to the observed stock API29 renderer for mandatory CI diagnosis. Preserve every matrix case and failed/unrun gate; no older-engine, clinical or qualified acceptance is inferred from compilation."
+}

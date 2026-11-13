@@ -1,0 +1,35 @@
+{
+  "id": "ss-electrical-order-stock-reservations-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useOrderReservations.ts",
+    "apps/shop-suit/app/pages/orders.vue",
+    "apps/shop-suit/app/pages/pos.vue",
+    "apps/shop-suit/app/pages/inventory/reels.vue",
+    "apps/shop-suit/app/types",
+    "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+    "packages/ui/src/templates/BsTradeOrdersPage.vue",
+    "packages/ui/src/types/tradeOrderPresentation.ts",
+    "apps/shop-suit/app/composables/useShopClient.ts"
+  ],
+  "reason": "Location-scoped customer orders reserve actual FIFO stock and physical source reels until an explicit expiry. Ordinary sales, counts and supplier withdrawals cannot consume held capacity; authorized replacement, release, expiry and cancellation retain immutable history.",
+  "notes": {
+    "title": {
+      "en": "Reserve stock for contractor orders",
+      "ar": "حجز المخزون لأوامر المقاولين"
+    },
+    "summary": {
+      "en": "Protect agreed material quantities and physical cable sources while showing on-hand, reserved and available stock.",
+      "ar": "احفظ كميات المواد ومصادر الكابلات الفعلية المتفق عليها مع عرض الموجود والمحجوز والمتاح."
+    },
+    "details": {
+      "en": "Replace or release order holds with a reason and deadline. Expired or cancelled holds return stock to availability. Cashier availability excludes active holds, and competing reservations cannot claim the same stock. Reservations create no invoice or payment.",
+      "ar": "استبدل حجوزات الأمر أو حرّرها مع تسجيل السبب والموعد. تعيد الحجوزات المنتهية أو الملغاة الكمية إلى المتاح. يستبعد المتاح للكاشير الحجوزات النشطة، ولا تستطيع الأوامر المتنافسة حجز المخزون نفسه. لا ينشئ الحجز فاتورة أو دفعة."
+    }
+  }
+}

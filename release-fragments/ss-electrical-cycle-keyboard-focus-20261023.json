@@ -1,0 +1,28 @@
+{
+  "id": "ss-electrical-cycle-keyboard-focus-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/ux/src/composables/useControlFocus.ts"
+  ],
+  "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+  "notes": {
+    "title": {
+      "en": "Keep keyboard focus after changing language",
+      "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
+    },
+    "summary": {
+      "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+      "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
+    },
+    "details": {
+      "en": "Focus stays with a different control if you move away while the language is loading.",
+      "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
+    }
+  }
+}

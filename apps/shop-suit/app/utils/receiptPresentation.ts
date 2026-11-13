@@ -5,6 +5,7 @@ import { formatReceiptDocumentDate, formatReceiptMoney } from './receipt.ts'
 export function projectReceipt(receipt: SaleReceiptSnapshot, language: string, translate: (key: string) => string): { view: BsReceiptView; copy: BsReceiptDocumentCopy } {
   const label = (key: string) => translate(`receipt.${key}`)
   const money = (value: number) => formatReceiptMoney(value, receipt.currency, language)
+  const otherDiscount = Math.max(0, sumReceiptAmounts([receipt.discount, ...((receipt.offers ?? []).map(offer => -offer.saving))]))
   const paid = sumReceiptAmounts(receipt.payments.map(payment => payment.amount))
   // Receipt snapshots are issued when fully paid. Still display actual allocations
   // rather than claiming the invoice total was paid if a legacy payload differs.
@@ -16,10 +17,11 @@ export function projectReceipt(receipt: SaleReceiptSnapshot, language: string, t
       issuer: receipt.business.name, issuerDetails: [receipt.business.address, receipt.business.phone].filter((item): item is string => Boolean(item)),
       invoice: receipt.invoiceNumber, issued: formatReceiptDocumentDate(receipt.issuedAt, language), location: { ...receipt.location, address: receipt.location.address ?? receipt.business.address, phone: receipt.location.phone ?? receipt.business.phone },
       staff: receipt.staffName || '—', customer: receipt.customer.name || label('walkIn'),
-      lines: receipt.lines.map(line => ({ id: line.id, label: line.name, description: receipt.presentation?.showDescriptions === false ? undefined : line.description || line.sku || undefined, quantity: String(Number(line.quantity)), unitPrice: money(line.unitPrice), total: money(line.total) })),
+      lines: receipt.lines.map(line => ({ id: line.id, label: line.name, description: [receipt.presentation?.showDescriptions === false ? undefined : line.description || line.sku, ...(line.measurement?.reelAllocations ?? []).map(piece => `${piece.barcode}: ${piece.soldQuantity} ${line.measurement?.baseUnitCode}`)].filter(Boolean).join(' · ') || undefined, quantity: line.measurement ? `${line.measurement.enteredQuantity} ${line.measurement.packageName || (language === 'ar' ? line.measurement.unitNameAr : line.measurement.unitNameEn)}` : String(Number(line.quantity)), unitPrice: money(Number(line.measurement?.enteredUnitPrice ?? line.unitPrice)), total: money(line.total) })),
       totals: [
         { id: 'subtotal', label: label('subtotal'), value: money(receipt.subtotal) },
-        ...(receipt.discount ? [{ id: 'discount', label: label('discount'), value: '− ' + money(receipt.discount) }] : []),
+        ...(receipt.offers ?? []).map(offer => ({ id: `offer-${offer.id}`, label: `${offer.name} × ${offer.quantity}`, value: `− ${money(offer.saving)}` })),
+        ...(otherDiscount ? [{ id: 'discount', label: label('discount'), value: '− ' + money(otherDiscount) }] : []),
         ...(receipt.tax?.calculationEnabled ? [{ id: 'tax', label: label('tax'), value: money(receipt.tax.tax) }] : []),
         ...(paid !== receipt.total ? [{ id: 'invoice-total', label: label('saleTotal'), value: money(receipt.total) }] : []),
         ...(balance ? [{ id: 'balance', label: label('balance'), value: money(balance) }] : []),

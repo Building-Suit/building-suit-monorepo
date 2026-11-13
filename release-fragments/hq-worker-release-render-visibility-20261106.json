@@ -1,0 +1,22 @@
+{
+  "id": "hq-worker-release-render-visibility-20261106",
+  "task": "HQ-WORKER-RELEASE-RENDER-VISIBILITY-20261106",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/tests/hologram-visibility.test.mjs",
+    "packages/testing/e2e/palette.spec.ts",
+    "tooling/hq-agent-host/VERIFICATION.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Repair aggregate browser qualification blocking Oracle release staging integration: defer offscreen HQ WebGL allocation, preserve lifecycle and controls, and bound Docs palette diagnostic captures without removing assertions, examples or deadlines."
+}

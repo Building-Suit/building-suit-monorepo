@@ -37,7 +37,7 @@ export async function generatePlatform({ slug, title = slug, dryRun = false, roo
     for (const entry of await readdir(directory, { withFileTypes: true })) {
       const file = path.join(relative, entry.name)
       if (entry.isDirectory()) await templates(file)
-      else files.set(file.replace(/\.template$/, ''), await readFile(path.join(directory, entry.name), 'utf8'))
+      else files.set(file.split(path.sep).join('/').replace(/\.template$/, ''), await readFile(path.join(directory, entry.name), 'utf8'))
     }
   }
   await templates()

@@ -1,0 +1,19 @@
+{
+  "id": "hq-native-image-dependency-pin-20261113",
+  "task": "HQ-NATIVE-IMAGE-DEPENDENCY-PIN-20261113",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/live-dispatch-native.Dockerfile",
+    "tooling/hq-agent-host/native-image-pins.test.mjs"
+  ],
+  "reason": "Keep the disposable PostgreSQL 17.11 test fixture stable while PGDG packages advance: pin compatible pg_cron and development headers, retain server-version and source verification. No hosted database or production change."
+}

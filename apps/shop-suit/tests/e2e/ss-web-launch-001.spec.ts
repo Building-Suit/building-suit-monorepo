@@ -14,7 +14,7 @@ for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const them
  const url='https://alpha-tools.shops.building-suit.com/',suffix=ar?'':'?lang=en'
  const initial=await page.goto(url+suffix);await mounted(page);expect(initial?.headers()['cache-control']).toBe('private, no-store');expect(await initial?.text()).not.toMatch(/LEAK-|PRIVATE|Guest launch/)
  await expect(page.getByRole('heading',{name:'Alpha Tools',exact:true})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr');await semantics(page,locale)
- const book=page.getByRole('link',{name:ar?'حجز موعد':'Book an appointment',exact:true});await book.focus();await page.keyboard.press('Enter');await mounted(page)
+ const book=page.getByRole('navigation',{name:ar?'تصفح المتجر':'Shop navigation',exact:true}).getByRole('link',{name:ar?'احجز موعدك':'Book an appointment',exact:true});await book.focus();await page.keyboard.press('Enter');await mounted(page)
  await keyboardChoice(page,ar?'الخدمة والموقع والموظف':'Service, location and staff');await page.getByRole('button',{name:ar?'عرض الأوقات':'Show times',exact:true}).click();await keyboardChoice(page,ar?'الوقت المتاح':'Available time');await semantics(page,locale)
  await page.getByRole('textbox',{name:ar?'الاسم':'Name',exact:true}).fill('Guest launch');await page.getByRole('textbox',{name:ar?'رقم الهاتف':'Phone number',exact:true}).fill('+201000000002');await page.getByRole('button',{name:ar?'تأكيد الحجز':'Confirm booking',exact:true}).click();await expect(page.locator('output')).toHaveText('0123-ABCD-EFGH')
  expect((await context.cookies()).some(c=>c.name==='bs-shop-production-appointment-access'&&c.httpOnly&&c.secure&&c.domain==='alpha-tools.shops.building-suit.com')).toBeTruthy()

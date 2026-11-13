@@ -47,9 +47,15 @@ const server = http.createServer(async (req, res) => {
   // Never retain credential bodies or verification material in fixture telemetry.
   state.calls.push(`${req.method} ${url.pathname}`)
   if (delegationProtocol({ state, req, url, input, send, deny })) return
+  if (url.pathname === '/rest/v1/rpc/doctor_auth_email_exists') {
+    if (req.headers.apikey !== 'sb_secret_synthetic_protocol_fixture') { send({}, 403); return }
+    if (state.emailLookupDelay) await new Promise(resolve => setTimeout(resolve, state.emailLookupDelay))
+    if (state.emailLookupMalformed) { send({ unexpected: 'SYNTHETIC_INVALID_RESPONSE' }); return }
+    send(input.p_email === 'synthetic@example.test' && state.emailExists !== false); return
+  }
   if (input.email && input.email !== 'synthetic@example.test') { deny('invalid_credentials'); return }
   if (url.pathname === '/rest/v1/rpc/doctor_runtime_contract') { send({ product: state.marker, version: 1, data_mode: 'synthetic' }); return }
-  if (url.pathname === '/auth/v1/signup') { state.confirmed = false; state.active = false; state.outbox.push('signup'); send({ user: user(), session: null }); return }
+  if (url.pathname === '/auth/v1/signup') { state.confirmed = false; state.active = false; state.emailExists = true; state.outbox.push('signup'); send({ user: { ...user(), identities: [{ provider: 'email' }] }, session: null }); return }
   if (url.pathname === '/auth/v1/verify') {
     if (input.token !== '123456') { deny('otp_expired'); return }
     state.confirmed = true; state.active = true; send(session()); return

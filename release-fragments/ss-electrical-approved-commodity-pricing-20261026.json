@@ -1,0 +1,34 @@
+{
+  "id": "ss-electrical-approved-commodity-pricing-20261026",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/commodity-pricing.vue",
+    "apps/shop-suit/app/composables/useCommodityPricing.ts",
+    "apps/shop-suit/app/composables/useCommodityQuotePicker.ts",
+    "apps/shop-suit/app/pages/pos.vue",
+    "apps/shop-suit/app/utils/commodityPricingCopy.ts",
+    "apps/shop-suit/app/utils/tradePricing.ts",
+    "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+    "packages/ui/src/templates/BsCommodityPricingPage.vue"
+  ],
+  "reason": "Add explicitly approved same-currency commodity source quotes and exact product-content/premium rules to the existing authoritative price pipeline while retaining prior agreements and issued evidence. Preserve the reviewed payment amount across draft-save quote invalidation.",
+  "notes": {
+    "title": {
+      "en": "Approved commodity reference prices",
+      "ar": "أسعار مواد مرجعية معتمدة"
+    },
+    "summary": {
+      "en": "Price selected products from a documented source quote, approved material content and a stock-unit premium.",
+      "ar": "سعّر أصنافًا مختارة بسعر مصدر موثق ومحتوى مادة معتمد وإضافة لكل وحدة مخزون."
+    },
+    "details": {
+      "en": "Managers approve source currency and validity and retain immutable terms and history. Existing customer agreements, fixed packages, remnants and authorized staff prices keep their precedence. Issued sales and accepted orders retain the original source evidence. Checkout retains the reviewed amount while the draft is saved; no live feed or exchange rate is assumed.",
+      "ar": "يعتمد المدير عملة المصدر وسريانه مع حفظ شروطه وسجله. تحتفظ تعاقدات العملاء والعبوات ذات السعر المحدد والبواقي والأسعار المفوّضة بأولويتها. تحفظ المبيعات الصادرة والأوامر المقبولة دليل المصدر الأصلي. يحتفظ الدفع بالمبلغ الذي تمت مراجعته أثناء حفظ المسودة، دون افتراض تغذية سعرية مباشرة أو سعر صرف."
+    }
+  }
+}

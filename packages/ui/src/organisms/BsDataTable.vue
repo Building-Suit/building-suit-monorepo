@@ -16,7 +16,7 @@ import type {
   BsDataTableQueryAdapter,
   BsDataTableRowAction,
 } from '@building-suit/ux'
-import { csvCell, useTableQueryInteraction } from '@building-suit/ux'
+import { csvCell, useTableQueryInteraction, scrollRegionKey } from '@building-suit/ux'
 
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
@@ -113,7 +113,7 @@ function resolvedFilters() {
 function forwardedSlots() { return Object.keys(slots).filter(key => !['default', 'empty', 'loading', 'toolbar', 'filters'].includes(key) && !/^(?:cell|header|filter|footer)-/.test(key)) }
 const tableContainerPt = computed(() => ({
   class: 'overflow-auto',
-  ...(props.scrollLabel ? { tabindex: 0, role: 'region', 'aria-label': props.scrollLabel } : {}),
+  ...(props.scrollLabel ? { tabindex: 0, role: 'region', 'aria-label': props.scrollLabel, onKeydown: scrollRegionKey } : {}),
   ...(props.maxHeight ? { style: { maxHeight: props.maxHeight } } : {}),
 }))
 function exportCsv() {

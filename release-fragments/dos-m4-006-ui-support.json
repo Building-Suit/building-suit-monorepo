@@ -1,0 +1,22 @@
+{
+  "id": "dos-m4-006-ui-support",
+  "task": "DOS-M4-006",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+    "packages/ui/src/utils/clinicalPresentation.ts",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Use the same complete clinical template for native notes with optional editor sections and read-only conflict/unknown review. Preserve web defaults, register exact purpose and catalogue capability; no clinical authority or activation."
+}

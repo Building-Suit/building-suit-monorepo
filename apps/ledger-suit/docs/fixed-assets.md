@@ -1,5 +1,7 @@
 # Fixed assets and depreciation — V2-IMP-011
 
+2026-10-22 update: native independent-session **duplicate depreciation passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Status: implemented locally with partial verification on 2026-09-25. Full unit, Ledger lint/typecheck/build, workspace-boundary, locale JSON, and diff checks pass. Native SQL/concurrency is blocked by Docker access, and browser execution is blocked by local socket restrictions. Not deployed, hosted-verified, or accountant-accepted.
 
 ## Approved policy and boundary

@@ -1,0 +1,17 @@
+{
+  "id": "dos-m4-008-launch-handoff",
+  "task": "DOS-M4-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/app/plugins/mobile.client.ts",
+    "apps/doctor-suit/mobile/doctor/app/utils/nativeLinks.ts",
+    "apps/doctor-suit/tests/unit/dos-m4-008.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-008.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-008-device-evidence.json"
+  ],
+  "reason": "Handle native launch links after Nuxt mount with deterministic event ordering and disposal; retain every device case and genuine approval gate."
+}

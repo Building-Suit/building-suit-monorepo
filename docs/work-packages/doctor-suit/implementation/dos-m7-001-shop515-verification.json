@@ -1,0 +1,326 @@
+{
+  "schema": "doctor-legal-independent-verifier/v1",
+  "execution_id": "252de2ca-ab6f-4921-82eb-7ddd0fef2ee1",
+  "task_id": "DOS-M7-001",
+  "case_id": "DOS-M7-001-C02",
+  "exact_base": "2884e18aec448ae81555a0fb9431884abc0aa5dd",
+  "exact_candidate": "6134a6e9e69f91ee123258de04ae6b76851d8c45",
+  "started_at_utc": "2026-10-29T20:53:22.183Z",
+  "ended_at_utc": "2026-10-29T20:53:22.429Z",
+  "argv": [
+    "node",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-verify.mjs",
+    "--base",
+    "2884e18aec448ae81555a0fb9431884abc0aa5dd",
+    "--head",
+    "6134a6e9e69f91ee123258de04ae6b76851d8c45"
+  ],
+  "node": "26.8.1",
+  "evaluated_input_sha256": {
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-verify.mjs": "e255c1796874b3989ca3df8714f1fa77268cd4fdecc407e6763f57587df759c5",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001.md": "09ee19ef854ad606a2eaa08308a6dfa80603d4f091392ac1d75d4b6bd1f59dc2",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json": "5f7bc1fd65788363d7919814cb8d99a89de0d1ab81e13fa07de3c2d316668bae",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+    "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+    "docs/architecture/environments.json": "02bdd1787747093cb8563142005bf385c957273072206ba4f8514a9472aaf8e2",
+    "apps/doctor-suit/app/utils/authConfiguration.ts": "9d4963294a1ceba66e3304740858c45c09f923e7639008fd73121164c5dde532",
+    "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+    "apps/doctor-suit/app/utils/privacyRequests.ts": "23f07f6b363078baa0a1b0ba19c7f5fce40d2fc5a9ad9f32fd26ce5822457735",
+    "apps/doctor-suit/app/utils/contactPreferences.ts": "c40704595f4bc01d639f56b4f85dc6465a1cf99fb4d0cb6cbc160c971b0e15ac",
+    "apps/doctor-suit/app/utils/locationContext.ts": "75f5e4981decc38f40772a9cd185a999a5ef72c0b8bfabcd25f04749d6d05587",
+    "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+    "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028"
+  },
+  "assertions": [
+    {
+      "id": "executing-exact-candidate",
+      "status": "passed"
+    },
+    {
+      "id": "parent-is-ancestor",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m7-001-verify.mjs",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m7-001.md",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-task-decision-and-parent",
+      "status": "passed"
+    },
+    {
+      "id": "genuine-review-policies-and-approval-not-invented",
+      "status": "passed"
+    },
+    {
+      "id": "separate-participant-responsibilities-without-assigned-legal-roles",
+      "status": "passed"
+    },
+    {
+      "id": "exact-technical-data-flow-binding",
+      "status": "passed"
+    },
+    {
+      "id": "proposed-requirements-are-not-approved-policy",
+      "status": "passed"
+    },
+    {
+      "id": "dependent-actions-remain-held",
+      "status": "passed"
+    },
+    {
+      "id": "all-domain-criteria-remain-unavailable",
+      "status": "passed"
+    },
+    {
+      "id": "public-pointer-discovery-does-not-become-authoritative-review",
+      "status": "passed"
+    },
+    {
+      "id": "missing-legal-review-is-unavailable",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:unsigned",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:wrong-candidate",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:changed-flow",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:missing-party",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:superseded",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:expired",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:future",
+      "status": "passed"
+    },
+    {
+      "id": "negative-receipt-control:unqualified",
+      "status": "passed"
+    },
+    {
+      "id": "well-shaped-generated-claim-cannot-supply-authority",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-1-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-2-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-3-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-4-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-5-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-6-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-7-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-8-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+      "status": "passed"
+    },
+    {
+      "id": "canonical-packet-9-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "evidence-only-allowed-paths",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:docs/architecture/environments.json",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:docs/architecture/environments.json",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/authConfiguration.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/authConfiguration.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/privacyRequests.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/privacyRequests.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/contactPreferences.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/contactPreferences.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/locationContext.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/locationContext.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/administrativeEdition.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/administrativeEdition.ts",
+      "status": "passed"
+    },
+    {
+      "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/entitlement.ts",
+      "status": "passed"
+    },
+    {
+      "id": "technical-fact-source-unchanged:apps/doctor-suit/app/utils/entitlement.ts",
+      "status": "passed"
+    },
+    {
+      "id": "repository-map-is-not-hosted-state-approval",
+      "status": "passed"
+    },
+    {
+      "id": "existing-synthetic-intake-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "existing-privacy-boundary-rejects:invented-policy",
+      "status": "passed"
+    },
+    {
+      "id": "existing-privacy-boundary-rejects:unapproved-fulfillment",
+      "status": "passed"
+    },
+    {
+      "id": "existing-privacy-boundary-rejects:foreign-account",
+      "status": "passed"
+    },
+    {
+      "id": "existing-memory-only-caregiver-preview-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "synthetic-preview-rejects-invented-legal-approval",
+      "status": "passed"
+    },
+    {
+      "id": "synthetic-preview-rejects-live-scope",
+      "status": "passed"
+    },
+    {
+      "id": "synthetic-preview-rejects-foreign-patient",
+      "status": "passed"
+    }
+  ],
+  "criterion_status": "unavailable-no-qualified-review-receipt",
+  "review_receipt_disposition": "unavailable-no-qualified-receipt",
+  "result": "controls-verified-qualified-review-unavailable",
+  "exit_code": 2,
+  "qualified_cases": {
+    "C01": "unavailable",
+    "C02": "unavailable",
+    "C03": "unavailable",
+    "C04": "unavailable"
+  },
+  "government_registration_performed": false,
+  "hosted_state_validated": false,
+  "legal_or_professional_authority_granted": false,
+  "dependent_actions_enabled": false,
+  "full_task_acceptance": false
+}

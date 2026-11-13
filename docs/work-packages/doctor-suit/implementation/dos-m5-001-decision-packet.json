@@ -1,0 +1,68 @@
+{
+  "task": "DOS-M5-001",
+  "status": "ready for accountable review; identity approval missing",
+  "parent_pr": 470,
+  "parent_sha": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+  "task_acceptance": false,
+  "decision_id": "DOS-M5-GATE-IDENTITY",
+  "decision_status": "open",
+  "document_sha256": "002f9d6ccb0dc0a5223a9249e82353fd37cb8a874344d3543396b485b33e73b6",
+  "accountable_review": {
+    "reviewer": null,
+    "authority_basis": null,
+    "decision_date": null,
+    "approved_candidate": null,
+    "selected_assurance_method": null,
+    "supporting_references": []
+  },
+  "approved_patient_claim": false,
+  "approved_caregiver_authority": false,
+  "approved_native_patient_platform": false,
+  "provider_evidence": [],
+  "contact_equality_grants_authority": false,
+  "reciprocal_doctor_chart_access": false,
+  "proposed_technical_bounds": {
+    "deployed": false,
+    "entropy_bits": 256,
+    "challenge_ttl_minutes": 10,
+    "failed_attempt_limit": 5
+  },
+  "implementation_hold": "No provider/native/live-data dependent patient implementation until the accountable relevant decision is approved.",
+  "existing_evidence_limits": [
+    {
+      "source": "docs/architecture/identity.md",
+      "fact": "Independent product/environment Auth; contact equality cannot merge accounts."
+    },
+    {
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m3-005.md",
+      "fact": "Synthetic communication consent/guardian review is not Auth, custody or clinical authority."
+    },
+    {
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m2-009.md",
+      "fact": "Scoped synthetic recipient release is not a patient identity claim."
+    },
+    {
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m4-010.md",
+      "fact": "Clinician native source and emulator checks cannot approve patient identity, platform or clinical/offline policy."
+    }
+  ],
+  "genuine_gaps": [
+    "patient identity assurance method",
+    "accountable reviewer authority",
+    "purpose consent/withdrawal/recovery review",
+    "caregiver capacity/legal basis",
+    "retention/privacy policy",
+    "patient platform/distribution and command mapping",
+    "clinician-reviewed reminder interpretation"
+  ],
+  "validation": {
+    "diff_hygiene": "passed",
+    "workspace": "138 templates/80 historical migrations unchanged",
+    "canonical_packets": "9 passed/104 unchanged task fingerprints",
+    "release_provenance": "passed against parent2a9f3b4c at the source validation phase; final candidate rechecked before push",
+    "document_digest": "verified",
+    "repository_source_references": "verified",
+    "runtime": "not executed; documentation-only task",
+    "domain_acceptance": "blocked; reviewer/authority/date/candidate/evidence absent"
+  }
+}

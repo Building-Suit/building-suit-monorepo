@@ -4,6 +4,7 @@ import path from 'node:path'
 import ts from 'typescript'
 import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
 import { validateAtomicTemplateArchitecture } from './atomic-template-architecture.mjs'
+import { discoverApplicationRoots } from './application-roots.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
 const failures = []
@@ -37,10 +38,7 @@ async function walk(relative) {
   return files
 }
 
-const appDirectories = (await readdir(path.join(root, 'apps'), { withFileTypes: true }))
-  .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
-  .map(entry => entry.name)
-  .sort()
+const { applications: appDirectories, suits: suitProducts } = await discoverApplicationRoots(root)
 const applicationPackages = []
 for (const app of appDirectories) {
   const packagePath = `apps/${app}/package.json`
@@ -211,4 +209,4 @@ for (const directory of ['apps', 'packages']) for (const entry of await readdir(
 }
 
 if (failures.length) { console.error(failures.join('\n')); process.exitCode = 1 }
-else console.log(`Workspace boundaries pass for ${appDirectories.length} dynamically discovered Suits and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged; ${atomicArchitecture.routes} full route templates with zero migration debt.`)
+else console.log(`Workspace boundaries pass for ${suitProducts.length} dynamically discovered Suits / ${appDirectories.length} applications and ${localComponents.length} classified local components; ${migrations} historical migrations unchanged; ${atomicArchitecture.routes} full route templates with zero migration debt.`)

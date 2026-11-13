@@ -30,7 +30,7 @@ async function fixture(user = google(), { existing = false, storage = new Map(),
   }
   const env = {
     ...onboarding, verifiedGoogleIdentity, BUSINESS_MODES, ref, reactive, computed,
-    definePageMeta() {}, useSupabaseClient: () => client,
+    definePageMeta() {}, useSupabaseClient: () => client, useShopClient: () => client,
     useI18n: () => ({ locale: ref('en'), t: key => key }),
     useSignupWizard: () => ({ step: ref(1), advance: async validate => { if (validate()) env.state.step.value++ }, back() {}, reset() {} }),
     useVerificationTimer: () => ({ expiresAt: ref(0), resendAt: ref(0), expired: ref(false), resendIn: ref(0), expiresIn: ref(0), restore() {}, reset() {}, format() {} }),

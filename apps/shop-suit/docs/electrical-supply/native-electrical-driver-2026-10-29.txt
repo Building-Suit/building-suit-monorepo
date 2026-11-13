@@ -1,0 +1,13 @@
+[WebServer] (node:188939) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:188947) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:188962) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: en (4.2s)
+  ✓  2 apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: ar (4.0s)
+
+  2 passed (10.8s)

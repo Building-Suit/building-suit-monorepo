@@ -1,0 +1,25 @@
+{
+  "id": "dos-m2-002-encounter-foundation",
+  "task": "DOS-M2-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/app/utils/clinicalController.ts",
+    "apps/doctor-suit/app/utils/clinicalRepository.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-002.sql",
+    "apps/doctor-suit/supabase/tests/fixtures/clinical.sql",
+    "apps/doctor-suit/tests/clinical-fixtures.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/unit/dos-m2-001.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m2-002.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-002.md"
+  ],
+  "reason": "Add unactivated synthetic encounter storage and scoped atomic create/save/start APIs, immutable provenance, late-response fencing and disposable SQL authorization tests. No operational Doctor registration, professional signing or real-patient authority."
+}

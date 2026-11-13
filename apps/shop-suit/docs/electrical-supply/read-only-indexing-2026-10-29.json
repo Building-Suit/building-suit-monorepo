@@ -1,0 +1,71 @@
+{
+  "observed_at": "2026-10-29T18:02:36.533135+00:00",
+  "results": [
+    {
+      "url": "https://shop.building-suit.com/",
+      "final_url": "https://shop.building-suit.com/",
+      "status": 200,
+      "x_robots_tag": null,
+      "robots_meta": [
+        "<meta name=\"robots\" content=\"index, follow\">"
+      ],
+      "robots_text": null
+    },
+    {
+      "url": "https://shop.building-suit.com/pricing",
+      "error_type": "HTTPError",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "url": "https://shop.building-suit.com/auth/login",
+      "final_url": "https://shop.building-suit.com/auth/login",
+      "status": 200,
+      "x_robots_tag": "noindex, nofollow",
+      "robots_meta": [
+        "<meta name=\"robots\" content=\"noindex, nofollow\">"
+      ],
+      "robots_text": null
+    },
+    {
+      "url": "https://shop.building-suit.com/robots.txt",
+      "final_url": "https://shop.building-suit.com/robots.txt",
+      "status": 200,
+      "x_robots_tag": "noindex, nofollow",
+      "robots_meta": [],
+      "robots_text": "User-agent: *\nAllow: /\nSitemap: https://shop.building-suit.com/sitemap.xml\n"
+    },
+    {
+      "url": "https://stg.shop.building-suit.com/",
+      "final_url": "https://stg.shop.building-suit.com/",
+      "status": 200,
+      "x_robots_tag": "noindex, nofollow",
+      "robots_meta": [
+        "<meta name=\"robots\" content=\"noindex, nofollow\">"
+      ],
+      "robots_text": null
+    },
+    {
+      "url": "https://stg.shop.building-suit.com/pricing",
+      "error_type": "HTTPError",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "url": "https://stg.shop.building-suit.com/auth/login",
+      "final_url": "https://stg.shop.building-suit.com/auth/login",
+      "status": 200,
+      "x_robots_tag": "noindex, nofollow",
+      "robots_meta": [
+        "<meta name=\"robots\" content=\"noindex, nofollow\">"
+      ],
+      "robots_text": null
+    },
+    {
+      "url": "https://stg.shop.building-suit.com/robots.txt",
+      "final_url": "https://stg.shop.building-suit.com/robots.txt",
+      "status": 200,
+      "x_robots_tag": "noindex, nofollow",
+      "robots_meta": [],
+      "robots_text": "User-agent: *\nAllow: /\n"
+    }
+  ]
+}

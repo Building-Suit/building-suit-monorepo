@@ -1,0 +1,12 @@
+✔ provisioning acceptance refuses ordinary/local/self-hosted execution (1.780657ms)
+✔ only the two isolated product loopback APIs can receive generated fixture credentials (0.468028ms)
+✔ media runner rejects non-Actions, self-hosted and non-disposable execution (1.88216ms)
+✔ media runner rejects hosted projects, arbitrary local services and URL credentials (0.511385ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132.937983

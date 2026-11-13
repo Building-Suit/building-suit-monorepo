@@ -1,0 +1,13 @@
+{
+  "id": "ls-ops-recovery-001-native-restore",
+  "task": "LS-OPS-RECOVERY-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit"
+  ],
+  "reason": "Add guarded native two-project database/Auth/private-Storage backup and recovery rehearsal, exact COPY and customer export checks, independent signing keys and post-restore continuation evidence; preserve all financial volumes and distinguish hosted operation and accountant acceptance."
+}

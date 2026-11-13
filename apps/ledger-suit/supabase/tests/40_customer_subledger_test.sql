@@ -19,6 +19,8 @@ begin
   return pg_temp.check_ar(actual=expected_code,label || ' (SQLSTATE ' || coalesce(actual,'none') || ')');
 end;
 $$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.check_ar(boolean,text), pg_temp.reject_ar(text,text,text) to authenticated;
 create temp table ar_ids(key text primary key,id uuid);
 grant all on ar_ids to authenticated;
 grant all on sequence ar_test_number to authenticated;

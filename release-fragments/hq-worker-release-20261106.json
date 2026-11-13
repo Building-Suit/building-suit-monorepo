@@ -1,0 +1,20 @@
+{
+  "id": "hq-worker-release-20261106",
+  "task": "HQ-WORKER-RELEASE-20261106",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    "tooling/hq-agent-host",
+    "release-changes/items.json"
+  ],
+  "reason": "Implement source-only exact-stg worker packages, signed provenance, safe drain, health-gated activation and rollback; no host access, database migration, production promotion or timer activation."
+}

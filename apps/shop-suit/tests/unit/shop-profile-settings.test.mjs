@@ -5,8 +5,8 @@ import test from 'node:test'
 const migration = await readFile(new URL('../../supabase/migrations/20260930170000_editable_shop_profile.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_profile_settings.sql', import.meta.url), 'utf8')
 const template = await readFile(new URL('../../../../packages/ui/src/templates/BsBusinessSettingsPage.vue', import.meta.url), 'utf8')
-const page = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
-const shopContext = await readFile(new URL('../../app/composables/useShop.ts', import.meta.url), 'utf8')
+const page = await readFile(new URL('../../app/pages/settings/[[section]].vue', import.meta.url), 'utf8')
+const shopContext = await readFile(new URL('../../app/stores/shop.ts', import.meta.url), 'utf8')
 
 test('Shop profile command is permission checked, tenant scoped, and audited', () => {
   assert.match(migration, /has_permission\(p_shop_id, 'settings\.manage'\)/)
@@ -37,9 +37,9 @@ test('Business settings exposes a bilingual responsive Shop profile form and ref
   assert.match(template, /autocomplete="organization"/)
   assert.match(page, /save_shop_profile/)
   assert.match(page, /await reload\(\)/)
-  assert.match(template, /to="#locations"/)
+  assert.match(template, /to="\/settings\/locations"/)
   assert.match(page, /لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني/)
   assert.match(page, /does not change your personal account name or email/)
-  assert.match(template, /<BsPanel[\s\S]+padding="md"/)
+  assert.match(template, /<BsBox[\s\S]+id="shop-profile" as="section"/)
   assert.match(shopContext, /\.select\('id,name,status,business_mode,created_at,business_currency,currency_locked_at'\)/)
 })

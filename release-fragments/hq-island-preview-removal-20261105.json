@@ -1,0 +1,39 @@
+{
+  "id": "hq-island-preview-removal-20261105",
+  "task": "HQ-ISLAND-PREVIEW-REMOVAL-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/island.vue",
+    "packages/ui/src/templates/BsIslandPreviewPage.vue",
+    "packages/ui/src/organisms/BsIslandScene3d.vue",
+    "packages/ui/src/types/islandPreviewPresentation.ts",
+    "packages/ui/src/utils/islandPreviewScene.ts",
+    "packages/ui/src/utils/islandPreviewGeometry3d.ts",
+    "packages/ui/src/utils/islandPreviewRenderer.ts",
+    "packages/ui/src/utils/islandPreviewViewport.ts",
+    "packages/ui/src/utils/islandPreviewWater.ts",
+    "packages/ui/src/utils/islandWorkspaceLayout.ts",
+    "packages/ui/src/utils/islandWorkplaceArchitecture.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/package.json",
+    "packages/ux/src/orthographicWorkspaceCamera.ts",
+    "packages/ux/src/composables/useSpatialWorkspaceSelection.ts",
+    "packages/ux/src/index.ts",
+    "apps/company-hq/README.md",
+    "apps/company-hq/AGENTS.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "The founder withdrew the standalone /island preview. Remove its Nuxt route, dedicated shared presentation/terrain/water/circular-workplace helpers, optional reference renderer environment, orthographic focus extension, exports, active registrations and usage documentation. The preview additions are now net-zero against the committed original HQ implementation; earlier private island fragments remain historical provenance, not surviving functionality or public release items. Preserve the original HQ route, its default renderer/data/authority behavior and unrelated concurrent office-layout work. Static source searches found no remaining preview imports or active route references. Preflight timed out with ETIMEDOUT, so live GitHub/fetch state is unverified. Tests/builds/lint/typechecks/boundary/release/browser/API/runtime/visual checks remain unrun under the standing source-only instruction. No commit, push, merge, deployment or provider action."
+}

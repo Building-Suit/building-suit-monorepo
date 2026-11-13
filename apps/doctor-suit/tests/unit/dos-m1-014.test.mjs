@@ -92,3 +92,18 @@ test('Doctor live status and reconciliation wait for the provider activation ack
   systemReady({ extension: 'postgres_changes',status: 'ok' });await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,true);assert.equal(refreshes,1)
   await live.dispose()
 })
+test('same-query background refresh preserves the current board without first-load teardown',async()=>{
+ const f=fixture();await f.controller.load(query);const previous=f.state.board,pending=deferred();f.repository.board=()=>pending.promise;const read=f.controller.load(query)
+ assert.equal(f.state.loading,false);assert.equal(f.state.refreshing,true);assert.equal(f.state.board,previous)
+ pending.resolve({...previous,revision:2});assert.equal(await read,true);assert.equal(f.state.refreshing,false);assert.equal(f.state.board.revision,2)
+})
+test('a different date/page or session discards the previous board before the new read',async()=>{
+ for(const change of ['date','page','queuePage','session']){
+  const f=fixture();await f.controller.load(query);const pending=deferred();f.repository.board=()=>pending.promise;const next={...query}
+  if(change==='date')next.date='2026-10-21';if(change==='page')next.page=1;if(change==='queuePage')next.queuePage=1;if(change==='session')f.setScope({...f.scope(),sessionId:id(999)})
+  const read=f.controller.load(next);assert.equal(f.state.loading,true);assert.equal(f.state.refreshing,false);assert.equal(f.state.board,null);f.controller.clear();pending.resolve(null);assert.equal(await read,false)
+ }
+})
+test('failed background refresh clears the cached board and refresh indicators',async()=>{
+ const f=fixture();await f.controller.load(query);f.repository.board=async()=>{throw new Error('Synthetic unavailable read')};assert.equal(await f.controller.load(query),false);assert.equal(f.state.board,null);assert.equal(f.state.loading,false);assert.equal(f.state.refreshing,false)
+})

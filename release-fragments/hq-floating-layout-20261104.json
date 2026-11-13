@@ -1,0 +1,30 @@
+{
+  "id": "hq-floating-layout-20261104",
+  "task": "HQ-FLOATING-LAYOUT-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Replace internal HQ reserved header with full-height workspace and compact absolute logo, centered four-tab Workspace/Tasks/Calendar/Brain navigation, left status/CEO/account card and circular overview. Add translated Calendar/Login labels and optional display-only user/avatar projection; current app shows disabled Login and no agents, not invented authentication/activity. Replace camera-following ground with finite 160-segment centered round disk and shallow edge; radius and minimap scale share normalized officeLayerCount (zero now, 4.8+6*layers, integer0–64) and projection depth expands with radius. Preserve canonical coal/charcoal/graphite/Premium Gold, orb/reveal, left rotation/middle pan, sidebar zoom lock and above-floor bounds. No offices/roads, hosted operations, public activation or app checks. Tests/builds/lint/typechecks/boundary/release/browser/runtime/API/benchmarks and tester/reviewer delegation remain deferred per founder direction."
+}

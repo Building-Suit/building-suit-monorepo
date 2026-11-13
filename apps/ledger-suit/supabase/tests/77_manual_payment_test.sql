@@ -14,6 +14,8 @@ begin
   end if;
   return jsonb_populate_record(null::public.manual_payment_requests,result#>'{data,payment}');
 end;$$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.review_manual_payment(uuid,uuid,text,text) to authenticated;
 insert into auth.users(id,email,raw_user_meta_data) values
 ('c0000000-0000-4000-8000-000000000001','manual-owner@example.test','{"full_name":"Manual Owner"}'),
 ('c0000000-0000-4000-8000-000000000002','manual-other@example.test','{"full_name":"Manual Other"}'),

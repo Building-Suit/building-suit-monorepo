@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { ledgerFoundationFixture } from './foundation-fixture'
+import { completePasswordSignIn } from './password-sign-in'
 import { captureFoundation, expectChromeFree, expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
 const entitlements = {
@@ -65,11 +66,7 @@ async function openAuthenticatedShell(page: Page) {
   })
   await page.goto('/platform-admin')
   await expect(page).toHaveURL(/\/login\?operator=1/)
-  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
-  // Label text includes BsField's aria-hidden required marker.
-  await page.getByLabel(/^Email\s*\*?$/).fill(user.email)
-  await page.getByLabel(/^Password\s*\*?$/).fill('synthetic-password')
-  await page.locator('button[type=submit]').click()
+  await completePasswordSignIn(page, user.email, 'synthetic-password')
   await expect(page).toHaveURL('/platform-admin')
 }
 
@@ -107,15 +104,16 @@ test('Ledger shared landing remains accessible in Arabic RTL', async ({ page, co
   await expect(page.getByTestId('plan-pricing-grid').getByRole('radio', { name: 'سنوي' })).toBeVisible()
 })
 
-test('Ledger auth uses the shared split frame, login shell, and responsive RTL signup wizard', async ({ page, context }) => {
+test('Ledger auth uses the shared glass sign-in frame and responsive RTL signup wizard', async ({ page, context }) => {
   await mockPublicBackend(page)
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/login')
   await expect(page.locator('.bs-auth-layout')).toBeVisible()
-  await expect(page.locator('.ls-auth-showcase')).toBeVisible()
+  await expect(page.locator('.bs-auth-layout')).toHaveAttribute('data-presentation', 'glass')
+  await expect(page.getByRole('heading', { name: 'Sign in', exact: true })).toBeVisible()
   await expect(page.locator('.bs-auth-form')).toBeVisible()
   const loginShell = await page.locator('.bs-auth-layout__form-shell').boundingBox()
-  expect(loginShell?.width).toBeLessThanOrEqual(432)
+  expect(loginShell?.width).toBeLessThanOrEqual(568)
 
   await context.addCookies([{ name: 'building-suit-locale', value: 'ar', domain: '127.0.0.1', path: '/' }])
   await page.setViewportSize({ width: 390, height: 844 })
@@ -129,27 +127,30 @@ test('Ledger auth uses the shared split frame, login shell, and responsive RTL s
 })
 
 test('Ledger authenticated shell shares mobile drawer, user menu, settings, and focus behavior', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
   await page.setViewportSize({ width: 390, height: 844 })
   await openAuthenticatedShell(page)
 
   const navigationTrigger = page.getByRole('button', { name: 'Open navigation' })
   await navigationTrigger.click()
-  const navigation = page.locator('#bs-primary-navigation')
+  const navigation = page.getByRole('complementary')
   await expect(navigation).toBeVisible()
   await expect(page.locator('.ls-scrim')).toBeVisible()
+  await expect(navigation.getByRole('button', { name: 'Close navigation', exact: true })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(navigation).toBeHidden()
   await expect(navigationTrigger).toBeFocused()
 
+  await navigationTrigger.click()
   await page.getByRole('button', { name: 'Account menu' }).click()
   const userMenu = page.getByRole('menu', { name: 'Account menu' })
   await expect(userMenu).toBeVisible()
   await expect(userMenu.getByText('operator@example.test')).toBeVisible()
-  await userMenu.getByRole('menuitemradio', { name: 'Dark' }).click()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.keyboard.press('Escape')
   await expect(userMenu).toBeHidden()
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeFocused()
+  await page.getByRole('button', { name: 'Theme: Light', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
 
 test('Ledger shared table sorts, searches, filters, and opens the canonical record modal', async ({ page }) => {
@@ -161,7 +162,11 @@ test('Ledger shared table sorts, searches, filters, and opens the canonical reco
   await expect(table).toContainText('Zeta ledger')
 
   await table.getByRole('columnheader', { name: 'Name' }).click()
+  await expect(table.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'ascending')
   await expect(table.locator('tbody tr').first()).toContainText('Foundation ledger')
+  await table.getByRole('columnheader', { name: 'Name' }).press('Enter')
+  await expect(table.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'descending')
+  await expect(table.locator('tbody tr').first()).toContainText('Zeta ledger')
 
   await page.getByLabel('Search').fill('Foundation')
   await page.getByLabel('Search').press('Enter')
@@ -172,7 +177,7 @@ test('Ledger shared table sorts, searches, filters, and opens the canonical reco
   await page.getByRole('button', { name: 'Apply' }).click()
   await expect(table).toContainText('Foundation ledger')
 
-  await table.locator('tbody tr', { hasText: 'Foundation ledger' }).getByRole('button', { name: 'Suspend' }).click()
+  await table.locator('tbody tr', { hasText: 'Foundation ledger' }).getByRole('button', { name: 'Suspend writes', exact: true }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
@@ -241,14 +246,13 @@ test('Ledger workspace dashboard, account hierarchy/detail, table pagination and
 })
 
 test('Ledger subscription usage and shell context remain usable on narrow dark RTL screens', async ({ page }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
   await ledgerFoundationFixture(page, catalog)
-  await page.getByRole('button', { name: 'Account menu', exact: true }).click()
-  await page.getByRole('menuitem', { name: 'Subscription', exact: true }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('link', { name: 'Subscription', exact: true }).click()
   await expect(page.locator('#usage .bs-usage-meter')).toContainText('26 / 100')
-  await page.getByRole('button', { name: 'Account menu', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'العربية', exact: true }).click()
-  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Theme: Light', exact: true }).click()
+  await page.getByRole('button', { name: 'Language: English', exact: true }).click()
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
@@ -311,6 +315,7 @@ test('Ledger public desktop light frame keeps navigation links and pricing geome
 
 
 test('Ledger shared access presentation preserves role selection, permission editing and invitation commands', async ({ page }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
   const { calls } = await ledgerFoundationFixture(page, catalog, true)
   await page.locator('#__nuxt').evaluate(async (root) => {
     const app = (root as HTMLElement & { __vue_app__?: { config: { globalProperties: { $router?: { push: (to: string) => Promise<unknown> } } } } }).__vue_app__
@@ -321,15 +326,17 @@ test('Ledger shared access presentation preserves role selection, permission edi
   await expect(page.getByRole('tab', { name: /Members/ })).toHaveAttribute('aria-selected', 'true')
   await member.getByRole('button', { name: 'Edit access', exact: true }).click()
   let dialog = page.getByRole('dialog')
-  await expect(dialog.getByRole('radio', { name: /Viewer/ })).toBeChecked()
-  await dialog.getByRole('radio', { name: /Admin/ }).check()
-  await page.keyboard.press('Escape')
+  await expect(dialog.getByRole('combobox', { name: 'Role', exact: true })).toHaveText('Viewer')
+  await dialog.getByRole('combobox', { name: 'Role', exact: true }).click()
+  await page.getByRole('option', { name: 'Admin', exact: true }).click()
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(page.getByRole('dialog').last()).toContainText('Discard unsaved changes?')
   await page.getByRole('alert').getByRole('button', { name: 'Cancel', exact: true }).click()
-  await expect(dialog.getByRole('radio', { name: /Admin/ })).toBeChecked()
+  await expect(dialog.getByRole('combobox', { name: 'Role', exact: true })).toHaveText('Admin')
   await dialog.getByRole('button', { name: 'Save access', exact: true }).click()
   await expect(dialog).toBeHidden()
-  await expect.poll(() => calls.some(call => call.name === 'manage_organization_member')).toBe(true)
+  await expect.poll(() => calls.some(call => call.name === 'manage_organization_member' && call.args.p_role === 'admin')).toBe(true)
   await page.getByRole('button', { name: 'Permission matrix', exact: true }).click()
   dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('columnheader', { name: 'Viewer', exact: true })).toBeVisible()
@@ -348,10 +355,8 @@ test('Ledger shared access presentation preserves role selection, permission edi
   await captureFoundation(page, testInfo, 'ledger-access-desktop-light-en')
   await page.getByRole('button', { name: 'Revoke', exact: true }).click()
   await expect.poll(() => calls.some(call => call.name === 'revoke_organization_invitation' && call.args.p_invitation_id === 'invite-1')).toBe(true)
-  await page.getByRole('button', { name: 'Account menu', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
-  await page.getByRole('menuitemradio', { name: 'العربية', exact: true }).click()
-  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Theme: Light', exact: true }).click()
+  await page.getByRole('button', { name: 'Language: English', exact: true }).click()
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await expectNoPageOverflow(page)

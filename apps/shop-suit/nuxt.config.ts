@@ -11,15 +11,21 @@ export default defineNuxtConfig({
       ],
     },
   },
-  runtimeConfig: { public: {
-    appUrl: process.env.APP_URL, portalKey: 'shop-crm',
-    appEnvironment: process.env.APP_ENV || 'local',
-    // Runtime override: NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX (non-secret).
-    websiteHostnameSuffix: '',
-    // #318 owns the route. Include it only in builds where that file exists.
-    changelogAvailable: existsSync(new URL('./app/pages/changelog.vue', import.meta.url)),
-    gaMeasurementId: '', searchConsoleVerification: '',
-  } },
+  runtimeConfig: {
+    shopAssistantModel: 'google/gemini-3.8-flash',
+    shopAssistantSigningSecret: '',
+    public: {
+      shopAssistantEnabled: false,
+      shopAssistantMode: 'gateway',
+      appUrl: process.env.APP_URL, portalKey: 'shop-crm',
+      appEnvironment: process.env.APP_ENV || 'local',
+      // Runtime override: NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX (non-secret).
+      websiteHostnameSuffix: '',
+      // #318 owns the route. Include it only in builds where that file exists.
+      changelogAvailable: existsSync(new URL('./app/pages/changelog.vue', import.meta.url)),
+      gaMeasurementId: '', searchConsoleVerification: '',
+    },
+  },
   supabase: {
     redirect: false,
     // Independent product/environment session; no cross-product SSO.

@@ -1,0 +1,581 @@
+{
+  "task_id": "DOS-M6-009",
+  "parent_pr": 498,
+  "parent_head": "7655c874e0ee2cb57628458fabb65bd510cc00b7",
+  "initial_draft_head": "a80009ac2413cb9cf4dbaa1d8351de94918ce625",
+  "preserving_parent_merge": "e7859fa4069a76c931a3279e9f115465b716262c",
+  "recorded_at_utc": "2026-10-26T13:50:20.087781+00:00",
+  "source_status": "implemented; actual owned runtime acceptance pending",
+  "local": {
+    "own_node_cases": {
+      "passed": 18,
+      "failed": 0
+    },
+    "combined_focused_cases": {
+      "command": "node --test apps/doctor-suit/tests/unit/dos-m6-00{3,4,5,6,7,9}.test.mjs",
+      "passed": 83,
+      "failed": 0,
+      "own_cases": 18
+    },
+    "doctor_types": "passed",
+    "scoped_doctor_and_shared_lint": "passed",
+    "catalogue_lint": {
+      "errors": 0,
+      "inherited_warnings": 5
+    },
+    "workspace": {
+      "complete_route_entries": 141,
+      "historical_migrations_preserved": 80,
+      "local_components": 0,
+      "migration_debt": 0
+    },
+    "canonical": {
+      "packets": 9,
+      "tasks": 104,
+      "source_bytes": "verified"
+    },
+    "static_sql": {
+      "parser": "pglast7.21",
+      "migration_statements": 9,
+      "plpgsql_bodies": 2,
+      "test_statements": 128,
+      "database_execution": false
+    },
+    "financial_browser_discovery": {
+      "cases": 10,
+      "files": 5,
+      "executed": false
+    },
+    "root_regression": {
+      "command": "pnpm test",
+      "implementation_source": "aae1a082d2cee29b70c6ee5da21989b3f2a8a18d",
+      "tests": 2535,
+      "passed": 2458,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "all_failure_locations": "apps/shop-suit/",
+      "duration_ms": 138611.909763,
+      "qualification": "Product/unit inputs from implementation source; later provenance/E2E-only diagnostics changed during execution. Actual local baseline evidence, not immutable exact-final-head or full-CI acceptance.",
+      "previous_worktree_run": {
+        "tests": 2534,
+        "passed": 2457,
+        "failed": 54,
+        "skipped": 23,
+        "duration_ms": 208023.387614,
+        "note": "Before final exact reconciliation invariant/unit assertion."
+      }
+    },
+    "affected_consumer_types": {
+      "passed": [
+        "doctor-suit",
+        "shop-suit",
+        "ledger-suit",
+        "inventory-suit",
+        "super-admin-suit",
+        "@building-suit/docs",
+        "doctor-mobile"
+      ],
+      "limitation": "Static types only; missing hosted environment configuration warnings expected. Unmatched docs filter corrected to actual @building-suit/docs and executed."
+    },
+    "exact_parent_release": {
+      "first_implementation": "failed: fragment paths had trailing slashes; corrected to exact paths, then passed at5944857f",
+      "diagnostics_update": "failed: two diagnostic test paths unclassified; exact paths added, final recheck pending"
+    }
+  },
+  "owned_ci": {
+    "task_sql_assertions": {
+      "implemented": 57,
+      "executed": false
+    },
+    "real_transaction_scenarios": {
+      "implemented": 3,
+      "executed": false
+    },
+    "en_ar_browser_cases": {
+      "implemented": 2,
+      "executed": false
+    },
+    "runtime_acceptance": "unrun for this source",
+    "generated_schema": "generation/acquisition acceptance unqualified for this source"
+  },
+  "held": {
+    "commercial_payment_tax_qualified_acceptance": false,
+    "government_tax_adapter": false,
+    "external_money_transport": false,
+    "real_patient_data": false,
+    "automation_mutation": false,
+    "hosted_migration": false,
+    "staging_or_main_promotion": false,
+    "full_task_or_milestone_acceptance": false
+  },
+  "inherited_622_followup": {
+    "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+    "run_id": 40330279377,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40330279377",
+    "aggregate": "cancelled; SQL succeeded, Doctor browser failed, shared browser cancelled",
+    "sql": {
+      "job": 121597553814,
+      "status": "success",
+      "assertions": 2120,
+      "suites": 66,
+      "task006": 57,
+      "task007": 62,
+      "billing_transactions": 7,
+      "money_transactions": 8,
+      "exact_recovery_table_fingerprints": 95,
+      "schema_generation": "passed",
+      "generated_schema_acquisition": "unqualified"
+    },
+    "browser": {
+      "job": 121597553311,
+      "public_cases_passed": 60,
+      "protocol_cases_passed": 87,
+      "stress_cases_passed": 4,
+      "financial_receipts": [
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-003",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-003-C02-EN",
+              "status": "passed",
+              "phase": "direction_and_viewport"
+            },
+            {
+              "id": "DOS-M6-003-C02-AR",
+              "status": "failed",
+              "phase": "notice_row",
+              "source_location": {
+                "file": "dos-m6-003.spec.ts",
+                "line": 30,
+                "column": 82
+              }
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-004",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-004-C01-EN",
+              "status": "failed",
+              "phase": "notice_row",
+              "source_location": {
+                "file": "dos-m6-004.spec.ts",
+                "line": 34,
+                "column": 82
+              }
+            },
+            {
+              "id": "DOS-M6-004-C01-AR",
+              "status": "passed",
+              "phase": "direction_and_viewport"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-006",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-006-C02-EN",
+              "status": "timedOut",
+              "phase": "price_create"
+            },
+            {
+              "id": "DOS-M6-006-C02-AR",
+              "status": "timedOut",
+              "phase": "price_create"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-007",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-007-C03-EN",
+              "status": "timedOut",
+              "phase": "route"
+            },
+            {
+              "id": "DOS-M6-007-C03-AR",
+              "status": "timedOut",
+              "phase": "route"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        }
+      ],
+      "full_provider_lifecycle_hook": "unreached after financial subprocess failure"
+    },
+    "shared": {
+      "job": 121597553723,
+      "status": "cancelled",
+      "auth_cases_passed_before_cancellation": 48,
+      "settings": "unqualified"
+    },
+    "conclusion": "Directory page repair does not establish cause/resolution of remaining billing price_create timeouts. Added fine phases/bounded controller diagnostics; no speculative product fix/assertion relaxation."
+  },
+  "parent_history": [
+    "ab4e71cfd773eeacb095d70188a874c1fd5a32e6"
+  ],
+  "actual_6855_runtime": {
+    "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+    "run_id": 40335045291,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40335045291",
+    "conclusion": "failure",
+    "sql": {
+      "job_id": 121614227760,
+      "status": "failure",
+      "fully_passed_existing_suites": 65,
+      "existing_assertions_in_completed_suite_receipts": 2086,
+      "task009": "aborted setup at dos-m6-009.sql:77; no passing suite receipt",
+      "error_class": "doctor_commitment_no_overlap exclusion constraint",
+      "cause": "New generated appointments24/25 overlapped existing day-one appointments in the same synthetic doctor fixture.",
+      "recovery_and_schema_generation": "unrun after suite abort"
+    },
+    "doctor_browser": {
+      "job_id": 121614227843,
+      "status": "failure",
+      "public_passed": 60,
+      "protocol_passed": 87,
+      "stress_passed": 4,
+      "m3_actual": {
+        "accepted": true,
+        "expected": 10,
+        "passed": 10,
+        "failed": 0,
+        "issues": 0
+      },
+      "financial_receipts": [
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-003",
+          "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+          "status": "failed",
+          "cases": [
+            {
+              "diagnostic": {
+                "controller_present": true,
+                "ready": true,
+                "loading": false,
+                "pending": false,
+                "uncertain": false,
+                "selected_present": false,
+                "selected_resolves": false,
+                "has_rows": true,
+                "error": "none"
+              },
+              "id": "DOS-M6-003-C02-EN",
+              "status": "failed",
+              "phase": "notice_detail",
+              "source_location": {
+                "file": "dos-m6-003.spec.ts",
+                "line": 33,
+                "column": 82
+              }
+            },
+            {
+              "diagnostic": {
+                "controller_present": true,
+                "ready": true,
+                "loading": false,
+                "pending": false,
+                "uncertain": false,
+                "selected_present": false,
+                "selected_resolves": false,
+                "has_rows": true,
+                "error": "none"
+              },
+              "id": "DOS-M6-003-C02-AR",
+              "status": "failed",
+              "phase": "notice_detail",
+              "source_location": {
+                "file": "dos-m6-003.spec.ts",
+                "line": 33,
+                "column": 82
+              }
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-004",
+          "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+          "status": "failed",
+          "cases": [
+            {
+              "diagnostic": {
+                "controller_present": true,
+                "ready": true,
+                "loading": false,
+                "pending": false,
+                "uncertain": false,
+                "selected_present": false,
+                "selected_resolves": false,
+                "has_rows": true,
+                "error": "none"
+              },
+              "id": "DOS-M6-004-C01-EN",
+              "status": "failed",
+              "phase": "notice_detail",
+              "source_location": {
+                "file": "dos-m6-004.spec.ts",
+                "line": 37,
+                "column": 82
+              }
+            },
+            {
+              "diagnostic": {
+                "controller_present": true,
+                "ready": true,
+                "loading": false,
+                "pending": false,
+                "uncertain": false,
+                "selected_present": false,
+                "selected_resolves": false,
+                "has_rows": true,
+                "error": "none"
+              },
+              "id": "DOS-M6-004-C01-AR",
+              "status": "failed",
+              "phase": "notice_detail",
+              "source_location": {
+                "file": "dos-m6-004.spec.ts",
+                "line": 37,
+                "column": 82
+              }
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-006",
+          "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-006-C02-EN",
+              "status": "timedOut",
+              "phase": "price_form"
+            },
+            {
+              "id": "DOS-M6-006-C02-AR",
+              "status": "timedOut",
+              "phase": "price_form"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-007",
+          "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-007-C03-EN",
+              "status": "timedOut",
+              "phase": "route"
+            },
+            {
+              "id": "DOS-M6-007-C03-AR",
+              "status": "timedOut",
+              "phase": "route"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-009",
+          "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-009-C02-EN",
+              "status": "failed",
+              "phase": "report_totals",
+              "source_location": {
+                "file": "dos-m6-009.spec.ts",
+                "line": 14,
+                "column": 126
+              }
+            },
+            {
+              "id": "DOS-M6-009-C02-AR",
+              "status": "failed",
+              "phase": "report_totals",
+              "source_location": {
+                "file": "dos-m6-009.spec.ts",
+                "line": 14,
+                "column": 126
+              }
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        }
+      ],
+      "later_financial_persistence_full_provider_lifecycle_hooks": "unreached after financial subprocess failure"
+    },
+    "shared_browser": {
+      "job_id": 121614227914,
+      "status": "failure",
+      "auth_passed": 48,
+      "settings_passed": 6,
+      "settings_failed": 6
+    }
+  },
+  "repair_checkpoint": {
+    "parent008": "7655c874e0ee2cb57628458fabb65bd510cc00b7",
+    "preserving_merge": "0e70fd97fe086077bc6ddbc263adeb528894aff5",
+    "merged_conflict_resolution": "Preserved task007 fixed-state diagnostics and added parent exact accessible-role selectors; no diagnostic/assertion removed.",
+    "sql_fixture": "Generated appointments now start60days after earlier day-one fixtures, one-hour spacing; exclusion constraint stays enabled.",
+    "published_migration_sha256_unchanged": "4b24819c7027de1059fa6ab07b40323f401da66843d069b7bed058129da82fa3",
+    "focused_cases_passed": 84,
+    "own_cases": 18,
+    "financial_discovery_cases": 10,
+    "sql_static_statements": 128,
+    "doctor_types": "passed",
+    "scoped_changed_file_lint": "passed",
+    "current_full_root": "pending combined final task010 candidate; source-specific earlier2535/2458/54/23 retained without invented new count",
+    "new_actual_sql_browser_acceptance": "pending; no closure inferred from local fix"
+  },
+  "c724_actual_ci": {
+    "head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "run_id": 40345633850,
+    "sql_suites": 67,
+    "sql_assertions": 2177,
+    "own_sql": 57,
+    "encrypted_synthetic_restore_table_fingerprints": 95,
+    "full_ci": "failed",
+    "financial_browser": {
+      "003": "2/2 pass",
+      "004": "2/2 pass",
+      "006": "2/2 fail readonly history visibility",
+      "007": "2/2 pass",
+      "009": "2/2 fail missing monetary cells"
+    },
+    "limitations": "Synthetic only; no clinical/legal/financial/tax approval. Full provider acceptance hooks not reached."
+  },
+  "table_mapping_followup": {
+    "local_reproduction": "New isolated shared-UI render comparison fails missing monetary cells before fix; passes after explicit BsDataTable field mappings/rowKey. Existing table behavior unchanged.",
+    "scoped_lint": "passed",
+    "Doctor_typecheck": "passed",
+    "repaired_actual_browser": "pending owned CI",
+    "focused_comparison": "119/119 pass across financial003\u2013007/009 and shared foundation; final merged-parent total will include new ancestor readiness case"
+  },
+  "oct29_source_dialog_diagnosis": {
+    "observed_runs": [
+      40355163190,
+      40357141312
+    ],
+    "actual_failure_coordinates": {
+      "009": {
+        "file": "dos-m6-009.spec.ts",
+        "line": 17,
+        "column": 282
+      },
+      "010": {
+        "file": "dos-m6-010.spec.ts",
+        "line": 14,
+        "column": 481
+      }
+    },
+    "reproduction": "shared SSR with actual pinned PrimeVue Dialog; no Doctor runtime",
+    "before": {
+      "EN_close_buttons": 2,
+      "AR_close_buttons": 2,
+      "single_action_assertion": "failed"
+    },
+    "after": {
+      "EN_AR_ready_loading_error": "passed",
+      "canonical_header_close": "retained"
+    },
+    "browser_assertions_retries_timeouts": "unchanged",
+    "actual_repaired_browser": "pending-owned-CI",
+    "full_task_acceptance": false
+  },
+  "oct29_repaired_candidate_checks": {
+    "source_head": "4b137e31f0e88e764aa0d1ae854d70b5e72b3d70",
+    "parent_pr": 498,
+    "parent_head": "98b0a0b46cd4f04db3116fe0d36cbf8832ba38a3",
+    "focused_tests": {
+      "total": 54,
+      "passed": 54,
+      "failed": 0
+    },
+    "financial_e2e_types": "passed",
+    "changed_shared_lint": "passed",
+    "all_app_types": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "all_static_builds": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "root_tests": {
+      "total": 2539,
+      "passed": 2462,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "all_failure_files": "apps/shop-suit/tests/unit/"
+    },
+    "initial_broad_typecheck": "failed missing generated docs catalogue; corrected by documented pnpm run setup, then all8 passed",
+    "actual_repaired_browser": "pending-owned-CI",
+    "no_local_doctor_runtime": true,
+    "full_task_acceptance": false,
+    "broader_lint": {
+      "exit_code": 1,
+      "doctor_inherited_errors": 12,
+      "shop_untouched_errors": 2,
+      "docs_warnings": 5,
+      "shop_warnings": 25
+    }
+  }
+}

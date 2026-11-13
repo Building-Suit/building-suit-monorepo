@@ -75,7 +75,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Privacy Policy',
       intro: 'This Privacy Policy explains how Shop Suit by Building Suit collects, uses, stores, and protects information when you use our website and software service.',
-      updated: '15 October 2026',
+      updated: '13 November 2026',
       sections: [
         {
           title: '1. Information we collect',
@@ -134,13 +134,21 @@ export const legalDocuments: Record<
             'Use Privacy settings at any time to reject optional analytics or change your choice. Withdrawal removes the analytics document, discards pending events and attempts to expire accessible GA cookies without clearing sign-in cookies. Browser restrictions and previously sent provider data cannot be undone by this control. If local storage is unavailable, the choice lasts only in memory and will be asked again after reload. Browser settings can clear storage. Google Analytics retention and enhanced measurement must be configured by the operator before analytics is enabled.',
           ],
         },
+        {
+          title: 'Building Suit shop agent',
+          paragraphs: [
+            'Where available, a shop owner can enable an AI agent operated by Building Suit. We process the messages you send, the shop and location selected for your request, and the records needed to prepare or carry out the requested operation within your Shop Suit permissions.',
+            'Building Suit’s Shop Suit Agents department processes your recent chat messages and relevant shop context. An employee handles the request, posts a reply in Shop Suit, and reports the result for review. Shop Suit resolves customer and catalog records separately. Your messages may contain personal information, so include only what the request needs.',
+            'We save the messages you send and the agent’s replies so you can reopen the conversation in the same shop and branch. We retain authorization records and keep the work queue for a shorter period to operate and protect the service. Turning off the agent stops new requests and preserves your saved conversation. Our AI processing provider may retain content for service security under its applicable terms. Completed business records remain subject to the usual retention rules.',
+          ],
+        },
         { title: '10. Contact', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressEn}. Email: ${publicBusiness.supportEmail}.`] },
       ],
     },
     ar: {
       title: 'سياسة الخصوصية',
       intro: 'توضح هذه السياسة كيفية جمع واستخدام وحفظ وحماية المعلومات عند استخدام موقع وخدمة Shop Suit by Building Suit.',
-      updated: '15 أكتوبر 2026',
+      updated: '13 نوفمبر 2026',
       sections: [
         {
           title: '1. المعلومات التي نجمعها',
@@ -194,6 +202,14 @@ export const legalDocuments: Record<
             'تظل Google Analytics 4 الاختيارية متوقفة حتى تهيئة موقع الإنتاج وقبولك. يمكنك الرفض واستخدام الخدمة. لا نحمّل التحليلات ولا نرسل طلبات أو إشارات موافقة دون ملفات ارتباط قبل القبول. لا ترسل بيئات الاختبار والمعاينة تحليلات. بعد القبول نقيس زيارات الصفحات العامة والنقر على دعوة الخطط واكتمال إنشاء متجر جديد بنجاح ضمن قائمة محددة، إضافةً إلى بيانات الجلسة والتفاعل القياسية لدى Google بروابط منقّحة. لا نقيس تفعيل الاشتراك المدفوع في هذا الإصدار. لا نرسل معرّفات الحساب والمستخدم أو الأسماء أو البريد أو الهاتف أو سجلات المتجر والعملاء أو محتوى النماذج أو معرّفات الدفع أو معاملات الروابط أو أجزاءها أو مسارات التشغيل.',
             'قد تعالج Google معلومات الجهاز والمتصفح والشبكة وتعيّن معرّفات للمتصفح. نضبط ملفات _ga و_ga_* الخاصة بالقياس لمدة تصل إلى 180 يوماً دون تجديد. تبقى علامة منع تكرار حدث التسجيل bs-shop.analytics.signup لجلسة علامة التبويب بعد الموافقة وتُزال عند السحب. تعمل التحليلات في مستند منفصل بروابط عامة منقّحة، مع تعطيل إشارات الإعلانات وتخزينها وتخصيصها. قد تعالج Google البيانات خارج بلدك وفق سياساتها؛ هذه التحليلات ليست مجهولة الهوية. سجلات الخادم والأمان الضرورية لتشغيل الخدمة منفصلة عن هذا الاختيار.',
             'يمكنك فتح إعدادات الخصوصية في أي وقت ورفض التحليلات أو تغيير اختيارك. يسحب الرفض مستند التحليلات ويحذف الأحداث المعلقة ويحاول إنهاء ملفات GA المتاحة دون مسح ملفات تسجيل الدخول. لا يعكس هذا التحكم البيانات التي أُرسلت سابقاً، وقد تحد قيود المتصفح من إزالة الملفات. عند تعذر التخزين المحلي يبقى الاختيار في الذاكرة فقط ويُطلب بعد إعادة التحميل. يمكنك مسح التخزين من إعدادات المتصفح. يجب على المشغّل ضبط مدة الاحتفاظ لدى Google وتعطيل القياس المحسّن قبل تفعيل التحليلات.',
+          ],
+        },
+        {
+          title: 'مساعد المتجر من Building Suit',
+          paragraphs: [
+            'عند توفر المساعد، يمكن لمالك المتجر تفعيل مساعد ذكاء اصطناعي تشغّله Building Suit. نعالج رسائلك وبيانات المتجر والفرع المحددين لطلبك والسجلات اللازمة لتجهيز العملية المطلوبة أو تنفيذها في حدود صلاحياتك في Shop Suit.',
+            'يعالج قسم وكلاء Shop Suit التابع لـ Building Suit رسائل المحادثة الأخيرة وبيانات المتجر اللازمة. ينفّذ موظف الطلب ويرد عليك في Shop Suit ويرفع النتيجة للمراجعة. يبحث Shop Suit عن سجلات العملاء والكتالوج بشكل منفصل. قد تتضمن رسائلك بيانات شخصية، لذا أدرج فقط ما يحتاجه الطلب.',
+            'نحفظ الرسائل التي ترسلها وردود المساعد لتتمكن من الرجوع إلى المحادثة في المتجر والفرع نفسيهما. نحتفظ بسجلات التفويض ونحتفظ بقائمة الطلبات لمدة أقصر لتشغيل الخدمة وحمايتها. يوقف تعطيل المساعد الطلبات الجديدة ويُبقي محادثتك المحفوظة متاحة. قد يحتفظ مزوّد معالجة الذكاء الاصطناعي بالمحتوى لأمان الخدمة وفقًا لشروطه المطبقة. تخضع سجلات العمليات المكتملة لقواعد الاحتفاظ المعتادة.',
           ],
         },
         { title: '10. التواصل', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressAr}. البريد الإلكتروني: ${publicBusiness.supportEmail}.`] },
@@ -282,7 +298,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Terms & Conditions',
       intro: 'These Terms & Conditions govern access to and use of Shop Suit by Building Suit.',
-      updated: '14 October 2026',
+      updated: '13 November 2026',
       sections: [
         { title: '1. The service', paragraphs: ['Shop Suit is a hosted business-operations service. Features and limits depend on the active plan, account eligibility, and the capabilities made available in the product.'] },
         { title: '2. Accounts and authority', bullets: ['Provide accurate account and business information.', 'Protect credentials and use team permissions appropriately.', 'Only enter or manage information that you are authorized to use.', 'The Shop owner is responsible for authorized team access and activity in the workspace.', 'Team members use their own accounts and accept invitations. Team actions depend on assigned permissions and locations; delegated administrators cannot grant permissions they do not hold.', 'Each user account is intended for one active device/session at a time. Provider enforcement is not currently verified as enabled; where enabled, the newest sign-in takes precedence at session refresh, and already-issued access tokens may remain valid until expiry. This is not an instant-revocation or credential-sharing prevention guarantee. Normal logout ends only the current session.'] },
@@ -300,13 +316,20 @@ export const legalDocuments: Record<
         { title: '6. Availability and changes', paragraphs: ['We work to provide a reliable service but do not promise uninterrupted or error-free availability. We may maintain, secure, or change the service and will update applicable information when material terms change.'] },
         { title: '7. Cancellation, refunds, and records', paragraphs: ['Cancellation and refund requests follow the Refund & Cancellation Policy and applicable law. Subscription expiry or cancellation may restrict new operations while preserving authorized access to existing records. Records may be retained where needed for security, audit, billing, legal, or dispute-resolution purposes.'] },
         { title: '8. Responsibility', paragraphs: ['To the extent permitted by applicable law, you remain responsible for business decisions, source data, devices, credentials, and use of exported information. Nothing in these terms excludes rights or liability that cannot lawfully be excluded.'] },
+        {
+          title: '9. Building Suit shop agent',
+          paragraphs: [
+            'Building Suit owns and operates the optional shop agent and assigns it to your workspace. When you enable it, you authorize Building Suit to process the shop data needed to carry out your requests and perform the Shop Suit actions available under your permissions.',
+            'Submit only requests and information you have authority to share. If Building Suit asks for clarification, provide the required details in chat. For a paid sale, state the amount already paid and the payment method. Once the sale is recorded, you can open its receipt in Shop Suit. Turning off the agent withdraws authorization for new requests. You can still read the conversation saved before you turned it off.',
+          ],
+        },
         { title: '10. Contact', paragraphs: [`Questions about these terms may be sent to ${publicBusiness.supportEmail}. ${publicBusiness.brand} is based in ${publicBusiness.addressEn}.`] },
       ],
     },
     ar: {
       title: 'الشروط والأحكام',
       intro: 'تحكم هذه الشروط والأحكام الوصول إلى Shop Suit by Building Suit واستخدامه.',
-      updated: '14 أكتوبر 2026',
+      updated: '13 نوفمبر 2026',
       sections: [
         { title: '1. الخدمة', paragraphs: ['Shop Suit خدمة مستضافة لإدارة عمليات النشاط. تعتمد المميزات والحدود على الخطة النشطة وأهلية الحساب والقدرات المتاحة داخل المنتج.'] },
         { title: '2. الحسابات والصلاحيات', bullets: ['قدّم بيانات حساب ونشاط دقيقة.', 'احمِ بيانات الدخول واستخدم صلاحيات الفريق بطريقة مناسبة.', 'لا تدخل أو تدير إلا المعلومات المصرح لك باستخدامها.', 'يتحمل مالك المتجر مسؤولية وصول أعضاء الفريق المصرح لهم ونشاطهم داخل مساحة العمل.', 'يستخدم أعضاء الفريق حساباتهم الخاصة ويقبلون الدعوات. تعتمد إجراءات الفريق على الصلاحيات والفروع المسندة، ولا يمكن للمسؤول المفوّض منح صلاحيات لا يملكها.', 'كل حساب مستخدم مخصص لجهاز أو جلسة نشطة واحدة في الوقت نفسه. لم يتم التحقق حاليًا من تفعيل هذا القيد لدى مزود تسجيل الدخول؛ وعند تفعيله تكون الأولوية لأحدث تسجيل دخول عند تحديث الجلسة، وقد تظل رموز الوصول الصادرة صالحة حتى انتهاء مدتها. لا يعني ذلك ضمان الإلغاء الفوري أو منع مشاركة بيانات الدخول. ينهي تسجيل الخروج العادي الجلسة الحالية فقط.'] },
@@ -324,6 +347,13 @@ export const legalDocuments: Record<
         { title: '6. التوفر والتغييرات', paragraphs: ['نعمل على تقديم خدمة موثوقة، لكننا لا نعد بتوفر مستمر أو خالٍ من الأخطاء. وقد نجري أعمال صيانة أو حماية أو تغييرات على الخدمة، ونحدّث المعلومات المطبقة عند تغير الشروط الجوهرية.'] },
         { title: '7. الإلغاء والاسترداد والسجلات', paragraphs: ['تخضع طلبات الإلغاء والاسترداد لسياسة الاسترداد والإلغاء والقانون المطبق. وقد يؤدي انتهاء الاشتراك أو إلغاؤه إلى تقييد العمليات الجديدة مع الحفاظ على الوصول المصرح به للسجلات القائمة. وقد نحتفظ بسجلات لازمة للأمان أو المراجعة أو الفوترة أو الالتزامات القانونية أو حل النزاعات.'] },
         { title: '8. المسؤولية', paragraphs: ['في الحدود التي يسمح بها القانون المطبق، تظل مسؤولًا عن قرارات النشاط والبيانات الأصلية والأجهزة وبيانات الدخول واستخدام المعلومات المصدرة. ولا تستبعد هذه الشروط أي حقوق أو مسؤوليات لا يجوز قانونًا استبعادها.'] },
+        {
+          title: '9. مساعد المتجر من Building Suit',
+          paragraphs: [
+            'تمتلك Building Suit مساعد المتجر الاختياري وتشغّله وتعيّنه لمساحة عملك. عند تفعيله، تفوّض Building Suit بمعالجة بيانات المتجر اللازمة لتنفيذ طلباتك وإجراء العمليات المتاحة لك حسب صلاحياتك في Shop Suit.',
+            'أرسل فقط الطلبات والمعلومات التي يحق لك مشاركتها. إذا طلبت Building Suit توضيحًا، أرسل التفاصيل المطلوبة في المحادثة. لتسجيل بيع مدفوع، اذكر المبلغ المدفوع وطريقة الدفع. بعد تسجيل البيع، يمكنك فتح إيصال البيع في Shop Suit. يؤدي إيقاف المساعد إلى سحب التفويض للطلبات الجديدة، ويمكنك الرجوع إلى المحادثة التي حُفظت قبل إيقافه.',
+          ],
+        },
         { title: '10. التواصل', paragraphs: [`يمكن إرسال الأسئلة عن هذه الشروط إلى ${publicBusiness.supportEmail}. يقع مقر ${publicBusiness.brand} في ${publicBusiness.addressAr}.`] },
       ],
     },

@@ -1,0 +1,20 @@
+{
+  "id": "hq-module-recovery-20261104",
+  "task": "HQ-MODULE-RECOVERY-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/AGENTS.md",
+    "docs/work-packages/company-hq/HQ-MODULE-RECOVERY-20261104.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Record founder-authorized targeted recovery of the persistent HQ HTTP500. Parent reproduced the failure despite existing helper/direct Node import, restarted only HQ with source f86f6e2b unchanged, then observed HTTP200 and an in-app-browser smoke pass for scene/Brain/zoom/reset with no warning/error log entries. No new source/config fix was required; restart cleared the stale development SSR state. This documentation-only checkpoint does not broaden the testing exception or claim general Auth/approval/performance/product acceptance. No full test/build/lint/typecheck/boundary/release suite, provider mutation, app Brain write, deployment or spending."
+}

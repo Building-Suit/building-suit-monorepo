@@ -1,0 +1,16 @@
+{
+  "id": "dos-m5-001",
+  "task": "DOS-M5-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m5-001.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-001-decision-packet.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Prepare an accountable patient claim/consent decision with separate identities, scoped relationships, expiry, audit, disputes and recovery; preserve all missing identity/caregiver/platform/native/provider approvals."
+}

@@ -1,0 +1,18 @@
+<script setup lang="ts">
+import {nativePatientScopeKey} from '../../utils/nativePatients'
+import {nativePatientProfileCopy} from '../../utils/nativePatientsPresentation'
+defineOptions({name:'DoctorNativePatientPage'})
+const patients=useDoctorNativePatients(),context=useDoctorNativeContext(),shell=useDoctorMobile(),{auth}=useDoctorNativeAuth(),route=useRoute(),{locale}=useI18n()
+const copy=computed(()=>nativePatientProfileCopy(locale.value==='ar'))
+const scope=computed(()=>auth.identity()&&context.state.phase==='ready'?context.state.current:null)
+const scopeKey=computed(()=>nativePatientScopeKey(scope.value?.context??null))
+const scopeLabel=computed(()=>scope.value?`${scope.value.doctorName} · ${scope.value.practiceName} · ${scope.value.locationName}`:'')
+const profile=computed(()=>{const value=patients.state.profile;if(!value)return null;return{name:value.patient.name,source:`${copy.value.source} ${value.source.actorLabel} · ${value.source.locationName}`,fields:[{label:copy.value.patientName,value:value.patient.name},{label:copy.value.phone,value:value.patient.phone||copy.value.unknown},{label:copy.value.email,value:value.patient.email||copy.value.unknown},{label:copy.value.birth,value:value.patient.dateOfBirth||copy.value.unknown},{label:copy.value.provenance,value:copy.value.entered}]}})
+const file=ref<File|null>(null),uploadOpen=ref(false),historyOpen=ref(false),previewOpen=ref(false)
+const activity=computed(()=>(patients.state.profile?.activity??[]).map(item=>({id:item.id,event:item.type==='patient.created'?copy.value.created:item.type==='patient.corrected'?copy.value.corrected:copy.value.patientArchived,actor:item.actorLabel,location:item.locationName,date:new Intl.DateTimeFormat(locale.value==='ar'?'ar-EG':'en-GB',{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.happenedAt)),version:String(item.version)})))
+const documents=computed(()=>({rows:(patients.state.documents?.rows??[]).map(row=>({id:row.id,versionId:row.current.id,name:row.current.filename,revision:String(row.current.revision),size:String(row.current.size),mime:row.current.mime,uploader:row.current.uploaderLabel,uploaded:row.current.uploadedAt,location:row.current.locationName,status:copy.value.unreviewed,canReplace:false,canArchive:false,canDownload:false,canPreview:false})),total:patients.state.documents?.total??0,page:0,size:25,loading:false,error:patients.state.documentError==='error'?copy.value.network:null,denied:patients.state.documentError==='denied'||!patients.state.profile?.documentsRead,canUpload:false,pending:false,actionError:null}))
+async function reload(){await shell.navigate(route.path);await patients.profile(String(route.params.id??''))}
+watch([scopeKey,()=>route.params.id],()=>{void reload()},{immediate:true})
+onBeforeUnmount(()=>{patients.clear();file.value=null})
+</script>
+<template><BsPatientProfilePage v-model:file="file" v-model:upload-open="uploadOpen" v-model:history-open="historyOpen" v-model:preview-open="previewOpen" :title="copy.title" :scope-label="scopeLabel" back-href="/patients" :notice="copy.notice+' '+copy.devicePolicy" :loading="patients.state.phase==='loading'" :error="patients.state.phase==='error'?copy.network:null" :denied="!scopeKey||patients.state.phase==='denied'?copy.denied:null" :profile="profile" :activity="activity" :activity-count="String(patients.state.profile?.activityTotal??0)" :documents="documents" :documents-enabled="false" :upload="{title:copy.upload,dirty:false,pending:false,error:null,disabled:true}" :history="{rows:[],total:0,page:0,loading:false,error:null,events:[]}" :preview="{url:'',name:''}" :copy="copy" @retry="reload" @retry-documents="reload"/></template>

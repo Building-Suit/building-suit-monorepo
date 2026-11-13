@@ -1,0 +1,24 @@
+{
+  "id": "hq-open-ocean-20261105",
+  "task": "HQ-OPEN-OCEAN-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/islandWaterMaterial.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-OPEN-OCEAN-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Current ocean direction (5 November): the founder now selects calm-to-moderate open-sea stylized realism, superseding the heavy-wave restoration below. Modify only water rendering/motion in the existing native WebGL system. Seven directional Gerstner components span 41.3 to 3.4 world units, with slow long swells, smaller waves, low steepness, smooth spatial packet/noise modulation and analytic derivatives. Four shading-only ripple layers fade by projected pixel footprint; smaller geometric waves fade too. Use independent bounded phases from an uncapped visible-time water clock, preserving all other animation/camera timing and static reduced motion. Keep Navy/deep-Navy water, rough analytic sky/Fresnel response, soft crest highlights, depth-proxy absorption/transmission, sparse compression-based whitecaps and irregular incoming shoreline wash. No new texture, reflection pass, CPU vertex animation, beach or changes to the island/offices/Orb/roads/Brain/camera/lighting. Preserve existing mesh/pixel budgets. Source-only; tests/checks/runtime/visual/performance acceptance remain unrun under the standing founder restriction."
+}

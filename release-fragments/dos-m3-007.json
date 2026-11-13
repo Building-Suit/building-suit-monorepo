@@ -1,0 +1,19 @@
+{
+  "id": "dos-m3-007",
+  "task": "DOS-M3-007",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/communicationProvider.ts",
+    "apps/doctor-suit/supabase/tests/dos-m3-007.sql",
+    "apps/doctor-suit/tests/e2e/dos-m3-007.spec.ts",
+    "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007-provider-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007-verification.json"
+  ],
+  "reason": "Provider evidence packet and disabled external delivery guard; no approved provider or operational activation."
+}

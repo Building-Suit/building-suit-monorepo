@@ -1,0 +1,78 @@
+{
+  "task": "LS-SEC-DEP-003",
+  "date": "2026-10-23",
+  "parent_pr": 462,
+  "parent_sha": "2487314070f1f9c1469d8847e749f9ab0b3c2f19",
+  "versions": {
+    "nuxt": "4.6.2",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0",
+    "devtools": "3.4.4"
+  },
+  "audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 2,
+    "critical": 0
+  },
+  "native_route_case_regression": {
+    "source_sha256": "1a9754de32112adf8ade8ddb00968261a142e2444cf2743355a49d6ae16eaf23",
+    "parent": {
+      "login": 200,
+      "protected": 307,
+      "uppercase_protected": 200,
+      "uppercase_exposes_synthetic_text": true
+    },
+    "patched": {
+      "login": 200,
+      "protected": 307,
+      "uppercase_protected": 307,
+      "both_redirect_to": "/login",
+      "both_guard_header": true,
+      "protected_text_exposed": false
+    },
+    "fixture_command": "NUXT_ROUTE_SECURITY_DISPOSABLE=1 node tooling/checks/nuxt-route-security.mjs baseline|verify",
+    "other_advisories": "Upstream patched selections; not independently exploit-reproduced"
+  },
+  "verification": {
+    "prepare_apps": 7,
+    "typecheck_apps": 7,
+    "production_build_apps": 7,
+    "build_lock_recovery": "Four exact owned stale lock files removed only after PID zombie, CWD and unchanged-byte verification; two affected app builds rerun successfully with locking enabled",
+    "security_behavior_tests": 6,
+    "shared_foundation_tests": 34,
+    "ledger_atomic_browser": {
+      "pass": 64,
+      "fail": 0,
+      "duration_minutes": 5.1,
+      "browser": "system Chromium 154"
+    },
+    "root_units": {
+      "tests": 2027,
+      "pass": 1946,
+      "fail": 58,
+      "skip": 23,
+      "failed_names_identical_to_parent": true,
+      "inherited_failure_scopes": {
+        "shop": 54,
+        "shared_receipt_and_automation_health": 4
+      }
+    },
+    "changed_source_eslint": "pass; two existing Shop warnings",
+    "workspace": "pass",
+    "release": "pass including committed parent comparison before push"
+  },
+  "removed_dependency": "DevTools upstream removes simple-git; obsolete 3.4.2 import patch deleted; actual tinyexec readonly Git argv and absence regression pass",
+  "source_sha256": {
+    "pnpm-lock.yaml": "68b96d28cd9f63e31f7843e5b19bb48d5b590767334bd7b7c181804fb8dc9de1",
+    "pnpm-workspace.yaml": "ee171bdda7f23e7724b40cf3a80a2cb7020723ef513d6097b42724c76f1443b1",
+    "tooling/checks/toolchain-command-security.test.mjs": "1556558548113c230905cc7e9b0620eb0f865ecae014e8e83bdc488e61d41261",
+    "tooling/checks/nuxt-route-security.mjs": "5cb861f3eeb586fa8d66a5d46576667c5e6ec0130526b74afed413d47dbf7efa"
+  },
+  "limits": [
+    "Remaining high findings: direct Zod v3 and Nitro/listhen node-forge; no advisory ignores.",
+    "No full-CI, hosted deployment/configuration, live Automation database update, accountant UAT or sale-ready claim.",
+    "Ledger browser evidence covers 64 selected atomic cases; legacy fixtures/native billing remain separate."
+  ]
+}

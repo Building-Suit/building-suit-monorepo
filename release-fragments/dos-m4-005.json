@@ -1,0 +1,18 @@
+{
+  "id": "dos-m4-005",
+  "task": "DOS-M4-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/app/utils/patients.ts",
+    "apps/doctor-suit/app/utils/patientProfile.ts",
+    "apps/doctor-suit/tests/unit/dos-m4-005.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-005.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-005-device-evidence.json"
+  ],
+  "reason": "Implement authorized synthetic native patient reads using shared pure Doctor codecs and scoped online-only state; no qualified/device/clinical/offline/provider acceptance or activation."
+}

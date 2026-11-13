@@ -1,0 +1,36 @@
+{
+  "id": "hq-result-work-visibility-20261105",
+  "task": "HQ-RESULT-WORK-VISIBILITY-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/molecules/BsHqWorkActivity.vue",
+    "packages/ui/src/organisms/BsHqWorkforce.vue",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/package.json",
+    "packages/ux/src/composables/useDisplayClock.ts",
+    "packages/ux/src/index.ts",
+    "apps/company-hq/app/utils/hqWorkActivity.ts",
+    "apps/company-hq/app/composables/useHqAgents.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/tests/work-activity.test.mjs",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "docs/work-packages/company-hq/HQ-RESULT-WORK-VISIBILITY-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Private HQ actual work visibility, result-first task details and explicit scoped next-task approval through the existing authorized queue. No public Suit activation, new agent capability or business-plan execution."
+}

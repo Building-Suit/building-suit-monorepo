@@ -1,0 +1,9 @@
+{
+  "id": "hq-plans-backlog-20261109",
+  "task": "HQ-PLANS-BACKLOG-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue"],
+  "reason": "Founder-only Company HQ plans board displays the curated Brain backlog by recorded status. Existing approval and staffing records stay separate from backlog records. No public Suit behavior or activation changes."
+}

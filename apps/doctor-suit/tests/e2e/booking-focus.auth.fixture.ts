@@ -18,12 +18,13 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
     await request.post(fixture, { data: { reset: true } })
     await request.post(fixture, { data: { delegation: true, patients: true, documents: true, availability: true, appointments: true } })
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
+    let page: Page | undefined
     let release: (() => void) | undefined
     try {
       await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
       await context.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
       await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
-      const page = await context.newPage()
+      page = await context.newPage()
       await localRealtimeProtocol(page)
       const copy = doctorAppointmentsCopy(ar)
       await page.goto('/appointments')
@@ -39,6 +40,7 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       await tabTo(page, create)
       await expect(create).toBeFocused()
 
+      const originalDate = await boardDate.elementHandle()
       let captured = 0
       const held = new Promise<void>(resolve => { release = resolve })
       await page.route('**/rest/v1/rpc/doctor_appointment_board', async route => {
@@ -49,7 +51,10 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       })
       await page.evaluate(() => window.dispatchEvent(new Event('focus')))
       await expect.poll(() => captured).toBeGreaterThan(0)
-      await expect(boardDate).toHaveCount(0)
+      await expect(boardDate).toBeVisible()
+      await expect(boardDate).toBeDisabled()
+      expect(await boardDate.evaluate((element, previous) => element === previous, originalDate)).toBe(true)
+      await expect(create).toBeEnabled()
       // A read must not remove the permitted action between keyboard focus and
       // activation. The real synthetic board response is still deliberately held.
       await expect(create).toBeFocused()
@@ -63,15 +68,20 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       expect(response.ok()).toBe(true)
       expect(await response.finished()).toBeNull()
       // Network completion precedes the async adapter/controller/Vue update.
-      // This control returns only after the board loading branch has cleared.
-      await expect(boardDate).toBeVisible()
+      // The retained control is enabled only after the refresh response is applied.
+      await expect(boardDate).toBeEnabled()
       await expect(booking).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(booking).toBeHidden()
       await expect(create).toBeFocused()
     } finally {
       release?.()
-      try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
+      // The held board interceptor belongs to the page, not the context.
+      // Drain it before closing so late refreshes cannot reject after the test.
+      try {
+        await page?.unrouteAll({ behavior: 'wait' })
+        await context.unrouteAll({ behavior: 'wait' })
+      } finally { await context.close() }
     }
   })
 }

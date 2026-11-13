@@ -1,0 +1,16 @@
+{
+  "id": "dos-m4-001",
+  "task": "DOS-M4-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m4-001.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-001-decision-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-001-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Prepare explicit mobile platform/distribution alternatives, reserved boundaries and missing approval/device/offline evidence. No platform selection, framework install, native scaffold, provider/store purchase, operational activation or downstream admission."
+}

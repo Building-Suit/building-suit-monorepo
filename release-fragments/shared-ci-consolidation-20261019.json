@@ -1,0 +1,22 @@
+{
+  "id": "shared-ci-consolidation-20261019",
+  "task": "SHARED-CI-CONSOLIDATION-20261019",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows",
+    "tooling/git/tests/ci-workflow-efficiency.test.mjs",
+    "docs/shared/continuous-integration.md",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Consolidate duplicated Shop website/booking qualification and Doctor builds while retaining unique SQL, browser, reminder and authorization coverage. Retire completed PR-specific bootstrap jobs, preserve required verification/release/cancellation gates, and document suite ownership. This changes CI orchestration only and does not remove failing application tests or activate a product."
+}

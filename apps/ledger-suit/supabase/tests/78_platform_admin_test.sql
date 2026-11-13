@@ -65,6 +65,8 @@ begin
   end loop;
   return true;
 end;$$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.denial_matrix() to authenticated;
 set local role authenticated;
 select ok(pg_temp.denial_matrix(),'all global reads/commands deny all tenant roles, disabled operators and forged metadata across tenants');
 reset role;
@@ -75,7 +77,9 @@ select set_config('request.jwt.claims','{"sub":"d0000000-0000-4000-8000-00000000
 set local role authenticated;
 select is(public.platform_admin_read('identity')#>>'{data,0,role}','observer','explicit observer role');
 select is((select count(*) from jsonb_array_elements(public.platform_admin_read('organizations')->'data') r where (r->>'id')::uuid in (select id from admin_ids where key in ('org1','org2'))),2::bigint,'observer sees both organization summaries');
-select is(jsonb_array_length(public.platform_admin_read('payments')->'data'),2,'observer sees both payment summaries');
+select is((select count(*) from jsonb_array_elements(public.platform_admin_read('payments')->'data') r
+  where (r->>'id')::uuid in (select id from admin_ids where key in ('payment','payment2'))),
+  2::bigint,'observer sees both fixture payment summaries alongside retained history');
 select ok(not ((public.platform_admin_read('organizations')#>'{data,0}') ?| array['tax_identifier','legal_name']),'organization projection omits tax and unrelated details');
 select ok(not ((public.platform_admin_read('users')#>'{data,0}') ?| array['encrypted_password','raw_user_meta_data','default_organization_id']),'user projection contains no auth secrets or tenant preferences');
 select is(public.platform_admin_read('status')#>>'{data,0,support_available}','true','support queue is available');

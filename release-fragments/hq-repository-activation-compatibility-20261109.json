@@ -1,0 +1,9 @@
+{
+  "id": "hq-repository-activation-compatibility-20261109",
+  "task": "HQ-DISCOVERY-FAILURE-DIAGNOSTICS-20261109",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/hq-agent-host/worker.mjs", "tooling/hq-agent-host/worker.test.mjs", "tooling/hq-agent-host/lifecycle.test.mjs", "tooling/hq-agent-host/symlink-entry.test.mjs", "tooling/hq-agent-host/release_test.py", "tooling/hq-agent-host/public-repository-db.test.mjs", "tooling/hq-agent-host/proposed-migrations/hq_repository_worker_compatibility.sql", "docs/work-packages/company-hq/DISCOVERY-FAILURE-DIAGNOSTICS-20261109.md"],
+  "reason": "Fail candidate preflight, paused health/resume and direct startup closed unless authenticated SQL advertises the exact actual worker/module pair. Preserve old worker and historical evidence with private additive capability, without changing updater/workflow sequencing or privileges. Prepared SQL only; no deployment or publication readiness claim."
+}

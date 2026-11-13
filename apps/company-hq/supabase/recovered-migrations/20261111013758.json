@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "environment": "staging",
+  "projectRef": "dpruoncalmwicrqhqelu",
+  "migrationVersion": "20261111013758",
+  "migrationName": "hq_retire_meetings_and_voice_greeting",
+  "source": {
+    "type": "hosted-migration-ledger",
+    "table": "supabase_migrations.schema_migrations",
+    "column": "statements",
+    "statementCount": 1,
+    "statementIndex": 1
+  },
+  "verification": {
+    "observedOn": "2026-11-11",
+    "bytes": 11060,
+    "lineFeeds": 177,
+    "md5": "6991a79261ccf83eef863251d0d11583",
+    "sha256": "06f92be9097abc12b585eb8ef1e51ae23b9bd3e0f343f55b7310565d66d9a8ef",
+    "matchingLiveFunctionBodies": 5
+  },
+  "gitOrigin": {
+    "commit": null,
+    "status": "not-found-in-inspected-history"
+  }
+}

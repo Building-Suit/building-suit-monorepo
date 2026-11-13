@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
+import {once} from 'node:events'
 import {mkdtempSync,writeFileSync,chmodSync,readFileSync,rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
@@ -23,7 +24,7 @@ test('actual observer relay wakes persisted events once per burst, persists its 
   assert.match(queries,/LISTEN bs_dot_wake/)
   assert.match(queries,/FROM control\.dot_wake_events WHERE consumed_at IS NULL/)
   assert.doesNotMatch(queries,/UPDATE|DELETE|INSERT|claim|codex/i)
- }finally{child.kill('SIGTERM');if(child.exitCode===null)await new Promise(resolve=>child.once('exit',resolve));rmSync(home,{recursive:true,force:true})}
+ }finally{await stop(child);rmSync(home,{recursive:true,force:true})}
 })
 
 test('100 derived notifications never reach BS31; a state burst wakes once and relay restart retains delivery identity',async()=>{
@@ -31,12 +32,11 @@ test('100 derived notifications never reach BS31; a state burst wakes once and r
  writeFileSync(fake,`#!/usr/bin/env node\nconst fs=require('node:fs');require('node:readline').createInterface({input:process.stdin}).on('line',line=>{if(line.startsWith('SELECT')){const filtered=line.includes("wake_kind='state'")&&line.includes('retry_exhaustion_audited');const id=fs.existsSync(${JSON.stringify(state)})?41:filtered?0:40;for(let i=0;i<100;i++)console.log('bs_dot_event:'+id);}});`);chmodSync(fake,0o700)
  writeFileSync(hook,`import {appendFileSync} from 'node:fs';const later=globalThis.setTimeout;globalThis.setTimeout=(fn,delay,...args)=>later(fn,delay===15000?25:delay,...args);globalThis.fetch=async(url,options)=>{appendFileSync(${JSON.stringify(record)},options.body+'\\n');return {ok:true}};`)
  const start=()=>spawn(process.execPath,['--import',hook,fileURLToPath(new URL('../runner/dot-event-relay.mjs',import.meta.url))],{env:{...process.env,PATH:home+':'+process.env.PATH,BS_CONTROL_REPOSITORY_ROOT:home,BS_CONTROL_DB_HOST:'fixture',BS_CONTROL_DB_PORT:'1',BS_CONTROL_DB_USER:'observer',BS_CONTROL_DB_NAME:'fixture'},stdio:'ignore'})
- const stop=async child=>{child.kill('SIGTERM');if(child.exitCode===null)await new Promise(r=>child.once('exit',r))}
  let child
  try{child=start();await new Promise(r=>setTimeout(r,500));assert.equal(readFileSyncSafe(record),'');await stop(child)
  writeFileSync(state,'new state');child=start();await new Promise(r=>setTimeout(r,500));await stop(child);assert.equal(readFileSyncSafe(record).trim().split('\n').length,1)
  child=start();await new Promise(r=>setTimeout(r,500));await stop(child);assert.equal(readFileSyncSafe(record).trim().split('\n').length,1)
- }finally{if(child?.exitCode===null)await stop(child);rmSync(home,{recursive:true,force:true})}
+ }finally{await stop(child);rmSync(home,{recursive:true,force:true})}
 })
 function readFileSyncSafe(file){try{return readFileSync(file,'utf8')}catch(error){if(error.code==='ENOENT')return '';throw error}}
 
@@ -53,9 +53,15 @@ test('n8n unavailable after approval does not acknowledge the persisted wake; re
  writeFileSync(fake,`#!/usr/bin/env node\nrequire('node:readline').createInterface({input:process.stdin}).on('line',line=>{if(line.startsWith('SELECT'))console.log('bs_dot_event:51')});`);chmodSync(fake,0o700)
  writeFileSync(hook,`import {appendFileSync,existsSync} from 'node:fs';const later=globalThis.setTimeout;globalThis.setTimeout=(fn,delay,...args)=>later(fn,delay===15000?25:delay,...args);globalThis.fetch=async(url,options)=>{if(!existsSync(${JSON.stringify(available)}))throw Error('n8n unavailable');appendFileSync(${JSON.stringify(record)},options.body+'\\n');return {ok:true}};`)
  const start=()=>spawn(process.execPath,['--import',hook,fileURLToPath(new URL('../runner/dot-event-relay.mjs',import.meta.url))],{env:{...process.env,PATH:home+':'+process.env.PATH,BS_CONTROL_REPOSITORY_ROOT:home,BS_CONTROL_DB_HOST:'fixture',BS_CONTROL_DB_PORT:'1',BS_CONTROL_DB_USER:'observer',BS_CONTROL_DB_NAME:'fixture'},stdio:'ignore'})
- const stop=async child=>{child.kill('SIGTERM');if(child.exitCode===null)await new Promise(r=>child.once('exit',r))}
  let child
- try{child=start();await new Promise(r=>setTimeout(r,400));assert.equal(readFileSyncSafe(record),'');assert.equal(readFileSyncSafe(path.join(home,'.local/control-egress/relay-watermark.json')),'');await stop(child);writeFileSync(available,'ready');child=start();await waitUntil(()=>readFileSyncSafe(path.join(home,'.local/control-egress/relay-watermark.json')).includes('51'));await stop(child);assert.equal(readFileSyncSafe(record).trim().split('\n').length,1);assert.equal(JSON.parse(readFileSync(path.join(home,'.local/control-egress/relay-watermark.json'))).event_id,51)}finally{if(child?.exitCode===null)await stop(child);rmSync(home,{recursive:true,force:true})}
+ try{child=start();await new Promise(r=>setTimeout(r,400));assert.equal(readFileSyncSafe(record),'');assert.equal(readFileSyncSafe(path.join(home,'.local/control-egress/relay-watermark.json')),'');await stop(child);writeFileSync(available,'ready');child=start();await waitUntil(()=>readFileSyncSafe(path.join(home,'.local/control-egress/relay-watermark.json')).includes('51'));await stop(child);assert.equal(readFileSyncSafe(record).trim().split('\n').length,1);assert.equal(JSON.parse(readFileSync(path.join(home,'.local/control-egress/relay-watermark.json'))).event_id,51)}finally{await stop(child);rmSync(home,{recursive:true,force:true})}
 })
 
 async function waitUntil(predicate){const deadline=Date.now()+8000;while(!predicate()){assert.ok(Date.now()<deadline,'relay did not reach its persisted delivery boundary');await new Promise(r=>setTimeout(r,25))}}
+
+// A process terminated before registering its signal handler has signalCode set
+// and exitCode null. Waiting for another exit event would hang fixture cleanup.
+async function stop(child){
+ if(!child||child.exitCode!==null||child.signalCode!==null)return
+ const exited=once(child,'exit');child.kill('SIGTERM');await exited
+}

@@ -1,0 +1,15 @@
+{
+  "id": "shop-capacity-search-staging-reconciliation-20261029",
+  "task": "SS-ELEC-601",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/docs/electrical-supply/CAPACITY-SEARCH-ORDERING-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/capacity-search-reconciled-before-20261029.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-search-reconciled-after-20261029.txt"
+  ],
+  "reason": "Record history-preserving reconciliation of the test-only search response boundary with accepted staging c4497c3d. Fresh merged-source Shop build, deterministic old-assertion failure, corrected ten-case EN/AR capacity pass and static/provenance checks; no runtime, entitlement, financial or hosted configuration changes."
+}

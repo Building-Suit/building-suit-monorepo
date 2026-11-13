@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parse } from '@vue/compiler-sfc'
 import ts from 'typescript'
+import { discoverApplicationRoots } from './application-roots.mjs'
 
 const defaultRoot = fileURLToPath(new URL('../../', import.meta.url))
 export const defaultDebtManifest = 'docs/shared/suit-ui-boundary-debt.json'
@@ -51,10 +52,7 @@ async function walkVue(directory) {
 
 export async function discoverSuitVueFiles(root = defaultRoot) {
   const appsRoot = path.join(root, 'apps')
-  const suits = (await readdir(appsRoot, { withFileTypes: true }))
-    .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit'))
-    .map(entry => entry.name)
-    .sort()
+  const { applications: suits } = await discoverApplicationRoots(root)
   const files = []
   for (const suit of suits) files.push(...await walkVue(path.join(appsRoot, suit, 'app')))
   return { suits, files: files.sort() }

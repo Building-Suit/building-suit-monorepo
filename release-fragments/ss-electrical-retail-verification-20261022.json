@@ -1,0 +1,23 @@
+{
+  "id": "ss-electrical-retail-verification-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/database",
+    "release-changes/items.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    ".github/workflows/shop-measurement-disposable.yml"
+  ],
+  "reason": "Extend the disposable Shop merchant harness and compatible optional shared measurement presentation contracts for existing consumers, including the internal Doctor scaffold. Public Shop/Ledger sign-in label recovery is classified separately; no other Suit is activated."
+}

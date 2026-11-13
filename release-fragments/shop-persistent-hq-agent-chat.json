@@ -1,0 +1,41 @@
+{
+  "id": "shop-persistent-hq-agent-chat",
+  "task": "SS-PERSISTENT-HQ-CHAT",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopAssistant.ts",
+    "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+    "apps/shop-suit/app/layouts/default.vue",
+    "apps/shop-suit/app/middleware/assistant-compatibility.ts",
+    "apps/shop-suit/app/pages/assistant.vue",
+    "apps/shop-suit/app/utils/legal.ts",
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/server/api/assistant/hq/history.post.ts",
+    "apps/shop-suit/server/api/assistant/hq/requests.post.ts",
+    "apps/shop-suit/supabase/migrations/20261113141753_shop_hq_assistant_persistent_chat.sql",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
+    "packages/ui/src/templates/BsAppShell.vue",
+    "packages/ui/src/templates/BsWorkspaceShell.vue"
+  ],
+  "reason": "The Building Suit agent chat follows Shop owners across signed-in pages and restores the saved conversation for the selected branch.",
+  "notes": {
+    "title": {
+      "en": "Floating Shop Suit Agent chat",
+      "ar": "محادثة مساعد Shop Suit العائمة"
+    },
+    "summary": {
+      "en": "Open the Building Suit agent from any signed-in Shop page and pick up the conversation for your selected branch.",
+      "ar": "افتح مساعد Building Suit من أي صفحة بعد تسجيل الدخول وكمّل محادثة الفرع اللي اخترته."
+    },
+    "details": {
+      "en": "Shop Suit saves your messages, agent replies, and receipt links. Replies appear live, and you can reopen the chat or load older messages even while new requests are paused.",
+      "ar": "Shop Suit بيحفظ رسائلك وردود المساعد وروابط الفواتير. الردود بتظهر أول بأول، وتقدر تفتح المحادثة تاني أو تعرض الرسائل الأقدم حتى لو إرسال طلبات جديدة متوقف."
+    }
+  }
+}

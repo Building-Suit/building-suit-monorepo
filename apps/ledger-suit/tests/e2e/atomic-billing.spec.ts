@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { manualCheckoutFixture } from './manual-checkout-fixture'
 import { ledgerFixture, fixtureOrganization } from './atomic-ledger-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 import en from '../../i18n/locales/en.json' with { type: 'json' }
@@ -12,11 +13,13 @@ for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark'
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     const { calls, goto } = await ledgerFixture(page, locale, ['billing.read', 'billing.manage'], (name, args) => {
       if (name === 'subscription_plan_catalog') return catalog
+      if (name === 'subscriptions') return { status: 'active', provider: 'paymob', billing_interval: 'monthly', cancel_at_period_end: false }
       if (name === 'subscription_usage_summary') return [{ plan_key: 'starter', subscription_status: 'active', writes_allowed: true, quota_key: 'max_members', used_value: 2, limit_value: 3, remaining_value: 1, is_unlimited: false, is_at_limit: false, is_over_limit: false }]
       if (name === 'plan_change_impact') return { current_plan_key: 'starter', current_interval: 'monthly', target_plan_key: args.p_target_plan_key, target_interval: args.p_target_interval, target_amount_minor: 325584, change_direction: 'downgrade', provider_change_supported: false, requires_manual_handoff: true, would_block_new_activity: true, audit_history_current_days: 90, audit_history_target_days: 30, audit_history_reduced: true, quota_impacts: [{ quota_key: 'max_members', used_value: 2, current_limit_value: 3, target_limit_value: 1, is_over_target: true, will_block_new_activity: true }], feature_impacts: [] }
       return undefined
     })
     await goto('/billing')
+    await expect(page.getByRole('main')).not.toContainText(/Paymob|باي موب/)
     const pricing = page.getByTestId('plan-pricing')
     await pricing.getByRole('radio', { name: copy.billing.yearly, exact: true }).check()
     await pricing.locator('[data-plan="solo"]').getByRole('button').click()
@@ -42,23 +45,25 @@ for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark'
       if (name === 'subscription_access_state') return 'checkout_required'
       return undefined
     }, { landing: '/subscribe' })
-    let command: object | undefined
-    await page.route('**/functions/v1/paymob-checkout', async route => { command = route.request().postDataJSON(); await route.fulfill({ json: { url: '/billing-test-redirect' } }) })
-    await page.route('**/billing-test-redirect', route => route.fulfill({ contentType: 'text/html', body: '<main>Payment fixture</main>' }))
+    const manualCheckout = await manualCheckoutFixture(page)
     await goto('/subscribe')
     const pricing = page.getByTestId('plan-pricing')
     const policies = pricing.getByTestId('checkout-policy-review')
     await expect(policies.getByRole('link', { name: copy.marketing.terms, exact: true })).toHaveAttribute('href', '/terms')
     await expect(policies.getByRole('link', { name: copy.marketing.refundCancellation, exact: true })).toHaveAttribute('href', '/refund-cancellation')
     await expect(policies.getByRole('link', { name: copy.marketing.privacy, exact: true })).toHaveAttribute('href', '/privacy')
-    await expect(pricing.getByTestId('payment-method-branding')).toHaveText(copy.billing.securePayments)
+    await expect(pricing.getByTestId('payment-method-branding')).toHaveText(copy.billing.manualPaymentNotice)
     await expectNoPageOverflow(page)
     await pricing.getByRole('radio', { name: copy.billing.yearly, exact: true }).check()
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/billing-checkout-ledger-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
     await pricing.locator('[data-plan="solo"]').getByRole('button').first().click()
-    await expect.poll(() => command).toMatchObject({ organizationId: fixtureOrganization, planKey: 'solo', interval: 'yearly' })
-    await expect(page).toHaveURL(/\/billing-test-redirect$/)
+    await expect(page.getByRole('dialog')).toContainText(manualCheckout.instructions)
+    expect(manualCheckout.commands[0]).toMatchObject({ p_organization_id: fixtureOrganization, p_plan_key: 'solo', p_interval: 'yearly' })
+    expect(Object.keys(manualCheckout.commands[0]!).sort()).toEqual(['p_id', 'p_interval', 'p_organization_id', 'p_plan_key'])
+    expect(manualCheckout.onlineCalls()).toBe(0)
+    await expect(page.getByRole('main')).not.toContainText(/Paymob|باي موب/)
+    await expect(page).toHaveURL(/\/subscribe$/)
   })
 }
 
@@ -80,7 +85,7 @@ for (const locale of ['en', 'ar'] as const) {
     await goto('/subscribe')
     const pricing = page.getByTestId('plan-pricing')
     await pricing.getByRole('radio', { name: copy.billing.yearly, exact: true }).check()
-    await pricing.locator('[data-plan="solo"]').getByRole('button', { name: copy.billing.manual.choose, exact: true }).click()
+    await pricing.locator('[data-plan="solo"]').getByRole('button').first().click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toContainText('Fixture transfer instructions')
     const prepared = calls.find(call => call.name === 'prepare_manual_payment')
@@ -97,5 +102,32 @@ for (const locale of ['en', 'ar'] as const) {
     await dialog.getByRole('button', { name: copy.common.refresh, exact: true }).click()
     await expect(dialog).toContainText('receipt.png')
     expect(calls.filter(call => call.name === 'prepare_manual_payment')).toHaveLength(1)
+  })
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`unconfigured InstaPay instructions fail closed: ${locale}`, async ({ page }) => {
+    const copy = locale === 'ar' ? ar : en
+    const { goto } = await ledgerFixture(page, locale, ['billing.read', 'billing.manage'], name => name === 'subscription_plan_catalog' ? catalog : name === 'subscription_access_state' ? 'checkout_required' : undefined, { landing: '/subscribe' })
+    const manual = await manualCheckoutFixture(page)
+    await page.route('**/rest/v1/rpc/prepare_manual_payment', route => route.fulfill({ status: 400, json: { message: 'MANUAL_PAYMENT_NOT_CONFIGURED' } }))
+    await goto('/subscribe')
+    await page.getByTestId('plan-pricing').locator('[data-plan="solo"]').getByRole('button').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(copy.billing.manual.notConfigured)
+    await expect(dialog).not.toContainText(manual.instructions)
+    await expect(dialog.locator('input[type="file"]')).toHaveCount(0)
+    expect(manual.onlineCalls()).toBe(0)
+    await expect(page).toHaveURL(/\/subscribe$/)
+  })
+  test(`billing viewers cannot prepare an InstaPay quote: ${locale}`, async ({ page }) => {
+    const { calls, goto } = await ledgerFixture(page, locale, ['billing.read'], name => name === 'subscription_plan_catalog' ? catalog : name === 'subscription_access_state' ? 'checkout_required' : undefined, { landing: '/subscribe' })
+    const manual = await manualCheckoutFixture(page)
+    await goto('/subscribe')
+    await expect(page.getByTestId('plan-pricing').locator('[data-plan="solo"]').getByRole('button')).toBeDisabled()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(manual.commands).toHaveLength(0)
+    expect(calls.some(call => call.name === 'prepare_manual_payment')).toBe(false)
+    expect(manual.onlineCalls()).toBe(0)
   })
 }

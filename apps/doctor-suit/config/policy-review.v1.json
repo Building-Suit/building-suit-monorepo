@@ -1,0 +1,35 @@
+{
+  "version": "doctor-preview-policies/2026-10-18.2",
+  "sha256": "43935c93d304392be7bf3b56fd5a1824f00ffb2e47660298f9c18661020d749d",
+  "status": "draft",
+  "acceptanceMode": "review_only",
+  "qualifiedReview": null,
+  "operator": {
+    "legalName": null,
+    "registeredAddress": null,
+    "registrationTaxDetails": null,
+    "jurisdiction": null,
+    "privacyContact": null,
+    "supportContact": null
+  },
+  "unconfirmed": [
+    "legal_operator_and_contact",
+    "applicable_jurisdiction_and_mandatory_rights",
+    "qualified_legal_clinical_privacy_review",
+    "hosting_subprocessors_transfers_and_retention",
+    "trial_lifecycle_cancellation_refund_tax_terms",
+    "merchant_recipient_and_independent_reviewer"
+  ],
+  "sources": [
+    {
+      "url": "https://www.instapay.eg/?page_id=348&lang=en",
+      "accessed": "2026-10-18",
+      "use": "Bank-displayed beneficiary, transaction reference/status and investigation concepts; Doctor independent verification is an application safeguard."
+    },
+    {
+      "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/special-category-data/what-is-special-category-data/",
+      "accessed": "2026-10-18",
+      "use": "Specialist context: health information and some administrative records can be sensitive. UK-law applicability is unconfirmed; the guidance itself states it is under review."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "hq-conversational-chat-20261105",
+  "task": "HQ-CONVERSATIONAL-CHAT-20261105",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/organisms/BsHqWorkforce.vue",
+    "packages/ui/src/organisms/BsHqOfficeOverview.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "tooling/hq-agent-host",
+    "docs/work-packages/company-hq/HQ-CONVERSATIONAL-CHAT-20261105.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "release-changes/items.json"
+  ],
+  "reason": "Private HQ Chat gains right-founder/left-agent bubbles, Steve identity, escaped blue named mentions and separate exact task/Brain-receipt details without desk focus. A forward migration adds real CEO-first intake, recipient acknowledgment, one direct-report handoff, supervisor repair directions and reviewed author result links. Preserve real completion evidence, authorization, finite repairs and existing hosted capability boundaries. Founder process is saved in the live canonical Brain; local verification and hosted rollout have separate receipts. No public Suit activation, production release, Git merge or unlimited execution promise."
+}

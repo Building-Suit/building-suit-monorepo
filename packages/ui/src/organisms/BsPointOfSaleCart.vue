@@ -3,20 +3,20 @@ import { useViewportSpace, focusAfterRecordRemoval, usePointOfSaleCheckout } fro
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
 const props = defineProps<{ copy: BsPointOfSaleCopy; view: BsPointOfSaleView; cartLines: BsPointOfSaleCartLine[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; customerOptions: BsPointOfSaleCustomer[]; paymentOptions: BsPointOfSaleChoice[]; appointmentId: string; staffId: string; customerId: string }>()
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ checkout: []; retryContext: []; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: [] }>()
+const emit = defineEmits<{ priceOverride: [id: string, value: string]; priceReason: [id: string, value: string]; checkout: []; retryContext: []; remove: [id: string]; physicalSplit: [id: string, value: boolean]; physicalLoss: [id: string, value: string]; physicalSource: [id: string, value: string]; physicalSearch: [id: string, query: string]; physicalMore: [id: string]; physicalRetry: [id: string]; quantity: [id: string, value: number]; unit: [id: string, value: string]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: [] }>()
 const root = ref<HTMLElement | null>(null)
 const heading = ref<{ $el: HTMLElement } | null>(null)
 const customer = ref<{ focus: () => void } | null>(null)
-const { available, update } = useViewportSpace(() => root.value, 24, () => document.querySelector<HTMLElement>('[data-viewport-bottom]'))
+const { available, reveal } = useViewportSpace(() => root.value, 24, () => document.querySelector<HTMLElement>('[data-viewport-bottom]'))
 const locked = computed(() => props.view.checkingOut || props.view.confirming || props.view.locationChanged)
 function remove(id: string) { if (locked.value) return; const ids = props.cartLines.map(line => line.id); emit('remove', id); void focusAfterRecordRemoval(() => root.value, ids, id, () => heading.value?.$el.focus()) }
 function quantity(id: string, value: number) { if (locked.value) return; if (value <= 0) remove(id); else emit('quantity', id, value) }
 const optionalDetailsOpen = ref(false)
 watch(() => !props.cartLines.length, empty => { if (empty) optionalDetailsOpen.value = false })
 const wizard = usePointOfSaleCheckout(() => !props.cartLines.length, () => locked.value, () => heading.value?.$el.focus())
-async function focusCustomer() { optionalDetailsOpen.value = true; await wizard.select(2); await nextTick(); update(); customer.value?.focus() }
+async function focusCustomer() { optionalDetailsOpen.value = true; await wizard.select(2); await nextTick(); if (await reveal()) customer.value?.focus() }
 function checkout() { if (locked.value) return; if (wizard.step.value === 1) void wizard.select(2); else if (!props.view.checkoutDisabled) emit('checkout') }
-defineExpose({ checkout, focus: () => { update(); heading.value?.$el.focus() }, focusCustomer })
+defineExpose({ checkout, focus: async () => { if (await reveal()) heading.value?.$el.focus({ preventScroll: true }) }, focusCustomer })
 </script>
 <template>
   <section ref="root" class="bs-pos-cart" :style="available ? { '--bs-viewport-space': `${available}px` } : undefined" aria-labelledby="pos-cart-title">
@@ -32,8 +32,17 @@ defineExpose({ checkout, focus: () => { update(); heading.value?.$el.focus() }, 
       <ul v-else>
         <li v-for="line in cartLines" :key="line.id" :data-record-key="line.id">
           <div class="bs-pos-cart__line-heading"><BsCatalogImage :src="line.imageUrl" :name="line.name" :placeholder="copy.imagePlaceholder || ''" /><BsText as="strong" emphasis="semibold">{{ line.name }}</BsText></div>
+          <BsField v-if="line.unitChoices" v-slot="field" :label="copy.unit || copy.quantity"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :label="copy.unit || copy.quantity" :model-value="line.unitValue" :options="line.unitChoices" option-label="label" option-value="value" :disabled="locked || line.quantityLocked" @update:model-value="emit('unit', line.id, String($event))" /></BsField>
+          <BsStack v-if="line.physical" gap="sm">
+            <BsEntityPicker :model-value="line.physical.source" :label="copy.physicalSource || copy.quantity" :options="line.physical.choices" option-label="label" option-value="value" :loading="line.physical.loading" :error="line.physical.error" :has-more="line.physical.hasMore" :load-more-label="copy.physicalMore || copy.retry" :retry-label="copy.retry" :disabled="locked" @update:model-value="emit('physicalSource', line.id, String($event ?? ''))" @search="emit('physicalSearch', line.id, $event)" @load-more="emit('physicalMore', line.id)" @retry="emit('physicalRetry', line.id)" />
+            <BsCheckbox :model-value="line.physical.split" :label="copy.physicalSplit || copy.quantity" :disabled="locked || !line.physical.canSplit" @update:model-value="emit('physicalSplit', line.id, Boolean($event))" />
+            <BsField v-slot="field" :label="`${copy.physicalLoss || copy.quantity} (${line.physical.unit})`" :hint="copy.physicalLossHelp"><BsInput :id="field.id" :model-value="line.physical.loss" :aria-describedby="field.describedby" inputmode="decimal" :disabled="locked" @update:model-value="emit('physicalLoss', line.id, String($event))" /></BsField>
+          </BsStack>
+          <BsPriceApprovalFields v-if="line.pricing" :approval="line.pricing" :record-id="line.id" :disabled="locked" @price="emit('priceOverride', line.id, $event)" @reason="emit('priceReason', line.id, $event)" />
+          <BsText v-if="line.quantityNotice" as="p" size="sm" tone="muted">{{ line.quantityNotice }}</BsText>
+          <BsText v-if="line.baseEquivalent" as="p" size="sm" tone="muted">{{ line.baseEquivalent }}</BsText>
           <div class="bs-pos-cart__line-controls">
-            <BsQuantityStepper :model-value="line.quantity" :label="`${copy.quantity}: ${line.name}`" :decrease-label="`${copy.decrease || copy.quantity}: ${line.name}`" :increase-label="`${copy.increase || copy.quantity}: ${line.name}`" :max="line.maximumQuantity ?? 1000000" :disabled="locked" @update:model-value="quantity(line.id, $event)" />
+            <BsQuantityStepper :model-value="line.quantity" :label="`${copy.quantity}: ${line.name}`" :decrease-label="`${copy.decrease || copy.quantity}: ${line.name}`" :increase-label="`${copy.increase || copy.quantity}: ${line.name}`" :step="line.quantityStep ?? 1" :max="line.maximumQuantity ?? 1000000" :disabled="locked || line.quantityLocked" @update:model-value="quantity(line.id, $event)" />
             <BsText class="bs-pos-cart__line-total" emphasis="semibold">{{ line.total }}</BsText>
             <BsButton variant="icon" :disabled="locked" :aria-label="`${copy.remove}: ${line.name}`" @click="remove(line.id)"><BsIcon name="close" :size="16" /></BsButton>
           </div>
@@ -53,6 +62,7 @@ defineExpose({ checkout, focus: () => { update(); heading.value?.$el.focus() }, 
       </BsDisclosure>
     </div>
     <footer class="bs-pos-cart__footer">
+      <BsText v-if="view.offerSummary" role="status" size="sm">{{view.offerSummary}}</BsText>
       <BsInline justify="between"><BsText emphasis="semibold">{{ copy.total }}</BsText><BsText as="strong" size="lg">{{ view.total }}</BsText></BsInline>
       <BsText size="xs">{{ copy.serverTotal }}</BsText>
       <BsButton v-if="wizard.step.value === 1" variant="primary" :disabled="locked || !cartLines.length" @click="wizard.select(2)">{{ copy.continueToPayment || copy.paymentMethod }}<BsIcon name="arrowRight" directional :size="18" /></BsButton>

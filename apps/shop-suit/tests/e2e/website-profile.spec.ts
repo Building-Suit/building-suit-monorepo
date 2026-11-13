@@ -14,7 +14,7 @@ for (const locale of ['en','ar']) for (const theme of ['light','dark']) test(`pu
     if (name === 'shop_website_profile_save') { settings = { ...settings, draft: args.p_profile as WebsiteProfileDraft }; return settings }
     return undefined
   })
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   const panel = page.locator('#website-profile')
   await expect(panel).toContainText('https://public-profile.shops.building-suit.com')
   const publish = panel.getByRole('button',{name: ar ? 'نشر' : 'Publish',exact:true})
@@ -42,7 +42,7 @@ for (const locale of ['en','ar']) for (const theme of ['light','dark']) test(`pu
 })
 test('public settings denial reads and writes no tenant profile', async ({page}) => {
   const {calls} = await pilotFixture(page,'en','owner',name => name === 'shop_permission_access' ? {'settings.manage':false} : undefined)
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   await expect(page.locator('#website-profile')).toContainText('Settings permission required.')
   expect(calls.some(v => v.name.startsWith('shop_website_profile'))).toBe(false)
 })
@@ -55,7 +55,7 @@ test('unpublish revokes immediately and keeps draft; failures retain edits with 
     return undefined
   })
   await fixtureRoute(page,'**/rest/v1/rpc/shop_website_profile_save',route=>route.fulfill({status:403,json:{message:'private raw SQL details'}}))
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   const panel=page.locator('#website-profile')
   await panel.getByRole('button',{name:'Unpublish',exact:true}).click()
   await expect(panel).toContainText('Unpublished. Your configuration is retained.')
@@ -77,7 +77,7 @@ test('logo picker rejects SVG and oversized dimensions, decodes PNG/JPEG/WebP an
     if(name==='shop_website_logo_replace') { settings={...settings,logoDataUrl:args.p_data_url as string|null};return settings }
     return undefined
   })
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   await page.locator('#website-profile').getByRole('button',{name:'Edit draft',exact:true}).click()
   const dialog=page.getByRole('dialog'), input=dialog.locator('input[type=file]')
   await input.setInputFiles({name:'unsafe.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg onload="alert(1)"/>')})
@@ -109,14 +109,17 @@ test('malformed profile read stays retryable and does not remove the address edi
     if(name==='shop_website_profile') return malformed ? [] : initial()
     return undefined
   })
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   await expect(page.locator('#website-profile')).toContainText('Could not load public profile.')
+  await fixtureGoto(page,'/settings/website-address')
   await expect(page.locator('#website-address')).toContainText('https://public-profile.shops.building-suit.com')
+  await fixtureGoto(page,'/settings/website-profile')
   malformed=false
   await page.locator('#website-profile').getByRole('button',{name:'Retry',exact:true}).click()
   await expect(page.locator('#website-profile').getByRole('button',{name:'Edit draft',exact:true})).toBeEnabled()
 })
 for (const locale of ['en','ar']) test(`archived public location can be hidden and saved without republishing: ${locale}`, async ({page}) => {
+  test.setTimeout(90000)
   const ar=locale==='ar'
   const publicLocation={id:'location-2',visible:true,publicName:'Public branch two',address:'Public street two'}
   let archived=false
@@ -137,14 +140,16 @@ for (const locale of ['en','ar']) test(`archived public location can be hidden a
     }
     return undefined
   })
-  await fixtureGoto(page,'/settings')
+  await fixtureGoto(page,'/settings/website-profile')
   const panel=page.locator('#website-profile')
   await panel.getByRole('button',{name:ar?'تعديل المسودة':'Edit draft',exact:true}).click()
   await expect(page.getByRole('dialog').getByRole('checkbox',{name:/Second branch/})).toBeChecked()
   await page.getByRole('dialog').getByRole('button',{name:ar?'إلغاء':'Cancel',exact:true}).click()
+  await fixtureGoto(page,'/settings/locations')
   await page.locator('#locations').getByRole('row').filter({hasText:'Second branch'}).getByRole('button',{name:ar?'أرشفة':'Archive',exact:true}).click()
   await page.getByRole('dialog',{name:ar?'تأكيد':'Confirm',exact:true}).getByRole('button',{name:ar?'تأكيد':'Confirm',exact:true}).click()
   await expect.poll(()=>archived).toBe(true)
+  await fixtureGoto(page,'/settings/website-profile')
   await fixtureReload(page)
   await panel.getByRole('button',{name:ar?'تعديل المسودة':'Edit draft',exact:true}).click()
   const dialog=page.getByRole('dialog')

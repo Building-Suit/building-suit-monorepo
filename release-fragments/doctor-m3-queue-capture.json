@@ -1,0 +1,17 @@
+{
+  "id": "doctor-m3-queue-capture",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+    "apps/doctor-suit/tests/operations-browser-evidence.mjs",
+    "apps/doctor-suit/tests/unit/operations-browser-evidence.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Capture the keyboard-scrolled queue itself while retaining every assertion/variant, improve bounded privacy-preserving action diagnostics and record completed protocol/stress/provider evidence with the remaining failing M3 obligation. No runtime activation or acceptance waiver."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "ss-electrical-measured-retail-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui"
+  ],
+  "reason": "Enable exact measured receiving, sales and canonical FIFO stock through existing authorized workflows.",
+  "notes": {
+    "title": {
+      "en": "Sell and receive products by unit or package",
+      "ar": "بيع واستلام المنتجات بالوحدة أو العبوة"
+    },
+    "summary": {
+      "en": "Set product units and allowed increments, define product-specific packaging, and use them in purchasing and sales.",
+      "ar": "حدد وحدات المنتجات وأصغر كمية مسموحة، وعرّف عبوات كل منتج واستخدمها في المشتريات والمبيعات."
+    },
+    "details": {
+      "en": "Measured sales show their base quantity and preserve entered units and prices on receipts. Stock, counts and eligible returns use the same canonical quantity; used products retain their historical unit.",
+      "ar": "تعرض المبيعات المقاسة الكمية الأساسية وتحفظ الوحدات والأسعار المدخلة على الإيصالات. يستخدم المخزون والجرد والمرتجعات المؤهلة الكمية الأساسية نفسها، وتحتفظ المنتجات المستخدمة بوحدتها التاريخية."
+    }
+  }
+}

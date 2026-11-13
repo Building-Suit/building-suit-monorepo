@@ -1,0 +1,31 @@
+{
+  "id": "shop-hq-chat-typing-motion",
+  "task": "SS-HQ-CHAT-TYPING-MOTION",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue"
+  ],
+  "reason": "The floating Shop Suit Agent shows a typing indicator while a reply is prepared and presents the receipt link with its response.",
+  "notes": {
+    "title": {
+      "en": "Typing feedback in the Shop Suit Agent chat",
+      "ar": "مؤشر الكتابة في محادثة مساعد Shop Suit"
+    },
+    "summary": {
+      "en": "Three dots show while the agent prepares its reply. The reply and its receipt link appear together.",
+      "ar": "بتظهر ثلاث نقط والمساعد بيجهّز الرد. الرد ورابط الإيصال بيظهروا مع بعض."
+    },
+    "details": {
+      "en": "The chat uses subtle transitions and respects your device’s reduced motion setting.",
+      "ar": "المحادثة بتستخدم حركة بسيطة وبتراعي إعداد تقليل الحركة على جهازك."
+    }
+  }
+}

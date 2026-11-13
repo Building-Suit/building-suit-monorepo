@@ -1,0 +1,9 @@
+{
+  "id": "hq-team-radial-chart-20261108",
+  "task": "HQ-TEAM-RADIAL-CHART-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/utils/hqOrgChart.ts", "packages/ui/src/organisms/BsHqTeamChart.vue", "apps/company-hq/tests/browser/layout.spec.ts", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ Team uses a radial layout with the CEO at the center, round employees and labeled department rings. Actual manager relationships and the existing employee sidebar remain. Local source only; browser verification and publication unrun."
+}

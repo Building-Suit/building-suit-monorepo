@@ -1,0 +1,18 @@
+{
+  "id": "doctor-workspace-entry-inventory-20261022",
+  "task": "DOCTOR-WORKSPACE-ENTRY",
+  "suits": [
+    "shop-suit",
+    "doctor-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Curate bilingual shared-language notes and internal Doctor/shared support provenance. Public Shop copy has explicit current-code evidence in the separate shared-language-names item; no other operational product is activated."
+}

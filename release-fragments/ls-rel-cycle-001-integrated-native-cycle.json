@@ -1,0 +1,9 @@
+{
+  "id": "ls-rel-cycle-001-integrated-native-cycle",
+  "task": "LS-REL-CYCLE-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit"],
+  "reason": "Add native combined AR/AP/assets/bank/cash-flow and period-close acceptance with independently calculated daily depreciation, preserving the separate manual worksheet and all applied migration and product contracts."
+}

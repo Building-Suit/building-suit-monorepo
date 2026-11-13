@@ -5,8 +5,8 @@ const emit = defineEmits<{ selectSuit: [id: string] }>()
 </script>
 <template>
   <BsWorkspaceShell v-if="!suits.length" home-path="/" :product-name="productName" :groups="[]" :labels="entryLabels" :logo="{ kind: 'product' }"><slot /></BsWorkspaceShell>
-  <BsAdministrationShell v-else :suits="suits" :groups="groups" :selected-suit="selectedSuit" :selected-context="selectedContext" :context-title="contextTitle" :labels="labels" :loading="loading" @select-suit="emit('selectSuit', $event.id)">
-    <template #header><BsInline justify="between"><BsProductLogo :name="productName" /><BsSettingsMenu /></BsInline></template>
+  <BsAdministrationShell v-else :product-name="productName" :suits="suits" :groups="groups" :selected-suit="selectedSuit" :selected-context="selectedContext" :context-title="contextTitle" :labels="labels" :loading="loading" @select-suit="emit('selectSuit', $event.id)">
+    <template #mark><BsProductLogo :name="productName" kind="mark" /></template>
     <slot />
   </BsAdministrationShell>
 </template>

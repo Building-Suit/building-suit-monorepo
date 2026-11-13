@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -45,7 +47,7 @@ let shopId
 try {
   await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('${ownerId}','${ownerId}@supplier-concurrency.invalid','x','authenticated','authenticated','{}','{}',now(),now());`)
   shopId = lastLine((await runSql(authenticated(ownerId,
-    `select public.create_owner_shop('Supplier concurrency fixture','pro','product'::public.business_mode);`))).stdout)
+    `select public.create_owner_shop('Supplier concurrency fixture','multi','product'::public.business_mode);`))).stdout)
   const productId = lastLine((await runSql(authenticated(ownerId,
     `select public.save_product('${shopId}',null,'Concurrency item','PUR-CONCURRENCY',null,20);`))).stdout)
   const vendorId = lastLine((await runSql(authenticated(ownerId,
@@ -54,7 +56,7 @@ try {
     `select public.create_supplier_purchase('${randomUUID()}','${shopId}','${vendorId}','PUR-CONCURRENCY',current_date,null,'[{"product_id":"${productId}","quantity":10,"unit_cost":10}]'::jsonb);`))).stdout)
   const itemId = lastLine((await runSql(`select id from public.vendor_invoice_items where vendor_invoice_id='${purchaseId}';`)).stdout)
 
-  const paymentOne = `begin; select 1 from public.vendor_invoices where id='${purchaseId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_supplier_payment('${randomUUID()}','${shopId}','${vendorId}',70,now(),'cash',null,null,'[{"vendor_invoice_id":"${purchaseId}","amount":70}]'::jsonb); commit;`
+  const paymentOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_supplier_payment('${randomUUID()}','${shopId}','${vendorId}',70,now(),'cash',null,null,'[{"vendor_invoice_id":"${purchaseId}","amount":70}]'::jsonb); select pg_sleep(0.4); commit;`
   const firstPayment = runSql(paymentOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const secondPayment = runSql(authenticated(ownerId,
@@ -74,7 +76,7 @@ try {
   await runSql(authenticated(ownerId,
     `select public.reverse_supplier_payment('${randomUUID()}','${shopId}','${paymentId}',now(),'Prepare return race',null,'[{"allocation_id":"${allocationId}","amount":70}]'::jsonb);`))
 
-  const returnOne = `begin; select 1 from public.inventory_batches where source_id='${purchaseId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_purchase_return('${randomUUID()}','${shopId}','${purchaseId}',now(),'Concurrent return one',null,'[{"vendor_invoice_item_id":"${itemId}","quantity":6}]'::jsonb); commit;`
+  const returnOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_purchase_return('${randomUUID()}','${shopId}','${purchaseId}',now(),'Concurrent return one',null,'[{"vendor_invoice_item_id":"${itemId}","quantity":6}]'::jsonb); select pg_sleep(0.4); commit;`
   const firstReturn = runSql(returnOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const secondReturn = runSql(authenticated(ownerId,
@@ -84,8 +86,8 @@ try {
     || returnRace.filter(result => result.stderr.includes('PURCHASE_RETURN_STOCK_UNAVAILABLE')).length !== 1) {
     throw new Error(`purchase return race did not serialize safely: ${JSON.stringify(returnRace)}`)
   }
-  const returnEvidence = lastLine((await runSql(`select count(*) || '|' || sum(item.quantity) || '|' || min(batch.remaining_quantity) || '|' || shop_private.purchase_payable('${purchaseId}') from public.purchase_return_items item join public.inventory_batches batch on batch.id=item.inventory_batch_id where item.shop_id='${shopId}' group by item.shop_id;`)).stdout)
-  if (returnEvidence !== '1|6.000|4.00|40.00') throw new Error(`purchase return race reconciliation failed: ${returnEvidence}`)
+  const returnEvidence = lastLine((await runSql(`select count(*) || '|' || trim_scale(sum(item.quantity))::text || '|' || trim_scale(min(batch.remaining_quantity))::text || '|' || trim_scale(shop_private.purchase_payable('${purchaseId}'))::text from public.purchase_return_items item join public.inventory_batches batch on batch.id=item.inventory_batch_id where item.shop_id='${shopId}' group by item.shop_id;`)).stdout)
+  if (returnEvidence !== '1|6|4|40') throw new Error(`purchase return race reconciliation failed: ${returnEvidence}`)
   console.log(`shop_supplier_concurrency: passed; payment ${paymentEvidence}; return ${returnEvidence}`)
 }
 finally {

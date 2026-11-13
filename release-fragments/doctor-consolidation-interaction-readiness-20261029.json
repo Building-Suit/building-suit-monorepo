@@ -1,0 +1,28 @@
+{
+  "id": "doctor-consolidation-interaction-readiness-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/molecules/BsSelect.vue",
+    "packages/ui/src/organisms/BsLandingTopHeader.vue"
+  ],
+  "reason": "Make shared selection and landing-menu controls unavailable until their existing handlers can respond; only Shop has verified public registration in this initiative. Doctor remains synthetic and separately gated.",
+  "notes": {
+    "title": {
+      "en": "Controls wait until they can respond",
+      "ar": "انتظار جاهزية عناصر التحكم قبل استخدامها"
+    },
+    "summary": {
+      "en": "Selection controls stay disabled while choices load, and the mobile menu waits until it is ready.",
+      "ar": "تبقى عناصر الاختيار معطلة أثناء تحميل الخيارات، وتنتظر قائمة الهاتف حتى تصبح جاهزة."
+    },
+    "details": {
+      "en": "Loading choices no longer looks like an available selection, and an early tap on the mobile menu is not silently lost. Existing permissions and form validation remain unchanged.",
+      "ar": "لا يظهر اختيار قيد التحميل كأنه متاح، ولا تضيع ضغطة مبكرة على قائمة الهاتف دون استجابة. تبقى الصلاحيات والتحقق من النماذج كما هي."
+    }
+  }
+}

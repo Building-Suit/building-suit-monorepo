@@ -1,0 +1,35 @@
+[Unit]
+Description=Building Suit private HQ agent worker
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/building-suit-hq-agent-host/current
+EnvironmentFile=/home/ubuntu/.config/building-suit-hq/worker.env
+Environment=HQ_CODEX_BIN=/home/ubuntu/.local/bin/codex
+Environment=HQ_WORKER_STATE_DIR=/home/ubuntu/.local/state/building-suit-hq-worker
+Environment=PATH=/home/ubuntu/.local/lib/node-v24.15.0-linux-x64/bin:/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HQ_RELEASE_MANAGED=1
+ExecStart=/opt/building-suit-hq-agent-control/bin/node --preserve-symlinks-main /opt/building-suit-hq-agent-host/current/worker.mjs
+Restart=always
+RestartSec=15
+TimeoutStopSec=infinity
+KillMode=mixed
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/.codex /home/ubuntu/.local/state/building-suit-hq-worker
+MemoryMax=600M
+TasksMax=96
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

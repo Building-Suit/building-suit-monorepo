@@ -1,0 +1,20 @@
+{
+  "id": "hq-shared-hr-profile-path-20261107",
+  "task": "HQ-SHARED-HR-PROFILE-PATH-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/workforceRoster.mjs",
+    "tooling/hq-agent-host/workforceRoster.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Apply existing optional-extension path semantics to the exact HR lead shared-learning allowlist comparison; preserve the fixed shared skill and rejection for every other profile or CEO skill."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "ls-ci-qual-001-auth-field-labels",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "ledger-suit",
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "Give the sole canonical auth forms stable, distinct field IDs so native labels remain associated after SSR hydration and form updates. Account and verified-identity stages use separate IDs.",
+  "notes": {
+    "title": {
+      "en": "Keep account fields accessible after loading",
+      "ar": "إبقاء حقول الحساب متاحة بعد تحميل الصفحة"
+    },
+    "summary": {
+      "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
+      "ar": "تحتفظ حقول البريد وكلمة المرور وبيانات التسجيل بتسمياتها عند اكتمال تفاعل صفحات الحساب."
+    },
+    "details": {
+      "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
+      "ar": "تتعرف قارئات الشاشة والتنقل عبر التسميات على الحقول بصورة متسقة بالعربية والإنجليزية."
+    }
+  }
+}

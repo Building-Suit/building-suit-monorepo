@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { BsPurchasingView, BsSupplierForm, BsPurchaseForm, BsPurchasingFilters, BsSupplierRow, BsPurchaseRow, BsPurchasingPicker } from '@building-suit/ui/types/purchasingPresentation'
+import { measurementUnits } from '~/utils/measurement'
+import { cartQuantityStep, measuredBaseQuantity, saleLineInput } from '~/utils/pos'
+import type { ProductMeasurementOptions, PosMeasurement } from '~/types/measurement'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 const { businessCurrency } = useShop()
 
@@ -31,7 +34,7 @@ type Purchase = {
   notes: string | null
   createdAt: string
 }
-type PurchaseLine = { key: number; productId: string; quantity: number; unitCost: number }
+type PurchaseLine = import('@building-suit/ui/types/purchasingPresentation').BsPurchaseLineForm
 type VendorPage = { items: Vendor[]; total: number }
 type PurchasePage = { items: Purchase[]; total: number; page: number; pageSize: number }
 
@@ -60,6 +63,8 @@ const actionError = ref('')
 const successMessage = ref('')
 const voidingId = ref<string | null>(null)
 const requestId = ref<string | null>(null)
+const measurementContexts = reactive<Record<number, { productId: string; data: ProductMeasurementOptions | null; loading: boolean; error: string; request: number }>>({})
+let measurementRequest = 0
 let lineKey = 0
 
 function localToday() {
@@ -102,7 +107,7 @@ const copy = computed(() => isArabic.value ? {
   contactName: 'اسم جهة الاتصال', phone: 'الهاتف', email: 'البريد الإلكتروني', address: 'العنوان',
   taxNumber: 'الرقم الضريبي', notes: 'ملاحظات', saveSupplier: 'حفظ المورد', savePurchase: 'ترحيل المشتريات',
   saving: 'جاري الحفظ...', cancel: 'تراجع', invoiceNumber: 'رقم فاتورة المورد', optional: 'اختياري',
-  date: 'تاريخ الشراء', product: 'المنتج', quantity: 'الكمية', unitCost: 'تكلفة الوحدة', lineTotal: 'إجمالي البند',
+  unit: 'وحدة الشراء', date: 'تاريخ الشراء', product: 'المنتج', quantity: 'الكمية', unitCost: 'تكلفة الوحدة', lineTotal: 'إجمالي البند',
   addLine: 'إضافة بند', removeLine: 'حذف البند', total: 'الإجمالي', status: 'الحالة', posted: 'مرحّل', voided: 'ملغى',
   void: 'إلغاء', actions: 'إجراءات', recent: 'سجل المشتريات', search: 'ابحث في المشتريات',
   empty: 'لا توجد مشتريات بعد.', noResults: 'لا توجد نتائج مطابقة.', loading: 'جاري التحميل...',
@@ -125,7 +130,7 @@ const copy = computed(() => isArabic.value ? {
   contactName: 'Contact name', phone: 'Phone', email: 'Email', address: 'Address',
   taxNumber: 'Tax number', notes: 'Notes', saveSupplier: 'Save supplier', savePurchase: 'Post purchase',
   saving: 'Saving...', cancel: 'Cancel', invoiceNumber: 'Supplier invoice number', optional: 'Optional',
-  date: 'Purchase date', product: 'Product', quantity: 'Quantity', unitCost: 'Unit cost', lineTotal: 'Line total',
+  unit: 'Purchase unit', date: 'Purchase date', product: 'Product', quantity: 'Quantity', unitCost: 'Unit cost', lineTotal: 'Line total',
   addLine: 'Add line', removeLine: 'Remove line', total: 'Total', status: 'Status', posted: 'Posted', voided: 'Void',
   void: 'Void', actions: 'Actions', recent: 'Purchase history', search: 'Search purchases',
   empty: 'No purchases yet.', noResults: 'No matching purchases.', loading: 'Loading...',
@@ -200,6 +205,7 @@ const formTotal = computed(() => purchaseForm.lines.reduce((total, line) =>
   total + (Number(line.quantity) || 0) * (Number(line.unitCost) || 0), 0))
 
 watch(currentId, () => {
+  for (const key of Object.keys(measurementContexts)) Reflect.deleteProperty(measurementContexts, key)
   supplierOpen.value = false
   purchaseOpen.value = false
   actionError.value = ''
@@ -349,11 +355,14 @@ async function savePurchase() {
     && purchaseForm.lines.every(line => {
       const quantity = Number(line.quantity)
       const unitCost = Number(line.unitCost)
+      const context = measurementContexts[line.key]
+      if (!context || context.loading || context.error || context.productId !== line.productId) return false
+      if (context.data?.status === 'active') { try { measuredBaseQuantity(measuredLine(line)) } catch { return false } }
       return products.value.some(product => product.id === line.productId)
         && Number.isFinite(quantity) && quantity > 0 && quantity <= 1000000
-        && Math.abs(Math.round(quantity * 1000) - quantity * 1000) < 0.000001
+        && (context.data?.status === 'active' ? /^[0-9]+(\.[0-9]{1,6})?$/.test(String(quantity)) : Math.abs(Math.round(quantity * 1000) - quantity * 1000) < 0.000001)
         && Number.isFinite(unitCost) && unitCost >= 0 && unitCost <= 999999999.99
-        && Math.abs(Math.round(unitCost * 100) - unitCost * 100) < 0.000001
+        && (context.data?.status === 'active' ? /^[0-9]+(\.[0-9]{1,6})?$/.test(String(unitCost)) : Math.abs(Math.round(unitCost * 100) - unitCost * 100) < 0.000001)
     })
   if (!activeVendors.value.some(vendor => vendor.id === purchaseForm.vendorId)
     || !/^\d{4}-\d{2}-\d{2}$/.test(purchaseForm.issuedOn)
@@ -376,8 +385,9 @@ async function savePurchase() {
       p_notes: purchaseForm.notes.trim() || null,
       p_items: purchaseForm.lines.map(line => ({
         product_id: line.productId,
-        quantity: Number(line.quantity),
-        unit_cost: Number(line.unitCost),
+        ...purchaseMeasurementInput(line),
+        quantity: measurementContexts[line.key]?.data?.status === 'active' ? String(line.quantity) : Number(line.quantity),
+        unit_cost: measurementContexts[line.key]?.data?.status === 'active' ? String(line.unitCost) : Number(line.unitCost),
       })),
     })
     if (!inScope()) return
@@ -440,10 +450,49 @@ const supplierPickerView = computed(() => pickerView(supplierPicker))
 const productPickerView = computed(() => pickerView(productPicker))
 const supplierChoices = computed(() => supplierPicker.options(activeVendors.value.find(item => item.id === purchaseForm.vendorId)).map(item => ({ id: item.id, name: item.name })))
 const filterChoices = computed(() => supplierPicker.options(activeVendors.value.find(item => item.id === vendorFilter.value)).map(item => ({ id: item.id, name: item.name })))
-const lineChoices = computed(() => purchaseForm.lines.map(line => ({ options: productPicker.options(products.value.find(item => item.id === line.productId)).map(item => ({ id: item.id, name: item.name })) })))
+function unitLabel(code: string) { const unit = measurementUnits.find(entry => entry.code === code); return (isArabic.value ? unit?.nameAr : unit?.nameEn) || code }
+function measuredLine(line: PurchaseLine) {
+  const data = measurementContexts[line.key]?.data
+  const measurement: PosMeasurement | undefined = data?.status === 'active' ? { ...data, baseUnitPrice: '0' } : undefined
+  return { id: line.productId, itemType: 'product', sourceId: line.productId, quantity: line.quantity, unitSelection: line.unitSelection, measurement }
+}
+function purchaseMeasurementInput(line: PurchaseLine) {
+  const { item_type: _type, source_id: _source, quantity: _qty, ...input } = saleLineInput(measuredLine(line))
+  return input
+}
+function lineMeasurementView(line: PurchaseLine) {
+  const context = measurementContexts[line.key]
+  const data = context?.data
+  if (data?.status !== 'active') return { loading: context?.loading, error: context?.error }
+  let equivalent: string
+  try { equivalent = `${measuredBaseQuantity(measuredLine(line))} ${unitLabel(data.baseUnitCode)}` }
+  catch { equivalent = isArabic.value ? 'راجع الكمية ووحدة الشراء.' : 'Review the quantity and purchase unit.' }
+  return { step: cartQuantityStep(measuredLine(line)), baseEquivalent: equivalent, units: [...measurementUnits.filter(unit => unit.dimension === measurementUnits.find(base => base.code === data.baseUnitCode)?.dimension).map(unit => ({ value: `unit:${unit.code}`, label: unitLabel(unit.code) })), ...data.packages.filter(pack => pack.canPurchase).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(data.baseUnitCode)})` }))] }
+}
+const lineChoices = computed(() => purchaseForm.lines.map(line => ({ ...lineMeasurementView(line), options: productPicker.options(products.value.find(item => item.id === line.productId)).map(item => ({ id: item.id, name: item.name })) })))
 function selectSupplier(id: string) { purchaseForm.vendorId = id; const choice = supplierPicker.items.find(item => item.id === id); if (choice) chosenVendors.value.push(choice) }
 function filterSupplier(id: string) { vendorFilter.value = id; const choice = supplierPicker.items.find(item => item.id === id); if (choice) chosenVendors.value.push(choice) }
-function selectProduct(index: number, id: string) { const line = purchaseForm.lines[index]; if (!line) return; line.productId = id; const choice = productPicker.items.find(item => item.id === id); if (choice) chosenProducts.value.push(choice) }
+async function selectProduct(index: number, id: string) {
+  const line = purchaseForm.lines[index]
+  if (!line || !currentId.value) return
+  line.productId = id; line.unitSelection = undefined
+  const choice = productPicker.items.find(item => item.id === id); if (choice) chosenProducts.value.push(choice)
+  const request = ++measurementRequest
+  const inScope = captureScope()
+  measurementContexts[line.key] = { productId: id, data: null, loading: true, error: '', request }
+  try {
+    const result = await shopRpc.rpc('product_measurement_options', { p_shop_id: currentId.value, p_product_id: id })
+    const activeLine = purchaseForm.lines.find(entry => entry.key === line.key)
+    if (!inScope() || !activeLine || activeLine.productId !== id || measurementContexts[line.key]?.request !== request) return
+    if (result.error) throw result.error
+    measurementContexts[line.key]!.data = result.data
+    if (result.data?.status === 'active') {
+      const pack = result.data.packages.find(pack => pack.canPurchase && pack.defaultPurchase)
+      activeLine.unitSelection = pack ? `package:${pack.id}` : `unit:${result.data.baseUnitCode}`
+    }
+  } catch { if (inScope() && measurementContexts[line.key]?.request === request) measurementContexts[line.key]!.error = isArabic.value ? 'تعذر تحميل وحدات المنتج. أعد اختيار المنتج.' : 'Could not load product units. Select the product again.' }
+  finally { if (inScope() && measurementContexts[line.key]?.request === request) measurementContexts[line.key]!.loading = false }
+}
 function editSupplier(id: string) { const vendor = vendors.value.find(item => item.id === id); if (vendor) openSupplierForm(vendor) }
 function archiveSupplier(id: string) { const vendor = vendors.value.find(item => item.id === id); if (vendor) void archiveVendor(vendor) }
 function voidPurchaseById(id: string) { const purchase = purchases.value.find(item => item.id === id); if (purchase) void voidPurchase(purchase) }

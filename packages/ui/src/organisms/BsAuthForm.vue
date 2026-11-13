@@ -32,7 +32,7 @@ defineSlots<{
 
 <template>
   <div class="bs-auth-form">
-    <BsForm v-bind="$attrs" :pending="pending" :error="error" @submit="emit('submit', $event)">
+    <BsForm v-bind="$attrs" :pending="pending" :pending-label="pendingLabel" :error="error" @submit="emit('submit', $event)">
       <header class="bs-auth-form__header" :class="`bs-auth-form__header--${align}`">
         <p v-if="eyebrow" class="bs-auth-form__eyebrow">{{ eyebrow }}</p>
         <h1 class="bs-auth-form__title">{{ title }}</h1>

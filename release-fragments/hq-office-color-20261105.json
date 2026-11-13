@@ -1,0 +1,22 @@
+{
+  "id": "hq-office-color-20261105",
+  "task": "HQ-OFFICE-COLOR-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/officeArchitecture.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Founder-requested natural office colors: green foliage/stems, separate brown clay pots/dark soil, warm desk surfaces and a shared ceramic tiled floor with grout. Preserve office layout, terrain/water, lighting and controls. Source-only work in the primary HQ checkout. Tests/checks and browser/runtime acceptance remain unrun under the standing founder restriction; no merge, deployment or public activation."
+}

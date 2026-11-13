@@ -1,0 +1,15 @@
+{
+  "id": "hq-learning-readback-resilience-20261108",
+  "task": "HQ-LEARNING-READBACK-RESILIENCE-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/brainPublisher.mjs",
+    "tooling/hq-agent-host/brainPublisher.test.mjs",
+    "tooling/hq-agent-host/learning-readback.test.mjs",
+    "tooling/hq-agent-host/lifecycle.test.mjs",
+    "tooling/hq-agent-host/worker.mjs"
+  ],
+  "reason": "Bound post-write read consistency retries with complete independent verification, caller cancellation and independent deadlines. Preserve exact whole-file checks, fail-closed admission and existing conditional-write behavior; never retry an uncertain write or acknowledgment. Fixed diagnostic categories improve operator reconciliation without recording document or provider text."
+}

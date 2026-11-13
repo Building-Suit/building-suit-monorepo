@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { git, validateFragment, affectedSuits, fragmentTree, digest } from './fragments.mjs'
+import { git, validateFragment, affectedSuits, fragmentTree, digest, workspaceGraphAt } from './fragments.mjs'
+import { validateSupersessions } from './supersessions.mjs'
+export { workspaceGraphAt } from './fragments.mjs'
 
 /** Evidence is reviewed semantic text, compared directly between the two branch trees.
  * Commit lists, merge-base-only diffs and fragment accumulation are never release authority. */
@@ -48,12 +50,6 @@ export function netCandidate({ main, staging, items, graph, read = readTree, dif
   }
   return active.sort((a,b) => a.id.localeCompare(b.id))
 }
-export function workspaceGraphAt(ref, run = git) {
-  return run('ls-tree','-r','--name-only',ref,'--','apps','packages').split('\n').filter(file=>/^(apps|packages)\/[^/]+\/package.json$/.test(file)).map(file=>{
-    const manifest=JSON.parse(run('show',`${ref}:${file}`)), dir=file.slice(0,-'/package.json'.length)
-    return {dir,name:manifest.name,suit:dir.startsWith('apps/')&&dir.endsWith('-suit')?dir.slice(5):null,dependencies:Object.keys({...manifest.dependencies,...manifest.devDependencies})}
-  })
-}
 export function buildCandidate(main, staging) {
   const items = JSON.parse(readTree(staging, 'release-changes/items.json'))
   return { schemaVersion: 2, repository: 'Building-Suit/building-suit-monorepo', stagingRef: 'refs/heads/stg', productionRef: 'refs/heads/main', mainSha: git('rev-parse',main), mainTree: git('rev-parse',`${main}^{tree}`),
@@ -97,10 +93,12 @@ export function changedEdits(base, head, run = git) {
   }
   return edits
 }
-export function validatePublicTaskCoverage({fragments,inventory,candidate,base,main,head,run=git,reviewed=new Set()}) {
+export function validatePublicTaskCoverage({fragments,inventory,candidate,base,main,head,run=git,reviewed=new Set(),supersessions=[]}) {
+  const corrected = validateSupersessions({records:supersessions,inventory,candidate,head,run})
   const taskEdits=changedEdits(base,head,run), netEdits=changedEdits(main,head,run)
   const active=new Set(candidate.changes.filter(row=>row.disposition==='public').map(row=>row.id))
   for (const fragment of fragments.filter(row=>row.disposition==='public'&&!reviewed.has(row.id))) {
+    if (corrected.has(fragment.id)) continue // Exact replacement and private consumers were independently verified above.
     const survives=[...taskEdits].some(([file,tokens])=>fragment.paths.some(path=>file===path||file.startsWith(`${path}/`))
       && [...tokens].some(token=>netEdits.get(file)?.has(token)))
     for (const suit of fragment.suits) {

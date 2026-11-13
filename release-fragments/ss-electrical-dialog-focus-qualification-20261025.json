@@ -1,0 +1,25 @@
+{
+  "id": "ss-electrical-dialog-focus-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useDialogInteraction.ts",
+    "packages/ux/tests/form-dialog.test.mjs",
+    "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+    "tooling/database/test-shop-stock-local.mjs",
+    "tooling/database/test-shop-supplier-payables-local.mjs",
+    "docs/shared/interactions.md",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Qualify nested-confirmation focus after the real parent entrance settles, preserve pending and dirty-form policies, and compare exact PostgreSQL stock/return values independently of their newly widened display scale. Other shared consumers remain internal."
+}

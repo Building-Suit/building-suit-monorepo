@@ -1,0 +1,366 @@
+<script setup lang="ts">
+import type { HqActivityNotificationsPresentation, HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+
+import type { HqAgentPresentation, HqAgentsContent, HqAgentsPresentation } from '@building-suit/ui/types/hqAgentsPresentation'
+import { useHqAvatarAssets } from '../composables/useHqAvatarAssets'
+import { hqAvatarForAgent } from '../utils/hqAgentAvatars'
+
+defineOptions({ name: 'HqHomePage' })
+definePageMeta({ layout: false })
+const { t, te, locale } = useI18n()
+const { brain, refresh, selectNote } = useCompanyBrain()
+const companyPlansCopy = computed<HqCompanyPlansCopy>(() => ({
+  title: t('hq.companyPlans.title'),
+  board: {
+    brainLabel: t('hq.companyPlans.board.brainLabel'),
+    brainUnavailable: t('hq.companyPlans.board.brainUnavailable'),
+    sourceLabel: t('hq.companyPlans.board.sourceLabel'),
+    discussion: t('hq.companyPlans.board.discussion'),
+    preparation: t('hq.companyPlans.board.preparation'),
+    blocked: t('hq.companyPlans.board.blocked'),
+    done: t('hq.companyPlans.board.done'),
+    empty: t('hq.companyPlans.board.empty'),
+    description: t('hq.companyPlans.board.description'),
+  },
+  executiveLabel: t('hq.companyPlans.executiveLabel'),
+  loginTitle: t('hq.companyPlans.loginTitle'),
+  loginDescription: t('hq.companyPlans.loginDescription'),
+  emailLabel: t('hq.companyPlans.emailLabel'),
+  passwordLabel: t('hq.companyPlans.passwordLabel'),
+  signInLabel: t('hq.companyPlans.signInLabel'),
+  registerLabel: t('hq.companyPlans.registerLabel'),
+  signOutLabel: t('hq.companyPlans.signOutLabel'),
+  confirmationRequired: t('hq.companyPlans.confirmationRequired'),
+  invalidCredentials: t('hq.companyPlans.invalidCredentials'),
+  denied: t('hq.companyPlans.denied'),
+  unavailable: t('hq.companyPlans.unavailable'),
+  signOutFailed: t('hq.companyPlans.signOutFailed'),
+  loading: t('hq.companyPlans.loading'),
+  empty: t('hq.companyPlans.empty'),
+  refreshLabel: t('hq.companyPlans.refreshLabel'),
+  departmentsLabel: t('hq.companyPlans.departmentsLabel'),
+  hiringLabel: t('hq.companyPlans.hiringLabel'),
+  skillsLabel: t('hq.companyPlans.skillsLabel'),
+  hrReviewLabel: t('hq.companyPlans.hrReviewLabel'),
+  ceoReviewLabel: t('hq.companyPlans.ceoReviewLabel'),
+  readyLabel: t('hq.companyPlans.readyLabel'),
+  approvedLabel: t('hq.companyPlans.approvedLabel'),
+  rejectedLabel: t('hq.companyPlans.rejectedLabel'),
+  approveLabel: t('hq.companyPlans.approveLabel'),
+  rejectLabel: t('hq.companyPlans.rejectLabel'),
+  approveConfirmation: t('hq.companyPlans.approveConfirmation'),
+  rejectConfirmation: t('hq.companyPlans.rejectConfirmation'),
+  cancelLabel: t('hq.companyPlans.cancelLabel'),
+  conflict: t('hq.companyPlans.conflict'),
+  decisionFailed: t('hq.companyPlans.decisionFailed'),
+  legacyLabel: t('hq.companyPlans.legacyLabel'),
+}))
+const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
+  invalidCredentials: companyPlansCopy.value.invalidCredentials,
+  denied: companyPlansCopy.value.denied,
+  unavailable: companyPlansCopy.value.unavailable,
+  signOutFailed: companyPlansCopy.value.signOutFailed,
+  confirmationRequired: companyPlansCopy.value.confirmationRequired,
+}))
+const activityNotifications = useHqActivityNotifications(() => access.value.status === 'founder', topic => t(`hq.notifications.activity.${topic}`))
+const notifications = computed<HqActivityNotificationsPresentation>(() => {
+  const status = activityNotifications.status.value
+  const liveOnly = activityNotifications.liveOnly.value
+  return {
+    status,
+    busy: activityNotifications.busy.value,
+    soundOn: activityNotifications.soundOn.value,
+    label: t('hq.notifications.label'),
+    pushLabel: t(liveOnly
+      ? status === 'on' ? 'hq.notifications.disableAlerts' : 'hq.notifications.enableAlerts'
+      : status === 'on' ? 'hq.notifications.disablePush' : 'hq.notifications.enablePush'),
+    soundLabel: t(activityNotifications.soundOn.value ? 'hq.notifications.disableSound' : 'hq.notifications.enableSound'),
+    message: status === 'on' && liveOnly ? t('hq.notifications.liveOnly')
+      : status === 'off' || status === 'on' ? '' : t(`hq.notifications.${status}`),
+  }
+})
+const { backlog, setOpen: setPlanBoardOpen, refresh: refreshPlanBacklog } = useHqPlanBacklog(() => access.value.status === 'founder')
+const { meeting, command: meetingCommand } = useHqMeeting(() => access.value.status, () => access.value.user)
+const { staffing, staffingCopy, refreshStaffing, decideStaffing, cancelStaffing } = useHqStaffing(() => access.value)
+const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
+  unavailable: companyPlansCopy.value.unavailable,
+  conflict: companyPlansCopy.value.conflict,
+  decisionFailed: companyPlansCopy.value.decisionFailed,
+}))
+function agentLabel(category: string, value: string) {
+  const key = `hq.agents.${category}.${value.toLowerCase()}`
+  return te(key) ? t(key) : value
+}
+function employeeRoleLabel(agent: HqAgentPresentation): string {
+  const role = agent.roleLabel ?? ''
+  const employeeKey = `hq.agents.employeeRoles.${agent.id.toLowerCase()}`
+  // The operational roster falls back to department keys for employee roles.
+  // Translate known bindings; preserve a new human role supplied by its source.
+  const knownFallback = agent.role !== 'agent' || !role || ['employee', 'agent'].includes(role.toLowerCase())
+    || te(`hq.agents.departments.${role.toLowerCase()}`)
+  return knownFallback && te(employeeKey) ? t(employeeKey) : role || t(`hq.agents.roles.${agent.role}`)
+}
+const { agents, trialCommand, send: sendCeoMessage, refresh: refreshAgents } = useHqAgents(() => access.value, () => ({
+  unavailable: t('hq.agents.unavailableLabel'), sendFailed: t('hq.agents.sendFailed'),
+  unknownOutcome: t('hq.agents.unknownOutcome'), invalidMessage: t('hq.agents.invalidMessage'),
+  taskBlocked: t('hq.agents.taskBlocked'), autoAssign: t('hq.agents.workforce.autoAssignLabel'), reviewLabel: t('hq.agents.workforce.reviewsLabel'),
+  taskStatus: status => agentLabel('taskStatuses', status), lessonStatus: status => agentLabel('lessonStatuses', status),
+  taskError: code => te(`hq.agents.taskErrors.${code}`) ? t(`hq.agents.taskErrors.${code}`) : t('hq.agents.taskBlocked'),
+  lifecycle: value => agentLabel('lifecycles', value), connection: value => agentLabel('connections', value),
+}))
+const { presentation: emailConnection, command: emailConnectionCommand } = useHqEmailConnectionTest(() => access.value)
+const shopStaff = useHqShopSuitStaff(() => access.value.status === 'founder')
+function refreshWorkforce() {
+  void refreshAgents()
+  void shopStaff.refresh()
+}
+const labeledAgents = computed<HqAgentsPresentation>(() => ({
+  ...agents.value,
+  agents: [...agents.value.agents, ...shopStaff.agents.value].map(agent => ({ ...agent,
+    avatar: hqAvatarForAgent(agent.id),
+    roleLabel: employeeRoleLabel(agent), activityLabel: agent.activityLabel ?? t(`hq.agents.activities.${agent.activity}`),
+    departmentName: localizedDepartments.value.find(department => department.id === agent.departmentId)?.name
+      ?? (agent.role === 'ceo' ? companyPlansCopy.value.executiveLabel : agent.departmentName ? agentLabel('departments', agent.departmentName) : undefined),
+  })),
+}))
+const { assets: avatarAssets, loadGameCharacter, failedGameCharacter } = useHqAvatarAssets(() => labeledAgents.value.agents)
+const agentsContent = computed<HqAgentsContent>(() => ({
+  locale: locale.value,
+  title: t('hq.agents.title'),
+  description: t('hq.agents.description'),
+  transcriptLabel: t('hq.agents.transcriptLabel'),
+  composerLabel: t('hq.agents.composerLabel'),
+  composerPlaceholder: t('hq.agents.composerPlaceholder'),
+  sendLabel: t('hq.agents.sendLabel'),
+  sendingLabel: t('hq.agents.sendingLabel'),
+  dictation: {
+    start: t('hq.agents.dictation.start'),
+    stop: t('hq.agents.dictation.stop'),
+    starting: t('hq.agents.dictation.starting'),
+    listening: t('hq.agents.dictation.listening'),
+    stopping: t('hq.agents.dictation.stopping'),
+    unsupported: t('hq.agents.dictation.unsupported'),
+    denied: t('hq.agents.dictation.denied'),
+    service: t('hq.agents.dictation.service'),
+    noSpeech: t('hq.agents.dictation.noSpeech'),
+    audio: t('hq.agents.dictation.audio'),
+    network: t('hq.agents.dictation.network'),
+    failed: t('hq.agents.dictation.failed'),
+    limit: t('hq.agents.dictation.limit'),
+    notice: t('hq.agents.dictation.notice'),
+  },
+  emptyLabel: t('hq.agents.emptyLabel'),
+  loadingLabel: t('hq.agents.loadingLabel'),
+  unavailableLabel: t('hq.agents.unavailableLabel'),
+  errorLabel: t('hq.agents.errorLabel'),
+  runtimeOnlineLabel: t('hq.agents.runtimeOnlineLabel'),
+  runtimeOfflineLabel: t('hq.agents.runtimeOfflineLabel'),
+  queuedLabel: t('hq.agents.queuedLabel'),
+  lastSeenLabel: t('hq.agents.lastSeenLabel'),
+  keyboardHint: t('hq.agents.keyboardHint'),
+  founderLabel: t('hq.agents.founderLabel'),
+  ceoLabel: t('hq.agents.ceoLabel'),
+  hrLabel: t('hq.agents.hrLabel'),
+  systemLabel: t('hq.agents.systemLabel'),
+  openTaskLabel: t('hq.agents.openTaskLabel'),
+  learningUpdatedLabel: t('hq.agents.learningUpdatedLabel'),
+  requestProgressLabels: {
+    queued: t('hq.agents.requestProgress.queued'), working: t('hq.agents.requestProgress.working'),
+    recoveryNeeded: t('hq.agents.requestProgress.recoveryNeeded'), recoveryQueued: t('hq.agents.requestProgress.recoveryQueued'),
+    recoveryWorking: t('hq.agents.requestProgress.recoveryWorking'),
+  },
+  workforce: {
+    cancellation: {
+      action: t('hq.agents.workforce.cancellation.action'), title: t('hq.agents.workforce.cancellation.title'),
+      message: t('hq.agents.workforce.cancellation.message'), keep: t('hq.agents.workforce.cancellation.keep'),
+      pending: t('hq.agents.workforce.cancellation.pending'), canceled: t('hq.agents.workforce.cancellation.canceled'),
+      unconfirmed: t('hq.agents.workforce.cancellation.unconfirmed'), unavailable: t('hq.agents.workforce.cancellation.unavailable'),
+    },
+    taskBrowser: {
+      all: t('hq.agents.workforce.taskBrowser.all'), running: t('hq.agents.workforce.taskBrowser.running'),
+      waiting: t('hq.agents.workforce.taskBrowser.waiting'), done: t('hq.agents.workforce.taskBrowser.done'),
+      owner: t('hq.agents.workforce.taskBrowser.owner'), empty: t('hq.agents.workforce.emptyTasksLabel'),
+      loading: t('hq.agents.workforce.loadingLabel'), unavailable: t('hq.agents.workforce.unavailableLabel'),
+      retry: t('hq.agents.workforce.refreshLabel'), partial: t('hq.agents.workforce.taskBrowser.partial'),
+    },
+    activity: {
+      title: t('hq.agents.workforce.activity.title'),
+      empty: t('hq.agents.workforce.activity.empty'),
+      queued: t('hq.agents.workforce.activity.queued'),
+      working: t('hq.agents.workforce.activity.working'),
+      unconfirmed: t('hq.agents.workforce.activity.unconfirmed'),
+      elapsed: t('hq.agents.workforce.activity.elapsed'),
+      waiting: t('hq.agents.workforce.activity.waiting'),
+      observed: t('hq.agents.workforce.activity.observed'),
+      openTask: t('hq.agents.workforce.activity.openTask'),
+      stage: t('hq.agents.workforce.activity.stage'),
+      stages: {
+        'conversation-intake': t('hq.agents.workforce.activity.stages.conversation-intake'),
+        'conversation-hr': t('hq.agents.workforce.activity.stages.conversation-hr'),
+        'conversation-ceo': t('hq.agents.workforce.activity.stages.conversation-ceo'),
+        'task-route': t('hq.agents.workforce.activity.stages.task-route'),
+        'task-ack': t('hq.agents.workforce.activity.stages.task-ack'),
+        'task-start': t('hq.agents.workforce.activity.stages.task-start'),
+        'task-work': t('hq.agents.workforce.activity.stages.task-work'),
+        'head-review': t('hq.agents.workforce.activity.stages.head-review'),
+        'ceo-review': t('hq.agents.workforce.activity.stages.ceo-review'),
+        'task-report': t('hq.agents.workforce.activity.stages.task-report'),
+        'lesson-extract': t('hq.agents.workforce.activity.stages.lesson-extract'),
+        'lesson-review': t('hq.agents.workforce.activity.stages.lesson-review'),
+        'staffing-plan': 'Prepare staffing plan', 'staffing-review': 'Review staffing plan',
+      },
+    },
+    orgChartLabel: t('hq.agents.workforce.orgChartLabel'), unassignedDepartmentLabel: t('hq.agents.workforce.unassignedDepartmentLabel'),
+    orgChartControls: {
+      hint: t('hq.agents.workforce.orgChartHint'), label: t('hq.agents.workforce.orgChartControls'),
+      zoomIn: t('hq.zoomInLabel'), zoomOut: t('hq.zoomOutLabel'),
+      fit: t('hq.agents.workforce.orgChartFit'), reset: t('hq.agents.workforce.orgChartReset'),
+      subtitle: t('hq.agents.workforce.orgChartSubtitle'), organization: t('hq.agents.workforce.orgChartOrganization'),
+      departments: t('hq.agents.workforce.orgChartDepartments'), people: t('hq.agents.workforce.orgChartPeople'),
+      search: t('hq.agents.workforce.orgChartSearch'), noMatches: t('hq.agents.workforce.orgChartNoMatches'), more: t('hq.agents.workforce.orgChartMore'),
+    },
+    completedLabel: t('hq.agents.workforce.completedLabel'),
+    chatLabel: t('hq.agents.workforce.chatLabel'), tasksLabel: t('hq.agents.workforce.tasksLabel'), teamLabel: t('hq.agents.workforce.teamLabel'), learningLabel: t('hq.agents.workforce.learningLabel'),
+    briefLabel: t('hq.agents.workforce.briefLabel'), acceptanceLabel: t('hq.agents.workforce.acceptanceLabel'),
+    emptyTasksLabel: t('hq.agents.workforce.emptyTasksLabel'),
+    emptyTeamLabel: t('hq.agents.workforce.emptyTeamLabel'), emptyLessonsLabel: t('hq.agents.workforce.emptyLessonsLabel'), departmentLabel: t('hq.agents.workforce.departmentLabel'),
+    lifecycleLabel: t('hq.agents.workforce.lifecycleLabel'), connectionLabel: t('hq.agents.workforce.connectionLabel'), configuredNotice: t('hq.agents.workforce.configuredNotice'),
+    deliverableLabel: t('hq.agents.workforce.deliverableLabel'), reviewsLabel: t('hq.agents.workforce.reviewsLabel'), pendingDeliverableLabel: t('hq.agents.workforce.pendingDeliverableLabel'),
+    pendingReviewLabel: t('hq.agents.workforce.pendingReviewLabel'), lessonSourceLabel: t('hq.agents.workforce.lessonSourceLabel'), sourceTaskLabel: t('hq.agents.workforce.sourceTaskLabel'),
+    backLabel: t('hq.agents.workforce.backLabel'), refreshLabel: t('hq.agents.workforce.refreshLabel'), reviewedLabel: t('hq.agents.workforce.reviewedLabel'),
+    publishedLabel: t('hq.agents.workforce.publishedLabel'), receiptLabel: t('hq.agents.workforce.receiptLabel'),
+    loadingLabel: t('hq.agents.workforce.loadingLabel'), unavailableLabel: t('hq.agents.workforce.unavailableLabel'),
+  },
+}))
+const localizedDepartments = computed<readonly HqDepartmentOffice[]>(() => [
+  ...departments.value,
+  ...(shopStaff.department.value ? [shopStaff.department.value] : []),
+].map(department => ({
+  ...department,
+  name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name,
+})))
+const companyPlans = computed<HqCompanyPlansPresentation>(() => ({
+  ...workspace.value,
+  backlog: backlog.value,
+  plans: workspace.value.plans.map(plan => ({
+    ...plan,
+    departments: plan.departments.map(department => ({ ...department, name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name })),
+  })),
+}))
+const content = computed<HqLayoutContent>(() => ({
+  brandName: 'Building Suit',
+  brandSuffix: 'HQ',
+  logoSrc: '/brand/building-suit-logo-light.png',
+  workspaceLabel: t('hq.workspaceLabel'),
+  tasksLabel: t('hq.tasksLabel'),
+  calendarLabel: t('hq.calendarLabel'),
+  brainLabel: t('hq.brainLabel'),
+  statusLabel: agents.value.runtimeOnline ? t('hq.agents.workingCountLabel', { count: agents.value.agents.filter(agent => agent.activity === 'working').length }) : t('hq.statusLabel'),
+  talkToCeoLabel: t('hq.talkToCeoLabel'),
+  profileLabel: t('hq.profileLabel'),
+  loginLabel: t('hq.loginLabel'),
+  canvasLabel: t('hq.canvasLabel'),
+  minimapLabel: t('hq.minimapLabel'),
+  zoomOutLabel: t('hq.zoomOutLabel'),
+  zoomInLabel: t('hq.zoomInLabel'),
+  fitViewLabel: t('hq.fitViewLabel'),
+  hologramLabel: t('hq.hologramLabel'),
+  avatarAssets: avatarAssets.value,
+  game: {
+    label: t('hq.game.label'),
+    choose: t('hq.game.choose'),
+    play: t('hq.game.play'),
+    resume: t('hq.game.resume'),
+    exit: t('hq.game.exit'),
+    controls: t('hq.game.controls'),
+    paused: t('hq.game.paused'),
+    loading: t('hq.game.loading'),
+    unavailable: t('hq.game.unavailable'),
+    characters: (['ninja', 'pirate', 'wizard', 'witch', 'elf'] as const).map(id => ({ id, label: t(`hq.game.characters.${id}`) })),
+    failedCharacter: failedGameCharacter.value,
+  },
+  sceneUnavailableLabel: t('hq.sceneUnavailableLabel'),
+  mouseControlsLabel: t('hq.mouseControlsLabel'),
+  touchControlsLabel: t('hq.touchControlsLabel'),
+  keyboardControlsLabel: t('hq.keyboardControlsLabel'),
+  zoomLabel: t('hq.zoomLabel'),
+  workplaces: {
+    office: {
+      overview: t('hq.workplaces.office.overview'),
+      runningTasks: t('hq.workplaces.office.runningTasks'),
+      calendar: t('hq.workplaces.office.calendar'),
+      settings: t('hq.workplaces.office.settings'),
+      metrics: t('hq.workplaces.office.metrics'),
+      tasksToday: t('hq.workplaces.office.tasksToday'),
+      running: t('hq.workplaces.office.running'),
+      turnaround: t('hq.workplaces.office.turnaround'),
+      minutes: t('hq.workplaces.office.minutes'),
+      connectedTools: t('hq.workplaces.office.connectedTools'),
+      active: t('hq.workplaces.office.active'),
+      inactive: t('hq.workplaces.office.inactive'),
+      toolsEmpty: t('hq.workplaces.office.toolsEmpty'),
+      skills: t('hq.workplaces.office.skills'),
+      skillUsage: t('hq.workplaces.office.skillUsage'),
+      skillBasis: t('hq.workplaces.office.skillBasis'),
+      skillsEmpty: t('hq.workplaces.office.skillsEmpty'),
+      neverUsed: t('hq.workplaces.office.neverUsed'),
+      agents: t('hq.workplaces.office.agents'),
+      agentsEmpty: t('hq.workplaces.office.agentsEmpty'),
+      unavailable: t('hq.workplaces.office.unavailable'),
+      loading: t('hq.workplaces.office.loading'),
+      retry: t('hq.workplaces.office.retry'),
+      activity: t('hq.workplaces.office.activity'),
+      model: t('hq.workplaces.office.model'),
+      manager: t('hq.workplaces.office.manager'),
+      profile: t('hq.workplaces.office.profile'),
+      noRunningTasks: t('hq.workplaces.office.noRunningTasks'),
+      recentTasks: t('hq.workplaces.office.recentTasks'),
+      noRecentTasks: t('hq.workplaces.office.noRecentTasks'),
+      agentDetails: t('hq.workplaces.office.agentDetails'),
+      back: t('hq.workplaces.office.back'),
+      close: t('hq.workplaces.office.close'),
+      scope: t('hq.workplaces.office.scope'),
+      lifecycle: t('hq.workplaces.office.lifecycle'),
+      department: t('hq.workplaces.office.department'),
+    },
+    label: t('hq.workplaces.label'),
+    clearSelectionLabel: t('hq.workplaces.clearSelectionLabel'),
+    executiveDescription: t('hq.workplaces.executiveDescription'),
+    departmentDescription: t('hq.workplaces.departmentDescription'),
+    workstationsLabel: t('hq.workplaces.workstationsLabel'),
+    workstationsValue: t('hq.workplaces.workstationsValue'),
+    agentsSpaceLabel: t('hq.workplaces.agentsSpaceLabel'),
+    workspaceReadyLabel: t('hq.workplaces.workspaceReadyLabel'),
+    plansLabel: t('hq.workplaces.plansLabel'),
+  },
+  companyPlans: companyPlansCopy.value,
+  agents: agentsContent.value,
+  companyBrain: {
+    title: t('hq.companyBrain.title'),
+    notesTabLabel: t('hq.companyBrain.notesTabLabel'),
+    openLabel: t('hq.companyBrain.openLabel'),
+    loadingLabel: t('hq.companyBrain.loadingLabel'),
+    connectedLabel: t('hq.companyBrain.connectedLabel'),
+    unavailableLabel: t('hq.companyBrain.unavailableLabel'),
+    errorLabel: t('hq.companyBrain.errorLabel'),
+    sourceLabel: t('hq.companyBrain.sourceLabel'),
+    freshnessLabel: t('hq.companyBrain.freshnessLabel'),
+    refreshLabel: t('hq.companyBrain.refreshLabel'),
+    searchLabel: t('hq.companyBrain.searchLabel'),
+    showMoreLabel: t('hq.companyBrain.showMoreLabel'),
+    emptyLabel: t('hq.companyBrain.emptyLabel'),
+    selectLabel: t('hq.companyBrain.selectLabel'),
+    noteErrorLabel: t('hq.companyBrain.noteErrorLabel'),
+    observedLabel: t('hq.companyBrain.observedLabel'),
+    modifiedLabel: t('hq.companyBrain.modifiedLabel'),
+    partialLabel: t('hq.companyBrain.partialLabel'),
+    readOnlyLabel: t('hq.companyBrain.readOnlyLabel'),
+    setupRequiredLabel: t('hq.companyBrain.setupRequiredLabel'),
+    authorizationRequiredLabel: t('hq.companyBrain.authorizationRequiredLabel'),
+    setupInstructionsLabel: t('hq.companyBrain.setupInstructionsLabel'),
+    versionLabel: t('hq.companyBrain.versionLabel'),
+  },
+}))
+useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
+</script>
+<template><BsHqLayoutPage :content="content" :email-connection="emailConnection" @email-connection-command="emailConnectionCommand" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshWorkforce" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>

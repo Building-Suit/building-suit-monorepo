@@ -1,0 +1,38 @@
+{
+  "id": "hq-public-repository-read-20261108",
+  "task": "HQ-PUBLIC-REPOSITORY-READ-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/composables/useHqAgents.ts",
+    "apps/company-hq/server/api/hq/repository-trials/index.post.ts",
+    "apps/company-hq/server/utils/hqAgents.ts",
+    "apps/company-hq/supabase/migrations/20261108212105_hq_public_repository_read.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/browser/repository-trials.spec.ts",
+    "apps/company-hq/tests/unit/repository-trials-bff.test.mjs",
+    "apps/company-hq/tests/unit/research-trial-controls.test.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsHqRepositoryTrial.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "tooling/hq-agent-host/README.md",
+    "tooling/hq-agent-host/departmentWorkflow.mjs",
+    "tooling/hq-agent-host/public-repository-db.test.mjs",
+    "tooling/hq-agent-host/public-repository-mcp.test.mjs",
+    "tooling/hq-agent-host/public-repository-worker.test.mjs",
+    "tooling/hq-agent-host/test-cli.mjs",
+    "tooling/hq-agent-host/worker.mjs"
+  ],
+  "reason": "Prepare founder-controlled, separately qualified anonymous public source and CI inspection for existing Development workers. Fixed repository snapshots and manifests, durable request reservations, real typed MCP and host-resolution evidence, independent same-revision review, and honest incomplete CI limits. No credentials, source writes, code execution, canonical rewrite, live trial, hiring or production change."
+}

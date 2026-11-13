@@ -1,0 +1,27 @@
+{
+  "id": "hq-task-evidence-continuity-20261108",
+  "task": "HQ-TASK-EVIDENCE-CONTINUITY-20261108",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/hq-agent-host/worker.mjs",
+    "tooling/hq-agent-host/native-evidence.test.mjs",
+    "tooling/hq-agent-host/task-evidence-context.test.mjs",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "apps/company-hq/supabase/migrations/20261108030332_hq_task_evidence_context.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "tooling/hq-agent-host/proposed-migrations/hq_task_evidence_context.sql",
+    "tooling/hq-agent-host/EVIDENCE-CONTINUITY.md"
+  ],
+  "reason": "Preserve source-bound native observations and bounded task-local review provenance without inventing excerpts or changing qualification, review gates, tools, transport or authority. Includes a canonical forward migration and disposable database regression coverage."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ls-bill-instapay-001-cutover",
+  "task": "LS-BILL-INSTAPAY-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/ledger-suit"
+  ],
+  "reason": "Make existing server-quoted InstaPay/manual-review checkout primary, retire new online enrollment after authentication/tenant admission, remove customer provider branding and prevent stale selected instructions after a failed quote. Keep historical payment evidence, callbacks, audit, existing paid-period conflicts and authorization unchanged. No recipient is inferred or configured.",
+  "notes": {
+    "title": {
+      "en": "Pay by InstaPay with manual review",
+      "ar": "الدفع بإنستاباي مع المراجعة اليدوية"
+    },
+    "summary": {
+      "en": "Choose a plan, review its payment instructions and submit a receipt for authorized review.",
+      "ar": "اختر باقة وراجع تعليمات الدفع ثم أرسل الإيصال للمراجعة المخوّلة."
+    },
+    "details": {
+      "en": "A transfer or receipt submission does not activate access. Prices and instructions come from the server quote; missing instructions block payment preparation. Existing payment records are preserved.",
+      "ar": "التحويل أو إرسال الإيصال لا يفعّل الاشتراك. تصدر الأسعار والتعليمات من عرض السعر بالنظام، ويتعذر إعداد الدفع عند غياب التعليمات. تظل سجلات الدفع السابقة محفوظة."
+    }
+  }
+}

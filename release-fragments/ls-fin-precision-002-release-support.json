@@ -1,0 +1,18 @@
+{
+  "id": "ls-fin-precision-002-release-support",
+  "task": "LS-FIN-PRECISION-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain the shared private bilingual release inventory for the Ledger journal/dashboard precision correction; product behavior changes remain Ledger-only and Doctor is not publicly activated."
+}

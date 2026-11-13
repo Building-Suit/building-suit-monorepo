@@ -1,0 +1,26 @@
+{
+  "id": "shop-electrical-ledger-staging-reconciliation-20261029",
+  "task": "SS-ELEC-608",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/docs/electrical-supply/STAGING-RECONCILIATION-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-proof-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-checks-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-i18n-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-capacity-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-login-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-catalogue-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/staging-reconciliation-measured-2026-10-29.txt",
+    "release-changes/items.json"
+  ],
+  "reason": "Preserve prepared Shop12a4bac0 and accepted staging6a662776 histories, union unchanged release inventory objects, retain all accepted fragments and exclude open Doctor head. Qualify inherited translation update locally without triggering competing CI or claiming native/merchant acceptance. Shared root inventory requires private provenance for all consumers."
+}

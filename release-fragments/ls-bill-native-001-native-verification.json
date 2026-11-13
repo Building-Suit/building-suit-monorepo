@@ -1,0 +1,15 @@
+{
+  "id": "ls-bill-native-001-native-verification",
+  "task": "LS-BILL-NATIVE-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit/scripts",
+    "apps/ledger-suit/docs",
+    "apps/ledger-suit/tests/unit/platform-admin.test.mjs"
+  ],
+  "reason": "Verify the actual owned Auth, Edge, Storage, SQL, operator audit and browser billing lifecycle, preserving financial data and unresolved release gates."
+}

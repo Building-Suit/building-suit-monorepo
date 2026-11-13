@@ -1,0 +1,28 @@
+{
+  "id": "ss-electrical-reels-catalog-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui"
+  ],
+  "reason": "Track individual cable reels and exact cuts while preserving acquisition cost, stock balance, immutable receipts and controlled cable returns. Add typed electrical attributes and independently stocked SKU families.",
+  "notes": {
+    "title": {
+      "en": "Track cable reels and electrical specifications",
+      "ar": "تتبع بكرات الكابلات والمواصفات الكهربائية"
+    },
+    "summary": {
+      "en": "Record individual reels, sell continuous cable or explicit separate pieces, and maintain electrical specifications for each SKU.",
+      "ar": "سجل البكرات الفردية وبع الكابلات كقطع متصلة أو منفصلة باختيار واضح، واحتفظ بالمواصفات الكهربائية لكل صنف."
+    },
+    "details": {
+      "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale’s frozen policy.",
+      "ar": "تسجل عمليات القص باركود المصدر والطول المطلوب وفاقد القص. تدعم البكرات الجرد وتسعير البواقي والتلف والخردة والسجل، وتنشئ مرتجعات الكابلات المؤهلة قطعًا منفصلة وفق سياسة البيع المحفوظة."
+    }
+  }
+}

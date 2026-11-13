@@ -1,0 +1,127 @@
+{
+  "task_id": "DOS-M6-001",
+  "scope": "concrete-commercial-decision-review-packet-with-prior-owner-directions-preserved",
+  "task_acceptance": false,
+  "commercial_gate": "open-complete-accountable-review-missing",
+  "live_payment_acceptance": false,
+  "clinical_approval": false,
+  "tax_approval": false,
+  "hosted_configuration_inspected": false,
+  "prior_owner_decisions": {
+    "date": "2026-10-18",
+    "catalogue_version": 2,
+    "status": "owner_authorized_launch_prices",
+    "currency": "EGP",
+    "currency_exponent": 2,
+    "annual_calendar_months": 12,
+    "annual_discount_percent": 32,
+    "self_service_setup_fee_minor": 0,
+    "plans": [
+      {
+        "key": "starter",
+        "nameEn": "Starter",
+        "nameAr": "البداية",
+        "monthlyMinor": 29900,
+        "yearlyMinor": 243984,
+        "clinicLimit": 1,
+        "totalNamedUsers": 5,
+        "staffLimitExcludingOwner": 4
+      },
+      {
+        "key": "clinic",
+        "nameEn": "Clinic",
+        "nameAr": "العيادة",
+        "monthlyMinor": 59900,
+        "yearlyMinor": 488784,
+        "clinicLimit": 3,
+        "totalNamedUsers": 10,
+        "staffLimitExcludingOwner": 9
+      },
+      {
+        "key": "group",
+        "nameEn": "Group",
+        "nameAr": "المجموعة",
+        "monthlyMinor": 99900,
+        "yearlyMinor": 815184,
+        "clinicLimit": 5,
+        "totalNamedUsers": 25,
+        "staffLimitExcludingOwner": 24
+      }
+    ],
+    "future_feature_policy": "standard_features_as_released_within_plan_capacity_no_feature_addon_charges",
+    "selected_initial_route": "manual_instapay",
+    "route_direction_is_actual_merchant_account_or_live_approval": false,
+    "manual_launch_renewal_direction": "documented-no-automatic-debit-complete-qualified-terms-still-missing",
+    "evidence": [
+      "apps/doctor-suit/config/introductory-plans.v2.json",
+      "docs/work-packages/doctor-suit/early-administrative-edition/instapay-manual.md",
+      "docs/work-packages/doctor-suit/early-administrative-edition/manual-reconciliation.md",
+      "docs/work-packages/doctor-suit/early-administrative-edition/operator-decisions.md",
+      "docs/work-packages/doctor-suit/policy-draft-review.md"
+    ]
+  },
+  "remaining_decisions": {
+    "full_terms_policy_version": null,
+    "full_policy_accountable_reviewer": null,
+    "full_policy_approval_date": null,
+    "full_policy_approval_reference": null,
+    "trial_enabled_duration_eligibility": null,
+    "grace_and_failed_renewal_effective_dates": null,
+    "downgrade_over_quota_read_write_export_policy": null,
+    "cancellation_effective_date_and_mandatory_rights": null,
+    "refund_amount_rounding_timing_dispute_rules": null,
+    "actual_recipient_beneficiary_merchant_eligibility_custody": null,
+    "actual_independent_reviewer_identity_authority_expiry": null,
+    "approved_operational_activation_policy": null,
+    "qualified_legal_tax_applicability": null,
+    "historical_access_export_policy": null
+  },
+  "existing_synthetic_implementation": [
+    "versioned-terms-and-current-entitlement",
+    "server-bound-catalogue-quotes-and-held-intents",
+    "private-notice-evidence-independent-funds-review",
+    "separate-configured-bounded-manual-paid-activation",
+    "manual-ledger-reconciliation"
+  ],
+  "focused_existing_units": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
+      "apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+      "apps/doctor-suit/tests/unit/policy-drafts.test.mjs",
+      "apps/doctor-suit/tests/unit/launch-pricing.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "not_full_commercial_or_provider_approval": true
+  },
+  "full_root": {
+    "execution": "not-repeated-docs-only",
+    "inherited_source_task": "DOS-M5-014",
+    "total": 2447,
+    "passed": 2370,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "source_files": {
+    "apps/doctor-suit/config/introductory-plans.v2.json": "000914c32fd8d373bf903a425d6631ca51d6ce79e100f6abb6aa0ce9b7cd01c2",
+    "docs/work-packages/doctor-suit/early-administrative-edition/instapay-manual.md": "d7e12a19a1bc947233406040cb764854bd41514c9c069eff842f485271a73508",
+    "docs/work-packages/doctor-suit/early-administrative-edition/manual-reconciliation.md": "c392e6d71b36a03ad0d982fc39a329a31745088830d246cfac115c8cf56b81c3",
+    "docs/work-packages/doctor-suit/early-administrative-edition/operator-decisions.md": "64879b9f3dc06237be013856cf78fec6a49239632be82e7ea7ed3de6a75aba49",
+    "docs/work-packages/doctor-suit/policy-draft-review.md": "a3b132a0695a18647a71785607c7a489dfbd4320cda10625a5aae273d9f7aa9d",
+    "apps/doctor-suit/config/policy-review.v1.json": "1074aaef25a9759b52ffc31346045fe3e897f11f214da76d530d77097757b287",
+    "apps/doctor-suit/app/utils/saasTerms.ts": "59ef6264a19a40fd64f16fed33073d4a1366dff8891c4019102e113128c91cd2",
+    "apps/doctor-suit/app/utils/saasStatus.ts": "4b8e3c1d8d3eac020f74b9fb74d160f6115dd80f4f7774a4f4beb2b4e4dd52a1",
+    "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028",
+    "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs": "433abbe3a21e5e648b6cf5422576d83d3445e99cbe955fc108af577bd9bd1208",
+    "apps/doctor-suit/tests/unit/saas-terms.test.mjs": "9bd66c9ff001e3cc2b58de9a39bd26d4e84624781f4697c448bce2ca299e65cc",
+    "apps/doctor-suit/tests/unit/policy-drafts.test.mjs": "88eea45aa2757984b10bce66728b58eeb103a8e60cdd5b47eef0d2d2e63d6624",
+    "apps/doctor-suit/tests/unit/launch-pricing.test.mjs": "069be0a9e17ec53b4095024455bf286bf802c62e554f03bf1be618f947e32d4f"
+  },
+  "document_sha256": "90d99951aed48689960545f61090fee3fb760c1adbc66eaa6d7f39b68e1bb31e",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-packet"
+}

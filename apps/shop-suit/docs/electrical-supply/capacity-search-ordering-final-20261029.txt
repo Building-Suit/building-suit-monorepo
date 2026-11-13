@@ -1,0 +1,13 @@
+[WebServer] (node:236142) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:236150) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:236158) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 500 active, en (4.4s)
+  ✓  2 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 500 active, ar (3.9s)
+
+  2 passed (10.6s)

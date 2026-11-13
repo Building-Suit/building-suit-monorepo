@@ -1,0 +1,53 @@
+/** Local maintenance barrier. A busy scope includes claims, inference, delivery,
+ * journal recovery, roster writes and lesson publication. Never cancels work. */
+export function maintenanceGate({ paused = false, uncertain = false, poison = async () => {} } = {}) {
+  let busy = 0
+  return {
+    snapshot: () => ({ paused, busy, uncertain }),
+    pause() { paused = true },
+    resume() { if (uncertain || busy) throw Error('maintenance-unsettled'); paused = false },
+    async run(action) {
+      if (paused || uncertain) return false
+      busy++
+      try { await action(); return true }
+      catch (error) { uncertain = true; paused = true; await poison(); throw error }
+      finally { busy-- }
+    },
+  }
+}
+
+// This is an API-shape check, not proof of semantic compatibility. The separate
+// operator-approved schema contract must remain additive across both releases.
+export const REQUIRED_RPCS = {
+  hq_worker_release_status: ['p_worker_id'],
+  hq_worker_claim: ['p_worker_id', 'p_lease_seconds', 'p_meeting_protocol'],
+  hq_worker_finish_v4: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence', 'p_model_evidence', 'p_trial_evidence'],
+  hq_worker_finish_v3: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_reply', 'p_error', 'p_evidence', 'p_model_evidence'],
+  hq_worker_heartbeat: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_status'],
+  hq_worker_presence: ['p_worker_id'], hq_worker_skill_context: ['p_job_id', 'p_lease_token', 'p_worker_id', 'p_skill_ids'],
+  hq_worker_roster_sources: ['p_worker_id'], hq_worker_sync_roster: ['p_worker_id', 'p_agents'],
+  hq_worker_pending_lessons: ['p_worker_id'], hq_worker_publish_lesson: ['p_worker_id', 'p_lesson_id', 'p_reference', 'p_digest'],
+}
+export function checkApiContract(status) {
+  const api = status?.api
+  if (status?.contract !== 2 || status.trialDelivery !== 1 || status.trialSkills !== 1
+    || status.trialFailureSettlement !== 1 || !Number.isSafeInteger(status.activeJobs) || status.activeJobs < 0
+    || api?.version !== 1 || api.role !== 'authenticated' || api.schemaUsage !== true || api.execute !== true
+    || !api.rpcs || Object.keys(api.rpcs).length !== Object.keys(REQUIRED_RPCS).length) throw Error('schema-incompatible')
+  for (const [name, names] of Object.entries(REQUIRED_RPCS)) {
+    const actual = api.rpcs[name]
+    if (!Array.isArray(actual) || actual.length !== names.length || names.some((key, index) => actual[index] !== key)) throw Error('schema-incompatible')
+  }
+  return 2
+}
+
+export const STAFFING_RPCS = { hq_worker_staffing_claim: ['p_worker_id'] }
+export function checkStaffingContract(status) {
+  const api = status?.staffingApi
+  const rpcs = STAFFING_RPCS
+  if (api?.version !== 1 || api.role !== 'authenticated' || api.schemaUsage !== true || api.execute !== true
+    || !api.rpcs || Object.keys(api.rpcs).length !== Object.keys(STAFFING_RPCS).length) throw Error('schema-incompatible')
+  for (const [name, args] of Object.entries(rpcs)) {
+    if (!Array.isArray(api.rpcs[name]) || JSON.stringify(api.rpcs[name]) !== JSON.stringify(args)) throw Error('schema-incompatible')
+  }
+}

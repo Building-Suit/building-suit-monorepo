@@ -1,0 +1,110 @@
+{
+  "task_id": "DOS-M5-014",
+  "scope": "independent-synthetic-cross-model-integration-and-concrete-acceptance-packet",
+  "task_acceptance": false,
+  "milestone_acceptance": false,
+  "patient_native_scaffold": false,
+  "clinical_approval": false,
+  "professional_signature": false,
+  "external_notifications": false,
+  "real_patient_pilot_authorized": false,
+  "approvals": {
+    "patient_identity": null,
+    "caregiver_legal": null,
+    "patient_platform_commands": null,
+    "clinical_reminder_policy": null,
+    "privacy_offline": null,
+    "device_channel_ownership": null,
+    "independent_clinical_review": null,
+    "independent_patient_usability_review": null,
+    "M7_legal": null,
+    "M7_hosting": null,
+    "M7_real_data": null,
+    "M7_release": null
+  },
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "mode": "Node-memory-only-cross-model-protocol-not-device-SQL-or-clinical-acceptance"
+  },
+  "combined_patient_units": {
+    "passed": 105,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2447,
+    "passed": 2370,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "native_cases": [],
+  "physical_devices": [],
+  "sql_status": "blocked-unrun-no-approved-implemented-patient-identity-report-ownership-server-boundary",
+  "blocked_outputs": [
+    "apps/doctor-suit/supabase/tests/dos-m5-014.sql"
+  ],
+  "milestone_commands_not_claimed": [
+    "pnpm typecheck",
+    "pnpm lint",
+    "pnpm build",
+    "actual-patient-platform-native-device-commands",
+    "actual-affected-shared-consumer-qualification"
+  ],
+  "criterion_status": {
+    "C01": "synthetic-cross-model-subset-pass-signed-source-and-device-evidence-missing",
+    "C02": "independent-clinical-usability-reviews-absent",
+    "C03": "real-data-pilot-denied-M7-approvals-and-independent-patient-receipt-absent",
+    "C04": "approved-patient-platform-commands-and-native-device-evidence-absent"
+  },
+  "inherited_clinician_receipts": {
+    "source_commit": "a309fedcefc086c7b74515b8c4be834ec94333e1",
+    "native_run": 40221837499,
+    "data_run": 40221837613,
+    "borrowed_as_patient_qualification": false,
+    "aggregate_ci_passed": false
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientAccessiblePreview.ts": "73bfd78de96e8e25f09246196abf7ae1f38a6355a376f6d41cb8fb2740d12d7e",
+    "apps/doctor-suit/app/utils/patientAppointmentsResultsPreview.ts": "cf34fa051905d40a924a7b5a4c0ff2706dcc1d1ae16c59f5eb2537406be50fe6",
+    "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+    "apps/doctor-suit/app/utils/patientDeviceSyncPreview.ts": "8889c5d094bb415cc31d494a48b74db88c5733282607909de9045a9742bddc01",
+    "apps/doctor-suit/app/utils/patientPrescriptionPreview.ts": "385a55940f5084f7c994aaaed63eb43c9e80ac8b8cc1c777964ccbb1522ce9cc",
+    "apps/doctor-suit/app/utils/patientProfile.ts": "6e30733ba5dd341ffccd1cc64919544803b908274f9899a0166b22422b635ec0",
+    "apps/doctor-suit/app/utils/patientProfileController.ts": "436108f0dcd62e5947c86cd935dde71911bca16388d3954956184df96f753dbe",
+    "apps/doctor-suit/app/utils/patientProfilePresentation.ts": "42eaa790e86a375a63222bc53b58204a15d78d36d21b3f0ddc9ce1f52904cd2f",
+    "apps/doctor-suit/app/utils/patientProfileRepository.ts": "b122b095b6691482f8f6b4771edf55e9c712b873c0b79e955ead7365a8b08fdf",
+    "apps/doctor-suit/app/utils/patientReleasedTimeline.ts": "82654ba1b0346f24b8f60b83c982058240c836f4bf5da38a04f64f178ff0c974",
+    "apps/doctor-suit/app/utils/patientReminderLifecycle.ts": "af203184116a0655bb96676f611f3fe31d7c7f5a8b237b041d4a8939c113a194",
+    "apps/doctor-suit/app/utils/patientReminderPreview.ts": "f3196b38d0e52ced10bd477e2983e279bc5b815fedbaad1e0d85e8961f22260b",
+    "apps/doctor-suit/app/utils/patientReportHistoryPreview.ts": "504c37426e2e2a38f76ac12851a960e91ef81284283b4abcdf62eb37447bff85",
+    "apps/doctor-suit/app/utils/patientReportPreview.ts": "5846dac639f0a6ee0b84d40dc654445129a7125f0c4bfb73a6cb8769757474db",
+    "apps/doctor-suit/app/utils/patients.ts": "00c626eefa76e248b3c112782fdcd7f0a99c2c27494fd3a72bc6c89d8e9c0bbd",
+    "apps/doctor-suit/app/utils/patientsController.ts": "3d532e3f42a6d02b82ce3fa6ecc459d8b2af7bba2b657231534e0cb388e36803",
+    "apps/doctor-suit/app/utils/patientsPresentation.ts": "af7116a1e61200d7144e81b6036473b909a1a3f3f27b406a90382b07d77247b3",
+    "apps/doctor-suit/app/utils/patientsRepository.ts": "3f0bc1e7b717845161dee8c5a497d565094392f42589dc5cf0a1ac786fe8b496",
+    "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs": "7e82909c939fe98fbfa08492fefe81a27c92b89e8dbd42a8a83034a4110728ab"
+  },
+  "document_sha256": "20cd51e9af51a1913220779e296e7a1a7d822354356e2e46dd17ebd12eaca192",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "Synthetic hash provenance is not a signed clinical source",
+    "Memory ledgers/intent cancellation are not durable SQL/server/OS crash proofs",
+    "No actual patient Auth/RLS/clinical/usability/platform/native/physical/privacy acceptance",
+    "No real notification or guaranteed alarm",
+    "Actual whole-milestone/shared-consumer/release qualification remains unrun or blocked"
+  ]
+}

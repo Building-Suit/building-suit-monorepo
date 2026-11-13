@@ -1,6 +1,6 @@
-export interface BsCommerceDocumentForm { amount: number; date: string; method: string; reference: string; notes: string; reason: string; quantities: Record<string, number> }
+export interface BsCommerceDocumentForm { reelSources?: Record<string, string>; amount: number; date: string; method: string; reference: string; notes: string; reason: string; quantities: Record<string, number> }
 export interface BsCommerceCorrectionForm { date: string; reference: string; reason: string }
-export interface BsCommerceDocumentLine { id: string; name: string; description: string; quantity: string; price: string; total: string; discount: string; available: string; returnMaximum: number }
+export interface BsCommerceDocumentLine { returnSources?: { options: { value: string; label: string }[]; loading: boolean; error: string | null; hasMore: boolean }; id: string; name: string; description: string; quantity: string; price: string; total: string; discount: string; available: string; returnMaximum: number; returnStep?: number; returnUnit?: string }
 export interface BsCommerceDocumentEvent { id: string; title: string; description: string; reason: string; canReverse: boolean; canRefund: boolean }
 export interface BsCommerceDocumentMovement { id: string; date: string; name: string; quantity: string; cost: string; batch: string; to: string }
 export interface BsCommerceDocumentView {
@@ -21,7 +21,7 @@ export interface BsCommerceDocumentView {
   correctionDialog: { dirty: boolean; pending: boolean; warning: string }
 }
 export interface BsCommerceDocumentCopy {
-  downloadReceipt?: string
+  returnSource?: string; moreSources?: string; downloadReceipt?: string
   back: string; loading: string; loadError: string; retry: string; notFound: string; party: string; date: string; created: string; notes: string; total: string; balance: string; discount: string; paid: string; due: string; settlement: string
   lines: string; item: string; quantity: string; price: string; available: string; payments: string; credits: string; inventory: string; empty: string; noInventory: string; noParty: string; details: string; batch: string; open: string
   recordPayment: string; recordCredit: string; recordReturn: string; reverse: string; refund: string; issue: string; issuing: string; edit: string; reprint: string; share: string

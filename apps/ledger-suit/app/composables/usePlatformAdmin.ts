@@ -1,3 +1,4 @@
+import { platformReceiptUrl } from '~/utils/platformReceiptUrl'
 import type { Json } from '~~/types/database.types'
 import type { PlatformAdminDatabase } from '~~/types/platform-admin.types'
 
@@ -10,6 +11,7 @@ export type AdminCommand = { id: string, targetId: string, action?: string, targ
 export function usePlatformAdmin() {
   const client = useSupabaseClient<PlatformAdminDatabase>()
   const user = useSupabaseUser()
+  const config = useRuntimeConfig()
   const role = ref<string | null>(null)
   const rows = shallowRef<AdminRow[]>([])
   const pending = ref(false)
@@ -103,7 +105,7 @@ export function usePlatformAdmin() {
     return run(async () => {
       const result = await client.functions.invoke('platform-admin-receipt', { body: { requestId } })
       if (result.error || !result.data?.url) throw new Error('ADMIN_FAILED')
-      return result.data.url as string
+      return platformReceiptUrl(result.data.url, config.public.supabase.url)
     })
   }
   return { role, rows, pending, error, denied, load, review, setAccess, correctSubscription, updateSupport, receipt }

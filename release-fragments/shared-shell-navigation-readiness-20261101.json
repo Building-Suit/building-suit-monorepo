@@ -1,0 +1,31 @@
+{
+  "id": "shared-shell-navigation-readiness-20261101",
+  "task": "DOCTOR-SHARED-NAVIGATION-AUDIT-20261101",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsAppShell.vue"
+  ],
+  "reason": "Keep the existing shared mobile navigation trigger disabled until its client click handler is attached, preventing an enabled server-rendered control from losing the first activation. No authorization or product activation changes.",
+  "notes": {
+    "title": {
+      "en": "Open mobile navigation when ready",
+      "ar": "فتح قائمة الهاتف بعد جاهزيتها"
+    },
+    "summary": {
+      "en": "The mobile menu button becomes available when it can respond to the first click.",
+      "ar": "يصبح زر قائمة الهاتف متاحًا عندما يستطيع الاستجابة للنقرة الأولى."
+    },
+    "details": {
+      "en": "The menu keeps its keyboard focus, Escape dismissal and focus return while client code loads.",
+      "ar": "تحافظ القائمة على تركيز لوحة المفاتيح والإغلاق بمفتاح Escape وإعادة التركيز أثناء تحميل الشيفرة."
+    }
+  }
+}

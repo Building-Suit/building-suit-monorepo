@@ -1,0 +1,27 @@
+{
+  "id": "shop-plan-website-feature-20261022",
+  "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopPlanPresentation.ts"
+  ],
+  "reason": "Clarify the existing Website inclusion in Team and Multi plan cards without changing subscription entitlements.",
+  "notes": {
+    "title": {
+      "en": "Website inclusion is clear on plan cards",
+      "ar": "توضيح تضمين الموقع في بطاقات الباقات"
+    },
+    "summary": {
+      "en": "Team and Multi show the shop website as included; Solo shows it as not included.",
+      "ar": "تعرض باقتا تيم ومالتي موقع المتجر كميزة مشمولة، وتعرضه باقة سولو كميزة غير مشمولة."
+    },
+    "details": {
+      "en": "The English and Arabic feature row appears in public pricing and Subscription & billing, for monthly and yearly plan variants. Pricing and subscription access rules are unchanged.",
+      "ar": "يظهر صف الميزة بالعربية والإنجليزية في الأسعار العامة والاشتراك والفوترة، للخيارات الشهرية والسنوية. تظل الأسعار وقواعد الوصول إلى الاشتراك دون تغيير."
+    }
+  }
+}

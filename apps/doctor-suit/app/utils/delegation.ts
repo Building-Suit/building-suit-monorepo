@@ -28,7 +28,7 @@ function grants(value: unknown): DoctorDelegationGrant[] {
 }
 export function doctorTeamDirectory(value: unknown, practiceId: string): DoctorTeamDirectory {
   if (!record(value) || value.practice_id!==practiceId || !text(value.practice_name) || !count(value.member_total) || !count(value.invitation_total) || !count(value.location_total)) invalid()
-  if (!doctorEditionMode(value.edition) || !version(value.edition_revision) || !Array.isArray(value.available_capabilities) || new Set(value.available_capabilities).size !== value.available_capabilities.length || value.available_capabilities.some(cap => !doctorAdministrativeCapabilities.includes(cap as DoctorAdministrativeCapability) || (value.edition === 'administrative_candidate' && ['documents.read', 'documents.write'].includes(String(cap))))) invalid()
+  if (!doctorEditionMode(value.edition) || !version(value.edition_revision) || !Array.isArray(value.available_capabilities) || new Set(value.available_capabilities).size !== value.available_capabilities.length || value.available_capabilities.some(cap => !doctorAdministrativeCapabilities.includes(cap as DoctorAdministrativeCapability) || (value.edition === 'administrative_candidate' && ['documents.read', 'documents.write', 'worklists.read', 'worklists.manage'].includes(String(cap))))) invalid()
   const locations = unique(array(value.locations).map((item): DoctorTeamLocation => {
     if (!record(item) || !doctorUuid(item.id) || !text(item.name) || !text(item.timezone) || typeof item.archived!=='boolean') invalid()
     return { id: item.id, name: item.name, timezone: item.timezone, archived: item.archived }

@@ -1,0 +1,17 @@
+{
+  "id": "hq-chat-uninterrupted-realtime-20261105",
+  "task": "HQ-CHAT-UNINTERRUPTED-REALTIME-20261105",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "packages/ui/src/organisms/BsHqCeoChat.vue",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "tooling/hq-agent-host/README.md",
+    "tooling/hq-agent-host/workforce-db.test.mjs",
+    "docs/work-packages/company-hq/HQ-CHAT-UNINTERRUPTED-REALTIME-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Keep private HQ Chat usable while background snapshots refresh: preserve typing and send priority, isolate loading from refreshing, and retain request/idempotency guards. Replace minute worker-heartbeat agents invalidations with fresh-authorized lightweight presence; retain real job and changed-roster pushes, quiet identical roster syncs, category-isolated company reads, coalesced SSE readiness and bounded connection recovery. Thirteen fixture browser scenarios and thirty distinct focused runtime/transport/hub checks pass; HQ/docs typechecks and scoped lint pass. Web-first staging deployment dpl_9UNYfTH7rHFMT4x6VwTK2uJXTL1Q is READY and migration20261105192548 is applied; four actual post-change heartbeats produced zero agents/company invalidations; no worker restart, public Suit activation, production release, Git action or widened model/provider permission is claimed."
+}

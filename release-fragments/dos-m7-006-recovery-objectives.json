@@ -1,0 +1,13 @@
+{
+  "id": "dos-m7-006-recovery-objectives",
+  "task": "DOS-M7-006",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/helpers/recovery-objectives.mjs",
+    "apps/doctor-suit/tests/unit/dos-m7-006-objectives.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-006-objectives.md"
+  ],
+  "reason": "Pure synthetic measurement comparison with explicit supplied objectives and source/scope consistency checks; no defaults, approval, provenance authentication, restore permission, service access or full recovery acceptance."
+}

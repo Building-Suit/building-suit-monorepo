@@ -1,0 +1,28 @@
+{
+  "id": "ls-browser-001-admin-sorting",
+  "task": "LS-BROWSER-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+    "apps/ledger-suit/tests/e2e/shared-ui-foundation.spec.ts"
+  ],
+  "reason": "Bind administrative table sorting to its displayed nested values while retaining existing resource scope and authorization.",
+  "notes": {
+    "title": {
+      "en": "Correct sorting in administration tables",
+      "ar": "\u062a\u0631\u062a\u064a\u0628 \u0635\u062d\u064a\u062d \u0641\u064a \u062c\u062f\u0627\u0648\u0644 \u0627\u0644\u0625\u062f\u0627\u0631\u0629"
+    },
+    "summary": {
+      "en": "Administrators can sort displayed resource rows in both directions.",
+      "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0634\u0631\u0641\u064a\u0646 \u062a\u0631\u062a\u064a\u0628 \u0635\u0641\u0648\u0641 \u0627\u0644\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0641\u064a \u0627\u0644\u0627\u062a\u062c\u0627\u0647\u064a\u0646."
+    },
+    "details": {
+      "en": "Mouse and keyboard sorting use the displayed values within the currently loaded result scope.",
+      "ar": "\u064a\u0633\u062a\u062e\u062f\u0645 \u062a\u0631\u062a\u064a\u0628 \u0627\u0644\u0641\u0623\u0631\u0629 \u0648\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0642\u064a\u0645 \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0636\u0645\u0646 \u0646\u0637\u0627\u0642 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u062d\u0645\u0644\u0629 \u062d\u0627\u0644\u064a\u064b\u0627."
+    }
+  }
+}

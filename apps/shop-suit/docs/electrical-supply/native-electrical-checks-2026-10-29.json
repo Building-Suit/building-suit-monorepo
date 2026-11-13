@@ -1,0 +1,27 @@
+{
+  "baseline": "81cdcc608519f538a2dec85c3d6d6c2bd4e4687d",
+  "parent_checkpoint": "8fed6ad6d148f1965fc4d93ed679535d89e3879f",
+  "nativeBrowserCases": {
+    "discovered": 2,
+    "executed": false,
+    "status": "PENDING owned native backend and coordinated GitHub-hosted CI"
+  },
+  "schemaCompanion": {
+    "status": "PASS",
+    "migrations": 120,
+    "providerStandins": true
+  },
+  "relevantUnits": {
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0
+  },
+  "syntheticLoginDriver": {
+    "passed": 2,
+    "nativeAcceptance": false
+  },
+  "strictTypeScript": "PASS",
+  "scopedLint": "PASS",
+  "workflowYaml": "PARSES; timeout25 and runner admission/cleanup retained",
+  "credentialsArtifacts": false
+}

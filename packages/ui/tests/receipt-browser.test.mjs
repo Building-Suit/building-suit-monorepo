@@ -27,7 +27,7 @@ const view = {
 const copy = { title: 'Sales Receipt', reprintLabel: 'REPRINT / COPY', invoice: 'Sale No.', date: 'Date & Time', location: 'Branch', address: 'Address', phone: 'Phone', staff: 'Cashier', customer: 'Customer', items: 'Items', item: 'Product / Service', quantity: 'Qty', unitPrice: 'Unit Price', lineTotal: 'Amount', total: 'Total Paid', payment: 'Payment', reference: 'Reference No.', thankYou: 'Thank you', greeting: 'Hope you have a good day', issuedVia: 'Issued via Shop Suit by Building Suit', compliance: 'This is proof of sale only — not an Egyptian tax invoice or e-receipt approved by the Tax Authority.' }
 
 for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic render, original-reference comparison and complete PNG clipboard`, async () => {
-  const browser = await chromium.launch({ headless: true, args: ['--disable-lcd-text'] })
+  const browser = await chromium.launch({ headless: true, args: ['--disable-lcd-text'], ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) })
   try {
     const page = await browser.newPage({ viewport: { width: 900, height: 1000 }, deviceScaleFactor: 1 })
     const requests = []

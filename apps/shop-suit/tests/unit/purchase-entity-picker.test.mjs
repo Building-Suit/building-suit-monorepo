@@ -15,7 +15,7 @@ function fixture() {
   const module = { exports: {} }
   const globals = {
     ref: vue.ref, computed: vue.computed, watch: vue.watch, onScopeDispose: vue.onScopeDispose,
-    useSupabaseClient: () => ({ schema: () => ({ rpc }) }),
+    useShopClient: () => ({ schema: () => ({ rpc }) }),
     useShop: () => ({ currentId: shopId }), useSupabaseUser: () => user,
     useI18n: () => ({ locale: vue.ref('en') }),
   }

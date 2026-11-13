@@ -1,0 +1,20 @@
+{
+  "id": "hq-office-ring-balance-20261105",
+  "task": "HQ-OFFICE-RING-BALANCE-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "docs/work-packages/company-hq/HQ-OFFICE-RING-BALANCE-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Balance internal HQ office rings around a fixed top angle: CEO retains the first-ring top, each outer ring starts at the top and subsequent occupied slots alternate clockwise/counterclockwise using the unchanged full-capacity spacing and room clearance. Ordinary appended approvals retain existing assignments under the approved-date/ID ordering; backdated or equal-date insertions can still reorder. Road gaps use the same phase; renderer, minimap and directional island inherit the shared placements. No source/approval/integration, workplace geometry, camera or palette changes. Source and visual acceptance remain unverified; tests/checks/browser/runtime/tester agents are unrun under the standing founder instruction. No provider change, merge, deployment, production action or public product activation."
+}

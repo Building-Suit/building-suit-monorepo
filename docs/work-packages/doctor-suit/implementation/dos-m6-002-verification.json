@@ -1,0 +1,122 @@
+{
+  "task_id": "DOS-M6-002",
+  "scope": "task-specific-verification-of-existing-trusted-server-entitlement-and-quota-implementation",
+  "task_acceptance": false,
+  "commercial_approval_complete": false,
+  "clinical_approval": false,
+  "live_payment_acceptance": false,
+  "product_schema_changes": false,
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-002.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "focused_existing_and_owned_units": {
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2452,
+    "passed": 2375,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "phase": "before-final-lint-only-test-variable-cleanup-and-stronger-SQL-read-assertions",
+    "followup": "focused5/38-and-final-eslint-pass; SQL/browser runtime pending owned CI"
+  },
+  "static_checks": {
+    "doctor_scoped_eslint": "pass-final-initial-unused-test-variable-fixed",
+    "doctor_typecheck": "pass",
+    "workspace_boundaries": "138-templates-80-preserved-migrations-pass",
+    "canonical_packets": "9-packets-104-unchanged-task-fingerprints-pass"
+  },
+  "browser_discovery": {
+    "auth_exit_code": 0,
+    "auth_total_cases": 87,
+    "owned_task_cases": 2,
+    "public_exit_code": 0,
+    "public_total_cases": 60,
+    "task_cases_in_public_suite": 0,
+    "browser_or_server_started": false,
+    "not_runtime_acceptance": true
+  },
+  "sql": {
+    "file": "apps/doctor-suit/supabase/tests/dos-m6-002.sql",
+    "planned_assertions": 31,
+    "runtime_status": "passed-31-assertions-owned-run40232320918-source1f28d24a",
+    "actual_existing_server_commands": true,
+    "mock_business_tables": false
+  },
+  "browser": {
+    "file": "apps/doctor-suit/tests/e2e/dos-m6-002.spec.ts",
+    "cases": 2,
+    "mode": "owned-synthetic-HTTP-protocol-fixture-not-actual-Supabase-or-merchant",
+    "runtime_status": "passed-2-owned-cases-within87-protocol-cases-run40232320918-source1f28d24a"
+  },
+  "maintained_separate_transaction_races": {
+    "source": "apps/doctor-suit/tests/saas-quota-concurrency.mjs",
+    "runtime_status": "passed-all9-owned-same-source-SQL-job"
+  },
+  "owned_ci_receipts": [
+    {
+      "source_head": "1f28d24a8a8b80f423b70cc78e0de940b8e93e38",
+      "run_id": 40232320918,
+      "sql_job_id": 121286477290,
+      "sql_conclusion": "success",
+      "own_sql_assertions": 31,
+      "full_sql_suites": 61,
+      "full_sql_assertions": 1911,
+      "quota_transaction_cases": 9,
+      "browser_job_id": 121286477519,
+      "browser_conclusion": "success",
+      "own_protocol_cases": 2,
+      "auth_protocol_passed": 87,
+      "public_passed": 60,
+      "delegation_stress_passed": 4,
+      "M3_actual_cases_passed": 10,
+      "actual_provider_acceptance_marker": true,
+      "shared_settings_job_id": 121286477649,
+      "shared_settings_conclusion": "failure",
+      "shared_auth_passed": 48,
+      "shared_settings_passed": 6,
+      "shared_settings_failed": 6,
+      "aggregate_workflow_conclusion": "failure",
+      "archive_sha256": "1bc304c323edb6bb38e48bfb58a12c2b0bfbb1553a93ff55cbda27a2f77d3f08",
+      "raw_log_or_Auth_data_committed": false,
+      "local_generated_type_artifact_rehash_claimed": false
+    }
+  ],
+  "source_files": {
+    "apps/doctor-suit/tests/unit/dos-m6-002.test.mjs": "fc9d79f677a515803202bf29b7e4877d109feb0058140b2c38484c60affa0c9a",
+    "apps/doctor-suit/supabase/tests/dos-m6-002.sql": "bb0a64e8582baaa4cfc78b55f8ffa2d6db301b582a5fe9a3ff03a2f083a41b02",
+    "apps/doctor-suit/tests/e2e/dos-m6-002.spec.ts": "b3504fe7819453bda624614d70e9a6eb55bab47b2e36f3700779e53744889e53",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts": "6dfe7a1b1f22438afec1ff4a44bb1d74edbdfca2609adf9b06a59866d11d979f",
+    "apps/doctor-suit/tests/e2e/playwright.auth.config.ts": "d4983c32bfe6088672d050a6f22837a7c3e76af578d9a52616d98646e810a3dc",
+    "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028",
+    "apps/doctor-suit/app/utils/contextScope.ts": "e088e1c79b08618b81e143906fde8d8dc0230cb387949f926fd6abfd75a72af3",
+    "apps/doctor-suit/app/utils/saasStatus.ts": "4b8e3c1d8d3eac020f74b9fb74d160f6115dd80f4f7774a4f4beb2b4e4dd52a1",
+    "apps/doctor-suit/tests/saas-quota-concurrency.mjs": "968f26cc49f2fcb9cabe2ce9081f76650453510b6582f2b6b1426c63e8dcaae3",
+    "apps/doctor-suit/supabase/migrations/20261018110853_doctor_manual_payment_activation_evidence.sql": "b542295ebd94022485692833a1c9b7b85f582842d1a5906ad697b64c6d962c8b"
+  },
+  "document_sha256": "bb781efc4f7cd5b8a9bf10932362434ccc12b0e3e2a9391f977e40709ccee9ab",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "Complete past-due/cancellation/grace/expiry/export/access approval remains absent",
+    "Current DTO decoding is not server authorization",
+    "Owned SQL31/quota9/protocol2 technical subset passes on source1f28; complete policy/clinical/live acceptance stays held",
+    "No real recipient/reviewer/merchant/live payments configured or approved",
+    "54 inherited Shop failures and6 inherited shared-settings failures preserve CI consolidation hold"
+  ]
+}

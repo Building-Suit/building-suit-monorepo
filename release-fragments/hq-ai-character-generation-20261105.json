@@ -1,0 +1,19 @@
+{
+  "id": "hq-ai-character-generation-20261105",
+  "task": "HQ-AI-CHARACTER-GENERATION-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/company-hq/HQ-AI-CHARACTER-GENERATION-20261105.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Hosted-only Steve reconstruction produced a textured static SF3D GLB and a local orbit preview. Visual review finds recognizable costume/silhouette but soft face, hands and textures. The asset is not rigged, not an exact match and not integrated into HQ; this task records internal asset provenance without changing product behavior."
+}

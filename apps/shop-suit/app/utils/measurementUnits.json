@@ -1,0 +1,232 @@
+[
+  {
+    "code": "ea",
+    "nameEn": "Piece",
+    "nameAr": "قطعة",
+    "symbol": "pc",
+    "dimension": "count",
+    "factor": "1",
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "pair",
+    "nameEn": "Pair",
+    "nameAr": "زوج",
+    "symbol": "pair",
+    "dimension": "count",
+    "factor": "2",
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "dozen",
+    "nameEn": "Dozen",
+    "nameAr": "دستة",
+    "symbol": "doz",
+    "dimension": "count",
+    "factor": "12",
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "set",
+    "nameEn": "Set",
+    "nameAr": "طقم",
+    "symbol": "set",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "mm",
+    "nameEn": "Millimeter",
+    "nameAr": "ملليمتر",
+    "symbol": "mm",
+    "dimension": "length",
+    "factor": "0.001",
+    "allowedPrecision": 3,
+    "isActive": true
+  },
+  {
+    "code": "cm",
+    "nameEn": "Centimeter",
+    "nameAr": "سنتيمتر",
+    "symbol": "cm",
+    "dimension": "length",
+    "factor": "0.01",
+    "allowedPrecision": 4,
+    "isActive": true
+  },
+  {
+    "code": "m",
+    "nameEn": "Meter",
+    "nameAr": "متر",
+    "symbol": "m",
+    "dimension": "length",
+    "factor": "1",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "km",
+    "nameEn": "Kilometer",
+    "nameAr": "كيلومتر",
+    "symbol": "km",
+    "dimension": "length",
+    "factor": "1000",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "ft",
+    "nameEn": "Foot",
+    "nameAr": "قدم",
+    "symbol": "ft",
+    "dimension": "length",
+    "factor": "0.3048",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "mg",
+    "nameEn": "Milligram",
+    "nameAr": "ملليجرام",
+    "symbol": "mg",
+    "dimension": "mass",
+    "factor": "0.000001",
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "g",
+    "nameEn": "Gram",
+    "nameAr": "جرام",
+    "symbol": "g",
+    "dimension": "mass",
+    "factor": "0.001",
+    "allowedPrecision": 3,
+    "isActive": true
+  },
+  {
+    "code": "kg",
+    "nameEn": "Kilogram",
+    "nameAr": "كيلوجرام",
+    "symbol": "kg",
+    "dimension": "mass",
+    "factor": "1",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "t",
+    "nameEn": "Metric tonne",
+    "nameAr": "طن متري",
+    "symbol": "t",
+    "dimension": "mass",
+    "factor": "1000",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "ml",
+    "nameEn": "Milliliter",
+    "nameAr": "ملليلتر",
+    "symbol": "mL",
+    "dimension": "volume",
+    "factor": "0.001",
+    "allowedPrecision": 3,
+    "isActive": true
+  },
+  {
+    "code": "l",
+    "nameEn": "Liter",
+    "nameAr": "لتر",
+    "symbol": "L",
+    "dimension": "volume",
+    "factor": "1",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "cm2",
+    "nameEn": "Square centimeter",
+    "nameAr": "سنتيمتر مربع",
+    "symbol": "cm²",
+    "dimension": "area",
+    "factor": "0.0001",
+    "allowedPrecision": 2,
+    "isActive": true
+  },
+  {
+    "code": "m2",
+    "nameEn": "Square meter",
+    "nameAr": "متر مربع",
+    "symbol": "m²",
+    "dimension": "area",
+    "factor": "1",
+    "allowedPrecision": 6,
+    "isActive": true
+  },
+  {
+    "code": "pack",
+    "nameEn": "Pack",
+    "nameAr": "عبوة",
+    "symbol": "pack",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "box",
+    "nameEn": "Box",
+    "nameAr": "علبة",
+    "symbol": "box",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "carton",
+    "nameEn": "Carton",
+    "nameAr": "كرتونة",
+    "symbol": "carton",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "bag",
+    "nameEn": "Bag",
+    "nameAr": "كيس",
+    "symbol": "bag",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "roll",
+    "nameEn": "Roll",
+    "nameAr": "لفة",
+    "symbol": "roll",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  },
+  {
+    "code": "reel",
+    "nameEn": "Reel",
+    "nameAr": "بكرة",
+    "symbol": "reel",
+    "dimension": "package",
+    "factor": null,
+    "allowedPrecision": 0,
+    "isActive": true
+  }
+]

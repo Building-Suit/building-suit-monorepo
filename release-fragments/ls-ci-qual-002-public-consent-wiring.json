@@ -1,0 +1,36 @@
+{
+  "id": "ls-ci-qual-002-public-consent-wiring",
+  "task": "LS-CI-QUAL-002",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/layouts/landing.vue",
+    "apps/shop-suit/app/pages/index.vue",
+    "apps/shop-suit/tests/e2e/appointment-access.spec.ts",
+    "packages/ui/src/organisms/BsLandingFooter.vue",
+    "packages/ui/src/templates/BsMarketingLayout.vue",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+    "release-changes/items.json",
+    "apps/shop-suit/app/composables/useShopPrivacy.ts"
+  ],
+  "reason": "Repair public footer consent access and forward the existing consent-gated pricing analytics event; retain existing sensitive-data exclusion and withdrawal behavior. Update appointment access regression interaction to the current calendar details dialog without changing credential or permission assertions. Shared components add opt-in props/events only.",
+  "notes": {
+    "title": {
+      "en": "Keep privacy settings available",
+      "ar": "إبقاء إعدادات الخصوصية متاحة"
+    },
+    "summary": {
+      "en": "Reopen optional analytics choices from the public footer.",
+      "ar": "أعد فتح خيارات التحليلات الاختيارية من تذييل الصفحات العامة."
+    },
+    "details": {
+      "en": "Optional analytics remains consent-gated, and its existing pricing event follows the selected link without including business data.",
+      "ar": "تبقى التحليلات الاختيارية مشروطة بالموافقة ولا تتضمن بيانات العمل."
+    }
+  }
+}

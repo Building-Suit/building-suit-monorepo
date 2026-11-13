@@ -1,0 +1,37 @@
+{
+  "id": "shop-electrical-native-measured-fifo-20261029",
+  "task": "SS-ELEC-606",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-measurement-disposable.yml",
+    "apps/shop-suit/playwright.electrical-qualification.config.ts",
+    "apps/shop-suit/supabase/tests/shop_electrical_native_journey.sql",
+    "apps/shop-suit/tests/e2e/electrical-native-fixture.ts",
+    "apps/shop-suit/tests/e2e/electrical-native.spec.ts",
+    "apps/shop-suit/tests/e2e/pilot-backend.ts",
+    "packages/testing/browser-foundation.ts",
+    "tooling/database/test-shop-measurement-local.mjs",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-ELECTRICAL-JOURNEY-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/TASKS.md",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+    "apps/shop-suit/docs/electrical-supply/TEST-MATRIX.md",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-BROWSER-READINESS-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/native-electrical-checks-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/native-electrical-schema-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-electrical-units-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-electrical-driver-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-electrical-discovery-2026-10-29.txt"
+  ],
+  "reason": "Prepare two genuine native electrical browser journeys using existing real Auth/public financial authorities, deterministic invoice-date FIFO fixtures and credential-safe owned-runner execution. Record passing provider-stand-in SQL companion, strict compilation and unit/discovery checks without claiming unexecuted native acceptance. Root CI/shared test support requires private provenance for all current consumers; no product permissions, providers, commercial terms or runtime posting changes."
+}

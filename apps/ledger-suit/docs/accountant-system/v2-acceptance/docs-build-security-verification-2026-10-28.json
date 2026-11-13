@@ -1,0 +1,131 @@
+{
+  "task": "LS-SEC-DEP-006",
+  "date": "2026-10-28",
+  "parent_pr": 439,
+  "parent_sha": "a259e4cfe90e5f04a8eff99dd3abc201f4156511",
+  "state": "local_toolchain_qualification_complete_exact_combined_ci_pending",
+  "pins": {
+    "markdown-it": {
+      "before": "14.1.0",
+      "after": "14.3.3"
+    },
+    "turbo": {
+      "before": "2.8.20",
+      "after": "2.9.14"
+    }
+  },
+  "audit_before": {
+    "info": 0,
+    "low": 3,
+    "moderate": 4,
+    "high": 3,
+    "critical": 0
+  },
+  "audit_after": {
+    "info": 0,
+    "low": 1,
+    "moderate": 0,
+    "high": 1,
+    "critical": 0
+  },
+  "remaining_advisories": [
+    {
+      "package": "node-forge",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+      "patched_versions": "<0.0.0",
+      "paths": [
+        ".>nuxt>@nuxt/nitro-server>nitropack>listhen>node-forge"
+      ]
+    },
+    {
+      "package": "deepmerge",
+      "severity": "low",
+      "url": "https://github.com/advisories/GHSA-gcqx-w48m-w2h4",
+      "patched_versions": "<0.0.0",
+      "paths": [
+        ".>nuxt>@nuxt/nitro-server>nitropack>@rollup/plugin-node-resolve>deepmerge"
+      ]
+    }
+  ],
+  "old_markdown_probe": {
+    "version": "14.1.0",
+    "input_lines": 100000,
+    "duration_ms": 10047,
+    "status": null,
+    "signal": "SIGTERM",
+    "error": "ETIMEDOUT"
+  },
+  "qualified_builds": 7,
+  "qualified_typechecks": 7,
+  "production_output_inspection": [
+    {
+      "app": "automation-suit",
+      "executable_files": 5821,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "building-suit-docs",
+      "executable_files": 5757,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "doctor-suit",
+      "executable_files": 5836,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "inventory-suit",
+      "executable_files": 5690,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "ledger-suit",
+      "executable_files": 5826,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "shop-suit",
+      "executable_files": 5899,
+      "named_imports": [],
+      "package_files": []
+    },
+    {
+      "app": "super-admin-suit",
+      "executable_files": 5765,
+      "named_imports": [],
+      "package_files": []
+    }
+  ],
+  "inspection_limit": "No named executable imports or packaged module copies in these seven built outputs; not a universal proof against bundled/dynamic code paths. Both advisories remain visible.",
+  "source_sha256": {
+    "package.json": "dfed8343c9ed564f35f1fce97bc7925719592debb4e4c03592dab1e59b8e0b81",
+    "pnpm-lock.yaml": "fb1f5254cb6848ba47379d2e15c561c27fcb0ad8e27f3e2bee645dd7fa9241f6",
+    "tooling/checks/markdown-security.test.mjs": "df1a57a3250aee5699f57ce5de9e68ab5d326f37160aa4ff6da6614c7a765558"
+  },
+  "limits": [
+    "No financial/hosted/Automation mutation.",
+    "Exact combined candidate CI, provider migration history, accountant pilot and operating backup arrangements remain separate gates."
+  ],
+  "root_tests": {
+    "tests": 2061,
+    "passed": 2038,
+    "skipped": 23,
+    "failed": 0
+  },
+  "lint": "pass; existing warnings remain",
+  "workspace": "pass",
+  "release": "pass",
+  "markdown_regressions": {
+    "passed": 3,
+    "failed": 0,
+    "deadline_ms": 10000,
+    "linkification_ms": 1365,
+    "reference_ms": 4011
+  }
+}

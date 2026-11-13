@@ -1,0 +1,52 @@
+{
+  "task_id": "DOS-M5-003",
+  "scope": "independent-synthetic-memory-protocol",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "legal_approval": false,
+  "external_delivery": false,
+  "patient_native_scaffold": false,
+  "identity_approval": null,
+  "guardian_age_policy_approval": null,
+  "patient_platform_approval": null,
+  "native_cases": [],
+  "sql_status": "blocked-unrun-no-patient-schema-or-approved-identity-policy",
+  "device_status": "blocked-unrun-no-approved-patient-platform-command-map",
+  "unit": {
+    "command": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-003.test.mjs"
+    ],
+    "exit_code": 0,
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root_source_phase": {
+    "command": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2345,
+    "passed": 2268,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "final_strict_field_change": "focused-nine-tests-rerun-no-broad-repeat"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+    "apps/doctor-suit/tests/unit/dos-m5-003.test.mjs": "47ba7bd81fdfff4b2c0cc3354bc897108f9bfce1f4c9002a209745a6a26a146b"
+  },
+  "independent_exact_candidate_verification": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No patient native/provider/live-data integration",
+    "No accountable identity/guardian/age approval",
+    "No SQL or device acceptance",
+    "Memory clearing requires integration notifications and fresh operation checks",
+    "No actual notification scheduling, offline cache policy or remote erasure guarantee"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "doctor-sql-workspace-bootstrap",
+  "task": "DOS-M4-006",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/doctor-disposable.yml",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Link the pinned frozen workspace before the owned Doctor SQL fixture imports shared contracts; retain isolation guards and every mandatory SQL/concurrency/recovery/schema check without provider activation."
+}

@@ -1,5 +1,7 @@
 # LS-ADMIN-001 — Secure operator foundation
 
+2026-10-26 native follow-up: [LS-BILL-NATIVE-001](accountant-system/work-packages/LS-BILL-NATIVE-001.md) now verifies actual Auth/Edge/Storage/SQL, receipt expiry, quota/correction/renewal and mobile customer → desktop operator browser paths. It fixes receipt links through the configured public project origin. Earlier unrun/local-only statements below are historical; hosted configuration and accountant UAT remain separate.
+
 LS-ADMIN-002 extends this foundation with searchable operational projections,
 platform-admin access and subscription commands, and the support queue. See
 [the operations verification record](platform-admin-operations.md). Statements

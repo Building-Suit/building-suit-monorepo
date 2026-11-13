@@ -56,7 +56,7 @@ export function usePaymentReview(binding: () => string | undefined, active: () =
     await action.run(async () => {
       if (!active() || !selected.value) throw new Error('access_denied')
       command.value ||= paymentCommand(binding()!, selected.value, draft.value, () => crypto.randomUUID())
-      const result = await fetch<unknown>('/api/adapters/shop', { method: 'POST', body: command.value })
+      const result = await fetch('/api/adapters/shop', { method: 'POST', body: command.value })
       const confirmed = confirmPaymentResult(command.value, result)
       if (context !== generation || !active()) return
       receipt.value = confirmed

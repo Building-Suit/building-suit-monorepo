@@ -131,6 +131,15 @@
   --bs-shadow-elevation1-dark: 0 1px 2px rgba(0, 0, 0, 0.28);
   --bs-shadow-elevation2-dark: 0 10px 28px rgba(0, 0, 0, 0.36);
   --bs-shadow-elevation3-dark: 0 24px 64px rgba(0, 0, 0, 0.52);
+  --bs-component-hq-glass-panel: color-mix(in srgb, var(--bs-color-brand-deep-structure-navy) 91%, transparent);
+  --bs-component-hq-glass-card: color-mix(in srgb, var(--bs-color-brand-soft-silver) 12%, transparent);
+  --bs-component-hq-glass-control: color-mix(in srgb, var(--bs-color-neutral-charcoal) 82%, transparent);
+  --bs-component-hq-glass-selected: color-mix(in srgb, var(--bs-color-brand-building-navy) 88%, transparent);
+  --bs-component-hq-glass-border: color-mix(in srgb, var(--bs-color-brand-soft-silver) 18%, transparent);
+  --bs-component-hq-glass-blur: 12px;
+  --bs-component-hq-glass-panel-width: 520px;
+  --bs-component-hq-glass-plans-width: 600px;
+  --bs-component-hq-glass-detail-width: 40vw;
   --bs-component-app-shell-content-maximum-width: 1680px;
   --bs-component-receipt-font-family: 'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif;
   --bs-component-receipt-table-font-family: 'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif;

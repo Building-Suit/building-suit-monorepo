@@ -1,9 +1,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 /** Optional media is progressive enhancement; broken/unsafe sources use the same local placeholder. */
-export function useOptionalImage(source: () => string | null | undefined, element?: () => HTMLImageElement | null, localPreview: () => boolean = () => false) {
+export function useOptionalImage(source: () => string | null | undefined, element?: () => HTMLImageElement | null, localPreview: () => boolean = () => false, inlineRaster: () => boolean = () => false) {
   const broken = ref(false)
   const image = computed(() => {
     const value = source()?.trim()
+    if (value && inlineRaster() && value.length <= 175000 && /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) return value
     if (!value || value.length > 2000 || /\s/.test(value)) return null
     try {
       const url = new URL(value)

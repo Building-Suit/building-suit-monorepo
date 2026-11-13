@@ -1,0 +1,32 @@
+Building Suit HQ avatar packs
+
+LEGO minifigures assembled from the LDraw Official Parts Library
+LDraw contributors, named in the GLB asset metadata
+CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+https://library.ldraw.org/
+https://library.ldraw.org/library/updates/complete.zip
+
+The LDraw parts were assembled, recolored, rigged, and converted to glTF.
+
+MakeHuman system assets, base morph targets, and default rig
+MakeHuman Community
+CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html
+https://github.com/makehumancommunity/makehuman/tree/a8bc2d54ff0ac92e78ff71431b1023eda42bf482/makehuman/data
+
+Maxwell Hair and Micky Afro from Hair02
+Elvaerwyn
+CC BY — https://static.makehumancommunity.org/assets/assetpacks/hair02.html
+https://files2.makehumancommunity.org/asset_packs/hair02/hair02_ccby.zip
+
+The models were refitted, reskinned to a compact skeleton, and converted to glTF with resized textures.
+
+HQ Game Mode characters
+Grab3D, CC0 1.0 Universal
+https://grab3d.com/models/characters/ninja/
+https://grab3d.com/models/characters/pirate/
+https://grab3d.com/models/characters/wizard/
+https://grab3d.com/models/characters/witch/
+https://grab3d.com/models/characters/elf/
+
+Adaptations: compact rigs, resized textures and Character Studio walk cycles.

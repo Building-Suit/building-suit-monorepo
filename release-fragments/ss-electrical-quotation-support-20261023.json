@@ -1,0 +1,27 @@
+{
+  "id": "ss-electrical-quotation-support-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/supabase/tests/shop_trade_quotations.sql",
+    "apps/shop-suit/docs/electrical-supply",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "tooling/database/test-shop-measurement-local.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Optional typed quotation editor/history presentation, explicit exports and ownership registry, bilingual browser journeys and public-command SQL approval/expiry/legacy regression qualification. Other dependency consumers remain internal; no hosted deployment, product registration or competing financial ledger."
+}

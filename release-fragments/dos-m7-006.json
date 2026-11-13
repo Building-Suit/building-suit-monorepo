@@ -1,0 +1,13 @@
+{
+  "id":"dos-m7-006-document-integrity",
+  "task":"DOS-M7-006",
+  "suits":["doctor-suit"],
+  "classification":"internal",
+  "disposition":"internal",
+  "paths":[
+    "apps/doctor-suit/tests/helpers/recovery-document-integrity.mjs",
+    "apps/doctor-suit/tests/unit/dos-m7-006.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-006.md"
+  ],
+  "reason":"Implement the independently authorized synthetic document-byte integrity component against existing immutable version metadata. Missing/altered/ambiguous objects fail closed; no Storage access, actual restore, custody/objective approval or canonical task acceptance is inferred."
+}

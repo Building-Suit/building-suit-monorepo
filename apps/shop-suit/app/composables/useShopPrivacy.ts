@@ -53,7 +53,7 @@ export function useShopPrivacy(initialize = false) {
     })
   }
   return computed<PrivacyPresentation>(() => ({
-    showReopen: false, ready: ready.value, prompt: !preference.value && !user.value && isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable), settings: settings.value, analytics: draft.value,
+    showReopen: !isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable), ready: ready.value, prompt: !preference.value && !user.value && isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable), settings: settings.value, analytics: draft.value,
     open: () => { draft.value = preference.value?.analytics === true; settings.value = true },
     close: () => { settings.value = false }, save, change: value => { draft.value = value },
     copy: locale.value === 'ar' ? {

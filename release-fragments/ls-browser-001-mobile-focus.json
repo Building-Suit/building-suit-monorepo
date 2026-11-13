@@ -1,0 +1,32 @@
+{
+  "id": "ls-browser-001-mobile-focus",
+  "task": "LS-BROWSER-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ux/src/composables/useSideNavigation.ts",
+    "packages/ux/tests/menu-share.test.mjs"
+  ],
+  "reason": "Focus the visible mobile navigation close control after its CSS transition permits focus, and cancel pending focus after closing or disposal.",
+  "notes": {
+    "title": {
+      "en": "Reliable keyboard focus in mobile navigation",
+      "ar": "تركيز موثوق للوحة المفاتيح في قائمة الهاتف"
+    },
+    "summary": {
+      "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
+      "ar": "ينقل فتح قائمة الهاتف تركيز لوحة المفاتيح إلى داخلها كي يغلقها زر Escape."
+    },
+    "details": {
+      "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
+      "ar": "ينتظر التركيز ظهور عنصر التحكم ويُلغى إذا أُغلقت القائمة أو أُزيلت."
+    }
+  }
+}

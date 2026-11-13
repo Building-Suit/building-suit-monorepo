@@ -1,0 +1,59 @@
+[WebServer] (node:184880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:184888) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:184896) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: en (3.9s)
+(node:184973) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: ar (4.3s)
+
+
+  1) apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: en
+
+    Error: expect(locator).toBeEnabled() failed
+
+    Locator: locator('form').locator('button[type="submit"]')
+    Expected: enabled
+    Error: strict mode violation: locator('form').locator('button[type="submit"]') resolved to 2 elements:
+        1) <button pc0_2="" disabled data-p="" type="submit" aria-busy="false" data-pc-name="button" data-p-disabled="true" data-pc-section="root" aria-label="Validating email" class="bs-sign-in__arrow ls-btn ls-btn-primary bs-sign-in-arrow-leave-active bs-sign-in-arrow-leave-to">…</button> aka getByRole('button', { name: 'Validating email' })
+        2) <button pc9="" data-p="" type="submit" aria-busy="false" aria-label="Log in" data-pc-name="button" data-pc-section="root" data-p-disabled="false" class="bs-sign-in__arrow ls-btn ls-btn-primary bs-sign-in-arrow-enter-active bs-sign-in-arrow-enter-to">…</button> aka getByRole('button', { name: 'Log in' })
+
+    Call log:
+      - Expect "toBeEnabled" with timeout 5000ms
+      - waiting for locator('form').locator('button[type="submit"]')
+
+
+       at pilot-backend.ts:106
+
+      104 |   await password.fill(account.password)
+      105 |   const submit = form.locator('button[type="submit"]')
+    > 106 |   await expect(submit).toBeEnabled()
+          |                        ^
+      107 |   await Promise.all([
+      108 |     page.waitForURL(/\/dashboard/, { timeout: 20_000 }),
+      109 |     submit.click(),
+        at login (/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/tests/e2e/pilot-backend.ts:106:24)
+        at /workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:14:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/native-pilot-login/native-pilot-login-native--78c7b-nt-email-password-stages-en/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/native-pilot-login/native-pilot-login-native--78c7b-nt-email-password-stages-en/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/native-pilot-login/native-pilot-login-native--78c7b-nt-email-password-stages-en/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/native-pilot-login/native-pilot-login-native--78c7b-nt-email-password-stages-en/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    apps/shop-suit/tests/e2e/native-pilot-login.spec.ts:8:3 › native pilot login driver follows current email/password stages: en
+  1 passed (11.3s)

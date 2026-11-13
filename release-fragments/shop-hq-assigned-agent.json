@@ -1,0 +1,42 @@
+{
+  "id": "shop-hq-assigned-agent",
+  "task": "SS-HQ-ASSIGNED-AGENT",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/.env.example",
+    "apps/shop-suit/app/composables/useShopAssistant.ts",
+    "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+    "apps/shop-suit/app/pages/assistant.vue",
+    "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
+    "apps/shop-suit/app/utils/legal.ts",
+    "apps/shop-suit/app/utils/shopAssistantCopy.ts",
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/nuxt.config.ts",
+    "apps/shop-suit/server/api/assistant/hq",
+    "apps/shop-suit/server/utils/shopAssistantRequest.ts",
+    "apps/shop-suit/server/utils/shopHqAssistant.ts",
+    "apps/shop-suit/supabase/migrations/20261113001708_shop_hq_assistant_queue.sql",
+    "apps/shop-suit/supabase/migrations/20261113015713_shop_hq_assistant_workforce.sql",
+    "apps/shop-suit/supabase/migrations/20261113015737_shop_hq_assistant_service_sales.sql"
+  ],
+  "reason": "A Building Suit employee handles owner-authorized Shop Suit requests, posts results in chat, and sends the printable receipt for a completed service sale.",
+  "notes": {
+    "title": {
+      "en": "Building Suit shop agent",
+      "ar": "مساعد المتجر من Building Suit"
+    },
+    "summary": {
+      "en": "Ask Building Suit to record a paid service sale and send its receipt in chat.",
+      "ar": "اطلب من Building Suit تسجيل عملية بيع خدمة مدفوعة وإرسال الإيصال في المحادثة."
+    },
+    "details": {
+      "en": "Where the managed agent is available, owners can authorize Building Suit to handle service sale requests. When Shop Suit can verify the details and payment, the employee posts a link to the printable receipt. Follow-up corrections appear in the same chat.",
+      "ar": "عند توفر المساعد المُدار، يقدر صاحب المتجر يفوّض Building Suit لتنفيذ طلبات بيع الخدمات. لما Shop Suit يتحقق من التفاصيل والدفع، الموظف يرسل رابط الإيصال القابل للطباعة. أي تصحيح بعد المراجعة يظهر في نفس المحادثة."
+    }
+  }
+}

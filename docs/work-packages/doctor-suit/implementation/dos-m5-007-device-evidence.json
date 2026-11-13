@@ -1,0 +1,76 @@
+{
+  "task_id": "DOS-M5-007",
+  "status": "concrete-review-packet-native-feature-blocked",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "qualified_interpretation": false,
+  "patient_native_scaffold": false,
+  "native_notification_activation": false,
+  "provider_activation": false,
+  "external_delivery": false,
+  "patient_identity_approval": null,
+  "patient_caregiver_approval": null,
+  "patient_platform_command_approval": null,
+  "clinician_reminder_policy_approval": null,
+  "notification_privacy_retention_approval": null,
+  "reviewer": null,
+  "review_date": null,
+  "approved_candidate_sha": null,
+  "approval_references": [],
+  "patient_apk_sha256": null,
+  "native_cases": [],
+  "unit_status": "blocked-unrun-no-approved-implemented-native-patient-notification-flow",
+  "blocked_outputs": [
+    "apps/doctor-suit/tests/unit/dos-m5-007.test.mjs"
+  ],
+  "source_evidence": {
+    "apps/doctor-suit/mobile/doctor/package.json": "c9f80533748e625ce9bed019d368a2a7ada928db00ff0a16d193536d38ee4b4c",
+    "apps/doctor-suit/mobile/doctor/android/app/src/main/AndroidManifest.xml": "f033356fe3157bd08342766ab98c8e164b91760d25555bb6e49a513be26722d9",
+    "apps/doctor-suit/mobile/doctor/capacitor.config.ts": "2b845c6d85d51b30df9ed35589346512dee6237d6eed6a4996a5e18024b01ce6",
+    "apps/doctor-suit/app/utils/communicationProvider.ts": "101ac9507d3a0f1b336ad69e5c42dcbc2df28cfeb11f365b1a4fb9a0964b0981",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-001-decision-packet.json": "03e07b5699cf1196b52c46ae3ca1c4a50ff223bbb2841c303155977aa808ee2e",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-002-device-evidence.json": "45022171cd40c246fd300a0690049ce08292adfebe8fd0de8f850f66c77a6d3e",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-006-reminder-policy.json": "aa768140089f2c44b1edaa32a340531b37db1b8bd4c9a719b0736c733d9114d3"
+  },
+  "source_observations": {
+    "patient_path_absent": true,
+    "clinician_notification_dependency_absent": true,
+    "clinician_post_notifications_permission_absent": true,
+    "clinician_exact_alarm_permission_absent": true,
+    "communication_transport": "synthetic-disabled",
+    "reminder_preview_qualified_interpretation": false
+  },
+  "source_observation_limits": "These are checked source facts, not an executed OS permission/channel/reboot or patient delivery case.",
+  "notification_permission_is_delivery": false,
+  "enrollment_is_reminder_consent": false,
+  "offline_remote_erasure_guaranteed": false,
+  "private_notification_storage_approved": false,
+  "full_root_inherited_source_phase": {
+    "total": 2383,
+    "passed": 2306,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "repeated_for_this_document_only_packet": false
+  },
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "document_sha256": "23022a90c4df6565416cad7810734deba700d30c594a4e009f18faf0d6a233e0",
+  "existing_provider_boundary_validation": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Existing M3 disabled external boundary only; not patient permission/device acceptance"
+  },
+  "mechanical_checks": [
+    "138-template-80-preserved-migration-boundaries",
+    "9-canonical-packets-104-unchanged-task-fingerprints",
+    "source-document-evidence-digests",
+    "diff-hygiene"
+  ]
+}

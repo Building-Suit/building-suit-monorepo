@@ -5,8 +5,8 @@ export interface BsBusinessLocationForm { name: string; code: string; address: s
 export interface BsBusinessReceiptForm { displayName: string; address: string; phone: string; footer: string; paperSize: string; documentLabel?: string; referenceLabel?: string; documentLanguage?: string; documentDirection?: string; showDescriptions?: boolean; notes?: string; logoDataUrl?: string }
 export interface BsBusinessLocationRow { id: string; name: string; summary: string; badge: 'default' | 'archived' | null; canArchive: boolean; canRestore: boolean }
 export interface BsBusinessSettingsEditor { pending: boolean; error: string; success: string; dirty: boolean; submitDisabled: boolean }
-export interface BsBusinessLocationsView { rows: BsBusinessLocationRow[]; pending: boolean; error: string; dirty: boolean; editing: boolean; usageLabel: string; canCreate: boolean; capacityNotice: boolean; restoreDisabled: boolean }
-export interface BsBusinessCashPolicyView { loading: boolean; loadError: boolean; pending: boolean; error: string; success: string; disabled: boolean; submitDisabled: boolean }
+export interface BsBusinessLocationsView { rows: BsBusinessLocationRow[]; pending: boolean; error: string; dirty: boolean; editing: boolean; editingId: string | null; usageLabel: string; canCreate: boolean; capacityNotice: boolean; restoreDisabled: boolean }
+export interface BsBusinessCashPolicyView { dirty: boolean; loading: boolean; loadError: boolean; pending: boolean; error: string; success: string; disabled: boolean; submitDisabled: boolean }
 export interface BsBusinessReceiptSummary { displayName: string; address: string; phone: string; footer: string; paperLabel: string }
 export interface BsBusinessSettingsCopy {
   editProfile?: string
@@ -75,7 +75,7 @@ export interface BsBusinessSettingsCopy {
 }
 
 export interface BsBusinessCurrencyView {
-  code: string; locked: boolean; loading: boolean; loadError: boolean; pending: boolean; error: string; success: string
+  dirty: boolean; code: string; locked: boolean; loading: boolean; loadError: boolean; pending: boolean; error: string; success: string
   title: string; help: string; lockedHelp: string; failed: string; retry: string; save: string
   options: { value: string; label: string }[]
 }

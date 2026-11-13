@@ -1,0 +1,24 @@
+{
+  "id": "dos-m6-005",
+  "task": "DOS-M6-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/subscriptionLifecycleRequest.ts",
+    "apps/doctor-suit/supabase/migrations/20261025220541_doctor_saas_lifecycle_review_requests.sql",
+    "apps/doctor-suit/tests/unit/dos-m6-005.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m6-005.sql",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-005.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-005-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/saas-lifecycle-request-concurrency.mjs",
+    "apps/doctor-suit/tests/disposable-provider.mjs",
+    "apps/doctor-suit/tests/saas-lifecycle-requests-actual-provider.mjs"
+  ],
+  "reason": "Persist synthetic lifecycle review requests separately from unchanged entitlements; commercial effective-date/execution approval remains absent."
+}

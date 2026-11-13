@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-005-continuation",
+  "task": "DOS-M4-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Maintain the committed all-milestone continuation with current stack, actual validation and held native/file-policy gates; do not infer qualified acceptance."
+}

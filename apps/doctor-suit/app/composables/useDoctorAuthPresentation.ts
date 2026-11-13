@@ -5,8 +5,8 @@ export function useDoctorAuthPresentation(initialize = true) {
   const auth = useDoctorAuth()
   const ar = computed(() => locale.value === 'ar')
   const copy = computed(() => doctorAuthCopy(ar.value))
-  // No Doctor logo asset is registered; every auth surface uses the shared fallback.
-  const product = computed(() => ({ name: 'Doctor Suit', assetPrefix: '', homeLabel: copy.value.home, title: copy.value.title, description: copy.value.description }))
+  const brand = useDoctorBrand()
+  const product = computed(() => ({ ...brand, homeLabel: copy.value.home, title: copy.value.title, description: copy.value.description }))
   const availability = computed(() => doctorAuthAvailability(auth.state, ar.value))
   const error = computed(() => doctorAuthError(auth.state.error, ar.value))
   onMounted(() => { if (initialize && auth.state.phase === 'checking') void auth.refresh() })

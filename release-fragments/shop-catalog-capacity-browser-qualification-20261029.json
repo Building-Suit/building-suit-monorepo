@@ -1,0 +1,35 @@
+{
+  "id": "shop-catalog-capacity-browser-qualification-20261029",
+  "task": "SS-ELEC-601",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-catalog-capacity.yml",
+    "tooling/database/test-shop-measurement-local.mjs",
+    "apps/shop-suit/tests/e2e/catalog-capacity.spec.ts",
+    "apps/shop-suit/tests/e2e/catalog-capacity.config.ts",
+    "apps/shop-suit/docs/electrical-supply/CAPACITY-QUALIFICATION-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/TASKS.md",
+    "docs/shared/data-table.md",
+    "release-changes/items.json",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/capacity-browser-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-browser-pre-fix-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-catalogue-regression-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/read-only-indexing-2026-10-29.json",
+    "apps/shop-suit/app/stores/shop.ts",
+    "apps/shop-suit/docs/electrical-supply/capacity-typecheck-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-store-erasure-2026-10-29.txt",
+    "packages/ui/src/templates/BsCataloguePage.vue"
+  ],
+  "reason": "Qualify bounded synthetic browser transport for approved caps and actual shared product/service consumers in English/Arabic. Wire future PR browser CI and the quota suite into existing native measured-retail qualification. Preserve retries0, fixed deadlines, existing database authorities and external acceptance gates. Explicitly type the existing shop-selection predicate with its domain ShopSummary after the integrated Vue toolchain exposes implicit-any inference; no authorization or runtime behavior changes. Root workflow/tooling and shared UI require private provenance for all six existing consumers; actual catalog routes are only Shop product/service pages and receive the separate public patch item. No operational activation of other Suits."
+}

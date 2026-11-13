@@ -1,0 +1,21 @@
+{
+  "id": "hq-live-events-20261105",
+  "task": "HQ-LIVE-EVENTS-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "README.md",
+    "docs/work-packages/company-hq",
+    "release-changes/items.json"
+  ],
+  "reason": "Replace recurring Brain/company/access data fetches with one founder-only persistent fetch-SSE/private Supabase WebSocket event path. Snapshot once on ready/reconnect, then refresh only the affected category or explicit action; anonymous Brain reads require explicit open/manual refresh. Fresh session/membership gates, private receive-only channel policy, bounded event queues/dirty flags, cancellation and protocol-only heartbeats remain. Applied staging live-push migration removes the minute data cron, adds source-index digest/category invalidations and retains renewal-only scheduling without Drive data reads; worker v4 is ACTIVE. Durable event-triggered dispatch/retry/watchdog migration 20261105002521 is applied; setup metadata shows no idle jobs and a closed circuit, without asserting dispatcher/app acceptance. Historical index/watch evidence is not app acceptance. Optional JSON whole-plan publisher stays unselected/unbound; no autonomous CEO/HR, agents, staffing execution or approval from prose. No tests/checks/browser/runtime acceptance, tester agents, Brain writes, production change, merge or public activation."
+}

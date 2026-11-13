@@ -1,0 +1,20 @@
+begin;
+\ir fixtures/clinical.sql
+select pg_temp.command('create',jsonb_build_object('patient_id',pg_temp.patient(),'snapshot',pg_temp.snapshot()),2001);
+select is(pg_temp.detail()->'encounter'->>'created_by',pg_temp.id(1)::text,'M2-002 actual actor is attributed');
+select throws_ok($$select pg_temp.command('save',jsonb_build_object('snapshot',pg_temp.snapshot()),2002,0)$$,'40001','DOCTOR_CLINICAL_CONFLICT','M2-002 stale write is rejected');
+select pg_temp.claim(2);select throws_ok($$select pg_temp.detail()$$,'42501',null,'M2-002 doctor B cannot substitute A encounter');
+select pg_temp.claim(1);select is(pg_temp.detail()->'versions'->0->>'revision','1','M2-002 denied writes leave history intact');
+select pg_temp.put('first',pg_temp.v('encounter'));
+select pg_temp.command('create',jsonb_build_object('patient_id',pg_temp.patient(),'snapshot',pg_temp.snapshot()),2001);
+select is(pg_temp.v('encounter'),pg_temp.v('first'),'M2-002 exact creation retry returns the original encounter');
+select pg_temp.command('start','{}',2003);
+select is(pg_temp.detail()->'encounter'->>'status','in_progress','M2-002 start is an explicit versioned transition');
+select is(pg_temp.detail()->'versions_total','2'::jsonb,'M2-002 creation and start retain exactly two immutable versions');
+select ok(not has_table_privilege('authenticated','public.clinical_encounters','SELECT'),'M2-002 raw encounters are not readable');
+select ok(not has_table_privilege('service_role','public.clinical_versions','UPDATE'),'M2-002 service adapter cannot rewrite clinical versions');
+reset role;update doctor_private.clinical_fixture_grants set revoked_at=clock_timestamp() where user_id=pg_temp.id(1);
+set local role authenticated;select pg_temp.claim(1);
+select is(public.doctor_clinical_workspace(pg_temp.practice(),pg_temp.location())->>'available','false','M2-002 administrative owner and forged signer metadata do not replace a revoked fixture grant');
+select throws_ok($$select pg_temp.detail()$$,'42501',null,'M2-002 denied read reveals no retained chart');
+select * from finish();rollback;

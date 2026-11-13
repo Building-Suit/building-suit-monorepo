@@ -72,7 +72,7 @@ const columns=computed<BsDataTableColumn<BsEtaRow>[]>(()=>[
      <template v-if="item.configured">
       <BsField :label="copy.itemType"><BsSelect v-model="item.itemType" :options="[{label:'GS1',value:'GS1'},{label:'EGS',value:'EGS'}]" option-label="label" option-value="value" :aria-label="copy.itemType" /></BsField>
       <BsField :label="copy.itemCode"><BsInput v-model="item.itemCode" required maxlength="100" :aria-label="copy.itemCode" /></BsField>
-      <BsField :label="copy.unitType"><BsInput v-model="item.unitType" required maxlength="30" :aria-label="copy.unitType" /></BsField>
+      <BsText v-if="item.stockUnitCode" size="sm">{{ copy.stockUnit }}: {{ item.stockUnitCode }}</BsText><BsField :label="copy.unitType"><BsInput v-model="item.unitType" required maxlength="30" :aria-label="copy.unitType" /></BsField>
      </template>
     </BsPanel>
     <BsField :label="copy.reason"><BsInput v-model="form.reason" required minlength="2" maxlength="1000" :aria-label="copy.reason" /></BsField>

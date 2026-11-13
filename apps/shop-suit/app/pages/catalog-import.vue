@@ -10,8 +10,8 @@ type ImportKind = keyof typeof importTemplates
 type ImportError = { row: number | null; field: string; code: string }
 type ImportResult = { valid: boolean; dryRun: boolean; rowCount: number; errors: ImportError[]; created?: number; updated?: number; openingStockPosted?: number }
 type Category = { id: string; name: string }
-type LabelRow = { productId: string; name: string; sku: string | null; barcode: string; salePrice: number; category: string | null }
-type SalesRow = { type: string; name: string; category: string; quantity: number; amount: number }
+type LabelRow = { baseUnitCode?: string; quantityIncrement?: string; measurementStatus?: string; productId: string; name: string; sku: string | null; barcode: string; salePrice: number; category: string | null }
+type SalesRow = { type: string; name: string; category: string; quantity: number; baseUnitCode?: string; amount: number }
 
 const captureScope = useShopTaskScope()
 const confirmation = useConfirmation()
@@ -158,8 +158,8 @@ async function exportLabels() {
       all.push(...batch.items)
       total = batch.total
     } while (page++ * 100 < total)
-    downloadCsv('barcode-labels.csv', encodeCsv(['name', 'sku', 'barcode', 'sale_price', 'category'], all.map(item => ({
-      name: item.name, sku: item.sku, barcode: item.barcode, sale_price: item.salePrice, category: item.category,
+    downloadCsv('barcode-labels.csv', encodeCsv(['name', 'sku', 'barcode', 'sale_price', 'category', 'base_unit_code', 'quantity_increment'], all.map(item => ({
+      name: item.name, sku: item.sku, barcode: item.barcode, sale_price: item.salePrice, category: item.category, base_unit_code: item.measurementStatus === 'active' ? item.baseUnitCode : '', quantity_increment: item.measurementStatus === 'active' ? item.quantityIncrement : '',
     }))))
   } catch { if (inScope()) pushToast({ tone: 'error', title: copy.value.exportError }) }
   finally { exporting.value = false }
@@ -204,7 +204,7 @@ const importCopy = computed<BsCatalogImportCopy>(() => ({
 const importView = computed<BsCatalogImportView>(() => ({
   available: Boolean(current.value), contextLoading: shopLoading.value, categories: categories.value.map(row => ({ id: row.id, name: row.name })), categoryDirty: categoryDirty.value, categoryPending: categoryPending.value, categoryError: categoryError.value,
   pending: pending.value, filename: filename.value, rowCount: rows.value.length, error: parsingError.value, canValidate: rows.value.length > 0 && !pending.value, canApply: Boolean(result.value?.valid && result.value.dryRun), resultLabel: result.value?.valid ? result.value.dryRun ? copy.value.valid : `${copy.value.applied} ${result.value.created} / ${result.value.updated} / ${result.value.openingStockPosted}` : '',
-  issues: (result.value?.errors ?? []).map(row => ({ row: row.row, field: row.field, code: row.code })), exporting: exporting.value, reportPending: reportPending.value, reportError: Boolean(reportError.value), reportRows: salesReport.value.items.map((row, index) => ({ id: String(index), name: row.name, category: row.category, quantity: String(row.quantity), amount: money(Number(row.amount)) })),
+  issues: (result.value?.errors ?? []).map(row => ({ row: row.row, field: row.field, code: row.code })), exporting: exporting.value, reportPending: reportPending.value, reportError: Boolean(reportError.value), reportRows: salesReport.value.items.map((row, index) => ({ id: String(index), name: row.name, category: row.category, quantity: `${row.quantity}${row.baseUnitCode && !['legacy','service'].includes(row.baseUnitCode) ? ' ' + row.baseUnitCode : ''}`, amount: money(Number(row.amount)) })),
 }))
 const importKind = computed<string>({ get: () => kind.value, set: value => { if (value === 'products' || value === 'customers' || value === 'suppliers') kind.value = value } })
 const importKindChoices = computed<BsCatalogImportChoice[]>(() => [{ value: 'products', label: copy.value.products }, { value: 'customers', label: copy.value.customers }, { value: 'suppliers', label: copy.value.suppliers }])

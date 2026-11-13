@@ -1,0 +1,26 @@
+{
+  "id": "hq-trial-context-packet-20261107",
+  "task": "HQ-TRIAL-CONTEXT-PACKET-20261107",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261107201336_hq_supervised_trial_context_packet.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "apps/company-hq/tests/unit/staging-migration-parity.test.mjs",
+    "tooling/hq-agent-host/worker.mjs",
+    "tooling/hq-agent-host/worker.test.mjs",
+    "tooling/hq-agent-host/pilot-proposals-db.test.mjs",
+    "tooling/hq-agent-host/RELEASES.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Keep one bounded supervised-trial assignment with current selected hire sources, full head scoping and rejected review findings across acknowledgments, work, independent review and corrections; preserve failed evidence, restrictions, repair bounds and ordinary workflows."
+}

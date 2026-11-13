@@ -1,0 +1,25 @@
+{
+  "id": "hq-agent-identities-motion-20261105",
+  "task": "HQ-AGENT-IDENTITIES-MOTION-20261105",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/company-hq/i18n/locales/ar.json",
+    "packages/ui/src/types/hqAgentsPresentation.ts",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/utils/hqAgentCharacters.ts",
+    "docs/work-packages/company-hq/HQ-AGENT-IDENTITIES-MOTION-20261105.md"
+  ],
+  "reason": "Expose actual avatar names, localized roles/activity and stable identity; remove long synthetic idle stalls and frozen gait, smooth routes/turning and immediately seat actual working employees. Fresh Brain roster has ten employees while current HQ runtime binds only two; record job/tools/review/learning gaps without fabricating activation. Source-only internal work; no autonomous tests/builds/deployment or public Suit activation."
+}

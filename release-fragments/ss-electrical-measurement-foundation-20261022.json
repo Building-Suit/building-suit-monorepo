@@ -1,0 +1,13 @@
+{
+  "id": "ss-electrical-measurement-foundation-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Prepare exact units, guarded unused-product configuration and private implementation/release evidence. Measured transactions remain unavailable until dependent precision and workflow integration; no future capability is announced."
+}

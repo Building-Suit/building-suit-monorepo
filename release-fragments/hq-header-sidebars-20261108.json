@@ -1,0 +1,9 @@
+{
+  "id": "hq-header-sidebars-20261108",
+  "task": "HQ-HEADER-SIDEBARS-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/templates/BsHqLayoutPage.vue", "packages/ui/src/molecules/BsSelect.vue", "apps/company-hq/tests/browser/layout.spec.ts", "apps/company-hq/tests/browser/staffing.spec.ts", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ reorganizes the header and replaces the CEO Workspace tab strip with dedicated panels. The Workplaces menu scrolls independently of the 3D canvas. Browser checks were not run locally."
+}

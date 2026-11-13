@@ -1,0 +1,265 @@
+name: Disposable HQ Realtime isolation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/hq-live-dispatch-disposable.yml'
+      - 'tooling/hq-agent-host/*.mjs'
+      - 'tooling/hq-agent-host/live-dispatch-native.Dockerfile'
+      - 'tooling/hq-agent-host/test-fixtures/**'
+      - 'tooling/hq-agent-host/bootstrap/admission-pause.sql'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tooling/hq-agent-host/proposed-migrations/hq_live_dispatch.sql'
+      - 'apps/company-hq/supabase/migrations/**'
+      - 'apps/company-hq/supabase/recovered-migrations/**'
+      - 'apps/company-hq/tests/unit/founder-bind-db.test.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hq-live-dispatch-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cron-background-workers: ['on', 'off']
+        cron-source: ['upstream-1-6-4', 'packaged']
+    name: Native isolation (${{ matrix.cron-source }}, background workers ${{ matrix.cron-background-workers }})
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable native PostgreSQL and actual pg_cron
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          docker build --target ${{ matrix.cron-source }} -t hq-live-dispatch-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
+          docker network create --internal hq-live-dispatch-fixture
+          # cron libpq mode uses the official image's existing local Unix-socket
+          # authentication; no host trust rule or production credential is added.
+          # Tests run inside the same network namespace: no published host port.
+          # TCP readiness excludes the entrypoint's socket-only bootstrap server.
+          docker run -d --name hq-live-dispatch-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=fixture_admin -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_live_dispatch_disposable \
+            hq-live-dispatch-fixture \
+            -c port=55439 -c shared_preload_libraries=pg_cron \
+            -c cron.database_name=hq_live_dispatch_disposable \
+            -c cron.host=/var/run/postgresql \
+            -c cron.use_background_workers=${{ matrix.cron-background-workers }} -c max_worker_processes=16
+          for attempt in $(seq 1 60); do
+            if docker exec hq-live-dispatch-fixture pg_isready -h 127.0.0.1 -p 55439 -U fixture_admin -d hq_live_dispatch_disposable; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Prove claim, transport, and scheduler isolation
+        env:
+          HQ_NATIVE_CRON_MODE: ${{ matrix.cron-background-workers }}
+        run: |
+          docker exec hq-live-dispatch-fixture cat /usr/local/share/hq-cron-build.txt
+          timeout --signal=TERM --kill-after=10s 240s docker exec -w /workspace/repository -e HQ_NATIVE_CRON_MODE \
+            hq-live-dispatch-fixture node --test tooling/hq-agent-host/live-dispatch-native-check.mjs
+          # Upstream patch releases intentionally retain SQL extversion 1.6.
+          # The image provenance above identifies the implementation separately.
+          test "$(docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -Atc "SELECT current_setting('server_version_num') || ':' || extversion FROM pg_extension WHERE extname='pg_cron'")" = '170011:1.6'
+      - name: Prove claim query budget and concurrent freshness
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          # Independent database and container; no host port or hosted credential.
+          # TCP readiness excludes the image entrypoint's bootstrap server.
+          docker run -d --name hq-claim-budget-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_claim_budget_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-claim-budget-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_claim_budget_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 240s docker exec -w /workspace/repository \
+            hq-claim-budget-fixture node --test tooling/hq-agent-host/claim-query-budget-native-check.mjs
+          test "$(docker exec hq-claim-budget-fixture psql -U postgres -d hq_claim_budget_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove founder authorization concurrency
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          docker run -d --name hq-founder-bind-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_founder_bind_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-founder-bind-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_founder_bind_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 120s docker exec -w /workspace/repository -e HQ_FOUNDER_NATIVE=1 \
+            hq-founder-bind-fixture node --test apps/company-hq/tests/unit/founder-bind-db.test.mjs
+          test "$(docker exec hq-founder-bind-fixture psql -U postgres -d hq_founder_bind_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove trial review planning with four cold sessions
+        if: matrix.cron-source == 'upstream-1-6-4' && matrix.cron-background-workers == 'on'
+        run: |
+          # Fresh database for the exact passed/canceled/evaluator lifecycle mix.
+          # Reuse the pinned 17.11 image and isolated network; never publish ports.
+          docker run -d --name hq-trial-review-fixture --network hq-live-dispatch-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_trial_review_planning_disposable hq-live-dispatch-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-trial-review-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_trial_review_planning_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 330s docker exec -w /workspace/repository \
+            hq-trial-review-fixture node --test tooling/hq-agent-host/trial-review-planning-native-check.mjs
+          test "$(docker exec hq-trial-review-fixture psql -U postgres -d hq_trial_review_planning_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Disposable scheduler diagnostics
+        if: failure()
+        run: |
+          docker logs --tail 80 hq-live-dispatch-fixture
+          docker logs --tail 80 hq-trial-review-fixture || true
+          docker exec -e PGOPTIONS='-c statement_timeout=5000' hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -c 'SELECT pid,usename,application_name,state,wait_event_type,wait_event,pg_blocking_pids(pid) AS blockers FROM pg_stat_activity WHERE datname=current_database()'
+          docker exec hq-live-dispatch-fixture psql -p 55439 -U fixture_admin -d hq_live_dispatch_disposable -c 'SELECT jobid,status,return_message FROM cron.job_run_details ORDER BY runid DESC LIMIT 10'
+      - name: Remove disposable database
+        if: always()
+        run: |
+          docker rm -f hq-claim-budget-fixture || true
+          docker rm -f hq-founder-bind-fixture || true
+          docker rm -f hq-trial-review-fixture || true
+          docker rm -f hq-live-dispatch-fixture || true
+          docker network rm hq-live-dispatch-fixture || true
+  repository-review-planning:
+    name: Native repository review planning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start isolated repository review database
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          # Same pinned PostgreSQL 17.11/Node runtime; this fixture needs no cron.
+          # A separate job avoids extending the existing four isolation jobs.
+          docker build --target runtime -t hq-repository-review-fixture -f tooling/hq-agent-host/live-dispatch-native.Dockerfile .
+          docker network create --internal hq-repository-review-fixture
+          docker run -d --name hq-repository-review-fixture --network hq-repository-review-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_repository_review_planning_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-repository-review-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_repository_review_planning_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+      - name: Prove repository review cold and repeated concurrency
+        run: |
+          timeout --signal=TERM --kill-after=10s 390s docker exec -w /workspace/repository \
+            hq-repository-review-fixture node --test tooling/hq-agent-host/repository-review-planning-native-check.mjs
+          test "$(docker exec hq-repository-review-fixture psql -U postgres -d hq_repository_review_planning_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+      - name: Prove exact-pair migration, qualification separation and lock rollback
+        run: |
+          # Reuse the built image/network, but each case gets a fresh cluster so
+          # global fixture roles and historical evidence cannot cross cases.
+          for legacy in v1 historical; do
+            container="hq-repository-v2-$legacy"
+            docker run -d --name "$container" --network hq-repository-review-fixture \
+              --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+              -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+              -e POSTGRES_DB=hq_repository_compatibility_v2_disposable \
+              -e HQ_REPOSITORY_COMPATIBILITY_CASE="$legacy" hq-repository-review-fixture
+            ready=false
+            for attempt in $(seq 1 60); do
+              if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres -d hq_repository_compatibility_v2_disposable; then ready=true; break; fi
+              sleep 1
+            done
+            test "$ready" = true
+            timeout --signal=TERM --kill-after=10s 150s docker exec -w /workspace/repository \
+              "$container" node --test tooling/hq-agent-host/repository-worker-compatibility-v2-native-check.mjs
+            test "$(docker exec "$container" psql -U postgres -d hq_repository_compatibility_v2_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+            docker rm -f "$container"
+          done
+      - name: Prove bounded retail acknowledgment and atomic lock refusal
+        run: |
+          # Reuse the pinned image and internal network in a fresh isolated cluster.
+          docker run -d --name hq-retail-assignment-fixture --network hq-repository-review-fixture \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_retail_assignment_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-retail-assignment-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_retail_assignment_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 180s docker exec -w /workspace/repository \
+            hq-retail-assignment-fixture node --test tooling/hq-agent-host/retail-assignment-context-native-check.mjs
+          test "$(docker exec hq-retail-assignment-fixture psql -U postgres -d hq_retail_assignment_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+          docker rm -f hq-retail-assignment-fixture
+      - name: Prove Resend reserve and revoke races without provider access
+        run: |
+          docker run -d --name hq-resend-race-fixture --network none \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_resend_race_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-resend-race-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_resend_race_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 100s docker exec -w /workspace/repository \
+            hq-resend-race-fixture node --test tooling/hq-agent-host/resend-connection-native-check.mjs
+          docker rm -f hq-resend-race-fixture
+      - name: Prove recovered migration selection, clean effects, and rollback
+        run: |
+          # Each real CLI case gets a fresh cluster, not shared global roles or
+          # migration history. No network, host port, or hosted credentials.
+          for scenario in hosted clean rollback; do
+            container="hq-retirement-reconciliation-$scenario"
+            docker run -d --name "$container" --network none \
+              --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+              -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+              -e POSTGRES_DB=hq_retirement_reconciliation_disposable \
+              -e HQ_RETIREMENT_RECONCILIATION_CASE="$scenario" hq-repository-review-fixture
+            ready=false
+            for attempt in $(seq 1 60); do
+              if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres -d hq_retirement_reconciliation_disposable; then ready=true; break; fi
+              sleep 1
+            done
+            test "$ready" = true
+            timeout --signal=TERM --kill-after=10s 180s docker exec -w /workspace/repository \
+              "$container" node --test tooling/hq-agent-host/retirement-reconciliation-native-check.mjs
+            test "$(docker exec "$container" psql -U postgres -d hq_retirement_reconciliation_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
+            docker rm -f "$container"
+          done
+      - name: Repository review diagnostics
+        if: failure()
+        run: |
+          docker logs --tail 80 hq-repository-review-fixture
+          docker exec -e PGOPTIONS='-c statement_timeout=5000' hq-repository-review-fixture psql -U postgres -d hq_repository_review_planning_disposable -c 'SELECT pid,usename,application_name,state,wait_event_type,wait_event,pg_blocking_pids(pid) AS blockers FROM pg_stat_activity WHERE datname=current_database()'
+      - name: Remove repository review database
+        if: always()
+        run: |
+          docker rm -f hq-repository-review-fixture hq-repository-v2-v1 hq-repository-v2-historical || true
+          docker rm -f hq-retail-assignment-fixture hq-resend-race-fixture || true
+          docker rm -f hq-retirement-reconciliation-hosted hq-retirement-reconciliation-clean hq-retirement-reconciliation-rollback || true
+          docker network rm hq-repository-review-fixture || true

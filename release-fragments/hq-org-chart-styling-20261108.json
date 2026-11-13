@@ -1,0 +1,9 @@
+{
+  "id": "hq-org-chart-styling-20261108",
+  "task": "HQ-ORG-CHART-STYLING-20261108",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/organisms/BsHqTeamDialog.vue", "packages/ui/src/templates/BsHqLayoutPage.vue", "packages/ui/src/styles/hqGlassPanel.css", "packages/ui/src/utils/hqOrgChart.ts", "docs/work-packages/company-hq/HQ-TASK-BROWSER-20261108.md"],
+  "reason": "Private HQ Team uses the canonical sidebar glass treatment and a left-entering employee inspector. Org chart cards add initials, clearer name/role/status hierarchy, and department counts. Local source only; browser acceptance and publication unrun."
+}

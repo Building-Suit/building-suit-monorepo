@@ -1,0 +1,86 @@
+{
+  "task": "LS-READY-001",
+  "date": "2026-10-22",
+  "base_commit": "2efbed85c5893dfcd4d7a40eaa27a22e9690b00d",
+  "sale_readiness": "blocked",
+  "automation_database": "not_connected; no task/run/attempt/decision writes",
+  "source_migrations": {
+    "count": 105,
+    "latest": "20260928240000_support_submission.sql",
+    "manifest_format": "sha256(content) + two spaces + basename + newline, sorted by basename",
+    "manifest_sha256": "93e6f6c11b6eaa54b3bc9e427bbc3c665f46d493062eecfb91db4a4bcd31a9e6"
+  },
+  "checks": {
+    "ledger_unit": {
+      "passed": 123,
+      "failed": 0,
+      "skipped": 0
+    },
+    "independent_acceptance_artifacts": "pass; 138 requirements and exact eight-journal worksheet; not application accounting evidence",
+    "ledger_lint": "pass",
+    "ledger_typecheck": "pass; missing local Supabase URL/key warnings",
+    "ledger_production_build": "pass",
+    "workspace_check": "pass; 114 route templates, zero migration debt, 80 protected historical migrations unchanged",
+    "release_check": "pass",
+    "changed_test_lint": "pass from owning app and root testing configs",
+    "generated_client_scan": {
+      "files": 173,
+      "forbidden_server_secret_identifier_matches": 0,
+      "limitation": "no configured live secret values available; identifier scan only"
+    },
+    "public_login_http": {
+      "staging": 200,
+      "production": 200,
+      "limitation": "not authenticated acceptance or deployed app/schema identity"
+    }
+  },
+  "browser": {
+    "playwright": "1.62.1",
+    "executable": "/usr/bin/chromium",
+    "version": "154.0.8037.57",
+    "configuration": "temporary adapter of packages/testing/playwright.atomic-ledger-financial.config.ts; only executablePath/output directory changed",
+    "selection": "en, light, 390|ar, dark, 1440|: en$|: ar$",
+    "files": 17,
+    "selected": 62,
+    "initial_bounded_run": {
+      "passed": 58,
+      "failed": 4
+    },
+    "focused_recheck": {
+      "passed": 4,
+      "failed": 0,
+      "files": [
+        "atomic-dashboard.spec.ts",
+        "atomic-tax-workspace.spec.ts"
+      ]
+    },
+    "distinct_cases_with_passing_current_evidence": 62,
+    "full_305_case_suite_passed": false,
+    "not_selected_in_bounded_run": 243,
+    "limitation": "synthetic API fixtures; not native database/API/Storage or accountant acceptance; interrupted exploratory runs are not full-suite evidence"
+  },
+  "native_database": {
+    "status": "blocked_before_migrations",
+    "attempts": [
+      "standard local start with selected optional services excluded",
+      "database-only start after removing this task's unused downloaded service image caches"
+    ],
+    "failure": "Supabase postgres:17.6.1.165 image registration exhausted the 32 GiB Docker filesystem with the managed storage driver; registry rate limits also observed",
+    "cleanup": "stopped only task-owned startup/pull processes; no running containers, no hosted operations, no financial fixtures created",
+    "sql_tests": "not_run",
+    "shared_accounting_probe": "not_run",
+    "migration_preservation": "not_run",
+    "timed_restore": "not_run"
+  },
+  "dependencies": {
+    "audit_scope": "workspace production dependency graph, not deployed reachability",
+    "critical": 3,
+    "high": 10,
+    "moderate": 14,
+    "low": 4,
+    "evidence": "dependency-audit-2026-10-22.json",
+    "status": "requires triage/remediation; critical dependency versions confirmed in Ledger dependency graph"
+  },
+  "accountant_acceptance": "pending; no named reviewer or signed artifact",
+  "production_promotion": "not_performed"
+}

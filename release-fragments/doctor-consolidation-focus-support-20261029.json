@@ -1,0 +1,26 @@
+{
+  "id": "doctor-consolidation-focus-support-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsSignupWizard.vue",
+    "packages/ux/src/composables/useSignupWizard.ts",
+    "packages/ux/src/index.ts",
+    "packages/ui/tests/foundation.test.mjs",
+    "docs/shared/interactions.md",
+    "release-changes/items.json",
+    "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29.md",
+    "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29-status.json",
+    "packages/testing/e2e/atomic-signup-parity.spec.ts"
+  ],
+  "reason": "Shared wizard focus regression coverage, dependency-consumer qualification and truthful incorporated PR status. Operational Doctor registration and all clinical/legal/provider/release gates remain unchanged; public Shop feedback is separately classified."
+}

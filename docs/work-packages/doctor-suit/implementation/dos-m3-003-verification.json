@@ -1,0 +1,400 @@
+{
+  "task": "DOS-M3-003",
+  "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+  "parent_pr": 401,
+  "verified_runtime_source_sha": "8c4c0ce79f73e39926b09377a7eb064788106710",
+  "tool_versions": {
+    "node": "26.8.1",
+    "pnpm": "10.33.0",
+    "supabase_cli": "2.116.0"
+  },
+  "data_mode": "synthetic",
+  "professional_approval": false,
+  "provider_approval": false,
+  "full_repository_acceptance": false,
+  "full_provider_acceptance": false,
+  "actual_service_browser_receipt": {
+    "executionId": "44dae130-0516-437f-8383-748049883ce6",
+    "startedAt": "2026-10-20T15:04:48.733Z",
+    "finishedAt": "2026-10-20T15:07:53.677Z",
+    "sourceHead": "8c4c0ce79f73e39926b09377a7eb064788106710",
+    "baseSha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+    "baseVerified": true,
+    "finalHead": "8c4c0ce79f73e39926b09377a7eb064788106710",
+    "sourceClean": true,
+    "candidateVerified": true,
+    "nodeVersion": "v26.8.1",
+    "commandArgv": [
+      "/home/tareq/.cache/pnpm/dlx/cccfd02b2925bb5606bc10846568681b34c44d2b4084c797970066ca279b03cb/1a1567f0e80-65bf4/node_modules/.pnpm/node@26.8.1/node_modules/node/bin/node",
+      "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003/apps/doctor-suit/tests/operations-actual-provider.mjs"
+    ],
+    "exitCode": 0,
+    "stage": "actual M3 browser assertions",
+    "browserResult": {
+      "exitCode": 0,
+      "logSha256": "2fba2e89e69e39c33f72f24653a0691e0d0645a2db5f082d5390280b6e839680"
+    },
+    "ownedLocalProject": "building-suit-doctor",
+    "hostedOperations": false,
+    "professionalApproval": false,
+    "providerApproval": false
+  },
+  "checks": {
+    "sql": {
+      "check": "sql",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:06:08.399752+00:00",
+      "finished_at": "2026-10-20T15:08:46.753457+00:00",
+      "elapsed_seconds": 158.354,
+      "command_argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--types"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-sql.log",
+      "log_sha256": "7a4a8901ac98da4dc01536b844a2e560a7213d24d07ba8b4c20f2eacd2829390"
+    },
+    "units": {
+      "check": "units",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:06:08.399739+00:00",
+      "finished_at": "2026-10-20T15:06:11.621644+00:00",
+      "elapsed_seconds": 3.222,
+      "command_argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/administration-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-entry.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-root-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-http.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-provider-diagnostics.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-001.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-001.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-003.test.mjs",
+        "apps/doctor-suit/tests/unit/early-administrative-scope.test.mjs",
+        "apps/doctor-suit/tests/unit/email-lookup-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/entitlement-context.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/launch-pricing.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-contracts.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-session.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-reconciliation.test.mjs",
+        "apps/doctor-suit/tests/unit/onboarding-refresh.test.mjs",
+        "apps/doctor-suit/tests/unit/operations-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/policy-drafts.test.mjs",
+        "apps/doctor-suit/tests/unit/privacy-requests.test.mjs",
+        "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+        "apps/doctor-suit/tests/unit/registration.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-document.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-financial.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-quotes.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-write-offers.test.mjs",
+        "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/ui-consistency.test.mjs"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-units.log",
+      "log_sha256": "567595480ff624adcbac32f6ccd2019c4a2356909595dfe6fedd4004851d04ca"
+    },
+    "boundaries": {
+      "check": "boundaries",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:06:11.680685+00:00",
+      "finished_at": "2026-10-20T15:06:17.075256+00:00",
+      "elapsed_seconds": 5.395,
+      "command_argv": [
+        "pnpm",
+        "check"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-boundaries.log",
+      "log_sha256": "f6d7988d375fc296dedb4036f562a490bb2d4a331cd8b1686ee3aba6957c60d1"
+    },
+    "doctor-types": {
+      "check": "doctor-types",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:06:08.399748+00:00",
+      "finished_at": "2026-10-20T15:07:10.972537+00:00",
+      "elapsed_seconds": 62.573,
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "typecheck"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-doctor-types.log",
+      "log_sha256": "fcc6f5a60027119bd35eb9fd743439a9a1ea7086a814a9634ef24d1c1cd13152"
+    },
+    "docs-types": {
+      "check": "docs-types",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:07:11.062612+00:00",
+      "finished_at": "2026-10-20T15:07:51.770475+00:00",
+      "elapsed_seconds": 40.708,
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/docs",
+        "typecheck"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-docs-types.log",
+      "log_sha256": "7de0bd1885539d597bcb95697e3bb2da860db26fc143754bdecdf561311f82d1"
+    },
+    "doctor-lint": {
+      "check": "doctor-lint",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:07:51.839515+00:00",
+      "finished_at": "2026-10-20T15:08:01.243709+00:00",
+      "elapsed_seconds": 9.404,
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "lint"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-doctor-lint.log",
+      "log_sha256": "5a6f7ef2f6c3affbf921bb59395e1e9551db8d30af43351e4399dde29b6f5aba"
+    },
+    "ui-lint": {
+      "check": "ui-lint",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:08:01.299110+00:00",
+      "finished_at": "2026-10-20T15:08:02.959427+00:00",
+      "elapsed_seconds": 1.66,
+      "command_argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-ui-lint.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build": {
+      "check": "build",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:08:41.437230+00:00",
+      "finished_at": "2026-10-20T15:09:28.096001+00:00",
+      "elapsed_seconds": 46.659,
+      "command_argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "build"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 0,
+      "candidate_verified": true,
+      "log_path": "/tmp/doctor-m3-003-build.log",
+      "log_sha256": "95adc1d19b1c007acefcc3fdbbda1dabc6e8129bc9470b3bfcbb46e6238c656b"
+    },
+    "regression": {
+      "check": "regression",
+      "task": "m3-003",
+      "started_at": "2026-10-20T15:06:17.130990+00:00",
+      "finished_at": "2026-10-20T15:06:55.728104+00:00",
+      "elapsed_seconds": 38.597,
+      "command_argv": [
+        "pnpm",
+        "test"
+      ],
+      "cwd": "/home/tareq/Dev/building-suit-monorepo/.local/worktrees/doctor-m3-003",
+      "base_sha": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+      "base_verified": true,
+      "source_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "final_head": "8c4c0ce79f73e39926b09377a7eb064788106710",
+      "source_clean": true,
+      "exit_code": 1,
+      "candidate_verified": false,
+      "log_path": "/tmp/doctor-m3-003-regression.log",
+      "log_sha256": "52f1cce5376be1eed0459cd7e12a663576f3f747c783345798aa11bb2a2aa092"
+    }
+  },
+  "repository_results": {
+    "tests": 2121,
+    "passed": 2044,
+    "failed": 54,
+    "skipped": 23,
+    "parent_failed": 54,
+    "normalized_failure_labels_equal": true,
+    "candidate_only_failures": []
+  },
+  "rendered_review": [
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-1280-ar-dark.png",
+      "sha256": "0d8c88849827d69a92d32689acce9c0a1f0e5bd4ffa4898a04af4f98f8288a62"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-1280-ar-light.png",
+      "sha256": "23c033fbda97a45b647b5ae1944b36089d1a53c0cd72e0062661094bfffa9713"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-1280-en-dark.png",
+      "sha256": "663d6b7ab969330ab684f62ffe85c6433deff3d9e9cfcba19be83e2905404d58"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-1280-en-light.png",
+      "sha256": "94a67b59f29e723001ab611c8a923459dd21847c71a9b8563cc2cf97e6857d49"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-390-ar-dark.png",
+      "sha256": "a49b5a0fd3ec5a4f03113f1e4fb5ae235dfedaef0ac22fb67b5fc9b8108acf49"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-390-ar-light.png",
+      "sha256": "81d17b8874e3ea2f332c8bc2c2ab76cd3b825128dc1429753df78602b4336070"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-390-en-dark.png",
+      "sha256": "93e6eaa04eaf6b4d31cb8d8753d62c0fa7793977dd60d4b2779f90c150cd3930"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-390-en-light.png",
+      "sha256": "1354649db7def95999528bc4f713edd7f5ebaf25a39b358e52746008993348bb"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-conflict.png",
+      "sha256": "3bb097d7d6c769bc048f3e23bcd6012c2a0e66c555a1f446529a33a6dd5d1002"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-editor-ar-mobile.png",
+      "sha256": "eb12b76e81cff44ec21462a12f5c0af917a09af13d2a8f8da9f56c4dfe35773e"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-pending.png",
+      "sha256": "a1f8015acdd7d1242096d7c78fa0b4ca4b390fcd52063b2e6964b360c7521706"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-queue-ar-dark.png",
+      "sha256": "82cd1a141786a1d6b8bf8f6083fd40be557280137eee48d593f59342f385fef2"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-queue-ar-light.png",
+      "sha256": "8ec3f17c1f423658cec0c1caa758c5fb308b8ec2adea4f70985e4684254eea62"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-queue-en-dark.png",
+      "sha256": "bfb3a5c789a994cd0228e55a9ac8cabf1b823c5464bed7e7cd5d1b66ea66558c"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-queue-en-light.png",
+      "sha256": "07f9c947b6dfa14f9ef87774f1d89156518e608ba2d5ca3445b7230e49b8c3ef"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-uncertain.png",
+      "sha256": "0b46348f2d3b0ece168dfb141b093f6ddb77e31b4a419c0b65e90c34f369a337"
+    },
+    {
+      "local_path": "test-results/doctor-m3-actual/reception-walk-in.png",
+      "sha256": "4ba0e68972b70f72e4398a8b35bccd5bd48cfe1ec1b3d0df0efe176d12adef19"
+    }
+  ],
+  "limitations": [
+    "Actual recovery uses explicit Refresh/reload and authoritative RPCs. Inherited full-provider Realtime acceptance is not established.",
+    "No qualified clinical/catalogue/legal/provider approval, real patient, hosted operation or deployment.",
+    "Publication metadata is checked separately for zero runtime-source drift. M3-010 combined acceptance remains required."
+  ]
+}

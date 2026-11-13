@@ -1,0 +1,237 @@
+{
+  "observed_date": "2026-10-22",
+  "scope": "pnpm workspace production dependency graph; not deployed reachability evidence",
+  "counts": {
+    "info": 0,
+    "low": 4,
+    "moderate": 14,
+    "high": 10,
+    "critical": 3
+  },
+  "ledger_graph_confirmed": {
+    "nuxt": "4.5.2",
+    "@nuxt/nitro-server": "4.5.2",
+    "simple-git": "3.36.0",
+    "@simple-git/argv-parser": "1.1.1",
+    "shell-quote": "1.10.0"
+  },
+  "triage": "Critical simple-git/argv-parser/shell-quote paths enter via Nuxt developer tools. Ledger production deployment reachability and all other advisories require separate triage. Source Nuxt production output does not establish hosted configuration. No blanket critical-production-exposure or clean-security claim.",
+  "advisories": [
+    {
+      "module_name": "serialize-javascript",
+      "severity": "low",
+      "title": "Serialize JavaScript: Cross-site scripting (XSS) via unescaped </script> in serialized function bodies",
+      "vulnerable_versions": ">=7.1.1 <7.1.2",
+      "patched_versions": ">=7.1.2",
+      "url": "https://github.com/advisories/GHSA-gfhx-hw2g-v5hg"
+    },
+    {
+      "module_name": "node-forge",
+      "severity": "high",
+      "title": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
+      "vulnerable_versions": "<=1.4.0",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
+    },
+    {
+      "module_name": "braces",
+      "severity": "high",
+      "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+      "vulnerable_versions": "<=3.0.3",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
+    },
+    {
+      "module_name": "@simple-git/argv-parser",
+      "severity": "critical",
+      "title": "simple-git: `VISUAL` editor environment variable is omitted from unsafe editor detection",
+      "vulnerable_versions": "<2.0.1",
+      "patched_versions": ">=2.0.1",
+      "url": "https://github.com/advisories/GHSA-v5rq-49vh-5v5c"
+    },
+    {
+      "module_name": "simple-git",
+      "severity": "critical",
+      "title": "simple-git unsafe-operation guard does not block trailer command configuration",
+      "vulnerable_versions": ">=3.15.0 <4.0.1",
+      "patched_versions": ">=4.0.1",
+      "url": "https://github.com/advisories/GHSA-x6jw-m9v5-85vh"
+    },
+    {
+      "module_name": "simple-git",
+      "severity": "high",
+      "title": "simple-git allows command execution through unblocked Git configuration includes",
+      "vulnerable_versions": "<=3.36.0",
+      "patched_versions": ">=4.0.0",
+      "url": "https://github.com/advisories/GHSA-g4wm-2vf7-vfgr"
+    },
+    {
+      "module_name": "source-map-js",
+      "severity": "high",
+      "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+      "vulnerable_versions": ">=1.0.0 <1.2.2",
+      "patched_versions": ">=1.2.2",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+    },
+    {
+      "module_name": "shell-quote",
+      "severity": "critical",
+      "title": "shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token",
+      "vulnerable_versions": ">=1.8.4 <1.11.0",
+      "patched_versions": ">=1.11.0",
+      "url": "https://github.com/advisories/GHSA-pqg4-j6r4-53mv"
+    },
+    {
+      "module_name": "@modelcontextprotocol/client",
+      "severity": "high",
+      "title": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+      "vulnerable_versions": ">=2.0.0 <2.2.0",
+      "patched_versions": ">=2.2.0",
+      "url": "https://github.com/advisories/GHSA-6qxp-vccf-f47h"
+    },
+    {
+      "module_name": "simple-git",
+      "severity": "high",
+      "title": "simple-git: unsafe-operations plugin bypass via git long-option abbreviation (--receive-p/--exe) -> command execution (residual of CVE-2026-28291)",
+      "vulnerable_versions": "<=3.36.0",
+      "patched_versions": ">=4.0.0",
+      "url": "https://github.com/advisories/GHSA-858h-whjf-mvg5"
+    },
+    {
+      "module_name": "vite",
+      "severity": "moderate",
+      "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+    },
+    {
+      "module_name": "launch-editor",
+      "severity": "moderate",
+      "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+      "vulnerable_versions": "<=2.14.1",
+      "patched_versions": ">=2.14.2",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+    },
+    {
+      "module_name": "@modelcontextprotocol/client",
+      "severity": "moderate",
+      "title": "MCP TypeScript client SDK: HTTP client transports and OAuth requests followed cross-origin redirects and re-sent custom headers and request bodies",
+      "vulnerable_versions": ">=2.0.0 <2.3.0",
+      "patched_versions": ">=2.3.0",
+      "url": "https://github.com/advisories/GHSA-6prh-2h8m-c8cw"
+    },
+    {
+      "module_name": "@modelcontextprotocol/server",
+      "severity": "high",
+      "title": "MCP  TypeScript server SDK: Shared transport or server instances delivered one HTTP client's messages to another",
+      "vulnerable_versions": ">=2.0.0 <2.3.0",
+      "patched_versions": ">=2.3.0",
+      "url": "https://github.com/advisories/GHSA-jm63-cq47-j5jp"
+    },
+    {
+      "module_name": "@modelcontextprotocol/server",
+      "severity": "high",
+      "title": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
+      "vulnerable_versions": ">=2.0.0 <2.3.0",
+      "patched_versions": ">=2.3.0",
+      "url": "https://github.com/advisories/GHSA-46jr-4wx8-v453"
+    },
+    {
+      "module_name": "vite",
+      "severity": "moderate",
+      "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+    },
+    {
+      "module_name": "launch-editor",
+      "severity": "moderate",
+      "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+      "vulnerable_versions": "<=2.14.1",
+      "patched_versions": ">=2.14.2",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+    },
+    {
+      "module_name": "vite",
+      "severity": "high",
+      "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+    },
+    {
+      "module_name": "launch-editor",
+      "severity": "high",
+      "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+      "vulnerable_versions": "<=2.14.1",
+      "patched_versions": ">=2.14.2",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+    },
+    {
+      "module_name": "@modelcontextprotocol/server",
+      "severity": "moderate",
+      "title": "MCP TypeScript SDK: Server bearer authentication accepted tokens issued for another service",
+      "vulnerable_versions": ">=2.0.0 <2.3.0",
+      "patched_versions": ">=2.3.0",
+      "url": "https://github.com/advisories/GHSA-rvq5-wwqv-78pq"
+    },
+    {
+      "module_name": "vite",
+      "severity": "low",
+      "title": "Vite: Cross origin script execution through Vite custom middleware",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw"
+    },
+    {
+      "module_name": "vite",
+      "severity": "moderate",
+      "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+    },
+    {
+      "module_name": "vite",
+      "severity": "moderate",
+      "title": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg"
+    },
+    {
+      "module_name": "@nuxt/nitro-server",
+      "severity": "moderate",
+      "title": "Nuxt: Server-side route rules (`redirect`, `headers`, `proxy`, `ssr`) are skipped for case-variant paths when routing is case-insensitive",
+      "vulnerable_versions": ">=4.2.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "moderate",
+      "title": "Nuxt: Server-side route rules (`redirect`, `headers`, `proxy`, `ssr`) are skipped for case-variant paths when routing is case-insensitive",
+      "vulnerable_versions": ">=4.0.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "moderate",
+      "title": "Nuxt server islands render `useHeadSafe` input without sanitisation",
+      "vulnerable_versions": ">=3.13.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-xfq5-w38q-pc2x"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "low",
+      "title": "Nuxt: Incomplete fix for GHSA-934w-87qh-qr26: a `javascript:` URL prefixed with an ASCII control character executes from `<NuxtLink>` when `pages` is disabled",
+      "vulnerable_versions": "<4.6.0",
+      "patched_versions": ">=4.6.0",
+      "url": "https://github.com/advisories/GHSA-jjm6-p2m9-9w4x"
+    }
+  ]
+}

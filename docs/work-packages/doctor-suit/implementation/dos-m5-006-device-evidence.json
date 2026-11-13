@@ -1,0 +1,71 @@
+{
+  "task_id": "DOS-M5-006",
+  "scope": "independent-synthetic-deterministic-preview-and-unreviewed-policy-packet",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "qualified_interpretation": false,
+  "professional_signature": false,
+  "external_notifications": false,
+  "patient_native_scaffold": false,
+  "clinician_reviewer": null,
+  "approved_at": null,
+  "approved_candidate_sha": null,
+  "approval_references": [],
+  "patient_identity_approval": null,
+  "patient_platform_approval": null,
+  "native_cases": [],
+  "device_status": "blocked-unrun-no-approved-patient-platform-command-map-or-clinician-reminder-policy",
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs"
+    ],
+    "exit_code": 0,
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-003.test.mjs",
+      "apps/doctor-suit/tests/unit/dos-m5-004.test.mjs",
+      "apps/doctor-suit/tests/unit/dos-m5-005.test.mjs",
+      "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs"
+    ],
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0,
+    "phase": "before-final-historical-precision-guard; final12-owned-cases-rerun"
+  },
+  "full_root_source_phase": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2383,
+    "passed": 2306,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all54-under-apps/shop-suit/tests",
+    "final_clock_precision_guard": "focused12-case-rerun-and-final-lint-types-no-broad-repeat"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientReminderPreview.ts": "f3196b38d0e52ced10bd477e2983e279bc5b815fedbaad1e0d85e8961f22260b",
+    "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs": "c63fd2c60954aa8f5b3f8a68b5e44b06db3cb7eb21278aa9555a61d3b40718c9"
+  },
+  "policy_sha256": "aa768140089f2c44b1edaa32a340531b37db1b8bd4c9a719b0736c733d9114d3",
+  "document_sha256": "e50bb2ff2f1abae8a0d4fff33cca77bff4f4c3a7901e57743551f38e1f6f23e1",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No signed clinical source or clinician-approved interpretation",
+    "No native/provider/live-data patient integration or actual notification scheduling/cancellation",
+    "No identity/caregiver/platform/device/physical/security approval",
+    "No dose calculation, inferred taper, missed-dose compensation or guaranteed delivery",
+    "Runtime-specific technical vectors only; patient Intl/tzdb and device clock behavior unqualified"
+  ]
+}

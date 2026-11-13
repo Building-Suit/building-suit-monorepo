@@ -1,0 +1,50 @@
+[
+  {
+    "tone": "light",
+    "drawing_payload_unchanged": true,
+    "canvas": [
+      772,
+      232
+    ],
+    "alpha_bounds_before": [
+      1,
+      1,
+      766,
+      230
+    ],
+    "alpha_bounds_after": [
+      1,
+      1,
+      766,
+      230
+    ],
+    "different_raster_pixels": 664,
+    "opaque_pixel_max_channel_delta": 72,
+    "pixel_exact": false,
+    "note": "Chrome re-rasterizes curves/gradient edges after an SVG viewport translation. Painted-node bytes and pixel occupancy bounds are unchanged; exact PNG byte identity is not claimed."
+  },
+  {
+    "tone": "dark",
+    "drawing_payload_unchanged": true,
+    "canvas": [
+      772,
+      232
+    ],
+    "alpha_bounds_before": [
+      1,
+      1,
+      766,
+      230
+    ],
+    "alpha_bounds_after": [
+      1,
+      1,
+      766,
+      230
+    ],
+    "different_raster_pixels": 923,
+    "opaque_pixel_max_channel_delta": 83,
+    "pixel_exact": false,
+    "note": "Chrome re-rasterizes curves/gradient edges after an SVG viewport translation. Painted-node bytes and pixel occupancy bounds are unchanged; exact PNG byte identity is not claimed."
+  }
+]

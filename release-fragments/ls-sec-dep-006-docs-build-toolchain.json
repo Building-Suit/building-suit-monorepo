@@ -1,0 +1,9 @@
+{
+  "id": "ls-sec-dep-006-docs-build-toolchain",
+  "task": "LS-SEC-DEP-006",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["package.json", "pnpm-lock.yaml", "tooling/checks/markdown-security.test.mjs", "apps/ledger-suit/docs/accountant-system"],
+  "reason": "Patch the repository Markdown generator and shared build orchestrator against current availability/code-execution/auth-callback advisories; preserve rendered content policy and qualify all workspace build consumers without claiming customer runtime, provider or accountant acceptance."
+}

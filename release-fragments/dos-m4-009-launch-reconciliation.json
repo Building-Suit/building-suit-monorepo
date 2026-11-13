@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-009-launch-reconciliation",
+  "task": "DOS-M4-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m4-009.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-009-device-evidence.json"
+  ],
+  "reason": "Record resolved native launch/online-policy lifecycle integration,125 actual unit cases and source checks without claiming device or policy approval."
+}

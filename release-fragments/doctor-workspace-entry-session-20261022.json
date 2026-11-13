@@ -1,0 +1,13 @@
+{
+  "id": "doctor-workspace-entry-session-20261022",
+  "task": "DOCTOR-WORKSPACE-ENTRY",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/layouts/marketing.vue"
+  ],
+  "reason": "Resolve the existing Doctor session on a fresh public document before selecting the returning workspace CTA. Read-only synthetic Doctor session projection; workspace authorization still rechecks on entry, with no cross-product account or clinical authority."
+}

@@ -1,0 +1,52 @@
+{
+  "source": "ded0029f60ba48cc48d89021ff7c3c2ddbc9c401",
+  "run": 40983999537,
+  "job": 123830564337,
+  "account": {
+    "passed": 87,
+    "failed": 2,
+    "originalCasesPassed": 87
+  },
+  "controlledAr": {
+    "pointerdown": 1,
+    "pointerup": 1,
+    "click": 0,
+    "focus": 1,
+    "blur": 1,
+    "disabledChanges": 1,
+    "dialogChanges": 0,
+    "buttonConnected": true,
+    "buttonInitiallyDisabled": false,
+    "buttonFinallyDisabled": true,
+    "dialogCount": 0,
+    "contextReady": true,
+    "queueGranted": true,
+    "boardPresent": true,
+    "canQueue": true,
+    "canWrite": false,
+    "refreshing": true,
+    "pending": false
+  },
+  "controlledEn": "Held an earlier board read before pointerdown; initial enabled assertion failed. Correct arm timing before using EN as pointer-sequence evidence.",
+  "workspace": {
+    "run": 40983999560,
+    "conclusion": "success",
+    "rootTests": 2696,
+    "passed": 2673,
+    "failed": 0,
+    "skipped": 23
+  },
+  "otherDoctor": {
+    "publicPreview": "60 passed",
+    "sql": "passed",
+    "sharedAuth": "48 passed",
+    "sharedSettings": "12 passed",
+    "allTenM3": "passed",
+    "actualDisposableServices": "passed",
+    "delegationStress": "skipped",
+    "portableFunction": "skipped",
+    "finalAsset": "skipped"
+  },
+  "historicalFailure40971515961Cause": "UNESTABLISHED: its event sequence was not captured",
+  "afterFixBrowser": "UNRUN_AT_PREPARATION"
+}

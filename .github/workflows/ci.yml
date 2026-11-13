@@ -6,6 +6,7 @@ on:
   push:
     branches: [stg, main]
 concurrency:
+  # Ref-scoped validation never queues unrelated PRs behind each other.
   # Title/body edits cannot change code and must not cancel its active checks.
   group: verify-${{ github.ref }}-${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata' || 'code' }}
   cancel-in-progress: true
@@ -27,33 +28,60 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node tooling/git/check-pr.mjs "$PR_NUMBER"
-  review:
-    # A skipped metadata run must never overwrite a required code-check result.
-    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
-    # Keep retarget, synchronize, reopen and protected-push validation complete.
-    # Metadata-only edits still run branch-policy, but reuse existing code work.
-    if: >-
-      github.event_name != 'pull_request' || github.event.action != 'edited' ||
-      github.event.changes.base != null ||
-      (github.event.changes.title == null && github.event.changes.body == null)
+  plan:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      validate: ${{ steps.plan.outputs.validate }}
+      full: ${{ steps.plan.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - id: plan
+        run: node tooling/ci/plan.mjs
+  unit-review:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
       - name: Fetch protected branch history for release classification
         if: github.event_name == 'pull_request'
         env:
           FETCH_BASE_REF: ${{ github.base_ref }}
-        run: git fetch origin "$FETCH_BASE_REF" --no-tags
+        run: |
+          git fetch origin "$FETCH_BASE_REF" --no-tags
+          echo 'Release history after checkout'
+          git rev-parse --is-shallow-repository
+          git show -s --format='%H %P' HEAD origin/stg
+          git cat-file -p origin/stg | sed -n '/^tree /p; /^parent /p'
+          git rev-parse --verify 'origin/stg^1'
       - name: Validate task release fragments
         if: github.event_name == 'pull_request'
         env:
@@ -61,8 +89,7 @@ jobs:
           RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node tooling/releases/check.mjs
       - run: pnpm check
-      # Control-plane node tests render the health UI with Playwright.
-      - run: pnpm exec playwright install --with-deps chromium
+      # The verified image supplies browsers for the control-plane UI node tests.
       - run: pnpm test
       - name: Retain receipt reference comparisons
         if: always()
@@ -72,180 +99,349 @@ jobs:
           path: test-results/receipt
           if-no-files-found: ignore
           retention-days: 7
+  hq-invariants:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify HQ worker, durable maintenance and release invariants
+        run: |
+          node --test --test-concurrency=2 tooling/hq-agent-host/*.test.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tooling/hq-agent-host -p '*_test.py' -v
+  hq-browser:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
+      - name: Verify isolated HQ email approval component
+        run: node --test apps/company-hq/tests/browser/email-connection-component.mjs
+      - name: Verify mocked HQ task cancellation browser flow
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PLAYWRIGHT_USE_BUNDLED: '1'
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+            apps/company-hq packages/ui packages/ux packages/nuxt-layer \
+            packages/design-tokens packages/brand packages/i18n packages/auth \
+            packages/contracts packages/data-access packages/config packages/testing \
+            package.json pnpm-lock.yaml pnpm-workspace.yaml .node-version .github/workflows/ci.yml; then
+            echo "No HQ task-cancellation inputs changed."
+            exit 0
+          fi
+          pnpm --filter @building-suit/company-hq build
+          pnpm --filter @building-suit/company-hq exec playwright test tests/browser/task-cancellation.spec.ts
+      - name: Retain HQ task cancellation browser failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hq-task-cancellation-browser-results
+          path: apps/company-hq/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+  release-catalog:
+    needs: [plan]
+    if: needs.plan.outputs.validate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Verify disposable release catalog transactions and authorization
         run: node tooling/releases/catalog-disposable.mjs
       - name: Verify actual catalog adapter over disposable PostgREST and full SAS schema
         env:
           RELEASE_POSTGREST_DISPOSABLE: '1'
-        run: node tooling/releases/catalog-postgrest-disposable.mjs
-  verify:
-    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
-    needs: [review, branch-policy]
-    # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
+          RELEASE_VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          echo 'Release history immediately before catalog validation'
+          git rev-parse --is-shallow-repository
+          git show -s --format='%H %P' HEAD origin/stg
+          git cat-file -p origin/stg | sed -n '/^tree /p; /^parent /p'
+          git replace -l
+          shallow_file="$(git rev-parse --git-path shallow)"
+          if test -f "$shallow_file"; then cat "$shallow_file"; fi
+          # Report override names only, never credential-bearing environment values.
+          node -e 'console.log(Object.keys(process.env).filter(name => name.startsWith("GIT_")).sort().join("\n"))'
+          expected_head="$(git rev-parse HEAD)"
+          test "$expected_head" = "$RELEASE_VALIDATION_SHA"
+          if test "$(git rev-parse --is-shallow-repository)" = true; then
+            git fetch --unshallow --no-tags origin
+          fi
+          test "$(git rev-parse HEAD)" = "$expected_head"
+          git rev-parse --verify 'HEAD^1'
+          git rev-parse --verify 'origin/stg^1'
+          node tooling/releases/catalog-postgrest-disposable.mjs
+  review:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
+    needs: [plan, unit-review, hq-invariants, hq-browser, release-catalog]
     if: >-
-      !cancelled() && needs.review.result == 'success' &&
-      (github.event_name == 'push' ||
-       (needs.branch-policy.result == 'success' &&
-        (github.base_ref == 'stg' || github.base_ref == 'main')))
-    concurrency:
-      group: workspace-full-validation${{ github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'codex/shop-suit/usd-production' && '-shop-usd-production' || '' }}
-      cancel-in-progress: false
+      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'edited' || github.event.changes.base != null || (github.event.changes.title == null && github.event.changes.body == null))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-        if: ${{ success() && !cancelled() }}
         with:
-          # Disposable public-feed regressions also replay the preserved bootstrap fragment range.
           fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
-      - uses: pnpm/action-setup@v4
-        if: ${{ success() && !cancelled() }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
-        if: ${{ success() && !cancelled() }}
+        with:
+          node-version-file: .node-version
+      - name: Require every review lane to succeed
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node tooling/ci/readiness.mjs review
+  static-checks:
+    needs: [plan, branch-policy]
+    if: >-
+      !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [typecheck, lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-        if: ${{ success() && !cancelled() }}
       - run: pnpm run setup
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm typecheck --concurrency=2
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm lint
-        if: ${{ success() && !cancelled() }}
+      - name: Typecheck or lint in an isolated runner
+        env:
+          CHECK: ${{ matrix.check }}
+        run: |
+          case "$CHECK" in
+            typecheck) pnpm typecheck --concurrency=2 ;;
+            lint) pnpm lint ;;
+            *) exit 1 ;;
+          esac
+  build:
+    needs: [plan, branch-policy]
+    if: >-
+      !cancelled() && needs.plan.outputs.full == 'true' && (github.event_name == 'push' || needs.branch-policy.result == 'success')
+    runs-on: ubuntu-latest
+    # Match the artifact producer/consumers and avoid live Ubuntu apt dependencies.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 15
+    outputs:
+      artifact-id: ${{ steps.build-artifact.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify pinned browser runtime and required tools
+        run: |
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
+      - run: pnpm run setup
       - run: pnpm build --concurrency=2
-        if: ${{ success() && !cancelled() }}
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm test:built-assets
-        if: ${{ success() && !cancelled() }}
-      - run: pnpm exec playwright install --with-deps chromium
-        if: ${{ success() && !cancelled() }}
-      - name: Resolve permitted M1 aggregate browser scope
-        if: ${{ success() && !cancelled() }}
-        id: doctor-m1-scope
-        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs scope
-      - name: Verify permitted Doctor M1 aggregate browsers
-        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
+      - name: Package only this run's tested application outputs
         env:
-          DOCTOR_WORKSPACE_REPORT: ${{ runner.temp }}/doctor-m1-workspace-raw.json
-        run: pnpm exec playwright test -c packages/testing/playwright.doctor-workspace.config.ts
-      - name: Capture Doctor M1 aggregate browser evidence
-        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
-        env:
-          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs workspace "${{ runner.temp }}/doctor-m1-workspace" "${{ runner.temp }}/doctor-m1-workspace-raw.json"
-      - name: Retain sanitized Doctor M1 workspace summary
-        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/doctor-m1-workspace/workspace-summary.json
-          if-no-files-found: error
-      - name: Verify shared Shop regressions for Doctor M1
-        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
-        run: pnpm test:e2e:shared-regressions
-      - run: pnpm test:e2e
-        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active != 'true') }}
-      - name: Verify deployed-only Shop landing changelog discovery
-        if: ${{ success() && !cancelled() }}
-        run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
+          VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$VALIDATION_SHA"
+          printf '%s\n' "$VALIDATION_SHA" > .ci-build-sha
+          find apps -type d -name .output -prune -print0 > /tmp/ci-build-paths
+          test -s /tmp/ci-build-paths
+          printf '.ci-build-sha\0' >> /tmp/ci-build-paths
+          tar --null -T /tmp/ci-build-paths -cf - | gzip -1 > workspace-build.tar.gz
+          sha256sum workspace-build.tar.gz > workspace-build.tar.gz.sha256
       - uses: actions/upload-artifact@v4
-        if: failure()
+        id: build-artifact
         with:
-          name: browser-results
-          path: test-results
-          retention-days: 7
-      # A cancelled run must never satisfy verify, even if cancelled before checkout.
-      - name: Reject cancelled validation as readiness evidence
-        if: cancelled()
-        run: exit 1
-  doctor-m1-shop-backend:
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 345
+          name: workspace-build-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            workspace-build.tar.gz
+            workspace-build.tar.gz.sha256
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+  browser-tests:
+    needs: [plan, build]
+    if: ${{ !cancelled() && needs.plan.outputs.full == 'true' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Changelog keeps its real Docker SQL setup on the host; its browser server
+    # still runs in the same image, without access to the host Docker socket.
+    container:
+      image: ${{ matrix.suite != 'changelog' && 'mcr.microsoft.com/playwright:v1.62.1-resolute@sha256:aebd85bce8056dcdc2269853fd94ea432b6a201da4f0ef125b509489ecd52ddb' || '' }}
+      options: --user 1001 --init --shm-size=1g
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - suite: foundation
+            shard: 1/2
+            id: foundation-1
+          - suite: foundation
+            shard: 2/2
+            id: foundation-2
+          - suite: shared
+            shard: 1/2
+            id: shared-1
+          - suite: shared
+            shard: 2/2
+            id: shared-2
+          - suite: changelog
+            shard: 1/1
+            id: changelog
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run setup
-      - name: Build Shop and Ledger for actual isolated Auth acceptance
-        env:
-          SUPABASE_URL: http://127.0.0.1:61321
-          SUPABASE_KEY: local-development-publishable-key
+      - name: Verify pinned browser runtime and required tools
+        if: matrix.suite != 'changelog'
         run: |
-          pnpm --filter @building-suit/shop-suit build
-          pnpm --filter @building-suit/ledger-suit build
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Verify actual Shop signup, persistence and independent Ledger session
+          for tool in bash git openssl flock; do command -v "$tool"; done
+          node tooling/ci/playwright-runtime.mjs
+      # A failed-job retry retains its successful producer's output, even when
+      # github.run_attempt advances. Do not resolve an archive from another run.
+      - name: Require the successful producer's exact artifact identity
         env:
-          DOCTOR_SHOP_BACKEND_DISPOSABLE: '1'
-          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          DOCTOR_SHOP_BACKEND_EVIDENCE: ${{ runner.temp }}/doctor-m1-shop-backend
-        run: node apps/doctor-suit/tests/shop-backend-actual-provider.mjs
-      - name: Retain sanitized actual consumer receipt
-        if: always()
-        uses: actions/upload-artifact@v4
+          BUILD_ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+        run: '[[ "$BUILD_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]'
+      - uses: actions/download-artifact@v4
         with:
-          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
-          path: ${{ runner.temp }}/doctor-m1-shop-backend/shop-backend-summary.json
-          if-no-files-found: error
-  doctor-m1-evidence:
-    needs: [review, branch-policy, verify, doctor-m1-shop-backend]
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 345
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
+      - name: Verify and restore this exact run's build
+        env:
+          VALIDATION_SHA: ${{ github.sha }}
+        run: |
+          sha256sum --check workspace-build.tar.gz.sha256
+          tar -xzf workspace-build.tar.gz
+          test "$(cat .ci-build-sha)" = "$VALIDATION_SHA"
+          test "$(git rev-parse HEAD)" = "$VALIDATION_SHA"
+      - name: Run every browser obligation on isolated runners
+        if: matrix.suite != 'changelog'
+        env:
+          SUITE: ${{ matrix.suite }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          case "$SUITE" in
+            foundation) config=packages/testing/playwright.config.ts ;;
+            shared) config=packages/testing/playwright.shared-regressions.config.ts ;;
+            changelog) config=apps/shop-suit/tests/e2e/public-changelog.config.ts ;;
+            *) exit 1 ;;
+          esac
+          pnpm exec playwright test -c "$config" --shard="$SHARD"
+      - name: Run changelog SQL on the host and browsers in the pinned image
+        if: matrix.suite == 'changelog'
+        run: node tooling/ci/changelog-browser.mjs
+      - name: Clean up the changelog browser container
+        if: always() && matrix.suite == 'changelog'
+        run: |
+          if [[ "${CI_CHANGELOG_CONTAINER:-}" =~ ^ci-changelog-[a-z0-9-]+$ ]]; then
+            existing="$(docker container ls --all --filter "name=^/${CI_CHANGELOG_CONTAINER}$" --format '{{.Names}}')"
+            if [[ "$existing" == "$CI_CHANGELOG_CONTAINER" ]]; then
+              docker rm --force "$CI_CHANGELOG_CONTAINER"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-results-${{ matrix.id }}
+          path: test-results
+          retention-days: 7
+  verify:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
+    needs: [plan, branch-policy, review, static-checks, build, browser-tests]
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'edited' || github.event.changes.base != null || (github.event.changes.title == null && github.event.changes.body == null)) &&
+      (github.event_name == 'push' || github.base_ref == 'stg' || github.base_ref == 'main')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      actions: read
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-      - name: Fetch completed aggregate browser summary
-        if: needs.verify.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/doctor-m1-evidence
-      - name: Fetch actual Shop/Ledger backend receipt
-        if: needs.doctor-m1-shop-backend.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
-          path: ${{ runner.temp }}/doctor-m1-evidence
-      - name: Independently reconcile exact-candidate command and artifact evidence
-        if: always()
+      - name: Require all exact-head validation lanes
         env:
-          GH_TOKEN: ${{ github.token }}
-          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          M1_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs evaluate "${{ runner.temp }}/doctor-m1-evidence"
-      - name: Retain Doctor M1 exact-candidate evaluation
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: doctor-m1-exact-candidate-${{ github.event.pull_request.head.sha }}
-          path: |
-            ${{ runner.temp }}/doctor-m1-evidence/m1-aggregate-evidence.json
-            ${{ runner.temp }}/doctor-m1-evidence/artifact-manifest.json
-            ${{ runner.temp }}/doctor-m1-evidence/workspace-summary.json
-            ${{ runner.temp }}/doctor-m1-evidence/shop-backend-summary.json
-          if-no-files-found: error
-          retention-days: 14
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node tooling/ci/readiness.mjs verify
+      - name: Reject cancelled validation as readiness evidence
+        if: cancelled()
+        run: exit 1
   publish-releases:
     needs: [verify]
     if: always() && github.event_name == 'push' && needs.verify.result == 'success'
@@ -279,3 +475,47 @@ jobs:
           RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
           RELEASE_WAIT_FOR_DEPLOYMENT: '1'
         run: node tooling/releases/publisher.mjs
+  publish-hq-worker:
+    needs: [verify]
+    if: >-
+      !cancelled() && needs.verify.result == 'success' &&
+      github.repository == 'Building-Suit/building-suit-monorepo' && github.repository_id == '1376504404' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/stg'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    concurrency:
+      group: hq-worker-stg-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Test release and maintenance invariants
+        run: |
+          node --test tooling/hq-agent-host/maintenance.test.mjs tooling/hq-agent-host/lifecycle.test.mjs tooling/hq-agent-host/worker.test.mjs tooling/hq-agent-host/workforceRoster.test.mjs tooling/hq-agent-host/brainPublisher.test.mjs
+          python3 -m unittest discover -s tooling/hq-agent-host -p '*_test.py' -v
+      - name: Build exact tested code-only source
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: python3 tooling/hq-agent-host/release.py build --sha "$RELEASE_SHA" --output worker.json
+      - name: Attest exact source and package digest
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: worker.json
+      - name: Verify complete draft and publish staging release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE_PATH" worker.sigstore.json
+          python3 tooling/hq-agent-host/publish.py --sha "$RELEASE_SHA" --artifact worker.json --bundle worker.sigstore.json

@@ -1,0 +1,43 @@
+{
+  "id": "hq-office-monorepo-20261103",
+  "task": "HQ-OFFICE-MONOREPO-20261103",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/architecture/environments.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "package.json",
+    "pnpm-lock.yaml",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsAgentOfficePage.vue",
+    "packages/ui/src/templates/BsWorkspaceAccessPage.vue",
+    "packages/ui/src/types/agentOfficePresentation.ts",
+    "packages/ui/src/atoms/BsOfficeIcon.vue",
+    "packages/ux/src/index.ts",
+    "packages/ux/src/useOfficeViewport.ts",
+    "tooling/checks/application-roots.mjs",
+    "tooling/checks/application-roots.test.mjs",
+    "tooling/git/dev-worktrees.mjs",
+    "tooling/git/dev.mjs",
+    "tooling/git/tests/dev-worktrees.test.mjs",
+    "README.md",
+    "release-changes/items.json",
+    "tooling/new-platform/generate.mjs"
+  ],
+  "reason": "Restore the founder-approved HQ office as an internal monorepo application with complete shared templates, typed projections, viewport interactions and strict ownership checks. Preserve the checkpoint’s portable generator path fix and existing Suit behavior; no operational product activation, public release, hosted migration, deployment or model execution is established."
+}

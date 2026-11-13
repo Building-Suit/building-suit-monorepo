@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-007-continuation",
+  "task": "DOS-M4-007",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Maintain the owner-authorized synthetic continuation and actual verification limitations without qualifying clinical or runtime acceptance."
+}

@@ -10,7 +10,7 @@ test('contact duplicate commands stay locked until one authoritative request set
   let resolve
   let calls = 0
   const request = new Promise(done => { resolve = done })
-  const globals = { ref: vue.ref, reactive: vue.reactive, computed: vue.computed, watch: () => {}, definePageMeta: () => {}, useHead: () => {}, useI18n: () => ({ t: key => key, locale: vue.ref('en') }), useSupabaseUser: () => vue.ref(null), useSupabaseClient: () => ({ schema: () => ({ rpc: () => { calls++; return request } }) }) }
+  const globals = { ref: vue.ref, reactive: vue.reactive, computed: vue.computed, watch: () => {}, definePageMeta: () => {}, useHead: () => {}, useI18n: () => ({ t: key => key, locale: vue.ref('en') }), useSupabaseUser: () => vue.ref(null), useShopClient: () => ({ schema: () => ({ rpc: () => { calls++; return request } }) }) }
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
   const f = await new AsyncFunction('require', 'exports', ...Object.keys(globals), code)(() => ({ publicBusiness: {} }), {}, ...Object.values(globals))
   Object.assign(f.form, { email: 'visitor@example.test', subject: 'Question', message: 'Help please', consent: true })
