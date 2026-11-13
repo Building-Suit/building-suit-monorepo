@@ -937,6 +937,7 @@
       "interactionOwner": "packages/ux",
       "components": [
         "BsHqLayoutPage",
+        "BsHqEmailConnectionTest",
         "BsHologramScene",
         "BsHqCompanyPlans",
         "BsHqPlanBoard",

@@ -214,6 +214,21 @@ jobs:
             hq-retail-assignment-fixture node --test tooling/hq-agent-host/retail-assignment-context-native-check.mjs
           test "$(docker exec hq-retail-assignment-fixture psql -U postgres -d hq_retail_assignment_disposable -Atc "SELECT current_setting('server_version_num')")" = '170011'
           docker rm -f hq-retail-assignment-fixture
+      - name: Prove Resend reserve and revoke races without provider access
+        run: |
+          docker run -d --name hq-resend-race-fixture --network none \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace/repository,readonly" \
+            -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=disposable-only \
+            -e POSTGRES_DB=hq_resend_race_disposable hq-repository-review-fixture
+          ready=false
+          for attempt in $(seq 1 60); do
+            if docker exec hq-resend-race-fixture pg_isready -h 127.0.0.1 -U postgres -d hq_resend_race_disposable; then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout --signal=TERM --kill-after=10s 100s docker exec -w /workspace/repository \
+            hq-resend-race-fixture node --test tooling/hq-agent-host/resend-connection-native-check.mjs
+          docker rm -f hq-resend-race-fixture
       - name: Prove recovered migration selection, clean effects, and rollback
         run: |
           # Each real CLI case gets a fresh cluster, not shared global roles or
@@ -245,6 +260,6 @@ jobs:
         if: always()
         run: |
           docker rm -f hq-repository-review-fixture hq-repository-v2-v1 hq-repository-v2-historical || true
-          docker rm -f hq-retail-assignment-fixture || true
+          docker rm -f hq-retail-assignment-fixture hq-resend-race-fixture || true
           docker rm -f hq-retirement-reconciliation-hosted hq-retirement-reconciliation-clean hq-retirement-reconciliation-rollback || true
           docker network rm hq-repository-review-fixture || true

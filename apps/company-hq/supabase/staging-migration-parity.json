@@ -420,6 +420,15 @@
       "proposal": "apps/company-hq/supabase/migrations/20261112140052_hq_bounded_employee_parallelism.sql"
     },
     {
+      "file": "20261112213000_hq_resend_connection_test.sql",
+      "bytes": 14628,
+      "md5": "41a375b5eba7214c7586ab7e84c09561",
+      "sha256": "58a5fdb0a6ba142139957b4a4706d5c01c69f722cf1da743a2dd7ec1dfbbf32c",
+      "phase": "resend-connection-test",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261112213000_hq_resend_connection_test.sql"
+    },
+    {
       "file": "20261113023602_hq_shop_suit_staff_snapshot.sql",
       "bytes": 5076,
       "md5": "50d4feef1bf09ff4de8180aaae64a585",
@@ -436,6 +445,15 @@
       "phase": "shop-suit-worker-compatibility",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261113023924_hq_shop_suit_worker_compatibility.sql"
+    },
+    {
+      "file": "20261113070000_hq_resend_test_worker_compatibility.sql",
+      "bytes": 2524,
+      "md5": "a374af5816dfccfc9a209ac5ee449a2b",
+      "sha256": "73c576b7aad014edcb2947d1c08c261b575056bddd3b55dcc2e1797e75923289",
+      "phase": "resend-connection-test",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261113070000_hq_resend_test_worker_compatibility.sql"
     }
   ],
   "recoveredAppliedMigrations": [

@@ -14,6 +14,74 @@ import { createWorkforceRoster, managerForAgent, modelTierForAgent, validateStaf
 import { createBrainPublisher } from './brainPublisher.mjs'
 import { MAX_DOC_BYTES, readShopConnectorConfig, startShopConnector, workerExecutionBlock, discoveryMcpConfig, DISCOVERY_MCP_TOOL, DISCOVERY_MCP_POLICY, DISCOVERY_RETAIL_POLICY, DISCOVERY_RETAIL_CATEGORIES, researchDiscoveryTrialAllowed, supervisedTrialAllowed, discoveryResultSources, repositoryMcpConfig, repositoryToolResult, PUBLIC_REPOSITORY_POLICY, repositoryTrialAllowed, PUBLIC_REPOSITORY_TOOL as PUBLIC_REPOSITORY_MCP_TOOL } from './departmentWorkflow.mjs'
 
+/** Narrow official Resend HTTPS adapter. No account-admin MCP or model secret.
+ * Only an explicitly approved connection test can reach this code. */
+export const EMAIL_TEST_SENDER = 'Shop Suit Team <hello@shop.building-suit.com>'
+export const EMAIL_TEST_DOMAIN_ID = '71ee7c87-8936-4699-bfbe-ea13309ed389'
+const emailUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const emailFail = code => { const error = new Error(code); error.code = code; throw error }
+export function emailTestDigest(message) {
+  return createHash('sha256').update([message.sender,message.recipient,message.subject,message.body]
+    .map(value => `${Buffer.byteLength(value)}:${value}`).join('')).digest('hex')
+}
+export function emailTestConfigured(env) {
+  return env.HQ_RESEND_TEST_ENABLED === '1' && /^re_[A-Za-z0-9_-]{16,256}$/.test(env.HQ_RESEND_SENDING_KEY || '')
+    && env.HQ_RESEND_DOMAIN_ID === EMAIL_TEST_DOMAIN_ID && env.HQ_RESEND_KEY_PERMISSION === 'sending_access'
+}
+export function validateEmailTestPermit(permit, id, now = Date.now()) {
+  if (!permit || permit.id !== id || !emailUuid.test(id) || permit.agentId !== 'AG-EMAIL-002'
+    || permit.managerId !== 'AG-EMAIL-001' || permit.sender !== EMAIL_TEST_SENDER || permit.state !== 'reserved'
+    || !emailUuid.test(permit.reservation || '') || permit.idempotencyKey !== `hq-email-test/${id}`
+    || !(Date.parse(permit.expiresAt)>now)
+    || typeof permit.recipient !== 'string' || permit.recipient.length>254
+    || !/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/.test(permit.recipient)
+    || typeof permit.subject !== 'string' || Buffer.byteLength(permit.subject)<1 || Buffer.byteLength(permit.subject)>200 || /[\r\n]/.test(permit.subject)
+    || typeof permit.body !== 'string' || Buffer.byteLength(permit.body)<1 || Buffer.byteLength(permit.body)>8000
+    || permit.digest !== emailTestDigest(permit)) emailFail('email-test-permit-invalid')
+  return {from:permit.sender,to:[permit.recipient],subject:permit.subject,text:permit.body}
+}
+export async function runApprovedEmailTest({rpc,workerId,id,env,transport=fetch,now=Date.now}) {
+  if (!emailTestConfigured(env)) emailFail('email-test-not-configured')
+  if (!emailUuid.test(id || '') || !emailUuid.test(workerId || '')) emailFail('email-test-id-invalid')
+  // This RPC commits reservation before any network send. A lost response or
+  // crash leaves reserved, never reclaimable, even beyond provider dedupe TTL.
+  const permit = await rpc('hq_email_test_reserve',{p_worker_id:workerId,p_id:id})
+  let result = {state:'uncertain',providerId:null}
+  try {
+    const payload = validateEmailTestPermit(permit,id,now())
+    const response = await transport('https://api.resend.com/emails',{
+      method:'POST',redirect:'error',signal:AbortSignal.timeout(10_000),
+      headers:{Authorization:`Bearer ${env.HQ_RESEND_SENDING_KEY}`,'Content-Type':'application/json','Idempotency-Key':permit.idempotencyKey},
+      body:JSON.stringify(payload),
+    })
+    if ([400,401,403,404,422].includes(response.status)) {
+      await response.body?.cancel(); result={state:'rejected',providerId:null}
+    } else if (response.status===200 || response.status===201) {
+      const reader=response.body?.getReader();if(!reader)emailFail('email-test-response-invalid')
+      const chunks=[];let size=0
+      try { while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>4096){await reader.cancel();emailFail('email-test-response-invalid')}chunks.push(part.value)} }
+      finally{reader.releaseLock()}
+      const data=JSON.parse(Buffer.concat(chunks).toString('utf8'))
+      if (!emailUuid.test(data?.id || '')) emailFail('email-test-response-invalid')
+      result={state:'accepted',providerId:data.id}
+    } else {await response.body?.cancel()}
+  } catch { /* Never echo provider text, recipient, body, headers or key. No retry. */ }
+  try {
+    return await rpc('hq_email_test_finish',{p_worker_id:workerId,p_id:id,p_reservation:permit?.reservation,
+      p_state:result.state,p_provider_id:result.providerId})
+  } catch { emailFail('email-test-receipt-persistence-required') }
+}
+
+/** Called only by the existing admitted host drain, after ordinary jobs settle. */
+export async function drainApprovedEmailTest({rpc,workerId,env,transport=fetch,admitting=()=>true}) {
+  await rpc('hq_email_test_readiness',{p_worker_id:workerId,p_configured:emailTestConfigured(env)})
+  if (!emailTestConfigured(env) || !admitting()) return false
+  const id = await rpc('hq_email_test_next',{p_worker_id:workerId})
+  if (!id || !admitting()) return false
+  const result=await runApprovedEmailTest({rpc,workerId,id,env,transport})
+  return result.state==='accepted' || result.state==='rejected'
+}
+
 process.umask(0o077)
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const DRIVE_ID = /^[A-Za-z0-9_-]{8,200}$/
@@ -1306,7 +1374,7 @@ export async function start(adapters = {}) {
     try { await file.writeFile('Operator must reconcile uncertain queue/journal outcome.\n'); await file.sync() } finally { await file.close() }
     await syncState()
   } })
-  let roleClaims = false, repositoryClaims=false, parallelClaims=false
+  let roleClaims = false, repositoryClaims=false, parallelClaims=false, emailTestsAvailable=false
   async function compatible() {
     // Read-only RPC also verifies the current enabled worker identity/session.
     const status = await api.rpc('hq_worker_release_status', { p_worker_id: config.id })
@@ -1317,7 +1385,19 @@ export async function start(adapters = {}) {
     roleClaims = checkRoleContract(status)
     repositoryClaims = checkRepositoryContract(status)
     parallelClaims = status.parallelClaims === 1 && status.parallelCapacity === 2
+    emailTestsAvailable = status.emailConnectionTests === 1 && config.url === 'https://dpruoncalmwicrqhqelu.supabase.co'
     return status
+  }
+  // No command-line send bypass: sending only occurs in the admitted drain.
+  requireValue(!process.argv.includes('--email-test'), 'email-test-use-founder-approval')
+  if (process.argv.includes('--email-readiness')) {
+    requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
+    try {
+      await compatible()
+      const ready = await api.rpc('hq_email_test_readiness', { p_worker_id: config.id, p_configured: emailTestConfigured(process.env) })
+      process.stdout.write(JSON.stringify(ready) + '\n')
+    } finally { api.stop() }
+    return
   }
   if (process.argv.includes('--release-preflight')) {
     requireValue(config.url === 'https://dpruoncalmwicrqhqelu.supabase.co', 'staging-required')
@@ -1549,6 +1629,14 @@ export async function start(adapters = {}) {
         work,
         idle: wakeOnce,
       })
+      // Exact founder-approved connection tests share this admitted host drain,
+      // never a model turn or a separate worker. Failure blocks only test sends.
+      if (emailTestsAvailable && connected && !stopping && !gate.snapshot().paused) {
+        try {
+          if (await drainApprovedEmailTest({rpc:(name,body)=>api.rpc(name,body),workerId:config.id,env:process.env,
+            admitting:()=>connected && !stopping && !gate.snapshot().paused})) drainRequested=true
+        } catch { log('email-test-reconciliation-required') }
+      }
       // Staffing and Brain publication remain exclusive, outside the pool.
       if (connected && !stopping && !gate.snapshot().paused) {
         const staffing = await api.rpc('hq_worker_staffing_claim', { p_worker_id: config.id })
