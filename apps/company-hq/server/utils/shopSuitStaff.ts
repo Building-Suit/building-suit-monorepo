@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import { createError } from 'h3'
-import { z } from 'zod'
 import { SHOP_SUIT_STAFF_PAGE_SIZE } from '../../shared/shopSuitStaff'
 
 interface Configuration {
@@ -14,19 +13,29 @@ const shopOrigin = {
   staging: 'https://jvvelvftpfnlogalgxgv.supabase.co',
   production: 'https://fgdzjnsbcxfbiuogbmom.supabase.co',
 } as const
-const staffSchema = z.array(z.object({
-  employeeId: z.uuid(),
-  employeeTemplate: z.literal('shop-suit-agent-v1'),
-  shopId: z.uuid(),
-  shopName: z.string().trim().min(1).max(160),
-  state: z.enum(['idle', 'busy']),
-})).max(SHOP_SUIT_STAFF_PAGE_SIZE)
-const tokenSchema = z.object({
-  access_token: z.string().regex(/^[\w-]+\.[\w-]+\.[\w-]+$/).max(4096),
-  expires_in: z.number().int().positive(),
-})
+const uuid = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i
+const token = /^[\w-]+\.[\w-]+\.[\w-]+$/
 const unavailable = () => createError({ statusCode: 503, statusMessage: 'Shop Suit staff unavailable' })
 let session: { key: string; until: number; token: Promise<string> } | undefined
+
+function object(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw unavailable()
+  return value as Record<string, unknown>
+}
+
+function staffPage(value: unknown) {
+  if (!Array.isArray(value) || value.length > SHOP_SUIT_STAFF_PAGE_SIZE) throw unavailable()
+  const ids = new Set<string>()
+  return value.map(raw => {
+    const { employeeId, employeeTemplate, shopId, shopName, state } = object(raw)
+    if (typeof employeeId !== 'string' || !uuid.test(employeeId) || ids.has(employeeId)
+      || employeeTemplate !== 'shop-suit-agent-v1' || typeof shopId !== 'string' || !uuid.test(shopId)
+      || typeof shopName !== 'string' || !shopName.trim() || shopName.length > 200
+      || (state !== 'idle' && state !== 'busy')) throw unavailable()
+    ids.add(employeeId)
+    return { employeeId, shopName, state }
+  })
+}
 
 async function fetchJson(url: string, headers: Record<string, string>, body: unknown) {
   const response = await fetch(url, {
@@ -63,9 +72,11 @@ function staffToken(origin: string, apiKey: string, email: string, password: str
     until: Date.now() + 5_000,
     token: fetchJson(`${origin}/auth/v1/token?grant_type=password`, { apikey: apiKey }, { email, password })
       .then(response => {
-        const { access_token, expires_in } = tokenSchema.parse(response)
-        entry.until = Date.now() + Math.max(0, Math.min(300, expires_in - 15)) * 1_000
-        return access_token
+        const { access_token: accessToken, expires_in: expiresIn } = object(response)
+        if (typeof accessToken !== 'string' || accessToken.length > 4096 || !token.test(accessToken)
+          || typeof expiresIn !== 'number' || !Number.isInteger(expiresIn) || expiresIn <= 0) throw unavailable()
+        entry.until = Date.now() + Math.max(0, Math.min(300, expiresIn - 15)) * 1_000
+        return accessToken
       })
       .catch(error => {
         if (session === entry) session = undefined
@@ -87,13 +98,13 @@ export async function loadShopSuitStaff(config: Configuration, after?: string) {
   if (!origin || !/^sb_publishable_[\w-]{16,512}$/.test(key) || email.length > 254 || password.length > 1024) throw unavailable()
 
   try {
-    const token = await staffToken(origin, key, email, password)
-    const staff = staffSchema.parse(await fetchJson(`${origin}/rest/v1/rpc/shop_hq_assistant_staff`, {
-      apikey: key, Authorization: `Bearer ${token}`,
+    const accessToken = await staffToken(origin, key, email, password)
+    const staff = staffPage(await fetchJson(`${origin}/rest/v1/rpc/shop_hq_assistant_staff`, {
+      apikey: key, Authorization: `Bearer ${accessToken}`,
     }, { p_after_employee_id: after ?? null, p_limit: SHOP_SUIT_STAFF_PAGE_SIZE }))
     return {
       status: 'ready' as const,
-      staff: staff.map(({ employeeId, shopName, state }) => ({ employeeId, shopName, state })),
+      staff,
       next: staff.length === SHOP_SUIT_STAFF_PAGE_SIZE ? staff.at(-1)!.employeeId : null,
     }
   } catch {
