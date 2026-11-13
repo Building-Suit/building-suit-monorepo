@@ -46,6 +46,7 @@ begin
     'public.shop_hq_assistant_job(uuid,uuid,uuid)'::regprocedure,
     'public.shop_hq_assistant_claim()'::regprocedure,
     'public.shop_hq_assistant_dispatch()'::regprocedure,
+    'public.shop_hq_assistant_recall(uuid,uuid)'::regprocedure,
     'public.shop_hq_assistant_recent(uuid,uuid)'::regprocedure,
     'public.shop_hq_assistant_staff(uuid,integer)'::regprocedure,
     'public.shop_hq_assistant_review_claim()'::regprocedure,
@@ -378,7 +379,7 @@ begin
   end if;
   perform set_config('hq_test.waiting_job',
     public.shop_hq_assistant_enqueue(v_shop,v_location,gen_random_uuid(),
-      '[{"role":"user","content":"Wait while my employee is busy"}]')->>'jobId', true);
+      '[{"role":"user","content":"Continue while the prior answer is reviewed"}]')->>'jobId', true);
 end;
 $$;
 select set_config('request.jwt.claim.sub', current_setting('hq_test.outsider'), true);
@@ -400,18 +401,33 @@ select set_config('request.jwt.claim.sub', current_setting('hq_test.worker'), tr
 do $$
 declare
   v_job uuid := current_setting('hq_test.job')::uuid;
+  v_next_job uuid := current_setting('hq_test.waiting_job')::uuid;
+  v_next_claim jsonb;
   v_review jsonb;
   v_fix jsonb;
   v_intent jsonb := '{"kind":"reply","customerName":null,"customerPhone":null,"services":[],"paymentMethod":null,"paidAmount":null,"paymentReceived":false,"reply":"تم التوضيح"}';
 begin
-  if public.shop_hq_assistant_dispatch() is not null or public.shop_hq_assistant_claim() is not null then
-    raise exception 'Busy employee was assigned a second job';
-  end if;
   v_review := public.shop_hq_assistant_review_claim();
-  if jsonb_array_length(v_review) <> 1 or v_review->0->>'headAgentId' is distinct from 'AG-SHOP-001'
-    or not public.shop_hq_assistant_review_finish(v_job,(v_review->0->>'leaseToken')::uuid,false,'Clarify the next step')
+  if jsonb_array_length(v_review) <> 1 or v_review->0->>'headAgentId' is distinct from 'AG-SHOP-001' then
+    raise exception 'Head could not start reviewing the first answer';
+  end if;
+  if public.shop_hq_assistant_dispatch()->>'jobId' is distinct from v_next_job::text then
+    raise exception 'Background review blocked dispatch of the next owner message';
+  end if;
+  v_next_claim := public.shop_hq_assistant_claim();
+  if v_next_claim->>'jobId' is distinct from v_next_job::text
+    or v_next_claim->>'employeeId' is distinct from current_setting('hq_test.employee') then
+    raise exception 'Next owner message was not leased to the same employee during review';
+  end if;
+  if not public.shop_hq_assistant_review_finish(v_job,(v_review->0->>'leaseToken')::uuid,false,'Clarify the next step')
     or not public.shop_hq_assistant_review_finish(v_job,(v_review->0->>'leaseToken')::uuid,false,'Clarify the next step') then
     raise exception 'Head could not route idempotent correction';
+  end if;
+  if public.shop_hq_assistant_claim() is not null then
+    raise exception 'Employee correction competed with the active employee lease';
+  end if;
+  if not public.shop_hq_assistant_finish(v_next_job,(v_next_claim->>'leaseToken')::uuid,v_intent,true) then
+    raise exception 'Employee could not finish the next request while a correction was pending';
   end if;
   v_fix := public.shop_hq_assistant_claim();
   if v_fix->>'employeeId' is distinct from current_setting('hq_test.employee')
@@ -420,11 +436,10 @@ begin
     raise exception 'Corrective job was not routed to its original employee';
   end if;
   v_review := public.shop_hq_assistant_review_claim();
-  if not public.shop_hq_assistant_review_finish(v_job,(v_review->0->>'leaseToken')::uuid,true,null) then
-    raise exception 'Head could not accept corrected reply';
-  end if;
-  if public.shop_hq_assistant_dispatch()->>'jobId' is distinct from current_setting('hq_test.waiting_job') then
-    raise exception 'Head could not dispatch to the newly available employee';
+  if jsonb_array_length(v_review) <> 2
+    or not public.shop_hq_assistant_review_finish(v_job,(v_review->0->>'leaseToken')::uuid,true,null)
+    or not public.shop_hq_assistant_review_finish(v_next_job,(v_review->1->>'leaseToken')::uuid,true,null) then
+    raise exception 'Head could not accept the correction and next reply';
   end if;
 end;
 $$;

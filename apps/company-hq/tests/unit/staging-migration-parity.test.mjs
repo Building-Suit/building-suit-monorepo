@@ -15,7 +15,7 @@ test('HQ staging migration sources match the reviewed applied set and preserve t
     encoding: 'utf8',
   })
   assert.equal(result.status, 0, result.stderr || result.stdout)
-  assert.match(result.stdout, /17 applied baseline migrations; 38 pending forward migration/)
+  assert.match(result.stdout, /17 applied baseline migrations; 40 pending forward migration/)
   assert.match(result.stdout, /1 recovered applied migration/)
 })
 

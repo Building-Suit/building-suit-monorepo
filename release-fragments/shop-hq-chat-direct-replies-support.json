@@ -1,0 +1,33 @@
+{
+  "id": "shop-hq-chat-direct-replies-support",
+  "task": "SS-HQ-CHAT-DIRECT-REPLIES",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/supabase/tests/shop_hq_assistant.sql",
+    "apps/shop-suit/supabase/tests/shop_hq_assistant_conversation_recall.sql",
+    "apps/shop-suit/tests/e2e/hq-assistant-authorization.spec.ts",
+    "apps/shop-suit/tests/e2e/hq-assistant-pos.spec.ts",
+    "apps/shop-suit/tests/e2e/post-unification-regressions.spec.ts",
+    "docs/shared/ui-ownership-manifest.json",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
+    "packages/ui/src/types/assistantChatPresentation.ts",
+    "release-changes/items.json",
+    "tooling/database/test-shop-local.mjs",
+    "tooling/hq-agent-host/departmentWorkflow.mjs",
+    "tooling/hq-agent-host/shopConnector.test.mjs",
+    "tooling/hq-agent-host/worker.mjs"
+  ],
+  "reason": "Shared chat presentation, scoped worker behavior and focused tests support the Shop experience."
+}

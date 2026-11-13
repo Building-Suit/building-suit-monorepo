@@ -4,18 +4,19 @@ import { catalogMediaRequest, type CatalogMediaAction, type CatalogMediaPayload,
 export function useCatalogMedia() {
   const client = useShopClient<ShopRpcDatabase>()
   const rpc = client.schema('public')
+  async function resolveImageUrls(items: { imageObjectName?: string | null; imageUrl?: string | null }[]) {
+    const names = [...new Set(items.flatMap(item => item.imageObjectName ? [item.imageObjectName] : []))]
+    if (!names.length) return
+    const { data } = await client.storage.from(CATALOG_IMAGE_BUCKET).createSignedUrls(names, 3600)
+    const urls = new Map(data?.map(item => [item.path, item.signedUrl]))
+    for (const item of items) if (item.imageObjectName) item.imageUrl = urls.get(item.imageObjectName) || null
+  }
   async function request(action: CatalogMediaAction, payload: CatalogMediaPayload & { p_shop_id: string }, legacy: () => PromiseLike<CatalogMediaResult>, imageUrl: string | null = null, requiresMedia = false) {
     const result = await catalogMediaRequest(action, imageUrl, () => rpc.rpc('shop_catalog_media', { p_shop_id: payload.p_shop_id, p_action: action, p_payload: action.startsWith('save_') ? { ...payload, imageUrl } : payload }), legacy, requiresMedia)
     if (!result.error && !action.startsWith('save_') && result.data && typeof result.data === 'object' && 'items' in result.data && Array.isArray(result.data.items)) {
-      const items = result.data.items as { imageObjectName?: string | null; imageUrl?: string | null }[]
-      const names = [...new Set(items.flatMap(item => item.imageObjectName ? [item.imageObjectName] : []))]
-      if (names.length) {
-        const { data } = await client.storage.from(CATALOG_IMAGE_BUCKET).createSignedUrls(names, 3600)
-        const urls = new Map(data?.map(item => [item.path, item.signedUrl]))
-        for (const item of items) if (item.imageObjectName) item.imageUrl = urls.get(item.imageObjectName) || null
-      }
+      await resolveImageUrls(result.data.items)
     }
     return result
   }
-  return { request }
+  return { request, resolveImageUrls }
 }

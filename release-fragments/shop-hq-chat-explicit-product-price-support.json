@@ -1,0 +1,25 @@
+{
+  "id": "shop-hq-chat-explicit-product-price-support",
+  "task": "SS-HQ-CHAT-EXPLICIT-PRODUCT-PRICE",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq/supabase/migrations/20261113205600_hq_shop_product_price_worker_compatibility.sql",
+    "apps/company-hq/supabase/staging-migration-parity.json",
+    "apps/company-hq/supabase/verify-staging-migration-parity.mjs",
+    "tooling/hq-agent-host/departmentWorkflow.mjs",
+    "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
+    "apps/shop-suit/supabase/tests/shop_hq_assistant_product_creation.sql",
+    "tooling/hq-agent-host/shopProductParsing.test.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Keep Shop worker byte admission and regression proof separate from owner-facing release notes."
+}

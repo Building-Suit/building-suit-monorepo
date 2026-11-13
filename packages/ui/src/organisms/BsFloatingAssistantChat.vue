@@ -134,7 +134,7 @@ onMounted(() => { if (props.assistant.openRequest) void openPanel() })
   align-items: end;
   justify-items: end;
   inset-inline-end: var(--bs-space-4);
-  inset-block-end: calc(5rem + env(safe-area-inset-bottom));
+  inset-block-end: calc(var(--bs-space-4) + env(safe-area-inset-bottom));
   z-index: 40;
   width: max-content;
   max-width: calc(100% - 2 * var(--bs-space-4));
@@ -157,12 +157,18 @@ onMounted(() => { if (props.assistant.openRequest) void openPanel() })
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   width: min(26rem, calc(100vw - 2 * var(--bs-space-4)));
-  max-height: min(42rem, calc(100dvh - 6rem - env(safe-area-inset-bottom)));
+  height: min(52rem, calc(100dvh - 2 * var(--bs-space-4) - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   background: var(--bs-surface);
   border: 1px solid var(--bs-border);
   border-radius: var(--bs-radius-card);
   box-shadow: var(--bs-elevation-3);
   overflow: hidden;
+}
+
+@media (min-width: 64rem) {
+  .bs-floating-assistant__panel {
+    height: min(52rem, calc(100dvh - 5rem - var(--bs-space-4) - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -216,6 +222,8 @@ onMounted(() => { if (props.assistant.openRequest) void openPanel() })
 .bs-floating-assistant__revoke { justify-self: start; }
 
 .bs-floating-assistant__content {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;

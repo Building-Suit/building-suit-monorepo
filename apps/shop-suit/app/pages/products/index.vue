@@ -22,6 +22,7 @@ type Product = {
   sku: string | null
   barcode: string | null
   sale_price: number
+  price_pending?: boolean
   category_id: string | null
   category_name: string | null
   created_at: string
@@ -30,10 +31,16 @@ type ProductPage = { supportsTechnicalDetails?: boolean; supportsMeasurements?: 
 type Category = { id: string; name: string }
 
 const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
+const catalogueClient = useShopClient()
 const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
+const route = useRoute()
+const linkedProductId = computed(() => {
+  const id = route.query.product
+  return typeof id === 'string' && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(id) ? id : null
+})
 const search = ref('')
 const categoryFilter = ref('')
 const page = ref(1)
@@ -50,7 +57,7 @@ let packagingCommand: { payload: string; requestId: string } | null = null
 const measurementContext = ref<ProductMeasurementOptions | null>(null)
 const measurementLoading = ref(false)
 let measurementLoad = 0
-const form = reactive({ technical: { enabled: false, family: '', reelTracking: false, unopenedResellable: true, cutRequiresManagerApproval: true, attributes: [] as { code: string; value: string }[] }, measurement: { enabled: true, baseUnit: 'ea', increment: '1', saleUnits: ['ea'] }, imageObjectName: null as string | null, imageUrl: '', name: '', sku: '', barcode: '', salePrice: 0, categoryId: '' })
+const form = reactive({ technical: { enabled: false, family: '', reelTracking: false, unopenedResellable: true, cutRequiresManagerApproval: true, attributes: [] as { code: string; value: string }[] }, measurement: { enabled: true, baseUnit: 'ea', increment: '1', saleUnits: ['ea'] }, imageObjectName: null as string | null, imageUrl: '', name: '', sku: '', barcode: '', salePrice: 0 as number | null, categoryId: '' })
 const upload = useCatalogImageUpload(currentId, 'products', objectName => { form.imageObjectName = objectName; form.imageUrl = '' })
 const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => ({ ...form, imageSelection: upload.selectedName.value, packaging: packagingForm.value }))
 function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
@@ -76,6 +83,7 @@ const copy = computed(() => isArabic.value ? {
   add: 'إضافة منتج', edit: 'تعديل', editTitle: 'تعديل المنتج', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ المنتج', saving: 'بنحفظ...', loading: 'بنحمّل المنتجات…',
   name: 'اسم المنتج', sku: 'رمز المنتج', barcode: 'الباركود', price: 'سعر البيع', category: 'التصنيف', allCategories: 'كل التصنيفات', previous: 'السابق', next: 'التالي', import: 'الاستيراد والإعداد',
   search: 'دوّر باسم المنتج أو الرمز', empty: 'مفيش منتجات لسه.', noResults: 'مفيش نتايج مطابقة.',
+  pricePending: 'السعر مطلوب', catalogue: 'عرض كل المنتجات',
   noShop: 'اعمل متجر الأول من لوحة التحكم.', dashboard: 'لوحة التحكم',
   readError: 'مقدرناش نحمّل المنتجات.', writeError: 'مقدرناش نحفظ المنتج.', retry: 'حاول تاني',
   invalid: 'اكتب اسمًا من حرفين إلى 160 حرفًا وسعرًا صحيحًا غير سالب.',
@@ -93,6 +101,7 @@ const copy = computed(() => isArabic.value ? {
   add: 'Add product', edit: 'Edit', editTitle: 'Edit product', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...', loading: 'Loading products…',
   name: 'Product name', sku: 'SKU', barcode: 'Barcode', price: 'Sale price', category: 'Category', allCategories: 'All categories', previous: 'Previous', next: 'Next', import: 'Import & setup',
   search: 'Search name or code', empty: 'No products yet.', noResults: 'No matching products.',
+  pricePending: 'Price needed', catalogue: 'View all products',
   noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
   readError: 'Could not load products.', writeError: 'Could not save the product.', retry: 'Retry',
   invalid: 'Enter a name of 2–160 characters and a valid nonnegative price.',
@@ -111,15 +120,32 @@ const { data: categories } = useShopQuery(() => `shop-data:product-categories:${
 const emptyPage = (): ProductPage => ({ items: [], total: 0, page: 1, pageSize })
 const { data: productPage, pending, error, refresh } = useShopQuery(
   'shop-data:products', async () => {
-    if (!currentId.value) return emptyPage()
+    const shop = currentId.value
+    if (!shop) return emptyPage()
+    const productId = linkedProductId.value
     const args = {
-      p_shop_id: currentId.value, p_search: search.value.trim() || null,
-      p_category_id: categoryFilter.value || null, p_page: page.value, p_page_size: pageSize,
+      p_shop_id: shop, p_search: productId ? null : search.value.trim() || null,
+      p_category_id: productId ? null : categoryFilter.value || null,
+      p_page: productId ? 1 : page.value, p_page_size: productId ? 1 : pageSize,
     }
-    const { data, error: queryError } = await media.request('products', args, () => shopRpc.rpc('list_products', args))
+    const [{ data, error: queryError }, linked] = await Promise.all([
+      media.request('products', args, () => shopRpc.rpc('list_products', args)),
+      productId ? catalogueClient.from('products')
+        .select('id,name,sku,barcode,sale_price,price_pending,category_id,created_at,base_unit_code,measurement_status,image_url,image_object_name')
+        .eq('shop_id', shop).eq('id', productId).eq('is_active', true).maybeSingle() : null,
+    ])
     if (queryError) throw queryError
-    return data as ProductPage
-  }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
+    const listing = data as ProductPage
+    if (!linked) return listing
+    if (linked.error) throw linked.error
+    const items: Product[] = []
+    if (linked.data) {
+      const { image_url, image_object_name, ...product } = linked.data
+      items.push({ ...product, category_name: null, imageUrl: image_url, imageObjectName: image_object_name })
+      await media.resolveImageUrls(items)
+    }
+    return { ...listing, items, total: items.length, page: 1, pageSize }
+  }, { watch: [currentId, search, categoryFilter, page, linkedProductId], default: emptyPage },
 )
 const products = computed(() => productPage.value.items)
 watch([search, categoryFilter], () => { page.value = 1 })
@@ -161,7 +187,7 @@ async function openEdit(product: Product) {
   form.name = product.name
   form.sku = product.sku ?? ''
   form.barcode = product.barcode ?? ''
-  form.salePrice = Number(product.sale_price)
+  form.salePrice = product.price_pending ? null : Number(product.sale_price)
   form.categoryId = product.category_id ?? ''
   actionError.value = ''
   showForm.value = true
@@ -217,9 +243,9 @@ function readableError(message?: string) {
 async function save() {
   if (!currentId.value || technicalLoading.value || (productPage.value.supportsTechnicalDetails && !technicalContext.value) || packagingPending.value || measurementLoading.value || (editingId.value && productPage.value.supportsMeasurements && !measurementContext.value) || saving.value || ['uploading', 'error', 'invalid'].includes(upload.status.value) || !canManage.value) return
   actionError.value = ''
-  const price = Number(form.salePrice)
+  const price = form.salePrice
   if (form.name.trim().length < 2 || form.name.trim().length > 160
-    || !Number.isFinite(price) || price < 0 || price > 999999999.99) {
+    || price === null || !Number.isFinite(price) || price < 0 || price > 999999999.99) {
     actionError.value = copy.value.invalid
     return
   }
@@ -257,19 +283,21 @@ async function save() {
 }
 
 async function archive(product: Product) {
-  if (!currentId.value || archivingId.value || !canManage.value) return
-  if (!await confirmation.ask(copy.value.archiveConfirm)) return
+  const shop = currentId.value
+  if (!shop || archivingId.value || !canManage.value) return
+  const inScope = captureTaskScope()
+  if (!await confirmation.ask(copy.value.archiveConfirm) || !inScope()) return
   actionError.value = ''
   archivingId.value = product.id
   try {
     const { error: archiveError } = await shopRpc.rpc('archive_product', {
-      p_shop_id: currentId.value,
+      p_shop_id: shop,
       p_product_id: product.id,
     })
     if (archiveError) throw archiveError
-    await refresh()
+    if (inScope()) await refresh()
   } catch (error) {
-    actionError.value = readableError(error instanceof Error ? error.message : undefined)
+    if (inScope()) actionError.value = readableError(error instanceof Error ? error.message : undefined)
   } finally {
     archivingId.value = null
   }
@@ -283,8 +311,22 @@ function money(value: number) {
 
 useShopRealtime('products', () => formDirty.value)
 
+const catalogueContext = computed(() => ({
+  available: Boolean(current.value), loading: shopLoading.value, dashboardTo: '/dashboard', importTo: '/catalog-import',
+  catalogueLink: linkedProductId.value ? { to: '/products', label: copy.value.catalogue } : undefined,
+}))
 const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
-const itemViews = computed(() => products.value.map(product => ({ id: product.id, name: product.name, description: product.technical_details?.familyName || undefined, category: product.category_name || '—', sku: product.sku || '—', barcode: product.barcode || '—', price: `${money(Number(product.sale_price))}${product.measurement_status === 'active' ? ' / ' + (isArabic.value ? measurementUnits.find(unit => unit.code === product.base_unit_code)?.nameAr : measurementUnits.find(unit => unit.code === product.base_unit_code)?.nameEn) : ''}`, schedule: '' })))
+const itemViews = computed(() => products.value.map(product => {
+  const unit = product.measurement_status === 'active' ? measurementUnits.find(entry => entry.code === product.base_unit_code) : undefined
+  const unitName = isArabic.value ? unit?.nameAr : unit?.nameEn
+  return {
+    id: product.id, name: product.name, description: product.technical_details?.familyName || undefined,
+    category: product.category_name || categories.value.find(category => category.id === product.category_id)?.name || '—',
+    sku: product.sku || '—', barcode: product.barcode || '—',
+    price: product.price_pending ? copy.value.pricePending : `${money(Number(product.sale_price))}${unitName ? ` / ${unitName}` : ''}`,
+    schedule: '',
+  }
+}))
 const editorForm = computed({
   get: () => ({ technical: productPage.value.supportsTechnicalDetails ? form.technical : undefined, packaging: packagingForm.value, measurement: productPage.value.supportsMeasurements ? form.measurement : undefined, imageUrl: form.imageUrl, name: form.name, description: '', sku: form.sku, barcode: form.barcode, price: form.salePrice, category: form.categoryId, discount: { type: '', value: 0 }, schedule: { enabled: false, duration: null, cleanup: 0, locations: [], staff: [] } }),
   set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => {
@@ -334,5 +376,5 @@ function editById(id: string) { const row = products.value.find(product => produ
 function archiveById(id: string) { const row = products.value.find(product => product.id === id); if (row) return archive(row) }
 </script>
 <template>
-  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="product" :copy="copy" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? copy.readError : null, canManage, archivePendingId: archivingId, pageSize, page, total: productPage.total, filtered: Boolean(search || categoryFilter) }" :technical="technicalView" :packaging="packagingView" :measurement="productPage.supportsMeasurements ? { units: unitOptions, saleUnits: saleUnitOptions, locked: measurementContext?.locked === true, loading: measurementLoading } : undefined" :editor="{ uploadBlocked: technicalLoading || Boolean(productPage.supportsTechnicalDetails && !technicalContext) || measurementLoading || Boolean(editingId && productPage.supportsMeasurements && !measurementContext) || ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: productPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving || packagingPending, error: actionError }" :upload="{ preview: upload.preview.value, status: upload.status.value }" @save-packaging="savePackaging()" @edit-packaging="editPackaging" @archive-packaging="savePackaging($event)"  @reset-packaging="resetPackaging" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="product" :copy="copy" :context="catalogueContext" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? copy.readError : null, canManage, archivePendingId: archivingId, pageSize, page, total: productPage.total, filtered: Boolean(search || categoryFilter || linkedProductId) }" :technical="technicalView" :packaging="packagingView" :measurement="productPage.supportsMeasurements ? { units: unitOptions, saleUnits: saleUnitOptions, locked: measurementContext?.locked === true, loading: measurementLoading } : undefined" :editor="{ uploadBlocked: technicalLoading || Boolean(productPage.supportsTechnicalDetails && !technicalContext) || measurementLoading || Boolean(editingId && productPage.supportsMeasurements && !measurementContext) || ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: productPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving || packagingPending, error: actionError }" :upload="{ preview: upload.preview.value, status: upload.status.value }" @save-packaging="savePackaging()" @edit-packaging="editPackaging" @archive-packaging="savePackaging($event)"  @reset-packaging="resetPackaging" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

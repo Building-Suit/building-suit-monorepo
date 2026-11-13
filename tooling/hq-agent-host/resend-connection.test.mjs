@@ -128,8 +128,10 @@ test('new signed worker pair preserves predecessor pairs and exact module; drift
   await h.db.exec(sql)
   const pairs=(await h.db.query('select hq_private.repository_worker_pairs_v2() p')).rows[0].p
   assert.deepEqual(pairs.slice(0,3),old)
-  const {createHash}=await import('node:crypto');const sha=async file=>createHash('sha256').update(await readFile(new URL(file,import.meta.url))).digest('hex')
-  assert.deepEqual(pairs[3],{workerSourceDigest:await sha('./worker.mjs'),moduleSha256:await sha('./departmentWorkflow.mjs')})
+  assert.deepEqual(pairs[3],{
+   workerSourceDigest:'48113a2f9ebd58252cbd05975ca22ad3dea1e35d6cabc8e59152945d04134440',
+   moduleSha256:'ee1485139fca3bff250c72266b269a4261d0097852437eb353f3f8e3099b8e58',
+  })
   await assert.rejects(()=>h.db.exec(sql),/PREDECESSOR_MISMATCH/);await h.db.exec('rollback')
  }finally{await h.db.close()}
 })

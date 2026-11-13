@@ -6,7 +6,7 @@ const category = defineModel<string>('category', { required: true })
 const props = defineProps<{
   kind: 'product' | 'service'
   copy: BsCatalogueCopy
-  context: { available: boolean; loading: boolean; dashboardTo: string; importTo: string }
+  context: { available: boolean; loading: boolean; dashboardTo: string; importTo: string; catalogueLink?: { to: string; label: string } }
   rows: BsCatalogueItemView[]
   categories: { value: string; label: string }[]
   table: { loading: boolean; error: string | null; canManage: boolean; archivePendingId: string | null; pageSize: number; page: number; total: number; filtered: boolean }
@@ -35,7 +35,7 @@ const columns = computed(() => [
 </script>
 <template>
   <BsStack>
-    <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"><template #actions><BsInline v-if="context.available"><BsLink :to="context.importTo">{{ copy.import }}</BsLink></BsInline></template></BsPageHeader>
+    <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"><template #actions><BsInline v-if="context.available"><BsLink v-if="context.catalogueLink" :to="context.catalogueLink.to">{{ context.catalogueLink.label }}</BsLink><BsLink :to="context.importTo">{{ copy.import }}</BsLink></BsInline></template></BsPageHeader>
     <BsPanel v-if="!context.available && !context.loading" padding="md"><BsText as="p">{{ copy.noShop }}</BsText><BsLink :to="context.dashboardTo">{{ copy.dashboard }}</BsLink></BsPanel>
     <template v-else-if="context.available">
       <BsText v-if="copy.stockLater" as="p" size="sm">{{ copy.stockLater }}</BsText>
@@ -47,7 +47,7 @@ const columns = computed(() => [
           <BsField v-slot="field" :label="copy.barcode ?? ''"><BsInput :id="field.id" :model-value="form.barcode" :aria-describedby="field.describedby" type="text" :maxlength="80" @update:model-value="change('barcode', String($event))" /></BsField>
         </template>
         <BsField v-else v-slot="field" :label="copy.description ?? ''"><BsTextarea :id="field.id" :model-value="form.description" :placeholder="copy.description" :aria-describedby="field.describedby" :maxlength="1000" :rows="2" @update:model-value="change('description', String($event))" /></BsField>
-        <BsField v-slot="field" :label="copy.price"><BsInput :id="field.id" :model-value="form.price" :aria-describedby="field.describedby" type="number" :min="0" :max="editor.priceMax" :step="0.01" required @update:model-value="change('price', Number($event))" /></BsField>
+        <BsField v-slot="field" :label="copy.price"><BsInput :id="field.id" :model-value="form.price" :aria-describedby="field.describedby" type="number" :min="0" :max="editor.priceMax" :step="0.01" required @update:model-value="change('price', kind === 'product' && $event === '' ? null : Number($event))" /></BsField>
         <BsFieldGroup v-if="form.measurement && copy.measurement && measurement" :legend="copy.measurement.baseUnit">
           <BsCheckbox :model-value="form.measurement.enabled" :label="copy.measurement.enabled" :disabled="measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('enabled', Boolean($event))" />
           <BsText as="p" size="sm" tone="muted">{{ measurement.locked ? copy.measurement.locked : copy.measurement.help }}</BsText>
@@ -120,9 +120,9 @@ const columns = computed(() => [
         </template>
       </BsRecordActionDialog>
       <BsPanel padding="md">
-        <BsDataTable :value="rows" :label="copy.title" :loading="table.loading" :error="table.error" :capabilities="{ insert: table.canManage, edit: table.canManage, archive: table.canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, row) => action === 'archive' && table.archivePendingId === row.id" searchable :search-label="copy.search" lazy paginator :page-size="table.pageSize" :page-sizes="[table.pageSize]" :first="(table.page - 1) * table.pageSize" :total-records="table.total" :always-show-paginator="false" data-key="id" :columns="columns" @search="emit('search', $event)" @page="emit('page', $event.page + 1)" @retry="emit('retry')" @create="emit('create')" @edit="emit('edit', $event.id)" @archive="emit('archive', $event.id)">
+        <BsDataTable :value="rows" :label="copy.title" :loading="table.loading" :error="table.error" :capabilities="{ insert: table.canManage, edit: table.canManage, archive: table.canManage }" :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }" :row-action-pending="(action, row) => action === 'archive' && table.archivePendingId === row.id" :searchable="!context.catalogueLink" :search-label="copy.search" lazy paginator :page-size="table.pageSize" :page-sizes="[table.pageSize]" :first="(table.page - 1) * table.pageSize" :total-records="table.total" :always-show-paginator="false" data-key="id" :columns="columns" @search="emit('search', $event)" @page="emit('page', $event.page + 1)" @retry="emit('retry')" @create="emit('create')" @edit="emit('edit', $event.id)" @archive="emit('archive', $event.id)">
           <template #cell-name="{ row }">{{ row.name }}<BsText v-if="row.description" as="p" size="xs" tone="muted" emphasis="semibold">{{ row.description }}</BsText></template>
-          <template #filters><BsSelect v-model="category" :label="copy.category" :options="categories" :placeholder="categories.find(option => option.value === '')?.label" option-label="label" option-value="value" /></template>
+          <template #filters><BsSelect v-if="!context.catalogueLink" v-model="category" :label="copy.category" :options="categories" :placeholder="categories.find(option => option.value === '')?.label" option-label="label" option-value="value" /></template>
           <template #empty><BsStateSurface state="empty" :title="table.filtered ? copy.noResults : copy.empty" /></template>
         </BsDataTable>
       </BsPanel>

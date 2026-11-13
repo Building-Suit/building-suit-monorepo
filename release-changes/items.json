@@ -6768,5 +6768,161 @@
       "release-changes/items.json"
     ],
     "reason": "Shared motion presentation, Shop browser coverage, and private HQ appointment and roster status labels support the chat and its workforce."
+  },
+  {
+    "id": "shop-hq-chat-direct-replies",
+    "task": "SS-HQ-CHAT-DIRECT-REPLIES",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+      "apps/shop-suit/app/composables/useShopPrivacy.ts",
+      "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/docs/seo-privacy-analytics.md",
+      "apps/shop-suit/server/utils/shopHqAssistant.ts",
+      "apps/shop-suit/shared/shopHqChat.ts",
+      "apps/shop-suit/supabase/migrations/20261113194400_shop_hq_chat_direct_links.sql",
+      "apps/shop-suit/supabase/migrations/20261113194524_shop_hq_assistant_conversation_recall.sql",
+      "apps/shop-suit/supabase/migrations/20261113195125_shop_hq_chat_background_review.sql",
+      "apps/shop-suit/supabase/migrations/20261113201329_shop_hq_chat_business_mode_link.sql",
+      "packages/ui/src/organisms/BsAssistantChat.vue",
+      "packages/ui/src/organisms/BsFloatingAssistantChat.vue"
+    ],
+    "reason": "The Shop agent chat shows message times, opens requested pages, and can use the owner’s earlier preferences.",
+    "notes": {
+      "title": {
+        "en": "Direct links and message times in Shop chat",
+        "ar": "روابط مباشرة وتوقيت الرسائل في محادثة المتجر"
+      },
+      "summary": {
+        "en": "Ask the Shop agent to open Sales or another page and get a direct link. Messages show when they were sent and are grouped by date.",
+        "ar": "اطلب من مساعد المتجر فتح المبيعات أو صفحة تانية وخد رابط مباشر. وقت الإرسال بيظهر مع كل رسالة والرسائل متجمعة حسب التاريخ."
+      },
+      "details": {
+        "en": "The agent can use earlier messages from the same authorized conversation. Find Privacy settings in the Shop settings menu.",
+        "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
+      }
+    },
+    "sources": [
+      "shop-hq-chat-direct-replies"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+        "contains": "messageTime: { locale:"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useShopPrivacy.ts",
+        "contains": "showReopen: false"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113194400_shop_hq_chat_direct_links.sql",
+        "contains": "jsonb_build_object('kind','action','destination',v_destination)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113194524_shop_hq_assistant_conversation_recall.sql",
+        "contains": "create function public.shop_hq_assistant_recall"
+      }
+    ]
+  },
+  {
+    "id": "shop-hq-chat-create-products",
+    "task": "SS-HQ-CHAT-CREATE-PRODUCTS",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useCatalogMedia.ts",
+      "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+      "apps/shop-suit/app/pages/products/index.vue",
+      "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/server/utils/shopHqAssistant.ts",
+      "apps/shop-suit/shared/shopHqChat.ts",
+      "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+      "apps/shop-suit/supabase/migrations/20261113205713_hq_product_price_evidence.sql",
+      "packages/ui/src/templates/BsCataloguePage.vue"
+    ],
+    "reason": "The Shop agent can create an editable catalog record from a product name and checks whether Products is already enabled.",
+    "notes": {
+      "title": {
+        "en": "Add products from Shop chat",
+        "ar": "إضافة المنتجات من محادثة المتجر"
+      },
+      "summary": {
+        "en": "Tell the agent to add a product by name. Include a price if you know it. The agent saves the record and sends a link so you can edit or archive it.",
+        "ar": "اطلب من المساعد إضافة منتج بالاسم. لو السعر معروف اكتبه مع الاسم. المساعد هيسجله ويبعت لك رابط عشان تعدّله أو تأرشفه."
+      },
+      "details": {
+        "en": "If you leave out the price, the product stays unavailable for sale until you set it. The agent checks your shop’s settings before sending you to Products or showing how to enable it.",
+        "ar": "لو ما كتبتش السعر، المنتج مش هيتباع لحد ما تحدد سعره. المساعد بيراجع إعدادات متجرك قبل ما يفتح لك المنتجات أو يشرح إزاي تفعّلها."
+      }
+    },
+    "sources": [
+      "shop-hq-chat-create-products",
+      "shop-hq-chat-explicit-product-price"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/docs/assistant-chat.md",
+        "contains": "Shop Suit verifies that the price was stated in the current request"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+        "contains": "create function shop_private.hq_assistant_create_product"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+        "contains": "/products?product=${entry.link.productId}"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+        "contains": "'productsEnabled',v_mode in ('product','mixed')"
+      }
+    ]
+  },
+  {
+    "id": "shop-hq-chat-owner-conversation",
+    "task": "SS-HQ-CHAT-OWNER-CONVERSATION",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+      "apps/shop-suit/docs/assistant-chat.md"
+    ],
+    "reason": "The assistant explains its capabilities, asks payment follow-ups using the known total, and directs the owner to records only after confirmation.",
+    "notes": {
+      "title": {
+        "en": "Clearer replies from your Shop Assistant",
+        "ar": "ردود أوضح من مساعد المتجر"
+      },
+      "summary": {
+        "en": "The assistant says what it did and how to open the saved product or receipt.",
+        "ar": "المساعد بيقولك عمل إيه وإزاي تفتح المنتج أو الإيصال اللي اتسجل."
+      },
+      "details": {
+        "en": "If payment details are missing, the assistant asks about payment using the actual sale total. It tells you when a mismatched amount prevented confirmation.",
+        "ar": "لو بيانات الدفع ناقصة، المساعد بيسأل عنها باستخدام إجمالي البيع الحقيقي. وبيقولك لو اختلاف المبلغ منع تأكيد البيع."
+      }
+    },
+    "sources": [
+      "shop-hq-chat-owner-conversation"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+        "contains": "so I haven’t confirmed the sale"
+      }
+    ]
   }
 ]

@@ -1,0 +1,28 @@
+{
+  "id": "shop-hq-chat-explicit-product-price",
+  "task": "SS-HQ-CHAT-EXPLICIT-PRODUCT-PRICE",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/supabase/migrations/20261113205713_hq_product_price_evidence.sql"
+  ],
+  "reason": "Explicit product prices are parsed and checked against the owner request before a catalog write.",
+  "notes": {
+    "title": {
+      "en": "Include the price when adding a product in chat",
+      "ar": "حدد السعر عند إضافة منتج من المحادثة"
+    },
+    "summary": {
+      "en": "The agent reads the product name and stated price separately, including Egyptian Arabic phrasing.",
+      "ar": "المساعد بيفصل بين اسم المنتج والسعر اللي كتبته، حتى بالعامية المصرية."
+    },
+    "details": {
+      "en": "An invalid price does not create a product. To correct an existing product, use its link in the earlier reply.",
+      "ar": "لو السعر مش صحيح، المساعد ما بيضيفش المنتج. لو عايز تصحح منتج اتسجل، افتح رابطه من الرد السابق."
+    }
+  }
+}

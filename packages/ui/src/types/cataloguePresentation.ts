@@ -19,7 +19,7 @@ export interface BsCatalogueForm {
   description: string
   sku: string
   barcode: string
-  price: number
+  price: number | null
   category: string
   discount: { type: string; value: number }
   schedule: { enabled: boolean; duration: number | null; cleanup: number; locations: string[]; staff: string[] }

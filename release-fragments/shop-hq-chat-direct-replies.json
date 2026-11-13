@@ -1,0 +1,40 @@
+{
+  "id": "shop-hq-chat-direct-replies",
+  "task": "SS-HQ-CHAT-DIRECT-REPLIES",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+    "apps/shop-suit/app/composables/useShopPrivacy.ts",
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/app/utils/shopNavigation.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/docs/seo-privacy-analytics.md",
+    "apps/shop-suit/server/utils/shopHqAssistant.ts",
+    "apps/shop-suit/shared/shopHqChat.ts",
+    "apps/shop-suit/supabase/migrations/20261113194400_shop_hq_chat_direct_links.sql",
+    "apps/shop-suit/supabase/migrations/20261113194524_shop_hq_assistant_conversation_recall.sql",
+    "apps/shop-suit/supabase/migrations/20261113195125_shop_hq_chat_background_review.sql",
+    "apps/shop-suit/supabase/migrations/20261113201329_shop_hq_chat_business_mode_link.sql",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue"
+  ],
+  "reason": "The Shop agent chat shows message times, opens requested pages, and can use the owner’s earlier preferences.",
+  "notes": {
+    "title": {
+      "en": "Direct links and message times in Shop chat",
+      "ar": "روابط مباشرة وتوقيت الرسائل في محادثة المتجر"
+    },
+    "summary": {
+      "en": "Ask the Shop agent to open Sales or another page and get a direct link. Messages show when they were sent and are grouped by date.",
+      "ar": "اطلب من مساعد المتجر فتح المبيعات أو صفحة تانية وخد رابط مباشر. وقت الإرسال بيظهر مع كل رسالة والرسائل متجمعة حسب التاريخ."
+    },
+    "details": {
+      "en": "The agent can use earlier messages from the same authorized conversation. Ask how to enable products for a link to Business operation mode. Find Privacy settings in the Shop settings menu.",
+      "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. اسأل عن تفعيل المنتجات عشان تفتح إعداد طريقة تشغيل النشاط. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
+    }
+  }
+}

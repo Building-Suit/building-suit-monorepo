@@ -2,19 +2,19 @@ import type { BsAssistantChatMessage, BsAssistantChatView, BsShellAssistantChat 
 import type { ShopHqChatAccess, ShopHqChatHistory, ShopHqChatJob, ShopHqChatMessage } from '#shared/shopHqChat'
 import { shopAssistantCopy } from '~/utils/shopAssistantCopy'
 import { shopHqAssistantCopy } from '~/utils/shopHqAssistantCopy'
+import { shopShellCopy } from '~/utils/shopNavigation'
 
 const maximumLength = 2_000
 const encode = new TextEncoder()
 const historyRetryMs = 5_000
 const fallbackForMs = 425_000
-const minimumTypingMs = 750
 
 export function useShopHqAssistant() {
   const config = useRuntimeConfig()
   const client = useSupabaseClient()
   const user = useSupabaseUser()
   const queries = useShopQueryCache()
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const { current, currentId, currentLocation, currentLocationId, currentMembership, isOwner, loading } = useShop()
   const enabled = computed(() => config.public.shopAssistantMode === 'hq' && String(config.public.shopAssistantEnabled) === 'true')
   const isArabic = computed(() => locale.value === 'ar')
@@ -33,8 +33,11 @@ export function useShopHqAssistant() {
   const accessError = ref(false)
   const pending = ref<BsAssistantChatView['pending']>(null)
   const sendError = ref<keyof ReturnType<typeof shopAssistantCopy>['error'] | null>(null)
-  const replyEntrance = shallowRef<{ afterSequence: number; jobId?: string }>()
   const waiting = computed(() => activeJobs.value.some(job => job.state !== 'completed'))
+  const awaitingReply = computed(() => {
+    const answered = new Set(entries.value.filter(entry => entry.role === 'assistant').map(entry => entry.jobId))
+    return activeJobs.value.some(job => job.state !== 'completed' && !answered.has(job.jobId))
+  })
   const scope = computed(() => {
     const actor = user.value?.id, shopId = currentId.value, locationId = currentLocationId.value
     if (!enabled.value || !isOwner.value || loading.value || !actor || !shopId || !locationId) return null
@@ -54,22 +57,35 @@ export function useShopHqAssistant() {
   let binding: Binding | undefined
   let releasingChannel: Promise<unknown> = Promise.resolve()
   let retry: { message: string; requestId: string } | undefined
-  let typingTimer: ReturnType<typeof setTimeout> | undefined
 
   function presentEntry(entry: ShopHqChatMessage): BsAssistantChatMessage {
-    const id = entry.sequence
-    if (entry.kind === 'message') return { id, role: entry.role, text: entry.text }
+    const stamp = { id: entry.sequence, createdAt: entry.createdAt }
+    if (entry.kind === 'message') return { ...stamp, role: entry.role, text: entry.text }
     if (entry.kind === 'receipt') return {
-      id, role: 'receipt', text: labels.value.saleRecorded,
+      ...stamp, role: 'receipt', text: labels.value.saleRecorded,
       link: { to: `/sales/${entry.link.saleId}/receipt?origin=assistant`, label: labels.value.openReceipt },
     }
-    if (entry.kind === 'status') return { id, role: 'assistant', text: labels.value.failed }
+    if (entry.kind === 'product') return {
+      ...stamp, role: 'assistant', text: labels.value.productCreated(entry.link.name, entry.link.pricePending),
+      link: { to: `/products?product=${entry.link.productId}`, label: labels.value.openProduct },
+    }
+    if (entry.kind === 'action') {
+      const destination = entry.link.destination
+      if (destination === 'business-mode') return {
+        ...stamp, role: 'assistant', text: '',
+        links: [{ to: '/settings/business-mode', label: labels.value.openBusinessMode }],
+      }
+      const menu = shopShellCopy(isArabic.value)
+      const label = destination === 'sales' || destination === 'customers' ? t(`${destination}.title`) : menu[destination]
+      return { ...stamp, role: 'assistant', text: '', links: [{ to: `/${destination}`, label }] }
+    }
+    if (entry.kind === 'status') return { ...stamp, role: 'assistant', text: labels.value.failed }
     const outcome = entry.outcome
     const amount = 'total' in outcome && outcome.total !== undefined && outcome.currency
       ? new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: outcome.currency }).format(outcome.total)
       : ''
     return {
-      id, role: 'assistant',
+      ...stamp, role: 'assistant',
       text: outcome.kind === 'amount_mismatch' ? labels.value.amountMismatch(amount)
         : outcome.kind === 'payment_missing' && amount ? labels.value.paymentForTotal(amount)
           : labels.value[outcome.kind],
@@ -79,19 +95,15 @@ export function useShopHqAssistant() {
   const messages = computed<BsAssistantChatMessage[]>(() => {
     const presented: BsAssistantChatMessage[] = []
     const acknowledgments = new Map<string, BsAssistantChatMessage>()
-    const unfinished = new Set(activeJobs.value.filter(job => job.state !== 'completed').map(job => job.jobId))
-    const entrance = replyEntrance.value
     for (const entry of entries.value) {
-      if (entry.role === 'assistant' && (
-        unfinished.has(entry.jobId) ||
-        (entrance && entry.sequence > entrance.afterSequence && (!entrance.jobId || entry.jobId === entrance.jobId))
-      )) continue
-
       const message = presentEntry(entry)
-      if (entry.kind === 'receipt' || entry.kind === 'clarification') {
-        // Checkout can finish on a later event. Keep its result with the worker's acknowledgment.
-        const acknowledgment = acknowledgments.get(entry.jobId)
-        if (acknowledgment) {
+      const acknowledgment = acknowledgments.get(entry.jobId)
+      if (acknowledgment) {
+        if (entry.kind === 'action') {
+          acknowledgment.links = [...acknowledgment.links ?? [], ...message.links ?? []]
+          continue
+        }
+        if (entry.kind === 'receipt' || entry.kind === 'clarification') {
           acknowledgment.outcome = message.text
           acknowledgment.link = message.link
           acknowledgments.delete(entry.jobId)
@@ -121,21 +133,20 @@ export function useShopHqAssistant() {
           { label: copy.value.fields.location, value: currentLocation.value?.name ?? '' },
         ],
         messages: messages.value,
+        messageTime: { locale: isArabic.value ? 'ar-EG' : 'en-EG', timeZone: 'Africa/Cairo' },
         proposal: null,
         delegation: access.value ? {
           enabled: access.value.enabled, title: label.authorizeTitle, explanation: label.authorization,
           enable: label.enable, disable: label.disable,
           policies: [{ to: '/privacy', label: label.privacy }, { to: '/terms', label: label.terms }],
         } : undefined,
-        canSend: canSend.value && !waiting.value && !replyEntrance.value,
+        canSend: canSend.value && !waiting.value,
         showComposer: Boolean(access.value?.enabled && access.value.queueAvailable),
         notice: access.value && !access.value.queueAvailable ? label.queueUnavailable : undefined,
         hasMore: hasMore.value,
         loadingEarlier: loadingEarlier.value,
         historyLoading: historyLoading.value,
-        typing: Boolean(!historyError.value && (pending.value === 'send' || replyEntrance.value || waiting.value)),
-        pendingJobs: activeJobs.value.filter(job => job.reviewPending)
-          .map(job => ({ id: job.jobId, label: label.requestReviewing })),
+        typing: !historyError.value && (pending.value === 'send' || awaitingReply.value),
         pending: pending.value,
         error: accessError.value ? label.accessError : historyError.value ? label.historyError
           : sendError.value ? copy.value.error[sendError.value] : null,
@@ -206,6 +217,9 @@ export function useShopHqAssistant() {
           if (binding !== active) return
           const first = latest.messages[0]?.sequence
           const lastKnown = entries.value.at(-1)?.sequence
+          if (latest.messages.some(entry => entry.kind === 'product' && entry.sequence > (lastKnown ?? 0))) {
+            queries.invalidate('shop-data:products')
+          }
           // A full latest page without overlap may have skipped intervening messages.
           if (first === undefined || (lastKnown !== undefined && first > lastKnown)) {
             entries.value = latest.messages
@@ -299,7 +313,6 @@ export function useShopHqAssistant() {
   }
 
   function clearHistory() {
-    clearReplyEntrance()
     access.value = undefined
     entries.value = []
     activeJobs.value = []
@@ -319,13 +332,6 @@ export function useShopHqAssistant() {
   function close() {
     opened.value = false
     clearTimeout(binding?.timer)
-    clearReplyEntrance()
-  }
-
-  function clearReplyEntrance() {
-    clearTimeout(typingTimer)
-    typingTimer = undefined
-    replyEntrance.value = undefined
   }
 
   async function authorize(allow: boolean) {
@@ -358,7 +364,7 @@ export function useShopHqAssistant() {
   async function send() {
     const active = binding
     const message = draft.value.trim()
-    if (!active || !canSend.value || waiting.value || pending.value || replyEntrance.value || !message) return
+    if (!active || !canSend.value || waiting.value || pending.value || !message) return
     if (encode.encode(message).length > maximumLength) {
       sendError.value = 'tooLong'
       return
@@ -366,16 +372,11 @@ export function useShopHqAssistant() {
     if (retry?.message !== message) retry = { message, requestId: crypto.randomUUID() }
     pending.value = 'send'
     sendError.value = null
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-      replyEntrance.value = { afterSequence: entries.value.at(-1)?.sequence ?? 0 }
-      typingTimer = setTimeout(clearReplyEntrance, minimumTypingMs)
-    }
     try {
       const result = await $fetch<{ jobId: string }>('/api/assistant/hq/requests', {
         method: 'POST', body: { ...apiScope(active), ...retry }, signal: active.controller.signal, timeout: 10_000,
       })
       if (binding !== active) return
-      if (replyEntrance.value) replyEntrance.value = { ...replyEntrance.value, jobId: result.jobId }
       active.retryUntil = Date.now() + fallbackForMs
       if (draft.value.trim() === message) draft.value = ''
       retry = undefined
@@ -385,7 +386,6 @@ export function useShopHqAssistant() {
       await refresh(active)
     } catch (error) {
       if (binding !== active) return
-      clearReplyEntrance()
       const status = (error as { statusCode?: number })?.statusCode
       sendError.value = status === 429 ? 'busy' : status === 401 || status === 403 ? 'access'
         : status === 503 ? 'unavailable' : 'message'

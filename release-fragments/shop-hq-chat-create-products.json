@@ -1,0 +1,35 @@
+{
+  "id": "shop-hq-chat-create-products",
+  "task": "SS-HQ-CHAT-CREATE-PRODUCTS",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useCatalogMedia.ts",
+    "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+    "apps/shop-suit/app/pages/products/index.vue",
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/server/utils/shopHqAssistant.ts",
+    "apps/shop-suit/shared/shopHqChat.ts",
+    "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+    "packages/ui/src/templates/BsCataloguePage.vue"
+  ],
+  "reason": "The Shop agent can create an editable catalog record from a product name and checks whether Products is already enabled.",
+  "notes": {
+    "title": {
+      "en": "Add products from Shop chat",
+      "ar": "إضافة المنتجات من محادثة المتجر"
+    },
+    "summary": {
+      "en": "Tell the agent to add a product by name. It saves the record and sends a link so you can edit or archive it.",
+      "ar": "اطلب من المساعد إضافة منتج بالاسم. هيسجله ويبعت لك رابط عشان تعدّله أو تأرشفه."
+    },
+    "details": {
+      "en": "If you leave out the price, the product stays unavailable for sale until you set it. The agent checks your shop’s settings before sending you to Products or showing how to enable it.",
+      "ar": "لو ما كتبتش السعر، المنتج مش هيتباع لحد ما تحدد سعره. المساعد بيراجع إعدادات متجرك قبل ما يفتح لك المنتجات أو يشرح إزاي تفعّلها."
+    }
+  }
+}

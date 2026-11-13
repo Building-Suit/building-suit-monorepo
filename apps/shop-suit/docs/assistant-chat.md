@@ -4,11 +4,19 @@ As a shop owner, select the branch where the work should happen and open the flo
 
 Each active shop has a stable employee assignment in the Shop Suit Agents department. The head dispatches each saved request to that shop's available employee. The employee posts replies in the same chat. The head reviews reports in batches and assigns corrections where needed. The employee appends any correction to the original request.
 
+Ask for a page by name, for example `عاوز افتح المبيعات`. The agent replies with a direct link to Sales. For an unclear request, it gives two or three useful options. The chat groups messages by date and shows their times. Privacy settings are in the Shop settings menu.
+
+The agent checks the selected shop’s current operation mode. Ask `ازاي افعل المنتجات؟` to open Products if they are already enabled or [Business operation mode](/settings/business-mode) to enable them. Choose **Products and services**, then **Save operation mode**.
+
+Ask `Add a product called Kids Backpack` to create a product by name. The agent returns a link to the saved product, where you can edit or archive it. If the request supplies no price, Shop Suit saves the record as **Price needed** and requires a price before selling it. If you already know the price, include it in the request: for example, `سجل منتج اسمه "شنطة اطفال" بـ ٥٠٠ جنيه` in a shop using EGP. Shop Suit verifies that the price was stated in the current request and matches the shop currency. A correction is not a second create request. To fix an existing record, use **Open product** on its original reply, then edit its name or price.
+
+The agent can use relevant earlier owner messages and stated preferences from the current authorized conversation. Turning the agent off ends that authorization for future recall. Saved chat history remains available to the owner.
+
 For a service sale, send the customer's name and services. Include the amount and method if the customer already paid in full. For example, with a matching test customer, published services priced at 200 total, and an open cash shift:
 
 > عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.
 
-Three dots show while the employee prepares the reply. If Shop Suit needs another detail, reply in chat. When the sale succeeds, the response includes **Open receipt** so you can print it if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
+Three dots show while the employee prepares the reply. If Shop Suit needs another detail, reply in chat. When payment information is missing, the assistant gives the actual sale total and asks about payment. A mismatched amount does not confirm the sale. When the sale succeeds, the response includes **Open receipt** so you can print it if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
 
 ## Managed worker setup
 
