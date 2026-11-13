@@ -13,6 +13,13 @@
   "disposition": "internal",
   "paths": [
     "apps/building-suit-docs/app/pages/components.vue",
+    "apps/company-hq/.env.example",
+    "apps/company-hq/app/composables/useHqShopSuitStaff.ts",
+    "apps/company-hq/app/pages/index.vue",
+    "apps/company-hq/nuxt.config.ts",
+    "apps/company-hq/server/api/hq/shop-suit-staff.get.ts",
+    "apps/company-hq/server/utils/shopSuitStaff.ts",
+    "apps/company-hq/shared/shopSuitStaff.ts",
     "apps/shop-suit/app/types/database.types.ts",
     "apps/shop-suit/app/types/shopCrmRpc.ts",
     "apps/shop-suit/playwright.assistant.config.ts",
@@ -22,10 +29,12 @@
     "docs/shared/ui-ownership-manifest.json",
     "package.json",
     "packages/ui/src/templates/BsAssistantChatPage.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
     "packages/ui/src/types/assistantChatPresentation.ts",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
     "release-changes/items.json",
     "tooling/database/test-shop-local.mjs",
     "tooling/hq-shop-agent-host"
   ],
-  "reason": "Shared consent presentation, database contracts and verification support the Shop Suit rollout."
+  "reason": "Shared chat and HQ office presentation, private staffing metadata, database contracts and verification support the Shop Suit rollout."
 }

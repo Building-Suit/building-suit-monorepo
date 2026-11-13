@@ -1,23 +1,27 @@
 # Shop Suit Agent
 
-Building Suit operates the managed Shop Suit Agent. Open **Shop assistant** from an active shop and branch, then choose **Authorize and enable**. Shop Suit records authorization for the current owner and shop. Use **Turn off agent** to withdraw it.
+Open **Shop assistant** as a shop owner in the branch where the work should happen. Choose **Authorize and enable** to let Building Suit handle requests using your Shop Suit permissions. **Turn off agent** withdraws that authorization.
 
-Type a request such as «عميل اسمه أحمد محمد عمل شعر ودقن». The assigned agent interprets it and Shop Suit looks up the customer and services using the owner's branch permissions. If Shop Suit can identify the records, it opens Point of Sale with the selections filled in. Review the payment and complete the sale in POS. Shop Suit then opens the issued receipt, where you can choose **Print**. Ambiguous matches remain unresolved until the owner supplies more detail or selects the record in Shop Suit.
+Each active shop has a stable employee assignment in the Shop Suit Agents department. The head dispatches each saved request to that shop's available employee. The employee posts replies in the same chat. The head reviews reports in batches and assigns corrections where needed. The employee appends any correction to the original request.
+
+For a service sale, send the customer's name and services. Include the amount and method if the customer already paid in full. For example, with a matching test customer, published services priced at 200 total, and an open cash shift:
+
+> عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.
+
+If Shop Suit needs another detail, reply in chat. When the sale succeeds, choose **Open receipt** from the employee's reply and print if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
 
 ## Managed worker setup
 
-The feature starts disabled. Apply the Shop database migration for the managed queue and follow the separate [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). Registering an enabled worker admits authorized requests at the database. When the correct worker is connected, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. To pause processing, disable the registered workers as well as the app flag.
+The feature starts disabled. Apply the current Shop Suit database migrations and follow the [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). Worker registration admits authorized requests at the database. When the correct worker is connected, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable registered workers and the app flag to pause processing.
 
-The managed worker reads requests through a registered technical identity with a private Realtime subscription. It returns a structured interpretation to Shop Suit. Shop Suit uses the signed-in owner's permissions to resolve records and to perform checkout. HQ's internal employee runtime and its founder login are separate. The model receives message text and the approved Shop documentation snapshot when configured. It receives no Supabase user token or customer records from the POS lookup.
+Existing active shops are backfilled by migration. Shop creation and activation provision the employee automatically. HQ reads the staffing roster with a dedicated metadata-only identity from the corresponding Shop environment. See the [department charter](https://drive.google.com/file/d/1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY/view).
 
-Starting a new chat or changing the signed-in account, shop, or branch clears the browser conversation. The queue clears raw messages when a worker claims the request, or on expiry or revocation if still pending. A model provider's retention rules apply to content it receives. The worker setup describes how to supply a reviewed Shop-only documentation snapshot.
+Shop Suit saves chat requests briefly so employees can act, review can recover after a disconnect, and owners can reconnect. Private Realtime signals carry no chat or sale content. Shop Suit authenticates each result read separately. Account, shop, or branch changes clear the browser view and load the new scope. Review and checkout are fenced to the authorized job. Completed sales remain in Shop Suit after the chat transcript expires.
 
 ## Gateway mode
 
-The earlier opt-in Gateway mode supports catalog and stock lookups, operating summaries and confirmed expense recording. Environments that use it set `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=gateway`, a private 64-character hexadecimal `NUXT_SHOP_ASSISTANT_SIGNING_SECRET`, and Vercel OIDC or `AI_GATEWAY_API_KEY`. Its default model is `google/gemini-3.8-flash`, which can be overridden with `NUXT_SHOP_ASSISTANT_MODEL`. In this mode, chat text and selected tool results go to the configured model provider. [Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok)
+The earlier opt-in Gateway mode supports catalog and stock lookups, operating summaries and confirmed expense recording. Set `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=gateway`, a private 64-character hexadecimal `NUXT_SHOP_ASSISTANT_SIGNING_SECRET`, and Vercel OIDC or `AI_GATEWAY_API_KEY`. The default model is `google/gemini-3.8-flash` and can be overridden with `NUXT_SHOP_ASSISTANT_MODEL`. This mode sends chat text and selected tool results to the configured provider. [Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok)
 
 ## Local verification
 
-Use a disposable Shop database with the current migrations. For a running disposable local database, apply pending migrations with `pnpm db shop-suit migration up --local`. Serve the checkout with `pnpm dev:shop --current`.
-
-For repeatable browser tests, run `pnpm --filter @building-suit/shop-suit build`, then `pnpm exec playwright test -c apps/shop-suit/playwright.hq-assistant.config.ts` for managed mode or `pnpm exec playwright test -c apps/shop-suit/playwright.assistant.config.ts` for Gateway mode. These tests use synthetic requests and do not call a model provider.
+Use a disposable Shop database with current migrations. Run `pnpm --filter @building-suit/shop-suit build`, then `pnpm exec playwright test -c apps/shop-suit/playwright.hq-assistant.config.ts` for managed mode or `pnpm exec playwright test -c apps/shop-suit/playwright.assistant.config.ts` for Gateway mode. These browser tests use synthetic messages and results.

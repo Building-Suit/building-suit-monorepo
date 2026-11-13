@@ -38,7 +38,6 @@ export interface BsAssistantChatView {
   context: readonly { label: string; value: string }[]
   messages: readonly BsAssistantChatMessage[]
   proposal: { title: string; fields: readonly { label: string; value: string }[] } | null
-  saleAction?: string
   delegation?: {
     enabled: boolean
     title: string

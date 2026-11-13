@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default', middleware: ['auth'] })
-const { copy, view, draft, maximumLength, send, confirmExpense, discard, reset, authorize, openPreparedSale } = useShopAssistant()
+const { copy, view, draft, maximumLength, send, confirmExpense, discard, reset, authorize } = useShopAssistant()
 </script>
 
 <template>
@@ -14,6 +14,5 @@ const { copy, view, draft, maximumLength, send, confirmExpense, discard, reset, 
     @confirm="confirmExpense"
     @discard="discard"
     @authorize="authorize"
-    @open-sale="openPreparedSale"
   />
 </template>

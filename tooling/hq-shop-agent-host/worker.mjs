@@ -1,13 +1,19 @@
 import { isAbsolute, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { createIntentResolver } from './model.mjs'
+import {
+  EMPLOYEE_TEMPLATE, HEAD_AGENT_ID, MODEL_TIMEOUT_MS, loadInference, readApprovedDocs,
+  validateIntent, validateMessages, validateReview,
+} from './model.mjs'
 
 const TOPIC = 'realtime:shop-hq-assistant-jobs'
 const JOIN_TIMEOUT_MS = 15_000
 const HEARTBEAT_MS = 20_000
 const RPC_TIMEOUT_MS = 5_000
 const REAUTH_BEFORE_EXPIRY_MS = 30_000
+const MAX_REVIEW_BATCH = 4
+const MAX_DISPATCH_BATCH = 32
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ALLOWED_SUPABASE_URLS = new Set([
   'https://jvvelvftpfnlogalgxgv.supabase.co',
   'https://fgdzjnsbcxfbiuogbmom.supabase.co',
@@ -41,14 +47,32 @@ export function readConfig(env = process.env) {
   const docsFile = env.SHOP_HQ_DOCS_FILE
   if (docsFile && !isAbsolute(docsFile)) throw new Error('absolute-Shop-docs-path-required')
 
+  const inference = requiredEnv(env, 'SHOP_HQ_INFERENCE_ADAPTER')
+  let inferenceConfig
+  if (inference === 'ollama') {
+    const model = requiredEnv(env, 'SHOP_HQ_OLLAMA_MODEL')
+    const modelDigest = requiredEnv(env, 'SHOP_HQ_OLLAMA_MODEL_DIGEST')
+    if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{0,120}:[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(model) ||
+        /(?:^|[:/._-])cloud(?:$|[:/._-])/i.test(model) || !/^[0-9a-f]{64}$/.test(modelDigest)) {
+      throw new Error('approved-local-model-and-digest-required')
+    }
+    inferenceConfig = { model, modelDigest }
+  } else if (inference === 'module') {
+    const inferenceModule = requiredEnv(env, 'SHOP_HQ_INFERENCE_MODULE')
+    if (!isAbsolute(inferenceModule)) throw new Error('absolute-inference-module-path-required')
+    inferenceConfig = { inferenceModule }
+  } else {
+    throw new Error('invalid-inference-adapter')
+  }
+
   return {
     url,
     key,
     email: requiredEnv(env, 'SHOP_HQ_WORKER_EMAIL'),
     password: requiredEnv(env, 'SHOP_HQ_WORKER_PASSWORD'),
-    openAiKey: requiredEnv(env, 'SHOP_HQ_OPENAI_API_KEY'),
-    model: requiredEnv(env, 'SHOP_HQ_MODEL'),
     docsFile,
+    inference,
+    ...inferenceConfig,
   }
 }
 
@@ -110,18 +134,48 @@ function createShopClient(config, fetcher) {
 }
 
 function validLease(job) {
-  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return typeof job?.jobId === 'string' && uuid.test(job.jobId) &&
-    typeof job.leaseToken === 'string' && uuid.test(job.leaseToken)
+  return typeof job?.jobId === 'string' && UUID.test(job.jobId) &&
+    typeof job.leaseToken === 'string' && UUID.test(job.leaseToken)
+}
+
+function employeeFor(job) {
+  if (typeof job.employeeId !== 'string' || !UUID.test(job.employeeId) || job.employeeTemplate !== EMPLOYEE_TEMPLATE) {
+    throw new Error('invalid-Shop-employee-binding')
+  }
+  return { id: job.employeeId, template: job.employeeTemplate }
+}
+
+function headFor(job) {
+  if (typeof job.headId !== 'string' || !UUID.test(job.headId) || job.headAgentId !== HEAD_AGENT_ID) {
+    throw new Error('invalid-Shop-head-binding')
+  }
+  return { id: job.headId, agentId: job.headAgentId }
+}
+
+function outcomeFor(job) {
+  const outcome = job.outcome
+  if (outcome == null) return null
+  if (!Number.isSafeInteger(outcome.sequence) || outcome.sequence < 1) throw new Error('invalid-Shop-action-outcome')
+  if (outcome.kind === 'receipt' && typeof outcome.invoiceId === 'string' && UUID.test(outcome.invoiceId)) {
+    return { kind: 'receipt' }
+  }
+  if (outcome.kind === 'clarification' && typeof outcome.outcome?.kind === 'string' &&
+      /^[a-z_]{1,50}$/.test(outcome.outcome.kind)) {
+    return { kind: 'clarification', reason: outcome.outcome.kind }
+  }
+  throw new Error('invalid-Shop-action-outcome')
 }
 
 export function startWorker(config, {
+  inference,
   fetcher = fetch,
   Socket = WebSocket,
   log = event => console.info('[shop-hq-worker]', event),
 } = {}) {
+  if (typeof inference?.inferEmployee !== 'function' || typeof inference.reviewEmployee !== 'function') {
+    throw new Error('inference-adapter-required')
+  }
   const shop = createShopClient(config, fetcher)
-  const resolveIntent = createIntentResolver(config, fetcher)
   let connection
   let drain
   let wakeRequested = false
@@ -129,30 +183,106 @@ export function startWorker(config, {
   let reconnectTimer
   let reconnectDelay = 1_000
 
-  async function processJob(job) {
+  async function settle(name, body) {
+    let result
+    try {
+      result = await shop.rpc(name, body)
+    } catch {
+      // A committed update may have lost its reply. Repeat the same fenced call.
+      result = await shop.rpc(name, body)
+    }
+    return result
+  }
+
+  async function settleLease(name, job, body) {
+    if (!validLease(job)) throw new Error('invalid-Shop-lease')
+    const result = await settle(name, { p_job_id: job.jobId, p_lease_token: job.leaseToken, ...body })
+    if (result !== true && result !== false) throw new Error('invalid-Shop-lease-result')
+    if (!result) log('lease-expired-or-revoked')
+  }
+
+  async function processEmployee(job) {
+    const employee = employeeFor(job)
     if (!validLease(job)) throw new Error('invalid-Shop-lease')
     let intent = null
     try {
-      intent = await resolveIntent(job.messages)
+      intent = validateIntent(await inference.inferEmployee({
+        employee,
+        messages: validateMessages(job.messages),
+        feedback: typeof job.feedback === 'string' ? job.feedback.slice(0, 500) : null,
+        outcome: outcomeFor(job),
+        docs: await readApprovedDocs(config.docsFile),
+        signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
+      }))
+      if (job.outcome?.kind === 'receipt' && intent.kind === 'service_sale') {
+        throw new Error('sale-already-issued')
+      }
     } catch {
-      log('intent-unavailable')
+      intent = null
+      log('employee-inference-unavailable')
+    }
+    await settleLease('finish', job, { p_intent: intent, p_succeeded: intent !== null })
+  }
+
+  async function processReview(job) {
+    const head = headFor(job)
+    const employee = employeeFor(job)
+    if (!validLease(job)) throw new Error('invalid-Shop-lease')
+    let review = { approved: false, feedback: null }
+    try {
+      review = validateReview(await inference.reviewEmployee({
+        head,
+        employee,
+        messages: validateMessages(job.messages),
+        intent: validateIntent(job.intent),
+        outcome: outcomeFor(job),
+        docs: await readApprovedDocs(config.docsFile),
+        signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
+      }))
+    } catch {
+      log('head-review-unavailable')
+    }
+    await settleLease('review_finish', job, { p_approved: review.approved, p_feedback: review.feedback })
+  }
+
+  async function executeSale(job) {
+    if (!validLease(job)) throw new Error('invalid-Shop-lease')
+    await settle('execute_sale', { p_job_id: job.jobId, p_lease_token: job.leaseToken })
+  }
+
+  async function drainStages() {
+    const sale = await shop.rpc('sale_claim')
+    if (sale !== null) {
+      await executeSale(sale)
+      return true
     }
 
-    const receipt = {
-      p_job_id: job.jobId,
-      p_lease_token: job.leaseToken,
-      p_intent: intent,
-      p_succeeded: intent !== null,
+    const batch = await shop.rpc('review_claim')
+    if (!Array.isArray(batch) || batch.length > MAX_REVIEW_BATCH) throw new Error('invalid-Shop-review-batch')
+    for (const job of batch) {
+      if (stopped || !connection?.ready) break
+      await processReview(job)
     }
-    let result
-    try {
-      result = await shop.rpc('finish', receipt)
-    } catch {
-      // A finish may have been committed before its response was lost. Repeat the same receipt.
-      result = await shop.rpc('finish', receipt)
+    if (stopped || !connection?.ready) return false
+
+    let assigned = false
+    for (let index = 0; index < MAX_DISPATCH_BATCH && !stopped && connection?.ready; index++) {
+      const dispatch = await shop.rpc('dispatch')
+      if (dispatch === null) break
+      if (typeof dispatch?.jobId !== 'string' || !UUID.test(dispatch.jobId)) throw new Error('invalid-Shop-dispatch')
+      employeeFor(dispatch)
+      headFor(dispatch)
+      assigned = true
     }
-    if (result !== true && result !== false) throw new Error('invalid-Shop-finish')
-    if (!result) log('receipt-expired-or-revoked')
+
+    if (stopped || !connection?.ready) return false
+    const employeeJob = await shop.rpc('claim')
+    if (employeeJob !== null) {
+      await processEmployee(employeeJob)
+      return true
+    }
+
+    return assigned || batch.length > 0
   }
 
   function wake() {
@@ -161,11 +291,7 @@ export function startWorker(config, {
     drain = (async () => {
       do {
         wakeRequested = false
-        while (!stopped && connection?.ready) {
-          const job = await shop.rpc('claim')
-          if (job === null) break
-          await processJob(job)
-        }
+        while (!stopped && connection?.ready && await drainStages()) { /* Recheck durable stages after each transition. */ }
       } while (wakeRequested && !stopped && connection?.ready)
     })().catch(() => {
       log('queue-request-failed')
@@ -314,7 +440,7 @@ async function main() {
     return
   }
 
-  const stop = startWorker(config)
+  const stop = startWorker(config, { inference: await loadInference(config) })
   const shutdown = async () => {
     await stop()
     process.exitCode = 0

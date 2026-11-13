@@ -35,6 +35,7 @@ for (const locale of ['en', 'ar'] as const) {
       submissions++
       return route.fulfill({ status: 202, json: { jobId: 'synthetic-hq-job' } })
     })
+    await page.route('**/api/assistant/hq/recent', route => route.fulfill({ json: [] }))
     let statusReads = 0
     const reply = arabic ? 'تحب تسجّل البيع في الفرع ده؟' : 'Is this sale for the current branch?'
     await page.route('**/api/assistant/hq/result', route => {
@@ -42,7 +43,7 @@ for (const locale of ['en', 'ar'] as const) {
         shopId: 'shop-1', locationId: 'location-1', jobId: 'synthetic-hq-job',
       })
       statusReads++
-      return route.fulfill({ json: statusReads === 1 ? { state: 'working' } : { state: 'completed', text: reply } })
+      return route.fulfill({ json: { state: 'completed', reviewPending: false, updates: [{ sequence: 1, kind: 'reply', text: reply }] } })
     })
 
     await fixtureGoto(page, '/assistant')
@@ -62,7 +63,7 @@ for (const locale of ['en', 'ar'] as const) {
     await composer.press('Enter')
     await expect(page.getByRole('log').getByText(reply)).toBeVisible()
     expect(submissions).toBe(1)
-    expect(statusReads).toBe(2)
+    expect(statusReads).toBeGreaterThan(0)
 
     await page.getByRole('button', { name: arabic ? 'إيقاف المساعد' : 'Turn off agent' }).click()
     await expect(enable).toBeVisible()

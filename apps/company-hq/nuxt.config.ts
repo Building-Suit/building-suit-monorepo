@@ -25,6 +25,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     hqBrainGoogleClientEmail: '', hqBrainGooglePrivateKey: '', hqBrainDevProxyToken,
     hqSupabaseUrl: '', hqSupabasePublishableKey: '', hqEnvironment: 'staging',
+    hqShopStaffPublishableKey: '', hqShopStaffEmail: '', hqShopStaffPassword: '',
     hqFounderEmail: 'ceo@building-suit.com',
     hqAppOrigin: '', hqPushVapidPublicKey: '',
     hqMeetingsDemo: false, hqMeetingsDemoDatabase: '', hqMeetingsLive: false,

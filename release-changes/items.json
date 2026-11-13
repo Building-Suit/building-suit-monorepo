@@ -6482,9 +6482,8 @@
       "apps/shop-suit/.env.example",
       "apps/shop-suit/app/composables/useShopAssistant.ts",
       "apps/shop-suit/app/composables/useShopHqAssistant.ts",
-      "apps/shop-suit/app/composables/useShopHqSaleHandoff.ts",
       "apps/shop-suit/app/pages/assistant.vue",
-      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/pages/sales/[id]/receipt.vue",
       "apps/shop-suit/app/utils/legal.ts",
       "apps/shop-suit/app/utils/shopAssistantCopy.ts",
       "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
@@ -6493,23 +6492,23 @@
       "apps/shop-suit/server/api/assistant/hq",
       "apps/shop-suit/server/utils/shopAssistantRequest.ts",
       "apps/shop-suit/server/utils/shopHqAssistant.ts",
-      "apps/shop-suit/server/utils/shopHqSaleIntent.ts",
-      "apps/shop-suit/shared/shopHqSale.ts",
-      "apps/shop-suit/supabase/migrations/20261113001708_shop_hq_assistant_queue.sql"
+      "apps/shop-suit/supabase/migrations/20261113001708_shop_hq_assistant_queue.sql",
+      "apps/shop-suit/supabase/migrations/20261113015713_shop_hq_assistant_workforce.sql",
+      "apps/shop-suit/supabase/migrations/20261113015737_shop_hq_assistant_service_sales.sql"
     ],
-    "reason": "The shop owner can authorize a Building Suit managed agent to interpret a service sale request and prepare the selected branch’s POS cart.",
+    "reason": "A Building Suit employee handles owner-authorized Shop Suit requests, posts results in chat, and sends the printable receipt for a completed service sale.",
     "notes": {
       "title": {
         "en": "Building Suit shop agent",
         "ar": "مساعد المتجر من Building Suit"
       },
       "summary": {
-        "en": "Ask the Building Suit agent to prepare a service sale from a chat message.",
-        "ar": "اطلب من مساعد Building Suit تجهيز عملية بيع خدمة من خلال رسالة."
+        "en": "Ask Building Suit to record a paid service sale and send its receipt in chat.",
+        "ar": "اطلب من Building Suit تسجيل عملية بيع خدمة مدفوعة وإرسال الإيصال في المحادثة."
       },
       "details": {
-        "en": "Where the managed agent is available, shop owners can enable it for their shop, ask it to find a customer and services, and continue in Point of Sale with those details filled in.",
-        "ar": "عند توفر المساعد المُدار، يقدر صاحب المتجر يفعّله ويطلب منه العثور على العميل والخدمات، وبعدها يكمّل البيع في نقطة البيع بالبيانات اللي المساعد جهّزها."
+        "en": "Where the managed agent is available, owners can authorize Building Suit to handle service sale requests. When Shop Suit can verify the details and payment, the employee posts a link to the printable receipt. Follow-up corrections appear in the same chat.",
+        "ar": "عند توفر المساعد المُدار، يقدر صاحب المتجر يفوّض Building Suit لتنفيذ طلبات بيع الخدمات. لما Shop Suit يتحقق من التفاصيل والدفع، الموظف يرسل رابط الإيصال القابل للطباعة. أي تصحيح بعد المراجعة يظهر في نفس المحادثة."
       }
     },
     "sources": [
@@ -6521,8 +6520,8 @@
         "contains": "scope.client.rpc('shop_hq_assistant_enqueue', {"
       },
       {
-        "path": "apps/shop-suit/server/api/assistant/hq/result.post.ts",
-        "contains": "sale: await resolveShopHqSaleIntent(scope, job.intent),"
+        "path": "apps/shop-suit/app/composables/useShopAssistant.ts",
+        "contains": "/receipt?origin=assistant"
       }
     ]
   },
@@ -6541,6 +6540,13 @@
     "disposition": "internal",
     "paths": [
       "apps/building-suit-docs/app/pages/components.vue",
+      "apps/company-hq/.env.example",
+      "apps/company-hq/app/composables/useHqShopSuitStaff.ts",
+      "apps/company-hq/app/pages/index.vue",
+      "apps/company-hq/nuxt.config.ts",
+      "apps/company-hq/server/api/hq/shop-suit-staff.get.ts",
+      "apps/company-hq/server/utils/shopSuitStaff.ts",
+      "apps/company-hq/shared/shopSuitStaff.ts",
       "apps/shop-suit/app/types/database.types.ts",
       "apps/shop-suit/app/types/shopCrmRpc.ts",
       "apps/shop-suit/playwright.assistant.config.ts",
@@ -6550,11 +6556,13 @@
       "docs/shared/ui-ownership-manifest.json",
       "package.json",
       "packages/ui/src/templates/BsAssistantChatPage.vue",
+      "packages/ui/src/templates/BsHqLayoutPage.vue",
       "packages/ui/src/types/assistantChatPresentation.ts",
+      "packages/ui/src/types/hqLayoutPresentation.ts",
       "release-changes/items.json",
       "tooling/database/test-shop-local.mjs",
       "tooling/hq-shop-agent-host"
     ],
-    "reason": "Shared consent presentation, database contracts and verification support the Shop Suit rollout."
+    "reason": "Shared chat and HQ office presentation, private staffing metadata, database contracts and verification support the Shop Suit rollout."
   }
 ]

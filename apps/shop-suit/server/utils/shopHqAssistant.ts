@@ -3,27 +3,27 @@ import { z } from 'zod'
 export const hqAssistantSelection = { shopId: z.uuid(), locationId: z.uuid() }
 export const hqAssistantAccess = z.object({ enabled: z.boolean(), agentName: z.string().min(1).max(120) })
 export const hqAssistantEnqueue = z.object({ jobId: z.uuid() })
-const commonIntent = { reply: z.string().trim().min(1).max(1_000) }
-const intentSchema = z.discriminatedUnion('kind', [
-  z.strictObject({
-    ...commonIntent,
-    kind: z.literal('reply'),
-    customerName: z.null(),
-    services: z.tuple([]),
-    paymentMethod: z.null(),
-  }),
-  z.strictObject({
-    ...commonIntent,
-    kind: z.literal('service_sale'),
-    customerName: z.string().trim().min(2).max(160),
-    services: z.array(z.string().trim().min(2).max(120)).min(1).max(6),
-    paymentMethod: z.enum(['cash', 'card', 'transfer']).nullable(),
-  }),
+const clarification = z.discriminatedUnion('kind', [
+  z.object({ kind: z.enum(['customer_missing', 'customer_ambiguous', 'service_missing', 'service_ambiguous']), query: z.string().max(160) }),
+  z.object({ kind: z.enum(['cash_shift_required', 'sale_unavailable', 'sale_details_required']) }),
+  z.object({ kind: z.literal('payment_missing'), total: z.number().nonnegative().optional(), currency: z.string().regex(/^[A-Z]{3}$/).optional() }),
+  z.object({ kind: z.literal('amount_mismatch'), total: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/) }),
 ])
-export const hqAssistantJob = z.discriminatedUnion('state', [
-  z.object({ state: z.enum(['queued', 'working', 'failed', 'expired', 'revoked']) }),
-  z.object({ state: z.literal('completed'), intent: intentSchema }),
+const update = z.discriminatedUnion('kind', [
+  z.object({ sequence: z.int().positive(), kind: z.literal('reply'), text: z.string().min(1).max(2_000) }),
+  z.object({ sequence: z.int().positive(), kind: z.literal('receipt'), invoiceId: z.uuid() }),
+  z.object({ sequence: z.int().positive(), kind: z.literal('clarification'), outcome: clarification }),
 ])
+export const hqAssistantJob = z.object({
+  state: z.enum(['queued', 'working', 'completed', 'failed', 'expired', 'revoked']),
+  reviewPending: z.boolean(),
+  updates: z.array(update).max(12),
+})
+export const hqAssistantRecent = z.array(hqAssistantJob.extend({
+  jobId: z.uuid(),
+  requestId: z.uuid(),
+  ownerMessage: z.string().max(2_000).nullable(),
+})).max(24)
 
 export function readHqAssistantRpc<T>(
   schema: z.ZodType<T>,

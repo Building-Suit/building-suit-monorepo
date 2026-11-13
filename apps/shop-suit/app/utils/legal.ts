@@ -138,7 +138,7 @@ export const legalDocuments: Record<
           title: 'Building Suit shop agent',
           paragraphs: [
             'Where available, a shop owner can enable an AI agent operated by Building Suit. We process the messages you send, the shop and location selected for your request, and the records needed to prepare or carry out the requested operation within your Shop Suit permissions.',
-            'For the managed agent, our AI processing provider receives your recent chat messages and instructions needed to interpret your request. Shop Suit looks up customer and catalog records separately. Your messages may contain personal information, so include only what the agent needs to perform the task.',
+            'Building Suit’s Shop Suit Agents department processes your recent chat messages and relevant shop context. An employee handles the request, posts a reply in Shop Suit, and reports the result for review. Shop Suit resolves customer and catalog records separately. Your messages may contain personal information, so include only what the request needs.',
             'We retain authorization records and short-lived request records to operate and protect the service. Our AI processing provider may retain content for service security under its applicable terms. You can turn off the agent in Shop Suit to prevent new requests. Completed business records remain subject to the usual retention rules.',
           ],
         },
@@ -208,7 +208,7 @@ export const legalDocuments: Record<
           title: 'مساعد المتجر من Building Suit',
           paragraphs: [
             'عند توفر المساعد، يمكن لمالك المتجر تفعيل مساعد ذكاء اصطناعي تشغّله Building Suit. نعالج رسائلك وبيانات المتجر والفرع المحددين لطلبك والسجلات اللازمة لتجهيز العملية المطلوبة أو تنفيذها في حدود صلاحياتك في Shop Suit.',
-            'عند استخدام المساعد المُدار، يستلم مزوّد معالجة الذكاء الاصطناعي رسائل المحادثة الأخيرة والتعليمات اللازمة لفهم طلبك. يبحث Shop Suit عن سجلات العملاء والكتالوج بشكل منفصل. قد تتضمن رسائلك بيانات شخصية، لذا أدرج فقط ما يحتاجه المساعد لتنفيذ المهمة.',
+            'يعالج قسم وكلاء Shop Suit التابع لـ Building Suit رسائل المحادثة الأخيرة وبيانات المتجر اللازمة. ينفّذ موظف الطلب ويرد عليك في Shop Suit ويرفع النتيجة للمراجعة. يبحث Shop Suit عن سجلات العملاء والكتالوج بشكل منفصل. قد تتضمن رسائلك بيانات شخصية، لذا أدرج فقط ما يحتاجه الطلب.',
             'نحتفظ بسجلات التفويض وسجلات الطلبات قصيرة الأجل لتشغيل الخدمة وحمايتها. قد يحتفظ مزوّد معالجة الذكاء الاصطناعي بالمحتوى لأمان الخدمة وفقًا لشروطه المطبقة. يمكنك إيقاف المساعد من Shop Suit لمنع إرسال طلبات جديدة. تخضع سجلات العمليات المكتملة لقواعد الاحتفاظ المعتادة.',
           ],
         },
@@ -320,7 +320,7 @@ export const legalDocuments: Record<
           title: '9. Building Suit shop agent',
           paragraphs: [
             'Building Suit owns and operates the optional shop agent and assigns it to your workspace. When you enable it, you authorize Building Suit to process the shop data needed to carry out your requests and perform the Shop Suit actions available under your permissions.',
-            'Submit only requests and information you have authority to share. Review details when the agent asks for clarification or when the requested workflow requires your confirmation. You can withdraw this authorization by turning off the agent in Shop Suit.',
+            'Submit only requests and information you have authority to share. If Building Suit asks for clarification, provide the required details in chat. For a paid sale, state the amount already paid and the payment method. Once the sale is recorded, you can open its receipt in Shop Suit. You can withdraw this authorization by turning off the agent in Shop Suit.',
           ],
         },
         { title: '10. Contact', paragraphs: [`Questions about these terms may be sent to ${publicBusiness.supportEmail}. ${publicBusiness.brand} is based in ${publicBusiness.addressEn}.`] },
@@ -351,7 +351,7 @@ export const legalDocuments: Record<
           title: '9. مساعد المتجر من Building Suit',
           paragraphs: [
             'تمتلك Building Suit مساعد المتجر الاختياري وتشغّله وتعيّنه لمساحة عملك. عند تفعيله، تفوّض Building Suit بمعالجة بيانات المتجر اللازمة لتنفيذ طلباتك وإجراء العمليات المتاحة لك حسب صلاحياتك في Shop Suit.',
-            'أرسل فقط الطلبات والمعلومات التي يحق لك مشاركتها. راجع التفاصيل عندما يطلب المساعد توضيحًا أو عندما تتطلب العملية تأكيدك. يمكنك سحب التفويض بإيقاف المساعد من Shop Suit.',
+            'أرسل فقط الطلبات والمعلومات التي يحق لك مشاركتها. إذا طلبت Building Suit توضيحًا، أرسل التفاصيل المطلوبة في المحادثة. لتسجيل بيع مدفوع، اذكر المبلغ المدفوع وطريقة الدفع. بعد تسجيل البيع، يمكنك فتح إيصال البيع في Shop Suit. يمكنك سحب التفويض بإيقاف المساعد من Shop Suit.',
           ],
         },
         { title: '10. التواصل', paragraphs: [`يمكن إرسال الأسئلة عن هذه الشروط إلى ${publicBusiness.supportEmail}. يقع مقر ${publicBusiness.brand} في ${publicBusiness.addressAr}.`] },

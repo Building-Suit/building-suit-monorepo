@@ -4,7 +4,7 @@ import type { BsAssistantChatCopy, BsAssistantChatView } from '../types/assistan
 
 const props = defineProps<{ copy: BsAssistantChatCopy; view: BsAssistantChatView; maximumLength: number; preview?: boolean }>()
 const draft = defineModel<string>('draft', { required: true })
-const emit = defineEmits<{ send: []; reset: []; confirm: []; discard: []; authorize: [enabled: boolean]; openSale: [] }>()
+const emit = defineEmits<{ send: []; reset: []; confirm: []; discard: []; authorize: [enabled: boolean] }>()
 const transcript = ref<HTMLElement | null>(null)
 const form = ref<HTMLFormElement | null>(null)
 const proposal = ref<HTMLElement | null>(null)
@@ -112,9 +112,6 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
       <div v-if="!preview" class="bs-assistant-chat__controls">
         <p v-if="view.pending === 'send'" class="bs-assistant-chat__progress" role="status">{{ copy.sending }}</p>
         <BsAlert v-if="view.error" tone="error" :description="view.error" />
-        <div v-if="view.saleAction">
-          <BsButton variant="secondary" :disabled="Boolean(view.pending)" @click="emit('openSale')">{{ view.saleAction }}</BsButton>
-        </div>
         <section v-if="view.proposal" ref="proposal" class="bs-assistant-chat__proposal" :aria-labelledby="proposalTitleId">
           <h2 :id="proposalTitleId" tabindex="-1">{{ copy.proposalTitle }}</h2>
           <p dir="auto">{{ view.proposal.title }}</p>
