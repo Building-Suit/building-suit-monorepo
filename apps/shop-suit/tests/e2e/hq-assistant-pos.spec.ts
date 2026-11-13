@@ -106,7 +106,7 @@ test('the floating HQ conversation shows replies promptly, dates the history and
   wake()
   await expect(link).toHaveAttribute('href', `/sales/${invoiceId}/receipt?origin=assistant`)
   const reply = log.getByRole('listitem').filter({ hasText: acknowledgment })
-  await expect(reply).toContainText('The sale was recorded.')
+  await expect(reply).toContainText('I recorded the sale.')
   await expect(reply.getByRole('link')).toHaveCount(1)
   await expect(typing).toHaveCount(0)
   await expect(page).toHaveURL(/\/dashboard/)

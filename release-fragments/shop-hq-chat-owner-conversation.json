@@ -1,0 +1,28 @@
+{
+  "id": "shop-hq-chat-owner-conversation",
+  "task": "SS-HQ-CHAT-OWNER-CONVERSATION",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+    "apps/shop-suit/docs/assistant-chat.md"
+  ],
+  "reason": "The assistant explains its capabilities, asks payment follow-ups using the known total, and directs the owner to records only after confirmation.",
+  "notes": {
+    "title": {
+      "en": "Clearer replies from your Shop Assistant",
+      "ar": "ردود أوضح من مساعد المتجر"
+    },
+    "summary": {
+      "en": "The assistant says what it did and how to open the saved product or receipt.",
+      "ar": "المساعد بيقولك عمل إيه وإزاي تفتح المنتج أو الإيصال اللي اتسجل."
+    },
+    "details": {
+      "en": "If payment details are missing, the assistant asks about payment using the actual sale total. It tells you when a mismatched amount prevented confirmation.",
+      "ar": "لو بيانات الدفع ناقصة، المساعد بيسأل عنها باستخدام إجمالي البيع الحقيقي. وبيقولك لو اختلاف المبلغ منع تأكيد البيع."
+    }
+  }
+}
