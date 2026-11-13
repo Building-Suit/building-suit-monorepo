@@ -7,6 +7,7 @@ const maximumLength = 2_000
 const encode = new TextEncoder()
 const historyRetryMs = 5_000
 const fallbackForMs = 425_000
+const minimumTypingMs = 750
 
 export function useShopHqAssistant() {
   const config = useRuntimeConfig()
@@ -32,6 +33,7 @@ export function useShopHqAssistant() {
   const accessError = ref(false)
   const pending = ref<BsAssistantChatView['pending']>(null)
   const sendError = ref<keyof ReturnType<typeof shopAssistantCopy>['error'] | null>(null)
+  const replyEntrance = shallowRef<{ afterSequence: number; jobId?: string }>()
   const waiting = computed(() => activeJobs.value.some(job => job.state !== 'completed'))
   const scope = computed(() => {
     const actor = user.value?.id, shopId = currentId.value, locationId = currentLocationId.value
@@ -52,8 +54,9 @@ export function useShopHqAssistant() {
   let binding: Binding | undefined
   let releasingChannel: Promise<unknown> = Promise.resolve()
   let retry: { message: string; requestId: string } | undefined
+  let typingTimer: ReturnType<typeof setTimeout> | undefined
 
-  const messages = computed<BsAssistantChatMessage[]>(() => entries.value.map(entry => {
+  function presentEntry(entry: ShopHqChatMessage): BsAssistantChatMessage {
     const id = entry.sequence
     if (entry.kind === 'message') return { id, role: entry.role, text: entry.text }
     if (entry.kind === 'receipt') return {
@@ -71,7 +74,35 @@ export function useShopHqAssistant() {
         : outcome.kind === 'payment_missing' && amount ? labels.value.paymentForTotal(amount)
           : labels.value[outcome.kind],
     }
-  }))
+  }
+
+  const messages = computed<BsAssistantChatMessage[]>(() => {
+    const presented: BsAssistantChatMessage[] = []
+    const acknowledgments = new Map<string, BsAssistantChatMessage>()
+    const unfinished = new Set(activeJobs.value.filter(job => job.state !== 'completed').map(job => job.jobId))
+    const entrance = replyEntrance.value
+    for (const entry of entries.value) {
+      if (entry.role === 'assistant' && (
+        unfinished.has(entry.jobId) ||
+        (entrance && entry.sequence > entrance.afterSequence && (!entrance.jobId || entry.jobId === entrance.jobId))
+      )) continue
+
+      const message = presentEntry(entry)
+      if (entry.kind === 'receipt' || entry.kind === 'clarification') {
+        // Checkout can finish on a later event. Keep its result with the worker's acknowledgment.
+        const acknowledgment = acknowledgments.get(entry.jobId)
+        if (acknowledgment) {
+          acknowledgment.outcome = message.text
+          acknowledgment.link = message.link
+          acknowledgments.delete(entry.jobId)
+          continue
+        }
+      }
+      presented.push(message)
+      if (entry.kind === 'message' && entry.role === 'assistant') acknowledgments.set(entry.jobId, message)
+    }
+    return presented
+  })
 
   const canSend = computed(() => Boolean(access.value?.enabled && access.value.queueAvailable && !accessError.value))
   const assistant = computed<BsShellAssistantChat | undefined>(() => {
@@ -81,7 +112,7 @@ export function useShopHqAssistant() {
       copy: {
         ...copy.value.chat, title: label.title, assistant: isArabic.value ? label.title : access.value?.agentName ?? label.title,
         privacy: label.introduction, emptyDescription: label.emptyDescription,
-        loadEarlier: label.loadEarlier, loadingEarlier: label.loadingEarlier,
+        loadEarlier: label.loadEarlier, loadingEarlier: label.loadingEarlier, typing: label.typing,
       },
       view: {
         state: loading.value ? 'loading' : scope.value ? 'ready' : 'noLocation',
@@ -96,14 +127,15 @@ export function useShopHqAssistant() {
           enable: label.enable, disable: label.disable,
           policies: [{ to: '/privacy', label: label.privacy }, { to: '/terms', label: label.terms }],
         } : undefined,
-        canSend: canSend.value && !waiting.value,
+        canSend: canSend.value && !waiting.value && !replyEntrance.value,
         showComposer: Boolean(access.value?.enabled && access.value.queueAvailable),
         notice: access.value && !access.value.queueAvailable ? label.queueUnavailable : undefined,
         hasMore: hasMore.value,
         loadingEarlier: loadingEarlier.value,
         historyLoading: historyLoading.value,
-        pendingJobs: activeJobs.value.map(job => ({ id: job.jobId, label: job.state === 'queued'
-          ? label.requestQueued : job.state === 'working' ? label.requestWorking : label.requestReviewing })),
+        typing: Boolean(!historyError.value && (pending.value === 'send' || replyEntrance.value || waiting.value)),
+        pendingJobs: activeJobs.value.filter(job => job.reviewPending)
+          .map(job => ({ id: job.jobId, label: label.requestReviewing })),
         pending: pending.value,
         error: accessError.value ? label.accessError : historyError.value ? label.historyError
           : sendError.value ? copy.value.error[sendError.value] : null,
@@ -267,6 +299,7 @@ export function useShopHqAssistant() {
   }
 
   function clearHistory() {
+    clearReplyEntrance()
     access.value = undefined
     entries.value = []
     activeJobs.value = []
@@ -286,6 +319,13 @@ export function useShopHqAssistant() {
   function close() {
     opened.value = false
     clearTimeout(binding?.timer)
+    clearReplyEntrance()
+  }
+
+  function clearReplyEntrance() {
+    clearTimeout(typingTimer)
+    typingTimer = undefined
+    replyEntrance.value = undefined
   }
 
   async function authorize(allow: boolean) {
@@ -318,7 +358,7 @@ export function useShopHqAssistant() {
   async function send() {
     const active = binding
     const message = draft.value.trim()
-    if (!active || !canSend.value || waiting.value || pending.value || !message) return
+    if (!active || !canSend.value || waiting.value || pending.value || replyEntrance.value || !message) return
     if (encode.encode(message).length > maximumLength) {
       sendError.value = 'tooLong'
       return
@@ -326,11 +366,16 @@ export function useShopHqAssistant() {
     if (retry?.message !== message) retry = { message, requestId: crypto.randomUUID() }
     pending.value = 'send'
     sendError.value = null
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      replyEntrance.value = { afterSequence: entries.value.at(-1)?.sequence ?? 0 }
+      typingTimer = setTimeout(clearReplyEntrance, minimumTypingMs)
+    }
     try {
       const result = await $fetch<{ jobId: string }>('/api/assistant/hq/requests', {
         method: 'POST', body: { ...apiScope(active), ...retry }, signal: active.controller.signal, timeout: 10_000,
       })
       if (binding !== active) return
+      if (replyEntrance.value) replyEntrance.value = { ...replyEntrance.value, jobId: result.jobId }
       active.retryUntil = Date.now() + fallbackForMs
       if (draft.value.trim() === message) draft.value = ''
       retry = undefined
@@ -340,6 +385,7 @@ export function useShopHqAssistant() {
       await refresh(active)
     } catch (error) {
       if (binding !== active) return
+      clearReplyEntrance()
       const status = (error as { statusCode?: number })?.statusCode
       sendError.value = status === 429 ? 'busy' : status === 401 || status === 403 ? 'access'
         : status === 503 ? 'unavailable' : 'message'

@@ -1,0 +1,27 @@
+{
+  "id": "shop-hq-chat-typing-motion-support",
+  "task": "SS-HQ-CHAT-TYPING-MOTION",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/company-hq/app/composables/useHqShopSuitStaff.ts",
+    "apps/company-hq/i18n/locales/ar.json",
+    "apps/company-hq/i18n/locales/en.json",
+    "apps/shop-suit/tests/e2e/hq-assistant-authorization.spec.ts",
+    "apps/shop-suit/tests/e2e/hq-assistant-pos.spec.ts",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
+    "packages/ui/src/types/assistantChatPresentation.ts",
+    "release-changes/items.json"
+  ],
+  "reason": "Shared motion presentation, Shop browser coverage, and private HQ appointment and roster status labels support the chat and its workforce."
+}

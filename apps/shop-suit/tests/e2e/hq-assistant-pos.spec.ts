@@ -7,7 +7,7 @@ const topic = 'realtime:shop-hq-assistant-chat:00000000-0000-4000-8000-000000000
 const prompt = 'عميل اسمه احمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.'
 const createdAt = '2026-11-13T10:00:00.000Z'
 
-test('the floating HQ conversation restores receipts and streams reviewed corrections', async ({ page }) => {
+test('the floating HQ conversation pairs the reply and receipt after typing and streams corrections', async ({ page }) => {
   const { calls } = await pilotFixture(page, 'en')
   let wake = () => { throw new Error('Realtime subscription not ready') }
   let joins = 0
@@ -35,22 +35,27 @@ test('the floating HQ conversation restores receipts and streams reviewed correc
     json: { enabled: true, agentName: 'Shop Suit Agent', queueAvailable: true },
   }))
   let stage = -1
+  let reads = 0
   const row = (sequence: number, role: 'user' | 'assistant', text: string) =>
     ({ sequence, jobId, createdAt, kind: 'message', role, text })
   const receipt = {
     sequence: 3, jobId, createdAt, role: 'assistant', kind: 'receipt', link: { destination: 'receipt', saleId: invoiceId },
   }
   const correction = 'راجعنا الفاتورة، والخدمتين متسجلين.'
-  await page.route('**/api/assistant/hq/history', route => route.fulfill({ json: {
-    messages: stage < 0 ? [] : [
-      row(1, 'user', prompt),
-      ...(stage >= 1 ? [row(2, 'assistant', 'حاضر، هراجع بيانات البيع.'), receipt] : []),
-      ...(stage >= 2 ? [row(4, 'assistant', correction)] : []),
-    ],
-    hasMore: false,
-    activeJobs: stage === 0 ? [{ jobId, state: 'working', reviewPending: false }]
-      : stage === 1 ? [{ jobId, state: 'completed', reviewPending: true }] : [],
-  } }))
+  await page.route('**/api/assistant/hq/history', route => {
+    reads++
+    return route.fulfill({ json: {
+      messages: stage < 0 ? [] : [
+        row(1, 'user', prompt),
+        ...(stage >= 1 ? [row(2, 'assistant', 'حاضر، هراجع بيانات البيع.')] : []),
+        ...(stage >= 2 ? [receipt] : []),
+        ...(stage >= 3 ? [row(4, 'assistant', correction)] : []),
+      ],
+      hasMore: false,
+      activeJobs: stage === 0 || stage === 1 ? [{ jobId, state: 'working', reviewPending: false }]
+        : stage === 2 ? [{ jobId, state: 'completed', reviewPending: true }] : [],
+    } })
+  })
   await page.route('**/api/assistant/hq/requests', route => {
     expect(route.request().postDataJSON()).toMatchObject({
       shopId: 'shop-1', locationId: 'location-1', message: prompt,
@@ -64,18 +69,37 @@ test('the floating HQ conversation restores receipts and streams reviewed correc
   await composer.fill(prompt)
   await composer.press('Enter')
   await expect.poll(() => joins).toBe(1)
-  await expect(page.getByRole('log').getByText(prompt)).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open receipt' })).toHaveCount(0)
+  const log = page.getByRole('log', { name: 'Conversation' })
+  const typing = log.locator('.bs-assistant-chat__typing')
+  const acknowledgment = 'حاضر، هراجع بيانات البيع.'
+  const link = log.getByRole('link', { name: 'Open receipt' })
+  await expect(log.getByText(prompt)).toBeVisible()
+  await expect(typing).toBeVisible()
+  await expect(typing.locator('span')).toHaveCount(3)
+  await expect(typing.locator('span').first()).toHaveCSS('animation-iteration-count', 'infinite')
+  await expect(page.getByRole('status').filter({ hasText: 'Shop Suit Agent is typing' })).toHaveCount(1)
+  const readsBeforeAcknowledgment = reads
   stage = 1
   wake()
-  const link = page.getByRole('link', { name: 'Open receipt' })
+  await expect.poll(() => reads).toBeGreaterThan(readsBeforeAcknowledgment)
+  await expect(typing).toBeVisible()
+  await expect(composer).toHaveAttribute('readonly', '')
+  await expect(log.getByText(acknowledgment)).toHaveCount(0)
+  await expect(link).toHaveCount(0)
+  stage = 2
+  wake()
   await expect(link).toHaveAttribute('href', `/sales/${invoiceId}/receipt?origin=assistant`)
+  const reply = log.getByRole('listitem').filter({ hasText: acknowledgment })
+  await expect(reply).toContainText('The sale was recorded.')
+  await expect(reply.getByRole('link')).toHaveCount(1)
+  await expect(typing).toHaveCount(0)
   await expect(page).toHaveURL(/\/dashboard/)
   await expect(composer).toBeEditable()
 
-  stage = 2
+  stage = 3
   wake()
-  await expect(page.getByRole('log').getByText(correction)).toBeVisible()
+  await expect(log.getByText(correction)).toBeVisible()
+  await expect(log.getByRole('listitem').filter({ hasText: correction }).getByRole('link')).toHaveCount(0)
   await expect(link).toHaveCount(1)
   expect(calls.some(call => ['save_pos_sale_draft', 'checkout_pos_sale'].includes(call.name))).toBe(false)
   await link.click()

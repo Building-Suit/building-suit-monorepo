@@ -384,6 +384,19 @@
         "offline": "Offline",
         "unknown": "Needs attention"
       },
+      "shopRoster": {
+        "head": "Department Head",
+        "employee": "Shop Suit employee",
+        "appointed": "Appointed",
+        "assigned": "Assigned to shop",
+        "busy": "Request assigned at last sync",
+        "idle": "No request assigned at last sync",
+        "lastSync": "Roster updated {time}",
+        "unconfigured": "Waiting for the first roster sync",
+        "loading": "Checking the Shop Suit roster",
+        "overflow": "Shop roster exceeds the current display limit",
+        "unavailable": "Shop roster refresh unavailable"
+      },
       "dictation": {
         "start": "Start voice transcription",
         "stop": "Stop voice transcription",

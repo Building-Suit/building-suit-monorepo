@@ -6678,12 +6678,13 @@
         "ar": "افتح مساعد Building Suit من أي صفحة بعد تسجيل الدخول وكمّل محادثة الفرع اللي اخترته."
       },
       "details": {
-        "en": "Shop Suit saves your messages, agent replies, and receipt links. Replies appear live, and you can reopen the chat or load older messages even while new requests are paused.",
-        "ar": "Shop Suit بيحفظ رسائلك وردود المساعد وروابط الفواتير. الردود بتظهر أول بأول، وتقدر تفتح المحادثة تاني أو تعرض الرسائل الأقدم حتى لو إرسال طلبات جديدة متوقف."
+        "en": "Shop Suit saves your messages, agent replies, and receipt links. Three dots show while the agent replies. The reply and any receipt link appear together. You can read saved messages while new requests are paused.",
+        "ar": "Shop Suit بيحفظ رسائلك وردود المساعد وروابط الفواتير. بتظهر ثلاث نقط أثناء تجهيز الرد، وبيظهر الرد مع رابط الإيصال لو موجود. تقدر تقرا الرسائل المحفوظة حتى لو إرسال طلبات جديدة متوقف."
       }
     },
     "sources": [
-      "shop-persistent-hq-agent-chat"
+      "shop-persistent-hq-agent-chat",
+      "shop-hq-chat-typing-motion"
     ],
     "evidence": [
       {
@@ -6697,6 +6698,10 @@
       {
         "path": "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
         "contains": "bs-floating-assistant"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsAssistantChat.vue",
+        "contains": "bs-assistant-chat__typing"
       }
     ]
   },
@@ -6736,5 +6741,32 @@
       "tooling/hq-shop-agent-host/README.md"
     ],
     "reason": "Shared UI contracts, generated database types and tests cover persistent chat while preserving the existing Gateway and HQ worker protocols."
+  },
+  {
+    "id": "shop-hq-chat-typing-motion-support",
+    "task": "SS-HQ-CHAT-TYPING-MOTION",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/company-hq/app/composables/useHqShopSuitStaff.ts",
+      "apps/company-hq/i18n/locales/ar.json",
+      "apps/company-hq/i18n/locales/en.json",
+      "apps/shop-suit/tests/e2e/hq-assistant-authorization.spec.ts",
+      "apps/shop-suit/tests/e2e/hq-assistant-pos.spec.ts",
+      "packages/ui/src/organisms/BsAssistantChat.vue",
+      "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
+      "packages/ui/src/types/assistantChatPresentation.ts",
+      "release-changes/items.json"
+    ],
+    "reason": "Shared motion presentation, Shop browser coverage, and private HQ appointment and roster status labels support the chat and its workforce."
   }
 ]

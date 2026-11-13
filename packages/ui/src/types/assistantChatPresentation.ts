@@ -7,6 +7,7 @@ export interface BsAssistantChatMessage {
   id: number
   role: 'user' | 'assistant' | 'receipt'
   text: string
+  outcome?: string
   link?: BsAssistantChatLink
 }
 
@@ -32,6 +33,7 @@ export interface BsAssistantChatCopy {
   proposalHelp: string
   loadEarlier?: string
   loadingEarlier?: string
+  typing?: string
   status: Record<'loading' | 'denied' | 'unavailable' | 'noLocation', string>
 }
 
@@ -56,6 +58,7 @@ export interface BsAssistantChatView {
   hasMore?: boolean
   loadingEarlier?: boolean
   historyLoading?: boolean
+  typing?: boolean
   pendingJobs?: readonly { id: string; label: string }[]
 }
 

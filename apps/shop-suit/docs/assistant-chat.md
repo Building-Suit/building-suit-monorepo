@@ -8,7 +8,7 @@ For a service sale, send the customer's name and services. Include the amount an
 
 > عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.
 
-If Shop Suit needs another detail, reply in chat. When the sale succeeds, choose **Open receipt** from the employee's reply and print if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
+Three dots show while the employee prepares the reply. If Shop Suit needs another detail, reply in chat. When the sale succeeds, the response includes **Open receipt** so you can print it if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
 
 ## Managed worker setup
 

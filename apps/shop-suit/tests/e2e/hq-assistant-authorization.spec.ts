@@ -11,6 +11,7 @@ for (const locale of ['en', 'ar'] as const) {
   test(`floating HQ chat saves history across navigation, reload and authorization changes in ${locale}`, async ({ page }) => {
     const ar = locale === 'ar'
     await page.setViewportSize({ width: ar ? 390 : 1440, height: 850 })
+    if (ar) await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.addInitScript(theme => localStorage.setItem('building-suit.theme', theme), ar ? 'dark' : 'light')
     await pilotFixture(page, locale)
 
@@ -27,6 +28,7 @@ for (const locale of ['en', 'ar'] as const) {
     let queueAvailable = true
     let submissions = 0
     let earlierReads = 0
+    const reducedMotionReply = Promise.withResolvers<undefined>()
 
     await page.route('**/api/assistant/hq/access', route => {
       const request = route.request().postDataJSON()
@@ -52,11 +54,12 @@ for (const locale of ['en', 'ar'] as const) {
         activeJobs: [],
       } })
     })
-    await page.route('**/api/assistant/hq/requests', route => {
+    await page.route('**/api/assistant/hq/requests', async route => {
       expect(enabled).toBe(true)
       expect(route.request().postDataJSON()).toEqual({
         shopId: 'shop-1', locationId: 'location-1', requestId: expect.stringMatching(/^[0-9a-f-]{36}$/), message: prompt,
       })
+      if (ar) await reducedMotionReply.promise
       submissions++
       return route.fulfill({ status: 202, json: { jobId } })
     })
@@ -79,8 +82,28 @@ for (const locale of ['en', 'ar'] as const) {
     await page.screenshot({ path: `${evidence}/hq-assistant-floating-${locale}.png`, animations: 'disabled' })
 
     await enable.click()
+    if (!ar) {
+      const now = new Date()
+      await page.clock.install({ time: now })
+      await page.clock.pauseAt(new Date(now.getTime() + 1000))
+    }
     await composer.fill(prompt)
     await composer.press('Enter')
+    if (!ar) {
+      await expect(page.getByRole('log').getByText(prompt)).toBeVisible()
+      await expect(page.getByRole('status').filter({ hasText: 'Shop Suit Agent is typing' })).toHaveCount(1)
+      await expect(page.getByRole('log').getByText(reply)).toHaveCount(0)
+      await page.clock.runFor(750)
+      await page.clock.resume()
+    } else {
+      try {
+        const typing = page.getByRole('log').locator('.bs-assistant-chat__typing')
+        await expect(typing).toBeVisible()
+        await expect(typing.locator('span').first()).toHaveCSS('animation-name', 'none')
+      } finally {
+        reducedMotionReply.resolve(undefined)
+      }
+    }
     await expect(page.getByRole('log').getByText(reply)).toBeVisible()
     expect(submissions).toBe(1)
 

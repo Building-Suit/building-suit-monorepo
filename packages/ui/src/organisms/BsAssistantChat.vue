@@ -31,22 +31,31 @@ function handleComposerKey(event: KeyboardEvent) {
   submit()
 }
 
-function scrollToLatest() {
-  if (transcript.value) transcript.value.scrollTop = transcript.value.scrollHeight
+function scrollToLatest(animate = false) {
+  const region = transcript.value
+  if (!region) return
+  const smooth = animate && props.compact && window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+  region.scrollTo({ top: region.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
 }
 
-onMounted(scrollToLatest)
+onMounted(() => scrollToLatest())
 watch(
-  () => [props.view.messages[0]?.id, props.view.messages.at(-1)?.id] as const,
-  async ([first, last], [previousFirst, previousLast]) => {
+  [
+    () => props.view.messages[0]?.id,
+    () => props.view.messages.at(-1)?.id,
+    () => props.view.messages.at(-1)?.outcome,
+    () => props.view.typing,
+  ],
+  async ([first, last, , typing], [previousFirst, previousLast, , previousTyping]) => {
     const region = transcript.value
     if (!region) return
     const { scrollTop, scrollHeight, clientHeight } = region
     const prepended = first !== previousFirst && last === previousLast
     const nearEnd = scrollHeight - scrollTop - clientHeight < 72
+    const startedSending = typing && !previousTyping && props.view.pending === 'send'
     await nextTick()
     if (prepended) region.scrollTop = scrollTop + region.scrollHeight - scrollHeight
-    else if (nearEnd) scrollToLatest()
+    else if (nearEnd || startedSending) scrollToLatest(!typing)
   },
 )
 
@@ -92,7 +101,7 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
     <p class="bs-assistant-chat__privacy">{{ copy.privacy }}</p>
     <div ref="transcript" class="bs-assistant-chat__transcript" role="log" :aria-label="copy.transcript" aria-live="polite" tabindex="0">
       <p v-if="view.historyLoading" class="bs-assistant-chat__progress" role="status">{{ copy.status.loading }}</p>
-      <div v-else-if="!view.messages.length" class="bs-assistant-chat__empty">
+      <div v-else-if="!view.messages.length && !view.typing" class="bs-assistant-chat__empty">
         <BsIcon name="chat" :size="26" />
         <h2>{{ copy.emptyTitle }}</h2>
         <p>{{ copy.emptyDescription }}</p>
@@ -102,20 +111,30 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
           {{ view.loadingEarlier ? copy.loadingEarlier || copy.loadEarlier : copy.loadEarlier }}
         </BsButton>
       </div>
-      <ol v-if="view.messages.length" class="bs-assistant-chat__messages">
+      <TransitionGroup
+        tag="ol"
+        name="bs-assistant-message"
+        :css="Boolean(compact)"
+        class="bs-assistant-chat__messages"
+      >
         <li v-for="message in view.messages" :key="message.id" class="bs-assistant-chat__message" :data-role="message.role">
           <strong>{{ copy[message.role] }}</strong>
           <p dir="auto">{{ message.text }}</p>
+          <p v-if="message.outcome" dir="auto">{{ message.outcome }}</p>
           <BsLink v-if="message.link" :to="message.link.to" variant="standalone">
             {{ message.link.label }}
             <BsIcon name="arrowRight" :size="16" directional />
           </BsLink>
         </li>
-      </ol>
+        <li v-if="view.typing" key="typing" class="bs-assistant-chat__message bs-assistant-chat__typing" aria-hidden="true">
+          <span /><span /><span />
+        </li>
+      </TransitionGroup>
     </div>
+    <p v-if="copy.typing" class="sr-only" role="status">{{ view.typing ? copy.typing : '' }}</p>
 
     <div v-if="!preview" class="bs-assistant-chat__controls">
-      <p v-if="view.pending === 'send'" class="bs-assistant-chat__progress" role="status">{{ copy.sending }}</p>
+      <p v-if="view.pending === 'send' && !copy.typing" class="bs-assistant-chat__progress" role="status">{{ copy.sending }}</p>
       <ul v-if="view.pendingJobs?.length" class="bs-assistant-chat__jobs" role="status">
         <li v-for="job in view.pendingJobs" :key="job.id" dir="auto">{{ job.label }}</li>
       </ul>
@@ -168,7 +187,7 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
           type="submit"
           :aria-label="copy.send"
           :title="copy.send"
-          :pending="view.pending === 'send'"
+          :pending="view.pending === 'send' && !copy.typing"
           :disabled="!sendable"
         >
           <BsIcon name="send" :size="20" directional />
@@ -275,6 +294,40 @@ watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
   align-items: center;
   gap: var(--bs-space-1);
   margin-block-start: var(--bs-space-1);
+}
+
+.bs-assistant-chat__typing {
+  display: flex;
+  align-items: center;
+  gap: var(--bs-space-1);
+  min-height: 2.5rem;
+}
+
+.bs-assistant-chat__typing span {
+  width: .375rem;
+  height: .375rem;
+  background: var(--bs-text-muted);
+  border-radius: var(--bs-radius-full);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bs-assistant-message-enter-active {
+    transition: opacity var(--bs-motion-default), transform var(--bs-motion-default);
+  }
+
+  .bs-assistant-message-enter-from {
+    opacity: 0;
+    transform: translateY(var(--bs-space-1));
+  }
+
+  .bs-assistant-chat__typing span { animation: bs-assistant-typing 950ms ease-in-out infinite; }
+  .bs-assistant-chat__typing span:nth-child(2) { animation-delay: 110ms; }
+  .bs-assistant-chat__typing span:nth-child(3) { animation-delay: 220ms; }
+}
+
+@keyframes bs-assistant-typing {
+  0%, 65%, 100% { opacity: .55; transform: none; }
+  32% { opacity: 1; transform: translateY(calc(-1 * var(--bs-space-1))); }
 }
 
 .bs-assistant-chat__controls {

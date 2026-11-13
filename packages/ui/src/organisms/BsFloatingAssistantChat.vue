@@ -19,6 +19,7 @@ const panelId = useId()
 const titleId = useId()
 const heading = ref<HTMLElement | null>(null)
 const launcher = ref<HTMLElement | null>(null)
+const renderChat = ref(false)
 const { open, trigger, close, onKeydown } = useNavigationDisclosure()
 
 function focusPanel() {
@@ -31,9 +32,14 @@ async function openPanel() {
     return
   }
 
+  renderChat.value = true
   open.value = true
   await nextTick()
   if (open.value) focusPanel()
+}
+
+function finishClosing() {
+  if (!open.value) renderChat.value = false
 }
 
 function handleEscape(event: KeyboardEvent) {
@@ -63,70 +69,78 @@ onMounted(() => { if (props.assistant.openRequest) void openPanel() })
         <BsIcon name="chat" :size="23" />
       </BsButton>
     </div>
-    <section
-      v-show="open"
-      :id="panelId"
-      class="bs-floating-assistant__panel"
-      :aria-labelledby="titleId"
-      @keydown="handleEscape"
-    >
-      <header class="bs-floating-assistant__header">
-        <div class="bs-floating-assistant__title">
-          <h2 :id="titleId" ref="heading" tabindex="-1">{{ assistant.copy.title }}</h2>
-          <p v-if="assistant.view.context.length">
-            <template v-for="(item, index) in assistant.view.context" :key="item.label">
-              <span v-if="index" aria-hidden="true"> · </span><bdi>{{ item.value }}</bdi>
-            </template>
-          </p>
+    <Transition name="bs-floating-assistant-panel" @after-leave="finishClosing">
+      <section
+        v-show="open"
+        :id="panelId"
+        class="bs-floating-assistant__panel"
+        :aria-labelledby="titleId"
+        :inert="!open"
+        @keydown="handleEscape"
+      >
+        <header class="bs-floating-assistant__header">
+          <div class="bs-floating-assistant__title">
+            <h2 :id="titleId" ref="heading" tabindex="-1">{{ assistant.copy.title }}</h2>
+            <p v-if="assistant.view.context.length">
+              <template v-for="(item, index) in assistant.view.context" :key="item.label">
+                <span v-if="index" aria-hidden="true"> · </span><bdi>{{ item.value }}</bdi>
+              </template>
+            </p>
+          </div>
+          <BsButton
+            variant="icon"
+            :aria-label="assistant.closeLabel"
+            :title="assistant.closeLabel"
+            @click="close(true)"
+          >
+            <BsIcon name="close" :size="20" />
+          </BsButton>
+          <BsButton
+            v-if="assistant.view.state === 'ready' && assistant.view.delegation?.enabled"
+            data-assistant-revoke
+            class="bs-floating-assistant__revoke"
+            variant="text"
+            size="sm"
+            :pending="assistant.view.pending === 'access'"
+            @click="emit('authorize', false)"
+          >
+            {{ assistant.view.delegation.disable }}
+          </BsButton>
+        </header>
+        <div class="bs-floating-assistant__content">
+          <BsAssistantChat
+            v-if="renderChat"
+            v-model:draft="draft"
+            :copy="assistant.copy"
+            :view="assistant.view"
+            :maximum-length="assistant.maximumLength"
+            compact
+            @send="emit('send')"
+            @confirm="emit('confirm')"
+            @discard="emit('discard')"
+            @authorize="emit('authorize', $event)"
+            @load-earlier="emit('loadEarlier')"
+          />
         </div>
-        <BsButton
-          variant="icon"
-          :aria-label="assistant.closeLabel"
-          :title="assistant.closeLabel"
-          @click="close(true)"
-        >
-          <BsIcon name="close" :size="20" />
-        </BsButton>
-        <BsButton
-          v-if="assistant.view.state === 'ready' && assistant.view.delegation?.enabled"
-          data-assistant-revoke
-          class="bs-floating-assistant__revoke"
-          variant="text"
-          size="sm"
-          :pending="assistant.view.pending === 'access'"
-          @click="emit('authorize', false)"
-        >
-          {{ assistant.view.delegation.disable }}
-        </BsButton>
-      </header>
-      <div class="bs-floating-assistant__content">
-        <BsAssistantChat
-          v-if="open"
-          v-model:draft="draft"
-          :copy="assistant.copy"
-          :view="assistant.view"
-          :maximum-length="assistant.maximumLength"
-          compact
-          @send="emit('send')"
-          @confirm="emit('confirm')"
-          @discard="emit('discard')"
-          @authorize="emit('authorize', $event)"
-          @load-earlier="emit('loadEarlier')"
-        />
-      </div>
-    </section>
+      </section>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
 .bs-floating-assistant {
   position: fixed;
+  display: grid;
+  align-items: end;
+  justify-items: end;
   inset-inline-end: var(--bs-space-4);
   inset-block-end: calc(5rem + env(safe-area-inset-bottom));
   z-index: 40;
   width: max-content;
   max-width: calc(100% - 2 * var(--bs-space-4));
 }
+
+.bs-floating-assistant > * { grid-area: 1 / 1; }
 
 .bs-floating-assistant__launcher {
   display: inline-flex;
@@ -149,6 +163,21 @@ onMounted(() => { if (props.assistant.openRequest) void openPanel() })
   border-radius: var(--bs-radius-card);
   box-shadow: var(--bs-elevation-3);
   overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bs-floating-assistant-panel-enter-active,
+  .bs-floating-assistant-panel-leave-active {
+    transition: opacity var(--bs-motion-default), transform var(--bs-motion-default);
+  }
+
+  .bs-floating-assistant-panel-leave-active { pointer-events: none; }
+
+  .bs-floating-assistant-panel-enter-from,
+  .bs-floating-assistant-panel-leave-to {
+    opacity: 0;
+    transform: translateY(var(--bs-space-2));
+  }
 }
 
 .bs-floating-assistant__header {

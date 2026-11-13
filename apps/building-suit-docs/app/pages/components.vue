@@ -132,8 +132,12 @@ const assistantAuthorizationView = computed<BsAssistantChatView>(() => ({
 const floatingAssistantExample = ref(false)
 const floatingAssistantDraft = ref('')
 const floatingAssistant = computed<BsShellAssistantChat>(() => ({
-  copy: { ...assistantExampleCopy.value, loadEarlier: isArabic.value ? 'عرض الرسائل الأقدم' : 'Load earlier messages' },
-  view: { ...assistantExampleView.value, canSend: false, showComposer: false },
+  copy: {
+    ...assistantExampleCopy.value,
+    loadEarlier: isArabic.value ? 'عرض الرسائل الأقدم' : 'Load earlier messages',
+    typing: isArabic.value ? 'المساعد يكتب الرد' : 'Assistant is typing',
+  },
+  view: { ...assistantExampleView.value, messages: assistantExampleView.value.messages.slice(0, 1), typing: true, canSend: false, showComposer: false },
   maximumLength: 2000,
   launcherLabel: isArabic.value ? 'افتح المحادثة التوضيحية' : 'Open sample conversation',
   closeLabel: ui('close'),
