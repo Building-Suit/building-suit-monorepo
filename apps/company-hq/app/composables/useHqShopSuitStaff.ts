@@ -30,7 +30,7 @@ export function useHqShopSuitStaff(isFounder: () => boolean) {
     const rows = new Map<string, Staff>()
     let after: string | null = null
     let observedAt: string | null = null
-    let nextStatus: StaffPage['status'] = 'unconfigured'
+    let nextStatus: StaffPage['status']
     try {
       do {
         const result: StaffPage = await $fetch('/api/hq/shop-suit-staff', {
