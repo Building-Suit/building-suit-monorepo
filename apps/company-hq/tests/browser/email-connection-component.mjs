@@ -19,7 +19,7 @@ async function component(path,name,globals=''){
  return `{${globals}\n${code}}`
 }
 test('real email component shows exact preview and allows only separate single approval',async()=>{
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']})
+ const browser=await chromium.launch({headless:true})
  try{
  const page=await browser.newPage();const external=[];const errors=[]
  page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',route=>{external.push(route.request().url());return route.abort()})

@@ -1,0 +1,21 @@
+{
+  "id": "hq-resend-acceptance-ci-20261113",
+  "task": "HQ-RESEND-ACCEPTANCE-CI-20261113",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/hq-live-dispatch-disposable.yml",
+    "apps/company-hq/tests/browser/email-connection-component.mjs",
+    "tooling/hq-agent-host/resend-connection-native-check.mjs"
+  ],
+  "reason": "Exercise the Resend-specific premerge acceptance gates inside existing CI: isolated email approval UI and actual PostgreSQL concurrent reservation/revocation. No provider calls, credentials, runtime behavior change or new workflows."
+}

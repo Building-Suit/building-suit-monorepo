@@ -146,6 +146,8 @@ jobs:
         run: |
           for tool in bash git openssl flock; do command -v "$tool"; done
           node tooling/ci/playwright-runtime.mjs
+      - name: Verify isolated HQ email approval component
+        run: node --test apps/company-hq/tests/browser/email-connection-component.mjs
       - name: Verify mocked HQ task cancellation browser flow
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
