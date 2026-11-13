@@ -46,6 +46,8 @@
     "tooling/hq-agent-host/repository-worker-compatibility-v2-checks.mjs",
     "tooling/hq-agent-host/test-fixtures/README.md",
     "tooling/hq-agent-host/test-fixtures/repository-legacy-departmentWorkflow.mjs.txt",
+    "apps/company-hq/tests/browser/workforce-fixture.ts",
+    "packages/testing/e2e/palette.spec.ts",
     "tooling/hq-shop-agent-host"
   ],
   "reason": "Shared chat and HQ office presentation, private staffing metadata, database contracts and verification support the Shop Suit rollout."
