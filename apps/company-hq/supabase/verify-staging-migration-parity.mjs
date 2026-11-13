@@ -58,6 +58,7 @@ const shopSuitWorker = pending.filter(row => row.phase === 'shop-suit-worker-com
 const expectedShopSuitWorker = [
   ['20261113023924_hq_shop_suit_worker_compatibility.sql', 'approved-source-not-deployed'],
   ['20261113203337_hq_shop_suit_assistant_worker_compatibility.sql', 'source-only-live-approval-required'],
+  ['20261113205600_hq_shop_product_price_worker_compatibility.sql', 'source-only-live-approval-required'],
 ]
 if (!isDeepStrictEqual(shopSuitWorker.map(row => [row.file, row.status]), expectedShopSuitWorker)
   || shopSuitWorker.some(row => row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown Shop Suit worker compatibility source')

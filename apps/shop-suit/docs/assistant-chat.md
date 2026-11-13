@@ -8,7 +8,7 @@ Ask for a page by name, for example `عاوز افتح المبيعات`. The ag
 
 The agent checks the selected shop’s current operation mode. Ask `ازاي افعل المنتجات؟` to open Products if they are already enabled or [Business operation mode](/settings/business-mode) to enable them. Choose **Products and services**, then **Save operation mode**.
 
-Ask `Add a product called Kids Backpack` to create a product by name. The agent returns a link to the saved product, where you can edit or archive it. If the request supplies no price, Shop Suit saves the record as **Price needed** and requires a price before selling it.
+Ask `Add a product called Kids Backpack` to create a product by name. The agent returns a link to the saved product, where you can edit or archive it. If the request supplies no price, Shop Suit saves the record as **Price needed** and requires a price before selling it. If you already know the price, include it in the request: for example, `سجل منتج اسمه "شنطة اطفال" بـ ٥٠٠ جنيه` in a shop using EGP. Shop Suit verifies that the price was stated in the current request and matches the shop currency. A correction is not a second create request. To fix an existing record, use **Open product** on its original reply, then edit its name or price.
 
 The agent can use relevant earlier owner messages and stated preferences from the current authorized conversation. Turning the agent off ends that authorization for future recall. Saved chat history remains available to the owner.
 

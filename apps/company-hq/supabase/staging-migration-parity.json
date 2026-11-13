@@ -463,6 +463,15 @@
       "phase": "shop-suit-worker-compatibility",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261113203337_hq_shop_suit_assistant_worker_compatibility.sql"
+    },
+    {
+      "file": "20261113205600_hq_shop_product_price_worker_compatibility.sql",
+      "bytes": 3026,
+      "md5": "e8559f1c3edb928c65b1020ffae1dd52",
+      "sha256": "5245f9c4569c442b16ea4a3b81396fd1260c268df645d80650ce2d9df83b79a7",
+      "phase": "shop-suit-worker-compatibility",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261113205600_hq_shop_product_price_worker_compatibility.sql"
     }
   ],
   "recoveredAppliedMigrations": [

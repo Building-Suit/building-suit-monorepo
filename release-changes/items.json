@@ -6847,6 +6847,7 @@
       "apps/shop-suit/server/utils/shopHqAssistant.ts",
       "apps/shop-suit/shared/shopHqChat.ts",
       "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+      "apps/shop-suit/supabase/migrations/20261113205713_hq_product_price_evidence.sql",
       "packages/ui/src/templates/BsCataloguePage.vue"
     ],
     "reason": "The Shop agent can create an editable catalog record from a product name and checks whether Products is already enabled.",
@@ -6856,8 +6857,8 @@
         "ar": "إضافة المنتجات من محادثة المتجر"
       },
       "summary": {
-        "en": "Tell the agent to add a product by name. It saves the record and sends a link so you can edit or archive it.",
-        "ar": "اطلب من المساعد إضافة منتج بالاسم. هيسجله ويبعت لك رابط عشان تعدّله أو تأرشفه."
+        "en": "Tell the agent to add a product by name. Include a price if you know it. The agent saves the record and sends a link so you can edit or archive it.",
+        "ar": "اطلب من المساعد إضافة منتج بالاسم. لو السعر معروف اكتبه مع الاسم. المساعد هيسجله ويبعت لك رابط عشان تعدّله أو تأرشفه."
       },
       "details": {
         "en": "If you leave out the price, the product stays unavailable for sale until you set it. The agent checks your shop’s settings before sending you to Products or showing how to enable it.",
@@ -6865,9 +6866,14 @@
       }
     },
     "sources": [
-      "shop-hq-chat-create-products"
+      "shop-hq-chat-create-products",
+      "shop-hq-chat-explicit-product-price"
     ],
     "evidence": [
+      {
+        "path": "apps/shop-suit/docs/assistant-chat.md",
+        "contains": "Shop Suit verifies that the price was stated in the current request"
+      },
       {
         "path": "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
         "contains": "create function shop_private.hq_assistant_create_product"

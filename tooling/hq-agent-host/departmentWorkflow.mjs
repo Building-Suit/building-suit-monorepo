@@ -957,7 +957,7 @@ function productModeReply(productsEnabled, arabic) {
     : shopReply('Open Business operation mode, choose “Products and services,” and click “Save operation mode.” Products and inventory will appear alongside services.', ['business-mode'])
 }
 
-function directProductCreation(message, shopContext) {
+export function directProductCreation(message, shopContext) {
   if (!shopContext) return
   const request = message.trim().replace(/[.!؟?]+$/u, '').trimEnd()
   const english = /^(?:please\s+)?(?:create|add|record)\s+(?:a\s+)?(?:new\s+)?product(?:\s+(?:(?:called|named)\s+)?(.*))?$/iu.exec(request) ??
@@ -966,16 +966,40 @@ function directProductCreation(message, shopContext) {
     /^(?:عاوز|عايز|اريد|أريد)\s+(.+?)\s+(?:تبقى|يبقى|تكون|يكون)\s+منتج(?:\s+جديد)?\s+في\s+(?:الكتالوج|المنتجات)$/u.exec(request)
   if (!english && !arabic) return
   if (shopContext.productsEnabled === false) return productModeReply(false, Boolean(arabic))
-  const name = (english ?? arabic)[1]?.trim().replace(/^[«“"']|[»”"'.؟?]$/gu, '').trim()
+  const details = (english ?? arabic)[1]?.trim() ?? ''
+  const quoted = /^(["'“«])(.+?)["'”»](.*)$/u.exec(details)
+  const digits = value => value.replace(/[٠-٩۰-۹]/gu, digit => String(digit.charCodeAt(0) % 16))
+    .replace(/٫/gu, '.')
+  const pricePattern = /^(.*?)\s+(?:(?:sale price|priced at|price|for|at)\s*[:=]?\s*|(?:و?سعر البيع|و?سعر المنتج|و?سعره|و?السعر|بسعر|بـ?)\s*[:=]?\s*)([0-9]{1,9}(?:\.[0-9]{1,2})?)\s*([a-z]{3}|جنيه(?: مصري)?)?$/iu
+  // Parse outside quotation marks so names such as "Price 500" remain literal names.
+  const price = pricePattern.exec(digits(quoted ? `NAME ${quoted[3].trim()}` : details))
+  const name = (quoted ? quoted[2] : price ? details.slice(0, price[1].length) : details).trim()
   if (!name || /^(?:called|named|اسمه|باسم)$/iu.test(name)) {
     return { ...shopReply(arabic ? 'اسم المنتج إيه؟' : 'What is the product name?', []),
       missingRequiredField: 'product_name' }
   }
-  // Requests with additional price or inventory details go through structured inference.
-  if (!boundedText(name, 2, 160) ||
-    /[،,؛;\n]|\b(?:with|for|at|price|stock|sku|barcode)\b|\band\s+(?:add|create|record|set)\b|بسعر|سعره|باركود|كمية|و(?:ضيف|سجل|اعمل|حط)/iu.test(name)) return
+  const invalid = () => shopReply(arabic
+    ? 'لم أضف منتجًا. اكتب اسم المنتج بين علامتي تنصيص، وبعده سعر واحد صحيح بعملة المتجر.'
+    : 'No product was added. Put the product name in quotes, followed by one valid price in the shop currency.', [])
+  if (quoted && quoted[3].trim() && !price) return invalid()
+  if (!boundedText(name, 2, 160)) return invalid()
+  // Do not silently turn malformed explicit prices into pending-price products.
+  if (!price && !quoted && /(?:\b(?:for|at|price|priced)\b|بسعر|سعره|سعر المنتج|السعر|\sبـ?\s*[-+٠-٩۰-۹0-9])/iu.test(details)) return invalid()
+  if (!quoted && /[،,؛;\n]|\b(?:with|stock|sku|barcode)\b|\band\s+(?:add|create|record|set)\b|باركود|كمية|و(?:ضيف|سجل|اعمل|حط)/iu.test(name)) return
+  const currency = price?.[3] && (/^جنيه/u.test(price[3]) ? 'EGP' : price[3].toUpperCase())
+  if (currency && shopContext.businessCurrency && currency !== shopContext.businessCurrency) return invalid()
   return { ...shopReply(arabic ? 'جاري إضافة المنتج.' : 'Adding the product.', []),
-    kind: 'create_product', product: { name, salePrice: null } }
+    kind: 'create_product', product: { name, salePrice: price ? Number(price[2]) : null } }
+}
+
+export function directProductCorrection(message) {
+  // Updating an existing product is not a wired write capability. Never reinterpret
+  // a correction as a second creation or claim that the existing row was changed.
+  if (!/^(?:لا(?:[،, ]|$)|تصحيح|عدل|عدّل|صحح|صحّح|no(?:[ ,]|$)|correct|update|change)/iu.test(message.trim()) ||
+      !/(?:منتج|product)/iu.test(message)) return
+  return shopReply(/[\u0600-\u06ff]/u.test(message)
+    ? 'فهمت إن ده تصحيح للمنتج الموجود، مش إضافة منتج جديد. لم أغيّر اسمه أو سعره؛ تعديل منتج موجود من الشات غير متاح حاليًا. لو المنتج اتسجّل، استخدم «افتح المنتج» في الرد السابق وعدّل الاسم والسعر.'
+    : 'I understand this is a correction to the existing product, not a new product. I have not changed its name or price; editing an existing product through chat is not available yet. If it was saved, use Open product in the earlier reply to edit its name and price.', [])
 }
 
 function directShopNavigation(message, shopContext) {
@@ -1286,7 +1310,8 @@ export function startShopConnector(input, {
   async function shopContext(job) {
     if (!shopContextEnabled) return undefined
     const result = await shop.rpc('shop_context', { p_job_id: job.jobId, p_lease_token: job.leaseToken })
-    if (!exactKeys(result, ['businessMode', 'productsEnabled']) ||
+    if (!(exactKeys(result, ['businessMode', 'productsEnabled']) || exactKeys(result, ['businessMode', 'productsEnabled', 'businessCurrency'])) ||
+      (result.businessCurrency !== undefined && !/^[A-Z]{3}$/u.test(result.businessCurrency)) ||
       !['product', 'service', 'mixed'].includes(result.businessMode) ||
       result.productsEnabled !== (result.businessMode !== 'service')) throw new Error('invalid-Shop-context')
     return result
@@ -1302,7 +1327,7 @@ export function startShopConnector(input, {
       message = messages.at(-1).content
       const signal = AbortSignal.timeout(MODEL_TIMEOUT_MS)
       const shopState = await shopContext(job)
-      intent = job.feedback ? undefined : directProductCreation(message, shopState) ?? directShopNavigation(message, shopState)
+      intent = job.feedback ? undefined : directProductCorrection(message) ?? directProductCreation(message, shopState) ?? directShopNavigation(message, shopState)
       if (!intent) {
         const [docs, memory] = await Promise.all([documentation(signal), recall(job)])
         intent = directShopAnswer(validateIntent(await inference.inferEmployee({

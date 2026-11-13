@@ -48,7 +48,7 @@ begin
   v_lease := (v_claim->>'leaseToken')::uuid;
   if v_claim->>'jobId' is distinct from v_job::text then raise exception 'Unexpected product lease'; end if;
   if public.shop_hq_assistant_shop_context(v_job,v_lease) is distinct from
-    '{"businessMode":"service","productsEnabled":false}'::jsonb then raise exception 'Service-only mode was not returned'; end if;
+    '{"businessMode":"service","businessCurrency":"EGP","productsEnabled":false}'::jsonb then raise exception 'Service-only mode was not returned'; end if;
 
   perform set_config('request.jwt.claim.sub',v_other_worker,true);
   begin
@@ -88,7 +88,7 @@ begin
   perform public.shop_hq_assistant_dispatch();
   v_lease := (public.shop_hq_assistant_claim()->>'leaseToken')::uuid;
   if public.shop_hq_assistant_shop_context(v_job,v_lease) is distinct from
-    '{"businessMode":"mixed","productsEnabled":true}'::jsonb then raise exception 'Live mode was not returned'; end if;
+    '{"businessMode":"mixed","businessCurrency":"EGP","productsEnabled":true}'::jsonb then raise exception 'Live mode was not returned'; end if;
   if not public.shop_hq_assistant_finish(v_job,v_lease,v_intent,true)
     or not public.shop_hq_assistant_finish(v_job,v_lease,v_intent,true)
     or public.shop_hq_assistant_finish(v_job,v_lease,jsonb_set(v_intent,'{product,salePrice}','20'),true) then
@@ -201,12 +201,12 @@ begin
   perform public.shop_hq_assistant_dispatch();
   v_lease := (public.shop_hq_assistant_claim()->>'leaseToken')::uuid;
   if not public.shop_hq_assistant_finish(v_job,v_lease,jsonb_set(v_intent,'{product,name}','"Kids Lunchbox"'),true) then
-    raise exception 'Could not save a pending product without a price';
+    raise exception 'Could not settle rejected unverified-price attempt';
   end if;
 
   perform set_config('request.jwt.claim.sub',current_setting('hq_product.owner'),true);
-  if not exists (select 1 from public.products where shop_id = v_shop and name = 'Kids Lunchbox' and price_pending) then
-    raise exception 'Assistant supplied an unverified price';
+  if exists (select 1 from public.products where shop_id = v_shop and name = 'Kids Lunchbox') then
+    raise exception 'Assistant supplied an unverified price must reject the write';
   end if;
   v_job := (public.shop_hq_assistant_send(v_shop,v_location,gen_random_uuid(),'Add a Kids Lunchbox')->>'jobId')::uuid;
   perform set_config('request.jwt.claim.sub',current_setting('hq_product.worker'),true);
@@ -226,3 +226,59 @@ begin
 end;
 $$;
 reset role;
+
+-- Price-evidence regression matrix. Queue/lease/owner checks are exercised above;
+-- this section isolates the private catalogue boundary with the same shop owner.
+do $$
+declare
+  v_job shop_private.hq_assistant_jobs;
+  v_case jsonb;
+  v_result jsonb;
+  v_before bigint;
+begin
+  v_job.shop_id := current_setting('hq_product.shop')::uuid;
+  v_job.actor_id := current_setting('hq_product.owner')::uuid;
+  for v_case in select value from jsonb_array_elements('[
+    ["سجل منتج اسمه \"شنطة اطفال\" بـ 500 جنيه", "شنطة اطفال", 500, true],
+    ["سجل منتج شنطة اطفال ب٥٠٠ جنيه", "شنطة اطفال", 500, true],
+    ["سجل منتج شنطة اطفال بسعر ۵۰۰٫۵۰ جنيه", "شنطة اطفال", 500.50, true],
+    ["Add product Bag for 500 EGP", "Bag", 500, true],
+    ["Add product Bag at 0", "Bag", 0, true],
+    ["Add product Bag price: 99.99", "Bag", 99.99, true],
+    ["Add product \"Price 500\"", "Price 500", null, true],
+    ["Add product Bag", "Bag", null, true],
+    ["Add product Bag for 500 USD", "Bag", 500, false],
+    ["Add product Bag for 500", "Bag", 5, false],
+    ["Add product Bag for -5", "Bag", null, false],
+    ["Add product Bag for 500.001", "Bag", null, false],
+    ["Add product Bag for 1000000000", "Bag", null, false],
+    ["Add product Bag for 500", "Bag", null, false],
+    ["Add product Bag", "Bag", 500, false],
+    ["Add product Bag price nonsense", "Bag", null, false],
+    ["Add product Bag for 500", "Bag", "500", false],
+    ["سجل منتج شنطة اطفال بـ 500 جنيه", "شنطة اطفال بـ 500 جنيه", null, false]
+  ]'::jsonb) loop
+    v_job.owner_message := v_case->>0;
+    select count(*) into v_before from public.products where shop_id = v_job.shop_id;
+    v_result := shop_private.hq_assistant_create_product(v_job,
+      jsonb_build_object('name',v_case->1,'salePrice',v_case->2));
+    if (v_result is not null) is distinct from (v_case->>3)::boolean then
+      raise exception 'Price evidence regression failed: %',v_case;
+    end if;
+    if v_result is null then
+      if (select count(*) from public.products where shop_id = v_job.shop_id) <> v_before then
+        raise exception 'Rejected price wrote a product';
+      end if;
+    elsif not exists (select 1 from public.products where id = (v_result->>'productId')::uuid
+      and shop_id = v_job.shop_id and name = v_case->>1
+      and sale_price = coalesce((v_case->>2)::numeric,0)
+      and price_pending = (v_case->>2 is null)) then
+      raise exception 'Price evidence saved incorrect catalogue values: %',v_case;
+    else
+      -- Synthetic rows only: keep each independent case below catalogue plan caps
+      -- and avoid duplicate-name interactions between price grammar examples.
+      delete from public.products where id = (v_result->>'productId')::uuid and shop_id = v_job.shop_id;
+    end if;
+  end loop;
+end;
+$$;
