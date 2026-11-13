@@ -20,7 +20,7 @@ Shop Suit saves chat requests briefly so employees can act, review can recover a
 
 ## Gateway mode
 
-The earlier opt-in Gateway mode supports catalog and stock lookups, operating summaries and confirmed expense recording. Set `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=gateway`, a private 64-character hexadecimal `NUXT_SHOP_ASSISTANT_SIGNING_SECRET`, and Vercel OIDC or `AI_GATEWAY_API_KEY`. The default model is `google/gemini-3.8-flash` and can be overridden with `NUXT_SHOP_ASSISTANT_MODEL`. This mode sends chat text and selected tool results to the configured provider. [Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok)
+When the assistant is enabled, Gateway is the default mode. It supports catalog and stock lookups, operating summaries and confirmed expense recording. Leave `NUXT_PUBLIC_SHOP_ASSISTANT_MODE` unset or set it to `gateway`. Configure a private 64-character hexadecimal `NUXT_SHOP_ASSISTANT_SIGNING_SECRET` and authenticate with Vercel OIDC or `AI_GATEWAY_API_KEY`. The default model is `google/gemini-3.8-flash` and can be overridden with `NUXT_SHOP_ASSISTANT_MODEL`. This mode sends chat text and selected tool results to the configured provider. [Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok)
 
 ## Local verification
 

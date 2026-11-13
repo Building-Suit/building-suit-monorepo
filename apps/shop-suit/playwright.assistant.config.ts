@@ -8,5 +8,5 @@ export default defineConfig({
   ...shop,
   testMatch: 'assistant-chat.spec.ts',
   outputDir: '../../test-results/shop-assistant',
-  webServer: { ...server, env: { ...server.env, NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED: 'true', NUXT_PUBLIC_SHOP_ASSISTANT_MODE: 'gateway' } },
+  webServer: { ...server, env: { ...server.env, NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED: 'true' } },
 })
