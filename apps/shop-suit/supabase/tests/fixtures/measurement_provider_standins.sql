@@ -2,7 +2,7 @@
 -- Network and scheduler invocation always throw; no external calls or live secrets.
 create role authenticator;create role anon;create role authenticated;create role service_role bypassrls;create role supabase_admin superuser;
 create schema extensions;create extension pgcrypto with schema extensions;create extension "uuid-ossp" with schema extensions;
-create schema auth;create table auth.users(id uuid primary key,email text,encrypted_password text,aud text,role text,email_confirmed_at timestamptz,raw_app_meta_data jsonb,raw_user_meta_data jsonb,created_at timestamptz,updated_at timestamptz,is_anonymous boolean default false,phone text,confirmed_at timestamptz,deleted_at timestamptz);
+create schema auth;create table auth.users(id uuid primary key,email text,encrypted_password text,aud text,role text,email_confirmed_at timestamptz,raw_app_meta_data jsonb,raw_user_meta_data jsonb,created_at timestamptz,updated_at timestamptz,is_anonymous boolean default false,phone text,confirmed_at timestamptz,deleted_at timestamptz,banned_until timestamptz);
 create function auth.uid() returns uuid language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claim.sub',true),''),(nullif(current_setting('request.jwt.claims',true),'')::jsonb)->>'sub')::uuid$$;
 create function auth.role() returns text language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claim.role',true),''),(nullif(current_setting('request.jwt.claims',true),'')::jsonb)->>'role')$$;
 create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,jsonb_build_object('sub',auth.uid(),'role',auth.role()))$$;
@@ -21,3 +21,26 @@ create schema vault;create table vault.decrypted_secrets(id uuid,name text,decry
 create schema net;create function net.http_post(url text,headers jsonb default '{}',body jsonb default '{}',timeout_milliseconds integer default 5000) returns bigint language plpgsql as $$begin raise exception 'PROVIDER_NETWORK_UNAVAILABLE_IN_SCHEMA_FIXTURE';end$$;
 create schema cron;create table cron.job(jobid bigint,jobname text,username text);create function cron.schedule(text,text,text) returns bigint language plpgsql as $$begin raise exception 'PROVIDER_CRON_UNAVAILABLE_IN_SCHEMA_FIXTURE';end$$;create function cron.unschedule(bigint) returns boolean language plpgsql as $$begin raise exception 'PROVIDER_CRON_UNAVAILABLE_IN_SCHEMA_FIXTURE';end$$;
 create publication supabase_realtime;
+
+-- Verify SQL broadcast and topic RLS only. The Realtime gateway is external.
+create schema realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+create table realtime.messages (
+  topic text not null,
+  extension text not null,
+  event text not null,
+  id uuid not null default gen_random_uuid(),
+  private boolean not null,
+  payload jsonb not null
+);
+alter table realtime.messages enable row level security;
+grant select, insert on realtime.messages to anon, authenticated, service_role;
+create function realtime.topic() returns text language sql stable
+as $$ select nullif(current_setting('realtime.topic', true), ''); $$;
+create function realtime.send(payload jsonb, event text, topic text, private boolean) returns void
+language sql security definer set search_path = ''
+as $$
+  with message as (select gen_random_uuid() as id)
+  insert into realtime.messages (topic, extension, event, id, private, payload)
+  select $3, 'broadcast', $2, message.id, $4, jsonb_set($1, '{id}', to_jsonb(message.id)) from message;
+$$;

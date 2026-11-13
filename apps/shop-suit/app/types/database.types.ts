@@ -15695,6 +15695,63 @@ export type Database = {
         Args: { _feature_key: string; _shop_id: string }
         Returns: boolean
       }
+      shop_hq_assistant_access: { Args: { p_shop_id: string }; Returns: Json }
+      shop_hq_assistant_authorize: {
+        Args: { p_enabled: boolean; p_shop_id: string }
+        Returns: Json
+      }
+      shop_hq_assistant_can_receive: { Args: never; Returns: boolean }
+      shop_hq_assistant_can_receive_owner: {
+        Args: { p_topic: string }
+        Returns: boolean
+      }
+      shop_hq_assistant_claim: { Args: never; Returns: Json }
+      shop_hq_assistant_dispatch: { Args: never; Returns: Json }
+      shop_hq_assistant_enqueue: {
+        Args: {
+          p_location_id: string
+          p_messages: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      shop_hq_assistant_execute_sale: {
+        Args: { p_job_id: string; p_lease_token: string }
+        Returns: Json
+      }
+      shop_hq_assistant_finish: {
+        Args: {
+          p_intent: Json
+          p_job_id: string
+          p_lease_token: string
+          p_succeeded: boolean
+        }
+        Returns: boolean
+      }
+      shop_hq_assistant_job: {
+        Args: { p_job_id: string; p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_hq_assistant_recent: {
+        Args: { p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_hq_assistant_review_claim: { Args: never; Returns: Json }
+      shop_hq_assistant_review_finish: {
+        Args: {
+          p_approved: boolean
+          p_feedback: string
+          p_job_id: string
+          p_lease_token: string
+        }
+        Returns: boolean
+      }
+      shop_hq_assistant_sale_claim: { Args: never; Returns: Json }
+      shop_hq_assistant_staff: {
+        Args: { p_after_employee_id?: string; p_limit?: number }
+        Returns: Json
+      }
       shop_offer_save: {
         Args: {
           p_id: string

@@ -73,6 +73,7 @@ export function shopAssistantCopy(isArabic: boolean) {
       expired: 'انتهت صلاحية الطلب. راجع المصروفات قبل ما تطلب تسجيله تاني.',
       changed: 'بيانات المتجر اتغيّرت. اطلب تسجيل المصروف تاني عشان تراجع البيانات الجديدة.',
       access: 'مقدرناش نتحقق من صلاحيتك للفرع ده.',
+      tooLong: 'الرسالة طويلة. قصّرها وحاول تاني.',
       busy: 'في طلبات كتير دلوقتي. استنى شوية وحاول تاني.',
       unavailable: 'المساعد مش متاح دلوقتي. حاول تاني بعد شوية.',
     } : {
@@ -81,6 +82,7 @@ export function shopAssistantCopy(isArabic: boolean) {
       expired: 'This request expired. Check Expenses before asking to record it again.',
       changed: 'Shop details changed. Ask to record the expense again so you can review the updated details.',
       access: 'Could not verify your access to this location.',
+      tooLong: 'Shorten your message and try again.',
       busy: 'There are too many requests. Wait a moment and try again.',
       unavailable: 'The assistant is temporarily unavailable. Try again shortly.',
     },

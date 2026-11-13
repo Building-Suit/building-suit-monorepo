@@ -1,32 +1,27 @@
-# Shop Suit Assistant
+# Shop Suit Agent
 
-Open **Shop assistant** in an enabled Shop Suit environment and choose the shop and location in the workspace. The assistant is available to the active shop's owner. Type a request in the language you normally use. The assistant is designed to reply in the language you use and can follow up on the current conversation. Starting a new chat, leaving the page or changing shop, location or account clears the conversation. Shop Suit stores no chat history.
+Open **Shop assistant** as a shop owner in the branch where the work should happen. Choose **Authorize and enable** to let Building Suit handle requests using your Shop Suit permissions. **Turn off agent** withdraws that authorization.
 
-| Ask for | Scope |
-| --- | --- |
-| Find a product by name or SKU | The selected shop's catalog |
-| Check stock or find low-stock products | Inventory across the selected shop |
-| Summarize operations for today, this week or this month | The selected location |
-| Record an expense you've already paid | The selected location. Review the title, amount, category and date, then confirm to save the expense. |
-| Open a Shop Suit screen | Links to the supported screens in the workspace |
+Each active shop has a stable employee assignment in the Shop Suit Agents department. The head dispatches each saved request to that shop's available employee. The employee posts replies in the same chat. The head reviews reports in batches and assigns corrections where needed. The employee appends any correction to the original request.
 
-For example, try “What products are low on stock?”, “مبيعات الفرع النهارده كام؟” or “Cherche le produit ABC-123.” The model handles language and dialect interpretation. If the assistant misreads a request, clarify it before confirming any action.
+For a service sale, send the customer's name and services. Include the amount and method if the customer already paid in full. For example, with a matching test customer, published services priced at 200 total, and an open cash shift:
 
-Each turn sends chat text and the selected fields returned by Shop Suit's tools to Vercel AI Gateway and the configured model. Avoid entering credentials or unnecessary personal information. Shop Suit checks access with the owner's authenticated session, including when saving a confirmed expense. The confirmation is valid for ten minutes. The expense RPC checks the reviewed details in the same transaction that records the expense. Retrying the same confirmation uses the original expense request ID.
+> عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.
 
-## Environment setup
+If Shop Suit needs another detail, reply in chat. When the sale succeeds, choose **Open receipt** from the employee's reply and print if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
 
-The feature starts disabled. Use a disposable local Shop database with the current migrations. For a running local database, apply pending migrations with `pnpm db shop-suit migration up --local`. Set these values in the ignored app environment file and launch `pnpm dev:shop --current` from the feature worktree.
+## Managed worker setup
 
-| Variable | Value |
-| --- | --- |
-| `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED` | `true` |
-| `NUXT_SHOP_ASSISTANT_SIGNING_SECRET` | A private 64-character hexadecimal value. Generate it with `openssl rand -hex 32`. |
-| `NUXT_SHOP_ASSISTANT_MODEL` | Optional AI Gateway model ID. The default is `google/gemini-3.8-flash`. |
-| `AI_GATEWAY_API_KEY` | A server-only gateway credential for local development. Hosted Vercel environments can authenticate through OIDC. |
+The feature starts disabled. Apply the current Shop Suit database migrations and follow the [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). The existing HQ worker can synchronize staffing while the Shop queue remains disabled. After the worker has an approved inference adapter and the queue has been enabled explicitly, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable the queue and the app flag to pause processing.
 
-Use a separate signing secret for each environment and keep both credentials server-side. The chat endpoint limits each account to 12 requests per minute per server instance. [AI Gateway setup](https://vercel.com/docs/ai-gateway/getting-started), [gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok).
+Existing active shops are backfilled by migration. Shop creation and activation provision the employee automatically. The HQ worker uses one scoped Shop identity to send staffing metadata to the existing HQ founder office. See the [department charter](https://drive.google.com/file/d/1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY/view).
 
-For a model-backed acceptance check, use disposable shops and try a lookup, location report, and paid-expense confirmation with prompts in English, Egyptian Arabic and another language you plan to use. Change the active location and test an employee session. Synthetic tool tests can check workflow boundaries and replay behavior. Understanding and dialect quality require real model responses in the target environment. Hosted activation requires the environment settings and matching Shop app and database revisions.
+Shop Suit saves chat requests briefly so employees can act, review can recover after a disconnect, and owners can reconnect. Private Realtime signals carry no chat or sale content. Shop Suit authenticates each result read separately. Account, shop, or branch changes clear the browser view and load the new scope. Review and checkout are fenced to the authorized job. Completed sales remain in Shop Suit after the chat transcript expires.
 
-For a repeatable browser check with synthetic data, build Shop with `pnpm --filter @building-suit/shop-suit build` and run `pnpm exec playwright test -c apps/shop-suit/playwright.assistant.config.ts` from the workspace root.
+## Gateway mode
+
+When the assistant is enabled, Gateway is the default mode. It supports catalog and stock lookups, operating summaries and confirmed expense recording. Leave `NUXT_PUBLIC_SHOP_ASSISTANT_MODE` unset or set it to `gateway`. Configure a private 64-character hexadecimal `NUXT_SHOP_ASSISTANT_SIGNING_SECRET` and authenticate with Vercel OIDC or `AI_GATEWAY_API_KEY`. The default model is `google/gemini-3.8-flash` and can be overridden with `NUXT_SHOP_ASSISTANT_MODEL`. This mode sends chat text and selected tool results to the configured provider. [Gateway authentication](https://vercel.com/docs/ai-gateway/authentication-and-byok)
+
+## Local verification
+
+Use a disposable Shop database with current migrations. Run `pnpm --filter @building-suit/shop-suit build`, then `pnpm exec playwright test -c apps/shop-suit/playwright.hq-assistant.config.ts` for managed mode or `pnpm exec playwright test -c apps/shop-suit/playwright.assistant.config.ts` for Gateway mode. These browser tests use synthetic messages and results.

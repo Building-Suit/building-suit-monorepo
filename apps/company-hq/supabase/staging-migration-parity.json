@@ -418,6 +418,24 @@
       "phase": "bounded-employee-parallelism",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261112140052_hq_bounded_employee_parallelism.sql"
+    },
+    {
+      "file": "20261113023602_hq_shop_suit_staff_snapshot.sql",
+      "bytes": 5076,
+      "md5": "50d4feef1bf09ff4de8180aaae64a585",
+      "sha256": "864a2c4c765a3f25cf885e41e955f47e662c66ed0b925c9b4d2b7c3b57de805e",
+      "phase": "shop-suit-staff-snapshot",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261113023602_hq_shop_suit_staff_snapshot.sql"
+    },
+    {
+      "file": "20261113023924_hq_shop_suit_worker_compatibility.sql",
+      "bytes": 3639,
+      "md5": "82a46a0811ab2efe48bc8128ed6a3d6c",
+      "sha256": "ea7d5ba871d33a0e05a8c45c5ed055cbd2ae74f085fed6f8544a0cbb30e8391b",
+      "phase": "shop-suit-worker-compatibility",
+      "status": "approved-source-not-deployed",
+      "proposal": "apps/company-hq/supabase/migrations/20261113023924_hq_shop_suit_worker_compatibility.sql"
     }
   ],
   "recoveredAppliedMigrations": [

@@ -42,7 +42,9 @@ for (const app of [
     // Catalogue examples may include their own settings control. Exercise the
     // Docs site's outer navigation control; standalone product auth pages have no banner.
     const settings = app.product ? page.getByRole('button', { name: 'Language · Theme', exact: true }) : page.locator('.bs-side-navigation').first().getByRole('button', { name: /^Theme:/ })
-    const primary = page.locator('.ls-btn-primary').first()
+    const primary = app.product ? page.locator('.ls-btn-primary').first() : page.locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'Brand and actions', exact: true }) })
+      .getByRole('button', { name: 'Save', exact: true })
     const input = page.locator('.ls-input').first()
     await expect(primary).toBeVisible()
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 250, 250)')

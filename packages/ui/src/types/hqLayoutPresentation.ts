@@ -160,6 +160,8 @@ export interface HqDepartmentOffice {
   name: string
   nameAr?: string
   approvedAt: string
+  /** The department roster comes from an external product's workforce. */
+  externalRoster?: boolean
   /** Undefined means roster unavailable; an empty list means no assigned employees. */
   agents?: readonly { id: string; name: string }[]
 }

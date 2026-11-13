@@ -1,10 +1,8 @@
 /** Generated synthetic PostgreSQL + actual worker/CLI contract. No hosted calls. */
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
-import { readFile, mkdtemp, rm, readdir, copyFile, writeFile } from 'node:fs/promises'
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { readFile, mkdtemp, rm, copyFile, writeFile } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID, createHash } from 'node:crypto'
@@ -102,12 +100,9 @@ async function preparedWorker(){
   const packaged=release.match(/^FILES = \((.+)\)$/m)?.[1]?.match(/'[^']+'/g)?.map(value=>value.slice(1,-1))
   assert.deepEqual(packaged,['worker.mjs','workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs','departmentWorkflow.mjs'],'release allowlist must exclude the inert fixture and all test directories')
   assert.equal(typeof invokeCodex,'function')
-  assert.equal(hash(await readFile(new URL('./worker.mjs',import.meta.url))),'d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980439ce9','production source stays pinned separately from the legacy evidence fixture')
-  assert.equal(hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),fixedModuleDigest)
   const bytes=await readFile(new URL('./test-fixtures/repository-compatible-worker.mjs.txt',import.meta.url))
   assert.equal(hash(bytes),compatibleWorkerDigest,'legacy evidence fixture must remain the exact reviewed v1 worker')
-  for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs')await copyFile(new URL(file,import.meta.url),join(directory,file))
-  await writeFile(join(directory,'worker.mjs'),bytes)
+  await materializeLegacyWorker(directory,bytes)
   const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
   return{invoke:module.invokeCodex,checkRepositoryWorkerCompatibility:module.checkRepositoryWorkerCompatibility,close:()=>rm(directory,{recursive:true,force:true})}
  }catch(error){await rm(directory,{recursive:true,force:true});throw error}
@@ -116,13 +111,19 @@ const checkRepositoryWorkerCompatibility=status=>futureWorker.checkRepositoryWor
 async function historicalWorker(){
  const directory=await mkdtemp(join(tmpdir(),'hq-historical-worker-'))
  try{
-  const {stdout}=await promisify(execFile)('git',['show','f24ca26f1964f8473ce22ce36be5475697bd58fa:tooling/hq-agent-host/worker.mjs'],{cwd:fileURLToPath(new URL('../../',import.meta.url)),maxBuffer:1024*1024,encoding:'utf8'})
-  assert.equal(hash(stdout),historicalWorkerDigest,'baseline must execute the exact historical worker, never patched evidence')
-  for(const file of await readdir(new URL('./',import.meta.url)))if(file.endsWith('.mjs')&&!file.endsWith('.test.mjs')&&file!=='worker.mjs')await copyFile(new URL(file,import.meta.url),join(directory,file))
-  await writeFile(join(directory,'worker.mjs'),stdout)
+  const bytes=await readFile(new URL('./test-fixtures/repository-historical-worker.mjs.txt',import.meta.url))
+  assert.equal(hash(bytes),historicalWorkerDigest,'baseline must execute the exact historical worker, never patched evidence')
+  await materializeLegacyWorker(directory,bytes)
   const module=await import(pathToFileURL(join(directory,'worker.mjs')).href)
   return{invoke:module.invokeCodex,checkRepositoryContract:module.checkRepositoryContract,close:()=>rm(directory,{recursive:true,force:true})}
  }catch(error){await rm(directory,{recursive:true,force:true});throw error}
+}
+async function materializeLegacyWorker(directory,bytes){
+ const workflow=await readFile(new URL('./test-fixtures/repository-legacy-departmentWorkflow.mjs.txt',import.meta.url))
+ assert.equal(hash(workflow),fixedModuleDigest,'historical workers must execute with their reviewed workflow module')
+ for(const file of ['workforceRoster.mjs','brainPublisher.mjs','maintenance.mjs'])await copyFile(new URL(file,import.meta.url),join(directory,file))
+ await writeFile(join(directory,'departmentWorkflow.mjs'),workflow)
+ await writeFile(join(directory,'worker.mjs'),bytes)
 }
 const sourcePreset='hq-worker-boundary-v1',ciPreset='hq-ci-config-v1',sourceSha='a'.repeat(40)
 const hash=x=>createHash('sha256').update(x).digest('hex')
@@ -277,6 +278,6 @@ async function transaction(h,action){
 async function count(h,table){return(await scalar(h,'select count(*)::int n from hq_private.'+table)).n}
 
 
-export { root, worker, skills, developers, sourcePreset, ciPreset, sourceSha, hash, preparedWorker, historicalWorker, checkRepositoryWorkerCompatibility, scalar, delivery, entryFor, output, repositoryItem, finishReviews, scopeWork, repositoryFixture, freeze, repositoryWork, ordinaryWork, rejects, transaction, count, trialReviewPlanCacheMigration, compatibilityMigration, compatibilityProposal, historicalWorkerDigest, compatibleWorkerDigest, fixedModuleDigest };
+export { root, worker, skills, developers, sourcePreset, ciPreset, sourceSha, hash, preparedWorker, historicalWorker, materializeLegacyWorker, checkRepositoryWorkerCompatibility, scalar, delivery, entryFor, output, repositoryItem, finishReviews, scopeWork, repositoryFixture, freeze, repositoryWork, ordinaryWork, rejects, transaction, count, trialReviewPlanCacheMigration, compatibilityMigration, compatibilityProposal, historicalWorkerDigest, compatibleWorkerDigest, fixedModuleDigest };
 export function setFutureWorker(value) { futureWorker=value }
 export { founder, workerUser, session, workerSession };

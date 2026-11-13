@@ -7,7 +7,7 @@ import { failedToolEvidence, checkRepositoryContract } from './worker.mjs'
 import { REQUIRED_RPCS } from './maintenance.mjs'
 import {  } from './departmentWorkflow.mjs'
 
-import { root, founder, worker, sourcePreset, ciPreset, sourceSha, hash, preparedWorker, historicalWorker, checkRepositoryWorkerCompatibility, scalar, delivery, entryFor, output, repositoryItem, finishReviews, repositoryFixture, freeze, repositoryWork, ordinaryWork, rejects, transaction, count, trialReviewPlanCacheMigration, compatibilityMigration, compatibilityProposal, historicalWorkerDigest, compatibleWorkerDigest, setFutureWorker } from './public-repository-db-fixture.mjs'
+import { root, founder, worker, sourcePreset, ciPreset, sourceSha, hash, preparedWorker, historicalWorker, checkRepositoryWorkerCompatibility, scalar, delivery, entryFor, output, repositoryItem, finishReviews, repositoryFixture, freeze, repositoryWork, ordinaryWork, rejects, transaction, count, trialReviewPlanCacheMigration, compatibilityMigration, compatibilityProposal, historicalWorkerDigest, compatibleWorkerDigest, fixedModuleDigest, setFutureWorker } from './public-repository-db-fixture.mjs'
 let futureWorker
 
 test('repository read capability is founder-frozen, lease-bound, independently reviewed and durable without upgrading ordinary qualification',async t=>{
@@ -91,7 +91,7 @@ test('repository read capability is founder-frozen, lease-bound, independently r
    const {repositoryWorkerCompatibility,...unchanged}=advertised
    assert.equal(status.repositoryWorkerCompatibility,undefined)
    assert.deepEqual(unchanged,status,'only the additive worker capability changes')
-   assert.deepEqual(repositoryWorkerCompatibility,{version:1,policyId:'hq-public-github-read-v1',moduleSha256:hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url))),workerSourceDigests:[historicalWorkerDigest,compatibleWorkerDigest]})
+   assert.deepEqual(repositoryWorkerCompatibility,{version:1,policyId:'hq-public-github-read-v1',moduleSha256:fixedModuleDigest,workerSourceDigests:[historicalWorkerDigest,compatibleWorkerDigest]})
    assert.deepEqual((await scalar(h,'select hq_private.repository_worker_digests() digests,hq_private.repository_worker_compatibility() capability')).digests,repositoryWorkerCompatibility.workerSourceDigests)
    assert.deepEqual((await scalar(h,'select hq_private.repository_worker_compatibility() capability')).capability,repositoryWorkerCompatibility)
    assert.equal(oldWorker.checkRepositoryContract(advertised),true,'actual historical worker accepts additive capability')
