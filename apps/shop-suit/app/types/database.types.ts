@@ -15701,6 +15701,10 @@ export type Database = {
         Returns: Json
       }
       shop_hq_assistant_can_receive: { Args: never; Returns: boolean }
+      shop_hq_assistant_can_receive_chat: {
+        Args: { p_topic: string }
+        Returns: boolean
+      }
       shop_hq_assistant_can_receive_owner: {
         Args: { p_topic: string }
         Returns: boolean
@@ -15729,6 +15733,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      shop_hq_assistant_history: {
+        Args: {
+          p_before_sequence?: number
+          p_limit?: number
+          p_location_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       shop_hq_assistant_job: {
         Args: { p_job_id: string; p_location_id: string; p_shop_id: string }
         Returns: Json
@@ -15748,6 +15761,15 @@ export type Database = {
         Returns: boolean
       }
       shop_hq_assistant_sale_claim: { Args: never; Returns: Json }
+      shop_hq_assistant_send: {
+        Args: {
+          p_location_id: string
+          p_message: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       shop_hq_assistant_staff: {
         Args: { p_after_employee_id?: string; p_limit?: number }
         Returns: Json

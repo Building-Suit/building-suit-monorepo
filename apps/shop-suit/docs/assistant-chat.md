@@ -1,6 +1,6 @@
 # Shop Suit Agent
 
-Open **Shop assistant** as a shop owner in the branch where the work should happen. Choose **Authorize and enable** to let Building Suit handle requests using your Shop Suit permissions. **Turn off agent** withdraws that authorization.
+As a shop owner, select the branch where the work should happen and open the floating Shop Suit Agent from any signed-in Shop Suit page. Choose **Authorize and enable** to let Building Suit handle requests using your Shop Suit permissions. **Turn off agent** stops new requests. You can still read the messages already saved for that branch.
 
 Each active shop has a stable employee assignment in the Shop Suit Agents department. The head dispatches each saved request to that shop's available employee. The employee posts replies in the same chat. The head reviews reports in batches and assigns corrections where needed. The employee appends any correction to the original request.
 
@@ -8,15 +8,15 @@ For a service sale, send the customer's name and services. Include the amount an
 
 > عميل اسمه أحمد محمد عمل شعر ودقن. دفع ٢٠٠ كاش.
 
-If Shop Suit needs another detail, reply in chat. When the sale succeeds, choose **Open receipt** from the employee's reply and print if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
+Three dots show while the employee prepares the reply. If Shop Suit needs another detail, reply in chat. When the sale succeeds, the response includes **Open receipt** so you can print it if needed. A payment statement such as `دفع ٢٠٠ كاش` or `paid 200 cash` can resolve a pending sale quote. Shop Suit checks the exact customer, service, branch, total and payment before issuing the receipt.
 
 ## Managed worker setup
 
-The feature starts disabled. Apply the current Shop Suit database migrations and follow the [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). The existing HQ worker can synchronize staffing while the Shop queue remains disabled. After the worker has an approved inference adapter and the queue has been enabled explicitly, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable the queue and the app flag to pause processing.
+The feature starts disabled. Apply the current Shop Suit database migrations and follow the existing [Shop HQ worker setup](../../../tooling/hq-shop-agent-host/README.md). The HQ worker can synchronize staffing while the Shop queue is disabled. Once the worker has an approved inference adapter and the queue is enabled, expose the chat with `NUXT_PUBLIC_SHOP_ASSISTANT_ENABLED=true` and `NUXT_PUBLIC_SHOP_ASSISTANT_MODE=hq`. Disable the queue to stop new processing and keep saved history available. The app flag controls access to the chat interface.
 
 Existing active shops are backfilled by migration. Shop creation and activation provision the employee automatically. The HQ worker uses one scoped Shop identity to send staffing metadata to the existing HQ founder office. See the [department charter](https://drive.google.com/file/d/1dCG4eMDpRIii8cfJWE2gYpMWsZuc8DgY/view).
 
-Shop Suit saves chat requests briefly so employees can act, review can recover after a disconnect, and owners can reconnect. Private Realtime signals carry no chat or sale content. Shop Suit authenticates each result read separately. Account, shop, or branch changes clear the browser view and load the new scope. Review and checkout are fenced to the authorized job. Completed sales remain in Shop Suit after the chat transcript expires.
+Shop Suit saves each submitted owner message and each reply in the conversation for that account, shop and branch. Reopen the chat to see the latest messages and choose **Load earlier messages** to go further back. Owners who previously authorized the temporary HQ assistant accept the updated authorization before sending new messages. The previous temporary requests continue to expire under their original terms. The work queue keeps a separate short-lived copy for dispatch, review and checkout. The existing HQ worker listens for new jobs and the Shop browser listens for updates to the conversation. Private Realtime signals prompt each side to fetch authorized data. The signals carry no message text or sale details. Changing the account, shop or branch clears the previous conversation from the browser.
 
 ## Gateway mode
 

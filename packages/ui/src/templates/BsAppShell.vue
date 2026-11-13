@@ -45,7 +45,7 @@ onMounted(() => { hydrated.value = true })
       </NuxtLink>
     </nav>
 
-    <slot name="overlays" />
+    <slot name="overlays" :mobile-navigation-open="mobileNavOpen" />
   </div>
 </template>
 

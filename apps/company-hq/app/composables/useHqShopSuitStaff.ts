@@ -5,9 +5,10 @@ type Staff = { employeeId: string; shopName: string; state: 'idle' | 'busy' }
 type StaffPage = { status: 'ready' | 'unconfigured' | 'overflow'; staff: Staff[]; next: string | null; observedAt: string | null }
 
 export function useHqShopSuitStaff(isFounder: () => boolean) {
+  const { t, locale } = useI18n()
   const live = useHqLiveEvents()
   const staff = shallowRef<Staff[]>([])
-  const lastObserved = ref('')
+  const lastObserved = ref<string | null>(null)
   const status = ref<StaffPage['status'] | 'loading' | 'unavailable'>('loading')
   let current: AbortController | undefined
   let refreshQueued = false
@@ -17,7 +18,7 @@ export function useHqShopSuitStaff(isFounder: () => boolean) {
     current = undefined
     refreshQueued = false
     staff.value = []
-    lastObserved.value = ''
+    lastObserved.value = null
     status.value = 'loading'
   }
 
@@ -29,6 +30,7 @@ export function useHqShopSuitStaff(isFounder: () => boolean) {
     const rows = new Map<string, Staff>()
     let after: string | null = null
     let observedAt: string | null = null
+    let nextStatus: StaffPage['status']
     try {
       do {
         const result: StaffPage = await $fetch('/api/hq/shop-suit-staff', {
@@ -43,11 +45,12 @@ export function useHqShopSuitStaff(isFounder: () => boolean) {
           rows.set(employee.employeeId, employee)
         }
         after = result.next
-        status.value = result.status
+        nextStatus = result.status
       } while (after && !request.signal.aborted)
       if (request.signal.aborted || !isFounder()) return
-      lastObserved.value = observedAt ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(observedAt)) : ''
+      lastObserved.value = observedAt
       staff.value = [...rows.values()]
+      status.value = nextStatus
     } catch {
       if (!request.signal.aborted) {
         status.value = 'unavailable'
@@ -62,21 +65,26 @@ export function useHqShopSuitStaff(isFounder: () => boolean) {
 
   const agents = computed<HqAgentPresentation[]>(() => {
     if (!isFounder()) return []
-    const rosterStatus = status.value === 'overflow' ? 'Shop roster exceeds the current display limit'
-      : status.value === 'unavailable' ? 'Shop roster refresh unavailable' : 'Runtime verification pending'
+    const syncedLabel = lastObserved.value
+      ? t('hq.agents.shopRoster.lastSync', { time: new Intl.DateTimeFormat(locale.value, {
+        dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Cairo',
+      }).format(new Date(lastObserved.value)) })
+      : t('hq.agents.shopRoster.unconfigured')
+    const rosterStatus = status.value === 'ready' ? syncedLabel : t(`hq.agents.shopRoster.${status.value}`)
     return [{
-      ...SHOP_SUIT_DEPARTMENT_HEAD, role: 'agent', roleLabel: 'Department Head',
+      ...SHOP_SUIT_DEPARTMENT_HEAD, role: 'agent', roleLabel: t('hq.agents.shopRoster.head'),
       managerId: 'AG-CEO-001', managerName: 'Steve', departmentId: SHOP_SUIT_OFFICE.id,
       deskIndex: null, activity: 'unknown', configured: true, connected: false,
-      lifecycleLabel: 'Appointed', connectionLabel: rosterStatus,
+      activityLabel: t('hq.agents.shopRoster.appointed'), lifecycleLabel: t('hq.agents.shopRoster.appointed'),
+      connectionLabel: rosterStatus,
     }, ...staff.value.map<HqAgentPresentation>(employee => ({
-      id: employee.employeeId, name: employee.shopName, role: 'agent', roleLabel: 'Shop Suit employee',
+      id: employee.employeeId, name: employee.shopName, role: 'agent', roleLabel: t('hq.agents.shopRoster.employee'),
       departmentId: SHOP_SUIT_OFFICE.id, deskIndex: null, managerId: SHOP_SUIT_DEPARTMENT_HEAD.id,
       managerName: SHOP_SUIT_DEPARTMENT_HEAD.name, activity: 'unknown',
       configured: true, connected: false,
-      activityLabel: employee.state === 'busy' ? 'Request assigned at last sync' : 'No request assigned at last sync',
-      lifecycleLabel: 'Assigned to shop',
-      connectionLabel: lastObserved.value ? `Roster synced ${lastObserved.value}` : 'Runtime presence unavailable',
+      activityLabel: t(`hq.agents.shopRoster.${employee.state}`),
+      lifecycleLabel: t('hq.agents.shopRoster.assigned'),
+      connectionLabel: syncedLabel,
     }))]
   })
   const department = computed(() => isFounder() ? {

@@ -907,7 +907,9 @@
       "family": "owner-assistant-chat",
       "owner": "packages/ui",
       "components": [
-        "BsAssistantChatPage"
+        "BsAssistantChatPage",
+        "BsAssistantChat",
+        "BsFloatingAssistantChat"
       ],
       "adapterBoundary": "Shared UI renders escaped bidirectional conversation text, owner authorization controls, a controlled composer and expense review. Shop supplies scope, translated copy and typed actions, and owns agent authorization, request lifecycles and sale and expense commands.",
       "migrationStatus": "implemented-local"

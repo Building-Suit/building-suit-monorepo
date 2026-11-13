@@ -153,7 +153,7 @@ declare
   v_job jsonb;
 begin
   v_access := public.shop_hq_assistant_access(v_shop);
-  if v_access is distinct from '{"enabled":false,"agentName":"Shop Suit Agent"}'::jsonb then
+  if v_access is distinct from '{"enabled":false,"agentName":"Shop Suit Agent","queueAvailable":true}'::jsonb then
     raise exception 'HQ assistant not initially disabled';
   end if;
   begin
@@ -162,7 +162,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   if public.shop_hq_assistant_authorize(v_shop, true) is distinct from
-    '{"enabled":true,"agentName":"Shop Suit Agent"}'::jsonb then
+    '{"enabled":true,"agentName":"Shop Suit Agent","queueAvailable":true}'::jsonb then
     raise exception 'Owner could not enable assistant';
   end if;
 

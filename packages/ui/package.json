@@ -199,6 +199,8 @@
     "./types/routingPolicyPresentation": "./src/types/routingPolicyPresentation.ts",
     "./templates/BsProjectRegistryPage": "./src/templates/BsProjectRegistryPage.vue",
     "./types/projectRegistryPresentation": "./src/types/projectRegistryPresentation.ts",
+    "./organisms/BsAssistantChat": "./src/organisms/BsAssistantChat.vue",
+    "./organisms/BsFloatingAssistantChat": "./src/organisms/BsFloatingAssistantChat.vue",
     "./templates/BsAssistantChatPage": "./src/templates/BsAssistantChatPage.vue",
     "./types/assistantChatPresentation": "./src/types/assistantChatPresentation.ts",
     "./templates/BsTaskDetailPage": "./src/templates/BsTaskDetailPage.vue",

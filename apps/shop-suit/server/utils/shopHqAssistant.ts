@@ -1,7 +1,8 @@
 import { z } from 'zod'
+import type { ShopHqChatHistory } from '../../shared/shopHqChat'
 
 export const hqAssistantSelection = { shopId: z.uuid(), locationId: z.uuid() }
-export const hqAssistantAccess = z.object({ enabled: z.boolean(), agentName: z.string().min(1).max(120) })
+export const hqAssistantAccess = z.object({ enabled: z.boolean(), agentName: z.string().min(1).max(120), queueAvailable: z.boolean() })
 export const hqAssistantEnqueue = z.object({ jobId: z.uuid() })
 const clarification = z.discriminatedUnion('kind', [
   z.object({ kind: z.enum(['customer_missing', 'customer_ambiguous', 'service_missing', 'service_ambiguous']), query: z.string().max(160) }),
@@ -24,6 +25,21 @@ export const hqAssistantRecent = z.array(hqAssistantJob.extend({
   requestId: z.uuid(),
   ownerMessage: z.string().max(2_000).nullable(),
 })).max(24)
+
+const historyEntry = { sequence: z.int().positive(), jobId: z.uuid(), createdAt: z.iso.datetime({ offset: true }) }
+const historyMessage = z.discriminatedUnion('kind', [
+  z.object({ ...historyEntry, kind: z.literal('message'), role: z.enum(['user', 'assistant']), text: z.string().min(1).max(2_000) }),
+  z.object({ ...historyEntry, kind: z.literal('receipt'), role: z.literal('assistant'),
+    link: z.object({ destination: z.literal('receipt'), saleId: z.uuid() }) }),
+  z.object({ ...historyEntry, kind: z.literal('clarification'), role: z.literal('assistant'), outcome: clarification }),
+  z.object({ ...historyEntry, kind: z.literal('status'), role: z.literal('assistant'), status: z.enum(['failed', 'expired', 'revoked']) }),
+])
+export const hqAssistantHistory: z.ZodType<ShopHqChatHistory> = z.object({
+  messages: z.array(historyMessage).max(30).refine(messages =>
+    messages.every((message, index) => index === 0 || messages[index - 1]!.sequence < message.sequence)),
+  hasMore: z.boolean(),
+  activeJobs: z.array(z.object({ jobId: z.uuid(), state: z.enum(['queued', 'working', 'completed']), reviewPending: z.boolean() })).max(32),
+})
 
 export function readHqAssistantRpc<T>(
   schema: z.ZodType<T>,

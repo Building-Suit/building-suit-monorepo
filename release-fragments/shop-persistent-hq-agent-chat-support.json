@@ -1,0 +1,37 @@
+{
+  "id": "shop-persistent-hq-agent-chat-support",
+  "task": "SS-PERSISTENT-HQ-CHAT",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/app/types/shopCrmRpc.ts",
+    "apps/shop-suit/server/utils/shopHqAssistant.ts",
+    "apps/shop-suit/shared/shopHqChat.ts",
+    "apps/shop-suit/supabase/tests/shop_hq_assistant.sql",
+    "apps/shop-suit/supabase/tests/shop_hq_assistant_persistent_chat.sql",
+    "apps/shop-suit/tests/e2e/hq-assistant-authorization.spec.ts",
+    "apps/shop-suit/tests/e2e/hq-assistant-pos.spec.ts",
+    "docs/shared/ui-ownership-manifest.json",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsAssistantChat.vue",
+    "packages/ui/src/organisms/BsFloatingAssistantChat.vue",
+    "packages/ui/src/templates/BsAppShell.vue",
+    "packages/ui/src/templates/BsAssistantChatPage.vue",
+    "packages/ui/src/templates/BsWorkspaceShell.vue",
+    "packages/ui/src/types/assistantChatPresentation.ts",
+    "release-changes/items.json",
+    "tooling/database/test-shop-local.mjs",
+    "tooling/hq-shop-agent-host/README.md"
+  ],
+  "reason": "Shared UI contracts, generated database types and tests cover persistent chat while preserving the existing Gateway and HQ worker protocols."
+}
