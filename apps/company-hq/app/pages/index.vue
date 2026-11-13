@@ -108,6 +108,7 @@ const { agents, trialCommand, send: sendCeoMessage, refresh: refreshAgents } = u
   taskError: code => te(`hq.agents.taskErrors.${code}`) ? t(`hq.agents.taskErrors.${code}`) : t('hq.agents.taskBlocked'),
   lifecycle: value => agentLabel('lifecycles', value), connection: value => agentLabel('connections', value),
 }))
+const { presentation: emailConnection, command: emailConnectionCommand } = useHqEmailConnectionTest(() => access.value)
 const labeledAgents = computed<HqAgentsPresentation>(() => ({
   ...agents.value,
   agents: agents.value.agents.map(agent => ({ ...agent,
@@ -354,4 +355,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>
+<template><BsHqLayoutPage :content="content" :email-connection="emailConnection" @email-connection-command="emailConnectionCommand" @load-game-character="loadGameCharacter" :notifications="notifications" @toggle-push="activityNotifications.togglePush" @toggle-notification-sound="activityNotifications.toggleSound" :brain="brain" :access="access" :company-plans="companyPlans" :staffing="staffing" :staffing-copy="staffingCopy" :meeting="meeting" :agents="labeledAgents" :departments="localizedDepartments" @refresh-staffing="refreshStaffing" @staffing-decision="decideStaffing" @staffing-cancel="cancelStaffing" @trial-command="trialCommand" @meeting-command="meetingCommand" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @plan-board-open="setPlanBoardOpen" @refresh-plan-backlog="refreshPlanBacklog" @refresh-agents="refreshAgents" @send-ceo-message="sendCeoMessage" @decide-plan="decidePlan" /></template>

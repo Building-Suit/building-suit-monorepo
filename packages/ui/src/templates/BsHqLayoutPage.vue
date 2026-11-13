@@ -16,6 +16,8 @@ import BsTabs from '../molecules/BsTabs.vue'
 import BsHqStaffingPlans from '../organisms/BsHqStaffingPlans.vue'
 import BsDialog from '../organisms/BsDialog.vue'
 import BsHqRepositoryTrial from '../organisms/BsHqRepositoryTrial.vue'
+import BsHqEmailConnectionTest from '../organisms/BsHqEmailConnectionTest.vue'
+import type { HqEmailConnectionCommand, HqEmailConnectionPresentation } from '../types/hqEmailConnection'
 import { hologramFloorRadius } from '../utils/hologramScene'
 import { layoutDepartmentOffices, workplaceFootprint } from '../utils/departmentOfficeLayout.ts'
 import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
@@ -30,8 +32,8 @@ const trialConfirming = ref(false)
 let repositoryConfirmationEpoch = 0
 let trialDisposed = false
 onScopeDispose(() => { trialDisposed = true })
-const props = defineProps<{ content: HqLayoutContent; notifications?: HqActivityNotificationsPresentation; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
-const emit = defineEmits<{ loadGameCharacter: [id: HqGameCharacter]; trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; togglePush: []; toggleNotificationSound: []; planBoardOpen: [open: boolean]; refreshPlanBacklog: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
+const props = defineProps<{ content: HqLayoutContent; emailConnection?: HqEmailConnectionPresentation; notifications?: HqActivityNotificationsPresentation; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; staffing?: HqStaffingPresentation; staffingCopy?: HqStaffingCopy; agents?: HqAgentsPresentation; meeting?: HqMeetingPresentation; departments?: readonly HqDepartmentOffice[] }>()
+const emit = defineEmits<{ emailConnectionCommand: [command: HqEmailConnectionCommand]; loadGameCharacter: [id: HqGameCharacter]; trialCommand: [command: HqTrialCommand]; refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; togglePush: []; toggleNotificationSound: []; planBoardOpen: [open: boolean]; refreshPlanBacklog: []; refreshStaffing: []; staffingDecision: [command: HqStaffingDecision]; staffingCancel: [sourceTaskId: string]; refreshAgents: []; sendCeoMessage: [message: string]; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected']; meetingCommand: [command: HqMeetingCommand] }>()
 const selectedTrial = computed(() => props.agents?.trials?.find(trial => trial.agentId === selectedAgent.value?.id))
 const selectedOrdinaryTrial = computed(() => selectedTrial.value?.ordinary)
 const selectedRetailTrial = computed(() => selectedAgent.value?.id === 'AG-RES-002' ? selectedTrial.value?.publicRetail : undefined)
@@ -686,6 +688,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
         <header class="bs-hq-layout__brain-heading"><div><h2 :id="agentTitleId" ref="agentTitleRef" tabindex="-1" dir="auto">{{ selectedAgent.name }}</h2><p class="bs-hq-layout__workplace-description">{{ selectedAgent.roleLabel }} · <bdi>{{ selectedAgent.id }}</bdi></p></div><BsButton variant="icon" :aria-label="officeCopy.close" @click="closeAgentPanel"><BsIcon name="close" :size="20" /></BsButton></header>
         <div class="bs-hq-layout__panel-scroll">
         <BsHqOfficeOverview :agents="[selectedAgent]" :observations="agentsState.observations" :copy="officeCopy" :locale="content.agents?.locale" :tasks="agentsState.officeTasks" detail />
+        <BsHqEmailConnectionTest v-if="founderAccess.status === 'founder' && selectedAgent.id === 'AG-EMAIL-002' && emailConnection" :state="emailConnection" @command="emit('emailConnectionCommand', $event)" />
         <template v-if="founderAccess.status === 'founder' && selectedTrial">
           <section v-if="selectedAgent.id === 'AG-RES-002'" aria-label="Public Research qualification">
             <h3>Public Research qualification</h3>

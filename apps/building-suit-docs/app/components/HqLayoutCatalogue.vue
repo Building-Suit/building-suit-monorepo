@@ -4,6 +4,7 @@ import type { HqAgentsContent, HqAgentsPresentation, HqWorkforceContent, HqTaskB
 import type { HqTaskBrowserSource } from '@building-suit/ui/utils/hqTaskBrowserSource'
 const { locale } = useI18n()
 const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
+const emailConnectionExample = { pending: false, readiness: null, test: null, message: 'Illustrative connection controls only; no provider requests.', approvalAvailable: false }
 // Illustrative presentation fixtures only; never projected into the private HQ.
 const organicDepartments = computed<HqDepartmentOffice[]>(() => [1, 2, 3, 4, 5, 2, 1].map((count, index) => ({
   id: `catalogue-organic-${index}`, name: c(`Sample office ${index + 1} · ${count} desks`, `مكتب توضيحي ${index + 1} · ${count} مكاتب`),
@@ -303,7 +304,8 @@ const plansExample = computed<HqCompanyPlansPresentation>(() => ({
 
 <template>
   <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Independent organic office islands use deterministic spline curves around actual furniture bounds. Existing desk-row dimensions and all office anchors remain fixed; the executive island has its own subtle curves with the original gold rim. Picking, walking exits and minimap share the same outlines. These illustrative offices and desk counts are catalogue fixtures, with no cloud, Auth or approval connection. Existing furniture, camera, lighting and office panels are preserved.', 'تستخدم جزر المكاتب المستقلة منحنيات عضوية ثابتة حول حدود الأثاث الفعلية. تبقى أبعاد صفوف المكاتب ومواقعها ثابتة، وتتميز جزيرة المدير التنفيذي بمنحنيات خاصة مع الحد الذهبي الأصلي. يشترك التحديد ومخارج المشي والخريطة في الحدود نفسها. هذه المكاتب والأعداد أمثلة للكتالوج دون اتصال بالسحابة أو المصادقة أو الاعتماد. يبقى الأثاث والكاميرا والإضاءة واللوحات كما هي.')">
-    <BsHqLayoutPage :content="catalogueTeamContent" :departments="organicDepartments" :agents="teamSample" :access="{ status: 'founder', pending: false }" :company-plans="plansExample" :staffing="staffingExample" :staffing-copy="staffingCopy" />
+    <BsHqEmailConnectionTest :state="emailConnectionExample" />
+    <BsHqLayoutPage :content="catalogueTeamContent" :email-connection="emailConnectionExample" :departments="organicDepartments" :agents="teamSample" :access="{ status: 'founder', pending: false }" :company-plans="plansExample" :staffing="staffingExample" :staffing-copy="staffingCopy" />
     <BsHqStaffingPlans :presentation="staffingExample" :copy="staffingCopy" :founder="true" />
     <BsContentSection title="Supervised qualification" description="The authenticated employee inspector accepts typed trial status and semantic start/qualification commands. Starting a trial requires explicit confirmation. Qualification requires immutable host-returned execution evidence plus department-head and independent HR review. Pending staff remain blocked until their canonical lifecycle is Active. This catalogue queues no work." />
   </BsContentSection>

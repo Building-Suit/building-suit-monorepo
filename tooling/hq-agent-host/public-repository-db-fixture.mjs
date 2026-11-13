@@ -280,3 +280,5 @@ async function count(h,table){return(await scalar(h,'select count(*)::int n from
 export { root, worker, skills, developers, sourcePreset, ciPreset, sourceSha, hash, preparedWorker, historicalWorker, checkRepositoryWorkerCompatibility, scalar, delivery, entryFor, output, repositoryItem, finishReviews, scopeWork, repositoryFixture, freeze, repositoryWork, ordinaryWork, rejects, transaction, count, trialReviewPlanCacheMigration, compatibilityMigration, compatibilityProposal, historicalWorkerDigest, compatibleWorkerDigest, fixedModuleDigest };
 export function setFutureWorker(value) { futureWorker=value }
 export { founder, workerUser, session, workerSession };
+// Reuse the authenticated base fixture without granting repository qualification.
+export { setup as authenticatedWorkerFixture }

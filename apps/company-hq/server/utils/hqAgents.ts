@@ -66,7 +66,7 @@ export function hqAgentSnapshot(value: unknown, event?: H3Event): HqAgentSnapsho
 }
 
 /** Bounded UTF-8 stream; framework defaults must not read an unbounded message body first. */
-async function boundedBody(event: H3Event, limit: number): Promise<unknown> {
+export async function boundedBody(event: H3Event, limit: number): Promise<unknown> {
   const invalid = () => createError({ statusCode: 400, statusMessage: 'HQ message unavailable' })
   if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(getHeader(event, 'content-type') ?? '')
     || getHeader(event, 'content-encoding') && getHeader(event, 'content-encoding') !== 'identity') throw invalid()

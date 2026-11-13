@@ -418,6 +418,24 @@
       "phase": "bounded-employee-parallelism",
       "status": "approved-source-not-deployed",
       "proposal": "apps/company-hq/supabase/migrations/20261112140052_hq_bounded_employee_parallelism.sql"
+    },
+    {
+      "file": "20261112213000_hq_resend_connection_test.sql",
+      "bytes": 14628,
+      "md5": "41a375b5eba7214c7586ab7e84c09561",
+      "sha256": "58a5fdb0a6ba142139957b4a4706d5c01c69f722cf1da743a2dd7ec1dfbbf32c",
+      "phase": "resend-connection-test",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261112213000_hq_resend_connection_test.sql"
+    },
+    {
+      "file": "20261112213001_hq_resend_test_worker_compatibility.sql",
+      "bytes": 2046,
+      "md5": "c33de2466fee7306e46c64ec6ed847ca",
+      "sha256": "8289de907b10cf4b875d4bc05a99bcfd6d3f37b51024f04b63a5990654ad4f01",
+      "phase": "resend-connection-test",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261112213001_hq_resend_test_worker_compatibility.sql"
     }
   ],
   "recoveredAppliedMigrations": [
