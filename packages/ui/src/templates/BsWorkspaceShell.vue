@@ -5,6 +5,7 @@ import type { BsWorkspaceCreationForm } from '../types/workspaceCreationPresenta
 import type { BsJournalCreationForm, BsJournalCreationFlow } from '../types/journalCreationPresentation'
 import type { BsCommitmentDraft, BsRecurringDraft, BsCounterpartyDraft, BsTagDraft } from '../types/operationalCreationPresentation'
 import type { BsAccessIdentityForm } from '../types/accessPresentation'
+import type { BsShellAssistantChat } from '../types/assistantChatPresentation'
 withDefaults(defineProps<{
   variant?: 'default' | 'shop'
   sidebarPlan?: { name: string; status: string; detail: string; actionLabel: string; to: string }
@@ -33,11 +34,13 @@ withDefaults(defineProps<{
   contextScope?: { key: string; value: string | null; label: string; options: ScopeOption[] }
   headerScopes?: { key: string; value: string | null; label: string; options: ScopeOption[]; visibility?: 'always' | 'mobile' | 'desktop'; placeholder?: string; disabled?: boolean }[]
   state?: { loading: boolean; error: boolean; title: string; description?: string; retry: string; titleLevel?: 1 | 2 | 3 }
+  assistant?: BsShellAssistantChat
   floatingActions?: boolean
   feedback?: boolean
   logo: { kind: 'text' | 'initials' | 'product'; initials?: string; assetPrefix?: string }
 }>(), { variant: 'default', settingsLinks: () => [], sidebarPlan: undefined, ready: true, loadingLabel: '', trial: undefined, notifications: undefined, readOnly: undefined, scopeNotice: undefined, workspaceCreation: undefined, onboarding: undefined, financialMap: undefined, journalCreation: undefined, operationalCreation: undefined, invitation: undefined, bodyLayout: 'stack', context: undefined, workspace: undefined, account: undefined, contextScope: undefined, headerScopes: () => [], state: undefined, floatingActions: false, feedback: false, homePath: '/dashboard', mobileLinks: () => [] })
-const emit = defineEmits<{ signOut: []; scope: [key: string, value: string | null]; retry: []; workspace: [id: string]; createWorkspace: []; closeWorkspaceCreation: []; submitWorkspaceCreation: []; createOrganization: []; acceptInvitation: []; demoReceipt: []; demoReset: []; notification: [id: string]; markAllNotifications: []; journalFlow: [value: BsJournalCreationFlow]; closeJournal: []; saveJournal: []; closeOperation: []; saveOperation: []; closeInvitation: []; submitInvitation: [] }>()
+const emit = defineEmits<{ signOut: []; scope: [key: string, value: string | null]; retry: []; workspace: [id: string]; createWorkspace: []; closeWorkspaceCreation: []; submitWorkspaceCreation: []; createOrganization: []; acceptInvitation: []; demoReceipt: []; demoReset: []; notification: [id: string]; markAllNotifications: []; journalFlow: [value: BsJournalCreationFlow]; closeJournal: []; saveJournal: []; closeOperation: []; saveOperation: []; closeInvitation: []; submitInvitation: []; assistantOpen: []; assistantClose: []; assistantSend: []; assistantConfirm: []; assistantDiscard: []; assistantAuthorize: [enabled: boolean]; assistantLoadEarlier: [] }>()
+const assistantDraft = defineModel<string>('assistantDraft', { default: '' })
 const workspaceCreationForm = defineModel<BsWorkspaceCreationForm | undefined>('workspaceCreationForm', { default: undefined })
 const onboardingForm = defineModel<{ name: string; legalName: string; currency: string; invitationToken: string } | undefined>('onboardingForm', { default: undefined })
 const journalForm = defineModel<BsJournalCreationForm | undefined>('journalForm', { default: undefined })
@@ -61,7 +64,20 @@ const invitationForm = defineModel<BsAccessIdentityForm | undefined>('invitation
     <template #context><BsText v-if="context" as="p" size="xs" tone="muted" emphasis="semibold">{{ context }}</BsText></template>
     <template #header><BsContextSwitcher v-if="workspace" :model-value="workspace.value" :label="workspace.label" :placeholder="workspace.placeholder" :options="workspace.options" :create-label="workspace.createLabel" @update:model-value="value => { if (value) emit('workspace', value) }" @create="emit('createWorkspace')"/><BsScopeSwitcher v-if="contextScope" :model-value="contextScope.value" :label="contextScope.label" :options="contextScope.options" visibility="mobile" @update:model-value="emit('scope', contextScope.key, $event)"/><BsTrialCountdown v-if="trial" :to="trial.to" :label="trial.label" :compact-label="trial.compactLabel"/><BsNotificationMenu v-if="notifications" :items="notifications.items" :label="notifications.label" :empty-label="notifications.emptyLabel" :mark-all-label="notifications.markAllLabel" :pending="notifications.pending" @select="emit('notification', $event)" @mark-all="emit('markAllNotifications')"/><BsScopeSwitcher v-for="scope in headerScopes" :key="scope.key" :model-value="scope.value" :label="scope.label" :options="scope.options" :placeholder="scope.placeholder" :disabled="scope.disabled" compact :visibility="scope.visibility" @update:model-value="emit('scope', scope.key, $event)"/></template>
     <BsStateSurface v-if="state?.error" state="error" :title-level="state.titleLevel" :title="state.title" :description="state.description" :action-label="state.retry" @action="emit('retry')"/><BsSectionSkeleton v-else-if="state?.loading" variant="cards"/><BsWorkspaceOnboarding v-else-if="onboarding && onboardingForm" v-model:form="onboardingForm" :pending="onboarding.pending" :error="onboarding.error" :copy="onboarding.copy" :accounts="onboarding.accounts" :revision="onboarding.revision" @create="emit('createOrganization')" @accept="emit('acceptInvitation')" @receipt="emit('demoReceipt')" @reset="emit('demoReset')"/><BsStack v-else gap="sm"><BsAlert v-if="scopeNotice" tone="info" :title="scopeNotice.title" :description="scopeNotice.description"/><BsReadOnlyBanner v-if="readOnly" :title="readOnly.title" :description="readOnly.description" :action-label="readOnly.actionLabel" :action-to="readOnly.actionTo"/><BsPageBody v-if="bodyLayout === 'page'"><slot/></BsPageBody><slot v-else/></BsStack>
-    <template #overlays>
+    <template #overlays="{ mobileNavigationOpen }">
+      <BsFloatingAssistantChat
+        v-if="assistant"
+        v-show="!mobileNavigationOpen"
+        v-model:draft="assistantDraft"
+        :assistant="assistant"
+        @open="emit('assistantOpen')"
+        @close="emit('assistantClose')"
+        @send="emit('assistantSend')"
+        @confirm="emit('assistantConfirm')"
+        @discard="emit('assistantDiscard')"
+        @authorize="emit('assistantAuthorize', $event)"
+        @load-earlier="emit('assistantLoadEarlier')"
+      />
       <BsWorkspaceCreationDialog v-if="workspaceCreation && workspaceCreationForm" v-model:form="workspaceCreationForm" :view="workspaceCreation" @close="emit('closeWorkspaceCreation')" @submit="emit('submitWorkspaceCreation')"/>
       <BsFinancialSystemMap v-if="financialMap" :copy="financialMap.copy" :flows="financialMap.flows" :checks="financialMap.checks" :reports="financialMap.reports"/>
       <BsJournalCreationDialog v-if="journalCreation && journalForm" v-model:form="journalForm" :flow="journalCreation.flow" :view="journalCreation.view" :copy="journalCreation.copy" :options="journalCreation.options" @flow="emit('journalFlow', $event)" @close="emit('closeJournal')" @save="emit('saveJournal')"/>

@@ -30,6 +30,8 @@ export interface BsAssistantChatCopy {
   discard: string
   proposalTitle: string
   proposalHelp: string
+  loadEarlier?: string
+  loadingEarlier?: string
   status: Record<'loading' | 'denied' | 'unavailable' | 'noLocation', string>
 }
 
@@ -48,4 +50,20 @@ export interface BsAssistantChatView {
   }
   pending: 'send' | 'confirm' | 'access' | null
   error: string | null
+  canSend?: boolean
+  showComposer?: boolean
+  notice?: string
+  hasMore?: boolean
+  loadingEarlier?: boolean
+  historyLoading?: boolean
+  pendingJobs?: readonly { id: string; label: string }[]
+}
+
+export interface BsShellAssistantChat {
+  copy: BsAssistantChatCopy
+  view: BsAssistantChatView
+  maximumLength: number
+  launcherLabel: string
+  closeLabel: string
+  openRequest?: number
 }

@@ -1,5 +1,6 @@
+import type { ShopHqChatAccess, ShopHqChatHistory } from '../../shared/shopHqChat'
+
 // Product RPC contract for the dedicated Shop project public schema.
-type ShopHqAssistantAccess = { enabled: boolean; agentName: 'Shop Suit Agent' }
 type ShopHqAssistantMessage = { role: 'user' | 'assistant'; content: string }
 type ShopHqAssistantIntent =
   | { kind: 'reply'; customerName: null; customerPhone: null; services: []; paymentMethod: null; paidAmount: null; paymentReceived: false; reply: string }
@@ -865,15 +866,23 @@ export type ShopRpcDatabase = {
       }
       shop_hq_assistant_access: {
         Args: { p_shop_id: string }
-        Returns: ShopHqAssistantAccess
+        Returns: ShopHqChatAccess
       }
       shop_hq_assistant_authorize: {
         Args: { p_shop_id: string; p_enabled: boolean }
-        Returns: ShopHqAssistantAccess
+        Returns: ShopHqChatAccess
       }
       shop_hq_assistant_enqueue: {
         Args: { p_shop_id: string; p_location_id: string; p_request_id: string; p_messages: ShopHqAssistantMessage[] }
         Returns: { jobId: string }
+      }
+      shop_hq_assistant_send: {
+        Args: { p_shop_id: string; p_location_id: string; p_request_id: string; p_message: string }
+        Returns: { jobId: string }
+      }
+      shop_hq_assistant_history: {
+        Args: { p_shop_id: string; p_location_id: string; p_before_sequence?: number | null; p_limit?: number }
+        Returns: ShopHqChatHistory
       }
       shop_hq_assistant_job: {
         Args: { p_shop_id: string; p_location_id: string; p_job_id: string }

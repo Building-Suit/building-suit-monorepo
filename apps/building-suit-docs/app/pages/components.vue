@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { calendarDateKey, calendarLocalDate, calendarWindow, useInlineForm } from '@building-suit/ux'
-import type { BsAssistantChatCopy, BsAssistantChatView } from '@building-suit/ui/types/assistantChatPresentation'
+import type { BsAssistantChatCopy, BsAssistantChatView, BsShellAssistantChat } from '@building-suit/ui/types/assistantChatPresentation'
 import type { BsAppointmentCard, BsAppointmentsView } from '@building-suit/ui/types/appointmentsPresentation'
 import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
@@ -105,9 +105,9 @@ const assistantExampleCopy = computed<BsAssistantChatCopy>(() => ({
   user: isArabic.value ? 'أنت' : 'You',
   assistant: isArabic.value ? 'المساعد' : 'Assistant',
   receipt: isArabic.value ? 'تم التسجيل' : 'Recorded',
-  emptyTitle: '', emptyDescription: '', composer: '', placeholder: '', keyboardHint: '',
+  emptyTitle: '', emptyDescription: '', composer: isArabic.value ? 'رسالتك' : 'Your message', placeholder: '', keyboardHint: '',
   privacy: isArabic.value ? 'مثال توضيحي ببيانات تجريبية.' : 'Example conversation with synthetic data.',
-  send: '', sending: '', newChat: '', discard: '', confirm: '', confirming: '', proposalTitle: '', proposalHelp: '',
+  send: isArabic.value ? 'إرسال' : 'Send', sending: '', newChat: '', discard: '', confirm: '', confirming: '', proposalTitle: '', proposalHelp: '',
   status: { loading: '', denied: '', unavailable: '', noLocation: '' },
 }))
 const assistantExampleView = computed<BsAssistantChatView>(() => ({
@@ -128,6 +128,16 @@ const assistantAuthorizationView = computed<BsAssistantChatView>(() => ({
     disable: isArabic.value ? 'إيقاف المساعد' : 'Turn off assistant',
     policies: [],
   },
+}))
+const floatingAssistantExample = ref(false)
+const floatingAssistantDraft = ref('')
+const floatingAssistant = computed<BsShellAssistantChat>(() => ({
+  copy: { ...assistantExampleCopy.value, loadEarlier: isArabic.value ? 'عرض الرسائل الأقدم' : 'Load earlier messages' },
+  view: { ...assistantExampleView.value, canSend: false, showComposer: false },
+  maximumLength: 2000,
+  launcherLabel: isArabic.value ? 'افتح المحادثة التوضيحية' : 'Open sample conversation',
+  closeLabel: ui('close'),
+  openRequest: 1,
 }))
 const exampleCalendarDate = ref('2026-10-12')
 const exampleCalendarView = ref<'month' | 'week' | 'day'>('month')
@@ -323,6 +333,15 @@ const invitationPreviewCopy={
     <BsContentSection title="BsAssistantChatPage">
       <BsAssistantChatPage v-model:draft="assistantExampleDraft" :copy="assistantExampleCopy" :view="assistantExampleView" :maximum-length="2000" preview />
       <BsAssistantChatPage v-model:draft="assistantExampleDraft" :copy="assistantExampleCopy" :view="assistantAuthorizationView" :maximum-length="2000" preview />
+      <BsButton variant="secondary" @click="floatingAssistantExample = true">
+        {{ isArabic ? 'افتح مثال المحادثة العائمة' : 'Open floating chat example' }}
+      </BsButton>
+      <BsFloatingAssistantChat
+        v-if="floatingAssistantExample"
+        v-model:draft="floatingAssistantDraft"
+        :assistant="floatingAssistant"
+        @close="floatingAssistantExample = false"
+      />
     </BsContentSection>
     <BsContentSection :title="isArabic ? 'الوزن وتأكيد الكمية' : 'Weighing and quantity confirmation'"><BsDescriptionList><BsDescriptionItem term="BsScaleCaptureDialog / BsPointOfSalePage">{{ isArabic ? 'نافذة اختيارية لاختيار الميزان والصنف، وتوصيل الجهاز وقراءة الوزن الثابت وتصفير الوعاء بتأكيد مستقل. تظهر كمية المخزون المحوّلة أولاً مع الصافي والوعاء والإجمالي قبل الإضافة. يزوّد التطبيق القراءات والصلاحيات؛ يحتفظ الطلب غير المؤكد بقيمه لإعادة المحاولة، ويظل الإدخال اليدوي متاحًا عند عدم دعم التوصيل.' : 'An optional dialog selects the scale and product, connects explicitly, reads stable weight and confirms tare separately. Converted stock quantity appears first with net, tare and gross before adding. The app supplies readings and capabilities; uncertain requests retain their values for retry, and manual entry remains available without device support.' }}</BsDescriptionItem><BsDescriptionItem term="BsWeighingSetupPage">{{ isArabic ? 'قالب كامل لإعداد الأجهزة ومعاملات الوزن إلى الطول مع دليل الاعتماد والتأكيد الصريح وسجل غير قابل للتغيير وترقيم صفحات من الخادم. يملك التطبيق الصلاحيات والقواعد، وتُقفل القيم عند عدم تأكد الحفظ.' : 'A complete page for device profiles and product mass-to-length factors, with approval references, explicit confirmation, immutable history and server pagination. The app owns authority and rules; uncertain saves lock their values for retry.' }}</BsDescriptionItem></BsDescriptionList></BsContentSection>
     <BsContentSection :title="isArabic ? 'مصادر الأسعار واعتمادها' : 'Price sources and approvals'"><BsDescriptionList><BsDescriptionItem term="BsCommodityPricingPage">{{ isArabic ? 'قالب كامل لأسعار المصادر وقواعد الأصناف، مع عرض العملة والسريان والوحدة والدليل والسجل. تبقى شروط المصدر السابق للقراءة فقط؛ يُضاف مصدر جديد لتغييرها. يزوّد التطبيق الصلاحيات والحسابات والأوامر، وتُقفل القيم عند عدم تأكد الحفظ لإعادة الطلب نفسه، مع أزرار ثابتة في النماذج الطويلة.' : 'A complete page for source quotes and product rules, displaying currency, validity, stock unit, evidence and history. Existing source terms stay read-only; changing them requires a new source. The app supplies authority, arithmetic and commands. Uncertain saves freeze their values for identical retry, with pinned actions for long forms.' }}</BsDescriptionItem></BsDescriptionList></BsContentSection>
