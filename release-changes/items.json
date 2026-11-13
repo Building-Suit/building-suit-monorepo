@@ -6804,8 +6804,8 @@
         "ar": "اطلب من مساعد المتجر فتح المبيعات أو صفحة تانية وخد رابط مباشر. وقت الإرسال بيظهر مع كل رسالة والرسائل متجمعة حسب التاريخ."
       },
       "details": {
-        "en": "The agent can use earlier messages from the same authorized conversation. Ask how to enable products for a link to Business operation mode. Find Privacy settings in the Shop settings menu.",
-        "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. اسأل عن تفعيل المنتجات عشان تفتح إعداد طريقة تشغيل النشاط. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
+        "en": "The agent can use earlier messages from the same authorized conversation. Find Privacy settings in the Shop settings menu.",
+        "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
       }
     },
     "sources": [
@@ -6827,6 +6827,58 @@
       {
         "path": "apps/shop-suit/supabase/migrations/20261113194524_shop_hq_assistant_conversation_recall.sql",
         "contains": "create function public.shop_hq_assistant_recall"
+      }
+    ]
+  },
+  {
+    "id": "shop-hq-chat-create-products",
+    "task": "SS-HQ-CHAT-CREATE-PRODUCTS",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useCatalogMedia.ts",
+      "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+      "apps/shop-suit/app/pages/products/index.vue",
+      "apps/shop-suit/app/utils/shopHqAssistantCopy.ts",
+      "apps/shop-suit/docs/assistant-chat.md",
+      "apps/shop-suit/server/utils/shopHqAssistant.ts",
+      "apps/shop-suit/shared/shopHqChat.ts",
+      "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+      "packages/ui/src/templates/BsCataloguePage.vue"
+    ],
+    "reason": "The Shop agent can create an editable catalog record from a product name and checks whether Products is already enabled.",
+    "notes": {
+      "title": {
+        "en": "Add products from Shop chat",
+        "ar": "إضافة المنتجات من محادثة المتجر"
+      },
+      "summary": {
+        "en": "Tell the agent to add a product by name. It saves the record and sends a link so you can edit or archive it.",
+        "ar": "اطلب من المساعد إضافة منتج بالاسم. هيسجله ويبعت لك رابط عشان تعدّله أو تأرشفه."
+      },
+      "details": {
+        "en": "If you leave out the price, the product stays unavailable for sale until you set it. The agent checks your shop’s settings before sending you to Products or showing how to enable it.",
+        "ar": "لو ما كتبتش السعر، المنتج مش هيتباع لحد ما تحدد سعره. المساعد بيراجع إعدادات متجرك قبل ما يفتح لك المنتجات أو يشرح إزاي تفعّلها."
+      }
+    },
+    "sources": [
+      "shop-hq-chat-create-products"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+        "contains": "create function shop_private.hq_assistant_create_product"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useShopHqAssistant.ts",
+        "contains": "/products?product=${entry.link.productId}"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261113202536_shop_hq_assistant_product_creation.sql",
+        "contains": "'productsEnabled',v_mode in ('product','mixed')"
       }
     ]
   }

@@ -65,6 +65,10 @@ export function useShopHqAssistant() {
       ...stamp, role: 'receipt', text: labels.value.saleRecorded,
       link: { to: `/sales/${entry.link.saleId}/receipt?origin=assistant`, label: labels.value.openReceipt },
     }
+    if (entry.kind === 'product') return {
+      ...stamp, role: 'assistant', text: labels.value.productCreated(entry.link.name, entry.link.pricePending),
+      link: { to: `/products?product=${entry.link.productId}`, label: labels.value.openProduct },
+    }
     if (entry.kind === 'action') {
       const destination = entry.link.destination
       if (destination === 'business-mode') return {
@@ -213,6 +217,9 @@ export function useShopHqAssistant() {
           if (binding !== active) return
           const first = latest.messages[0]?.sequence
           const lastKnown = entries.value.at(-1)?.sequence
+          if (latest.messages.some(entry => entry.kind === 'product' && entry.sequence > (lastKnown ?? 0))) {
+            queries.invalidate('shop-data:products')
+          }
           // A full latest page without overlap may have skipped intervening messages.
           if (first === undefined || (lastKnown !== undefined && first > lastKnown)) {
             entries.value = latest.messages

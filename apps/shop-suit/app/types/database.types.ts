@@ -5504,6 +5504,7 @@ export type Database = {
           measurement_revision: number
           measurement_status: string
           name: string
+          price_pending: boolean
           quantity_increment: number
           reorder_threshold: number
           sale_price: number
@@ -5525,6 +5526,7 @@ export type Database = {
           measurement_revision?: number
           measurement_status?: string
           name: string
+          price_pending?: boolean
           quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
@@ -5546,6 +5548,7 @@ export type Database = {
           measurement_revision?: number
           measurement_status?: string
           name?: string
+          price_pending?: boolean
           quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
@@ -15772,6 +15775,10 @@ export type Database = {
           p_request_id: string
           p_shop_id: string
         }
+        Returns: Json
+      }
+      shop_hq_assistant_shop_context: {
+        Args: { p_job_id: string; p_lease_token: string }
         Returns: Json
       }
       shop_hq_assistant_staff: {

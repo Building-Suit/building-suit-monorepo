@@ -454,6 +454,15 @@
       "phase": "resend-connection-test",
       "status": "source-only-live-approval-required",
       "proposal": "apps/company-hq/supabase/migrations/20261113070000_hq_resend_test_worker_compatibility.sql"
+    },
+    {
+      "file": "20261113203337_hq_shop_suit_assistant_worker_compatibility.sql",
+      "bytes": 2592,
+      "md5": "0e4f06605ecee40ebcfcca9985c45196",
+      "sha256": "a10e2b9e2cdb6a4845190ebd5d536728a4e6d28b17d9ce97787909b21e3c3e39",
+      "phase": "shop-suit-worker-compatibility",
+      "status": "source-only-live-approval-required",
+      "proposal": "apps/company-hq/supabase/migrations/20261113203337_hq_shop_suit_assistant_worker_compatibility.sql"
     }
   ],
   "recoveredAppliedMigrations": [

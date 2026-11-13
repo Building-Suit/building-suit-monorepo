@@ -10,9 +10,11 @@ const clarification = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('payment_missing'), total: z.number().nonnegative().optional(), currency: z.string().regex(/^[A-Z]{3}$/).optional() }),
   z.object({ kind: z.literal('amount_mismatch'), total: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/) }),
 ])
+const createdProduct = { productId: z.uuid(), name: z.string().min(2).max(160), pricePending: z.boolean() }
 const update = z.discriminatedUnion('kind', [
   z.object({ sequence: z.int().positive(), kind: z.literal('reply'), text: z.string().min(1).max(2_000) }),
   z.object({ sequence: z.int().positive(), kind: z.literal('receipt'), invoiceId: z.uuid() }),
+  z.object({ sequence: z.int().positive(), kind: z.literal('product'), ...createdProduct }),
   z.object({ sequence: z.int().positive(), kind: z.literal('action'), destination: z.enum(shopHqActionDestinations) }),
   z.object({ sequence: z.int().positive(), kind: z.literal('clarification'), outcome: clarification }),
 ])
@@ -32,6 +34,8 @@ const historyMessage = z.discriminatedUnion('kind', [
   z.object({ ...historyEntry, kind: z.literal('message'), role: z.enum(['user', 'assistant']), text: z.string().min(1).max(2_000) }),
   z.object({ ...historyEntry, kind: z.literal('receipt'), role: z.literal('assistant'),
     link: z.object({ destination: z.literal('receipt'), saleId: z.uuid() }) }),
+  z.object({ ...historyEntry, kind: z.literal('product'), role: z.literal('assistant'),
+    link: z.object({ destination: z.literal('product'), ...createdProduct }) }),
   z.object({ ...historyEntry, kind: z.literal('action'), role: z.literal('assistant'),
     link: z.object({ destination: z.enum(shopHqActionDestinations) }) }),
   z.object({ ...historyEntry, kind: z.literal('clarification'), role: z.literal('assistant'), outcome: clarification }),

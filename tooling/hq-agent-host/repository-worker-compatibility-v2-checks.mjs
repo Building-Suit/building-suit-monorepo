@@ -17,6 +17,7 @@ const parallelDigest='d768ee8a7ed2717c8fd1dbf09d0159b9aca0607b14f95e5608d5ea5980
 const parallelMigration=new URL('20261112140052_hq_bounded_employee_parallelism.sql',root)
 const emailCompatibilityMigration=new URL('20261113070000_hq_resend_test_worker_compatibility.sql',root)
 const shopCompatibilityMigration=new URL('20261113023924_hq_shop_suit_worker_compatibility.sql',root)
+const shopAssistantCompatibilityMigration=new URL('20261113203337_hq_shop_suit_assistant_worker_compatibility.sql',root)
 async function preparedVersion(filename,digest){
  const directory=await mkdtemp(join(tmpdir(),'hq-compatibility-v2-'))
  try{
@@ -272,12 +273,31 @@ export async function verifyRepositoryWorkerCompatibilityV2({database=null,histo
    await assert.rejects(()=>checkProductionWorker(shopAccepted),/repository-worker-incompatible/)
    assert.deepEqual(await metadata(h),beforeShopMetadata)
    await h.db.exec('reset role')
+   const assistantSql=await readFile(shopAssistantCompatibilityMigration,'utf8')
+   await assert.rejects(()=>h.db.exec(assistantSql),/HQ_SHOP_ASSISTANT_PAIR_PREDECESSOR_MISMATCH/)
+   await h.db.exec('rollback')
+   assert.deepEqual(await status(h),shopAccepted)
+   await h.db.exec('reset role')
    await h.db.exec(await readFile(emailCompatibilityMigration,'utf8'))
+   const emailAccepted=await status(h)
+   const emailPair={workerSourceDigest:'48113a2f9ebd58252cbd05975ca22ad3dea1e35d6cabc8e59152945d04134440',moduleSha256:shopPair.moduleSha256}
+   assert.deepEqual(emailAccepted.repositoryWorkerCompatibilityV2.sourcePairs,[...shopAccepted.repositoryWorkerCompatibilityV2.sourcePairs,emailPair])
+   assert.equal(emailAccepted.emailConnectionTests,1)
+   await assert.rejects(()=>checkProductionWorker(emailAccepted),/repository-worker-incompatible/)
+   const beforeAssistantDefinitions=await definitions(h),beforeAssistantMetadata=await metadata(h)
+   await h.db.exec(assistantSql)
    const accepted=await status(h)
-   assert.deepEqual(accepted.repositoryWorkerCompatibilityV2.sourcePairs,[...shopAccepted.repositoryWorkerCompatibilityV2.sourcePairs,productionPair])
-   assert.equal(accepted.emailConnectionTests,1)
+   assert.deepEqual(accepted,{
+    ...emailAccepted,
+    repositoryWorkerCompatibilityV2:{
+     ...emailAccepted.repositoryWorkerCompatibilityV2,
+     sourcePairs:[...emailAccepted.repositoryWorkerCompatibilityV2.sourcePairs,productionPair],
+    },
+   })
    assert.deepEqual(accepted.repositoryWorkerCompatibility,baseline.repositoryWorkerCompatibility)
    const afterShopDefinitions=await definitions(h)
+   assert.deepEqual(afterShopDefinitions,beforeAssistantDefinitions,'assistant admission only changes the exact-pair list')
+   assert.deepEqual(await metadata(h),beforeAssistantMetadata)
    assert.deepEqual(afterShopDefinitions.get(modified[4]),beforeShopDefinitions.get(modified[4]),'qualification issuance remains byte-identical')
    await assert.doesNotReject(()=>checkProductionWorker(accepted))
    await assert.doesNotReject(()=>prepared.checkRepositoryWorkerCompatibility(accepted))
@@ -300,8 +320,8 @@ export async function verifyReviewedProductionWorker(){
  const production=await readFile(new URL('./worker.mjs',import.meta.url))
  assert.equal(hash(await readFile(new URL('./test-fixtures/retail-v2-worker.mjs.txt',import.meta.url))),candidateDigest,'historical v2 fixture remains immutable')
  const pair={workerSourceDigest:hash(production),moduleSha256:hash(await readFile(new URL('./departmentWorkflow.mjs',import.meta.url)))}
- const migration=await readFile(emailCompatibilityMigration,'utf8')
- assert.deepEqual([...migration.matchAll(/'workerSourceDigest','([a-f0-9]{64})',\s*'moduleSha256','([a-f0-9]{64})'/g)].at(-1)?.slice(1),
+ const migration=await readFile(shopAssistantCompatibilityMigration,'utf8')
+ assert.deepEqual([...migration.matchAll(/'workerSourceDigest',\s*'([a-f0-9]{64})',\s*'moduleSha256',\s*'([a-f0-9]{64})'/g)].at(-1)?.slice(1),
   [pair.workerSourceDigest,pair.moduleSha256],'worker deployment must use the exact reviewed and SQL-admitted Shop connector pair')
  assert.notEqual(pair.workerSourceDigest,parallelDigest)
  assert.notEqual(pair.moduleSha256,fixedModuleDigest)

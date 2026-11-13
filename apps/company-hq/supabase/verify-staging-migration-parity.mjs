@@ -55,7 +55,12 @@ if (employeeParallelism.length !== 1 || employeeParallelism.some(row => row.file
 const shopSuitStaff = pending.filter(row => row.phase === 'shop-suit-staff-snapshot')
 if (shopSuitStaff.length !== 1 || shopSuitStaff.some(row => row.file !== '20261113023602_hq_shop_suit_staff_snapshot.sql' || row.status !== 'approved-source-not-deployed' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown Shop Suit staff snapshot source')
 const shopSuitWorker = pending.filter(row => row.phase === 'shop-suit-worker-compatibility')
-if (shopSuitWorker.length !== 1 || shopSuitWorker.some(row => row.file !== '20261113023924_hq_shop_suit_worker_compatibility.sql' || row.status !== 'approved-source-not-deployed' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown Shop Suit worker compatibility source')
+const expectedShopSuitWorker = [
+  ['20261113023924_hq_shop_suit_worker_compatibility.sql', 'approved-source-not-deployed'],
+  ['20261113203337_hq_shop_suit_assistant_worker_compatibility.sql', 'source-only-live-approval-required'],
+]
+if (!isDeepStrictEqual(shopSuitWorker.map(row => [row.file, row.status]), expectedShopSuitWorker)
+  || shopSuitWorker.some(row => row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown Shop Suit worker compatibility source')
 const retailAssignment = pending.filter(row => row.phase === 'retail-assignment-context')
 if (retailAssignment.length !== 1 || retailAssignment.some(row => row.file !== '20261111033000_hq_retail_assignment_context.sql' || row.status !== 'approved-source-not-deployed' || row.proposal !== 'apps/company-hq/supabase/migrations/' + row.file)) failures.push('unknown retail assignment context source')
 const repositoryV2 = pending.filter(row => row.phase === 'repository-worker-compatibility-v2-review-only')

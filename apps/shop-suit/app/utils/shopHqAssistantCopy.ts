@@ -19,6 +19,9 @@ export function shopHqAssistantCopy(isArabic: boolean) {
     accessError: 'مقدرناش نحدّث حالة المساعد. حاول تاني.',
     saleRecorded: 'تم تسجيل البيع.',
     openReceipt: 'افتح الإيصال',
+    openProduct: 'افتح المنتج',
+    productCreated: (name: string, pricePending: boolean) => pricePending
+      ? `اتسجل «${name}». ضيف سعره قبل البيع.` : `اتسجل «${name}».`,
     openBusinessMode: 'افتح طريقة تشغيل النشاط',
     failed: 'الطلب ما اكتملش. ابعته تاني لو لسه محتاج تنفّذه.',
     customer_missing: 'مقدرتش ألاقي عميل بالاسم ده. اكتب اسم العميل زي ما هو متسجّل.',
@@ -51,6 +54,9 @@ export function shopHqAssistantCopy(isArabic: boolean) {
     accessError: 'Could not update agent access. Try again.',
     saleRecorded: 'The sale was recorded.',
     openReceipt: 'Open receipt',
+    openProduct: 'Open product',
+    productCreated: (name: string, pricePending: boolean) => pricePending
+      ? `Created “${name}”. Add a price before selling it.` : `Created “${name}”.`,
     openBusinessMode: 'Open business operation mode',
     failed: 'This request could not be completed. Send it again if you still need it.',
     customer_missing: 'I couldn’t find that customer. Enter their name as it appears in Shop Suit.',

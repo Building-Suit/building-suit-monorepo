@@ -1472,6 +1472,7 @@ export async function start(adapters = {}) {
       shop = startShopConnector(shopConfig, {
         inference: adapters.shopInference,
         recallEnabled: Boolean(adapters.shopInference),
+        shopContextEnabled: Boolean(adapters.shopInference),
         readDocs: shopBrainReader(brain),
         admit: shopAdmitting,
         run: async action => {

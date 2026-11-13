@@ -6,7 +6,9 @@ Each active shop has a stable employee assignment in the Shop Suit Agents depart
 
 Ask for a page by name, for example `عاوز افتح المبيعات`. The agent replies with a direct link to Sales. For an unclear request, it gives two or three useful options. The chat groups messages by date and shows their times. Privacy settings are in the Shop settings menu.
 
-Ask `ازاي افعل المنتجات؟` to open [Business operation mode](/settings/business-mode). Choose **Products and services** and click **Save operation mode** to show products and inventory alongside services.
+The agent checks the selected shop’s current operation mode. Ask `ازاي افعل المنتجات؟` to open Products if they are already enabled or [Business operation mode](/settings/business-mode) to enable them. Choose **Products and services**, then **Save operation mode**.
+
+Ask `Add a product called Kids Backpack` to create a product by name. The agent returns a link to the saved product, where you can edit or archive it. If the request supplies no price, Shop Suit saves the record as **Price needed** and requires a price before selling it.
 
 The agent can use relevant earlier owner messages and stated preferences from the current authorized conversation. Turning the agent off ends that authorization for future recall. Saved chat history remains available to the owner.
 
