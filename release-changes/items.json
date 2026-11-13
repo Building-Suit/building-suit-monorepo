@@ -6636,6 +6636,7 @@
     "classification": "internal",
     "disposition": "internal",
     "paths": [
+      "apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
       "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs",
       "release-changes/items.json"
     ],
