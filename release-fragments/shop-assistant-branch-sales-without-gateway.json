@@ -1,0 +1,30 @@
+{
+  "id": "shop-assistant-branch-sales-without-gateway",
+  "task": "SS-ASSISTANT-STAGING-REPAIR",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/docs/assistant-chat.md",
+    "apps/shop-suit/server/api/assistant/chat.post.ts",
+    "apps/shop-suit/server/utils/shopAssistantBranchSales.ts",
+    "apps/shop-suit/tests/unit/shop-assistant-actions.test.mjs"
+  ],
+  "reason": "The assistant answers explicit daily branch sales questions from the authorized Shop report when the external model is unavailable.",
+  "notes": {
+    "title": {
+      "en": "Daily sales in Shop assistant",
+      "ar": "مبيعات اليوم في مساعد المتجر"
+    },
+    "summary": {
+      "en": "Ask the assistant for today’s sales at the selected branch, even when the AI provider is unavailable.",
+      "ar": "اسأل المساعد عن مبيعات اليوم في الفرع المحدد حتى لو مزوّد الذكاء الاصطناعي مش متاح."
+    },
+    "details": {
+      "en": "The assistant uses the branch report for direct daily sales questions in English and Egyptian Arabic and links to Reports.",
+      "ar": "المساعد بيرد على الأسئلة المباشرة عن مبيعات اليوم بالإنجليزي والعربي المصري من تقرير الفرع، وبيفتح لك رابط التقارير."
+    }
+  }
+}
