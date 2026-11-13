@@ -1,4 +1,10 @@
 // Product RPC contract for the dedicated Shop project public schema.
+type ShopHqAssistantAccess = { enabled: boolean; agentName: 'Shop Suit Agent' }
+type ShopHqAssistantMessage = { role: 'user' | 'assistant'; content: string }
+type ShopHqAssistantIntent =
+  | { kind: 'reply'; customerName: null; services: []; paymentMethod: null; reply: string }
+  | { kind: 'service_sale'; customerName: string; services: string[]; paymentMethod: 'cash' | 'card' | 'transfer' | null; reply: string }
+
 export type ShopRpcDatabase = {
   public: {
     Tables: Record<string, never>
@@ -840,6 +846,36 @@ export type ShopRpcDatabase = {
           p_expected_location_name: string
         }
         Returns: string
+      }
+      shop_hq_assistant_access: {
+        Args: { p_shop_id: string }
+        Returns: ShopHqAssistantAccess
+      }
+      shop_hq_assistant_authorize: {
+        Args: { p_shop_id: string; p_enabled: boolean }
+        Returns: ShopHqAssistantAccess
+      }
+      shop_hq_assistant_enqueue: {
+        Args: { p_shop_id: string; p_location_id: string; p_request_id: string; p_messages: ShopHqAssistantMessage[] }
+        Returns: { jobId: string }
+      }
+      shop_hq_assistant_job: {
+        Args: { p_shop_id: string; p_location_id: string; p_job_id: string }
+        Returns:
+          | { state: 'queued' | 'working' | 'failed' | 'expired' | 'revoked' }
+          | { state: 'completed'; intent: ShopHqAssistantIntent }
+      }
+      shop_hq_assistant_can_receive: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      shop_hq_assistant_claim: {
+        Args: Record<string, never>
+        Returns: { jobId: string; leaseToken: string; messages: ShopHqAssistantMessage[] } | null
+      }
+      shop_hq_assistant_finish: {
+        Args: { p_job_id: string; p_lease_token: string; p_intent: ShopHqAssistantIntent | null; p_succeeded: boolean }
+        Returns: boolean
       }
       void_expense: {
         Args: {

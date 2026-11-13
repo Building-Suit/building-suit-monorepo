@@ -1,0 +1,31 @@
+{
+  "id": "shop-hq-assigned-agent-support",
+  "task": "SS-HQ-ASSIGNED-AGENT",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/app/types/shopCrmRpc.ts",
+    "apps/shop-suit/playwright.assistant.config.ts",
+    "apps/shop-suit/playwright.hq-assistant.config.ts",
+    "apps/shop-suit/supabase/tests",
+    "apps/shop-suit/tests",
+    "docs/shared/ui-ownership-manifest.json",
+    "package.json",
+    "packages/ui/src/templates/BsAssistantChatPage.vue",
+    "packages/ui/src/types/assistantChatPresentation.ts",
+    "release-changes/items.json",
+    "tooling/database/test-shop-local.mjs",
+    "tooling/hq-shop-agent-host"
+  ],
+  "reason": "Shared consent presentation, database contracts and verification support the Shop Suit rollout."
+}

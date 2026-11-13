@@ -15695,6 +15695,35 @@ export type Database = {
         Args: { _feature_key: string; _shop_id: string }
         Returns: boolean
       }
+      shop_hq_assistant_access: { Args: { p_shop_id: string }; Returns: Json }
+      shop_hq_assistant_authorize: {
+        Args: { p_enabled: boolean; p_shop_id: string }
+        Returns: Json
+      }
+      shop_hq_assistant_can_receive: { Args: never; Returns: boolean }
+      shop_hq_assistant_claim: { Args: never; Returns: Json }
+      shop_hq_assistant_enqueue: {
+        Args: {
+          p_location_id: string
+          p_messages: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      shop_hq_assistant_finish: {
+        Args: {
+          p_intent: Json
+          p_job_id: string
+          p_lease_token: string
+          p_succeeded: boolean
+        }
+        Returns: boolean
+      }
+      shop_hq_assistant_job: {
+        Args: { p_job_id: string; p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
       shop_offer_save: {
         Args: {
           p_id: string

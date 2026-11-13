@@ -38,6 +38,15 @@ export interface BsAssistantChatView {
   context: readonly { label: string; value: string }[]
   messages: readonly BsAssistantChatMessage[]
   proposal: { title: string; fields: readonly { label: string; value: string }[] } | null
-  pending: 'send' | 'confirm' | null
+  saleAction?: string
+  delegation?: {
+    enabled: boolean
+    title: string
+    explanation: string
+    enable: string
+    disable: string
+    policies: readonly BsAssistantChatLink[]
+  }
+  pending: 'send' | 'confirm' | 'access' | null
   error: string | null
 }

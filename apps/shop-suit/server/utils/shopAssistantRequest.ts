@@ -21,11 +21,7 @@ export const assistantConfirmRequest = z.strictObject({
   token: z.string().min(1).max(8_192),
 })
 
-export async function readShopAssistantRequest<T extends { shopId: string, locationId: string }>(
-  event: H3Event,
-  schema: z.ZodType<T>,
-  byteLimit: number,
-) {
+export function guardShopAssistantRequest(event: H3Event) {
   setResponseHeader(event, 'Cache-Control', 'private, no-store')
   const config = useRuntimeConfig(event)
   if (event.context.websiteHost || String(config.public.shopAssistantEnabled) !== 'true') {
@@ -39,6 +35,18 @@ export async function readShopAssistantRequest<T extends { shopId: string, locat
   if (getHeader(event, 'content-type')?.split(';')[0]?.trim().toLowerCase() !== 'application/json') {
     throw createError({ statusCode: 415, statusMessage: 'JSON required' })
   }
+
+  return config
+}
+
+export async function readShopAssistantRequest<T extends { shopId: string, locationId: string }>(
+  event: H3Event,
+  schema: z.ZodType<T>,
+  byteLimit: number,
+  mode: 'gateway' | 'hq' = 'gateway',
+) {
+  const config = guardShopAssistantRequest(event)
+  if (config.public.shopAssistantMode !== mode) throw createError({ statusCode: 404, statusMessage: 'Not Found' })
 
   let raw: unknown
   try {
@@ -54,7 +62,7 @@ export async function readShopAssistantRequest<T extends { shopId: string, locat
 
   const input = parsed.data
   const scope = await requireShopAssistantScope(event, input.shopId, input.locationId)
-  if (!/^[a-f0-9]{64}$/i.test(config.shopAssistantSigningSecret)) {
+  if (mode === 'gateway' && !/^[a-f0-9]{64}$/i.test(config.shopAssistantSigningSecret)) {
     throw createError({ statusCode: 503, statusMessage: 'Shop Assistant unavailable' })
   }
   return { input, scope, config }

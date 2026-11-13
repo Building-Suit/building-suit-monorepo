@@ -4,12 +4,14 @@ import type { BsAssistantChatCopy, BsAssistantChatView } from '../types/assistan
 
 const props = defineProps<{ copy: BsAssistantChatCopy; view: BsAssistantChatView; maximumLength: number; preview?: boolean }>()
 const draft = defineModel<string>('draft', { required: true })
-const emit = defineEmits<{ send: []; reset: []; confirm: []; discard: [] }>()
+const emit = defineEmits<{ send: []; reset: []; confirm: []; discard: []; authorize: [enabled: boolean]; openSale: [] }>()
 const transcript = ref<HTMLElement | null>(null)
 const form = ref<HTMLFormElement | null>(null)
 const proposal = ref<HTMLElement | null>(null)
+const authorizationTitle = ref<HTMLElement | null>(null)
 const hintId = useId()
 const proposalTitleId = useId()
+const authorizationTitleId = useId()
 const composerBlocked = computed(() => Boolean(props.view.pending || props.view.proposal))
 const sendable = computed(() => !composerBlocked.value && Boolean(draft.value.trim()) && draft.value.length <= props.maximumLength)
 
@@ -43,13 +45,26 @@ watch(() => Boolean(props.view.proposal), async present => {
   if (present) proposal.value?.querySelector('h2')?.focus()
   else form.value?.querySelector('textarea')?.focus()
 })
+
+watch(() => props.view.delegation?.enabled, async (enabled, previous) => {
+  if (props.preview || enabled === undefined || previous === undefined) return
+  const focused = document.activeElement
+  if (focused !== document.body && !authorizationTitle.value?.parentElement?.contains(focused)
+    && !(focused instanceof HTMLElement && focused.dataset.assistantRevoke !== undefined)) return
+  await nextTick()
+  if (enabled) form.value?.querySelector('textarea')?.focus()
+  else authorizationTitle.value?.focus()
+})
 </script>
 
 <template>
   <BsPage width="lg" padding="none">
     <BsPageHeader :title="copy.title" :context="[...view.context]">
-      <template v-if="!preview && view.state === 'ready' && (view.messages.length || draft)" #actions>
-        <BsButton variant="secondary" size="sm" :disabled="Boolean(view.pending)" @click="resetConversation">
+      <template v-if="!preview && view.state === 'ready' && (view.delegation?.enabled || view.messages.length || draft)" #actions>
+        <BsButton v-if="view.delegation?.enabled" data-assistant-revoke variant="secondary" size="sm" :pending="view.pending === 'access'" @click="emit('authorize', false)">
+          {{ view.delegation.disable }}
+        </BsButton>
+        <BsButton v-if="view.messages.length || draft" variant="secondary" size="sm" :disabled="Boolean(view.pending)" @click="resetConversation">
           <BsIcon name="add" :size="17" />
           {{ copy.newChat }}
         </BsButton>
@@ -61,6 +76,19 @@ watch(() => Boolean(props.view.proposal), async present => {
       :state="view.state === 'loading' || view.state === 'denied' ? view.state : 'info'"
       :title="copy.status[view.state]"
     />
+    <section v-else-if="view.delegation && !view.delegation.enabled" class="bs-assistant-chat bs-assistant-chat__authorization" :aria-labelledby="authorizationTitleId">
+      <h2 :id="authorizationTitleId" ref="authorizationTitle" tabindex="-1">{{ view.delegation.title }}</h2>
+      <p>{{ view.delegation.explanation }}</p>
+      <div class="bs-assistant-chat__proposal-actions">
+        <BsLink v-for="policy in view.delegation.policies" :key="policy.to" :to="policy.to">{{ policy.label }}</BsLink>
+      </div>
+      <BsAlert v-if="view.error" tone="error" :description="view.error" />
+      <div>
+        <BsButton variant="primary" :disabled="preview" :pending="view.pending === 'access'" @click="emit('authorize', true)">
+          {{ view.delegation.enable }}
+        </BsButton>
+      </div>
+    </section>
     <section v-else class="bs-assistant-chat" :data-review="Boolean(view.proposal) || undefined" :aria-label="copy.title">
       <p class="bs-assistant-chat__privacy">{{ copy.privacy }}</p>
       <div ref="transcript" class="bs-assistant-chat__transcript" role="log" :aria-label="copy.transcript" aria-live="polite" tabindex="0">
@@ -84,6 +112,9 @@ watch(() => Boolean(props.view.proposal), async present => {
       <div v-if="!preview" class="bs-assistant-chat__controls">
         <p v-if="view.pending === 'send'" class="bs-assistant-chat__progress" role="status">{{ copy.sending }}</p>
         <BsAlert v-if="view.error" tone="error" :description="view.error" />
+        <div v-if="view.saleAction">
+          <BsButton variant="secondary" :disabled="Boolean(view.pending)" @click="emit('openSale')">{{ view.saleAction }}</BsButton>
+        </div>
         <section v-if="view.proposal" ref="proposal" class="bs-assistant-chat__proposal" :aria-labelledby="proposalTitleId">
           <h2 :id="proposalTitleId" tabindex="-1">{{ copy.proposalTitle }}</h2>
           <p dir="auto">{{ view.proposal.title }}</p>
@@ -138,6 +169,11 @@ watch(() => Boolean(props.view.proposal), async present => {
   background: var(--bs-surface);
   border: 1px solid var(--bs-border);
   border-radius: var(--bs-radius-card);
+}
+
+.bs-assistant-chat__authorization {
+  gap: var(--bs-space-3);
+  padding: var(--bs-space-4);
 }
 
 .bs-assistant-chat__privacy {

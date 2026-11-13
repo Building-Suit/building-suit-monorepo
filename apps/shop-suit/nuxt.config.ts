@@ -16,6 +16,7 @@ export default defineNuxtConfig({
     shopAssistantSigningSecret: '',
     public: {
       shopAssistantEnabled: false,
+      shopAssistantMode: 'hq',
       appUrl: process.env.APP_URL, portalKey: 'shop-crm',
       appEnvironment: process.env.APP_ENV || 'local',
       // Runtime override: NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX (non-secret).

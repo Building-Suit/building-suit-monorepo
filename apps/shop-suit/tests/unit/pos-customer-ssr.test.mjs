@@ -54,6 +54,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     useSupabaseUser: () => vue.ref({ id: 'owner-1' }),
     useShopInvalidation: () => ({ refreshShopQueries: async () => {}, clearShopQueries: () => {} }),
     usePosReceipt: () => ({ visible: vue.ref(false), recentOpen: vue.ref(false), open: () => {}, completed: async () => {}, overlay: { open: vue.ref(false) }, view: vue.ref({}) }),
+    useShopHqSaleHandoff: () => ({ pending: vue.ref(null), scope: vue.ref(null), takeSale: () => null }),
     useShopClient: () => ({ schema: () => ({ rpc: async name => ({ data: name === 'pos_checkout_context' ? context : name === 'list_catalog_categories' ? [] : { items: [service], total: 1, pageSize: 30 }, error: null }) }) }),
     // Match Nuxt's SSR contract: data starts at its default, is populated during
     // server prefetch, and the returned promise can be awaited by page setup.
