@@ -67,6 +67,10 @@ export function useShopHqAssistant() {
     }
     if (entry.kind === 'action') {
       const destination = entry.link.destination
+      if (destination === 'business-mode') return {
+        ...stamp, role: 'assistant', text: '',
+        links: [{ to: '/settings/business-mode', label: labels.value.openBusinessMode }],
+      }
       const menu = shopShellCopy(isArabic.value)
       const label = destination === 'sales' || destination === 'customers' ? t(`${destination}.title`) : menu[destination]
       return { ...stamp, role: 'assistant', text: '', links: [{ to: `/${destination}`, label }] }

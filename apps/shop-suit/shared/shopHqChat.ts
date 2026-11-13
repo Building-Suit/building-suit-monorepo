@@ -16,7 +16,7 @@ interface ChatEntry {
   createdAt: string
 }
 
-export const shopHqActionDestinations = ['sales', 'reports', 'products', 'inventory', 'expenses', 'appointments', 'customers'] as const
+export const shopHqActionDestinations = ['sales', 'reports', 'products', 'inventory', 'expenses', 'appointments', 'customers', 'business-mode'] as const
 export type ShopHqActionDestination = typeof shopHqActionDestinations[number]
 
 export type ShopHqChatMessage = ChatEntry & (

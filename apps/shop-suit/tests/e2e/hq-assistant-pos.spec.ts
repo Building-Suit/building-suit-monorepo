@@ -134,3 +134,30 @@ test('the floating HQ conversation shows replies promptly, dates the history and
   await expect(navigation.getByRole('link', { name: 'Reports', exact: true })).toBeInViewport()
   await page.screenshot({ path: testInfo.outputPath('floating-assistant-narrow-dark.png'), animations: 'disabled' })
 })
+
+test('the Arabic product activation link opens the business mode settings', async ({ page }) => {
+  await pilotFixture(page, 'ar', 'owner', name => name === 'shop_permission_access' ? { 'settings.manage': true } : undefined)
+  await page.route('**/api/assistant/hq/access', route => route.fulfill({
+    json: { enabled: true, agentName: 'Shop Suit Agent', queueAvailable: true },
+  }))
+  const createdAt = new Date().toISOString()
+  await page.route('**/api/assistant/hq/history', route => route.fulfill({
+    json: {
+      messages: [
+        { sequence: 1, jobId, createdAt, role: 'assistant', kind: 'message', text: 'اختار «منتجات وخدمات»، واضغط «حفظ طريقة التشغيل».' },
+        { sequence: 2, jobId, createdAt, role: 'assistant', kind: 'action', link: { destination: 'business-mode' } },
+      ],
+      hasMore: false, activeJobs: [],
+    },
+  }))
+  await fixtureGoto(page, '/dashboard?assistant=open')
+  const link = page.getByRole('log').getByRole('link', { name: 'افتح طريقة تشغيل النشاط', exact: true })
+  await expect(link).toHaveAttribute('href', '/settings/business-mode')
+  await link.click()
+  await expect(page).toHaveURL(/\/settings\/business-mode$/)
+  await page.getByRole('button', { name: 'اقفل المحادثة', exact: true }).click()
+  const settings = page.locator('#business-mode')
+  await expect(settings.getByRole('radio', { name: 'خدمات فقط', exact: true })).toBeChecked()
+  await settings.getByRole('radio', { name: 'منتجات وخدمات', exact: true }).check()
+  await expect(settings.getByRole('button', { name: 'حفظ طريقة التشغيل', exact: true })).toBeEnabled()
+})

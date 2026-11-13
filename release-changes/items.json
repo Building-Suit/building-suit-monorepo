@@ -6789,6 +6789,7 @@
       "apps/shop-suit/supabase/migrations/20261113194400_shop_hq_chat_direct_links.sql",
       "apps/shop-suit/supabase/migrations/20261113194524_shop_hq_assistant_conversation_recall.sql",
       "apps/shop-suit/supabase/migrations/20261113195125_shop_hq_chat_background_review.sql",
+      "apps/shop-suit/supabase/migrations/20261113201329_shop_hq_chat_business_mode_link.sql",
       "packages/ui/src/organisms/BsAssistantChat.vue",
       "packages/ui/src/organisms/BsFloatingAssistantChat.vue"
     ],
@@ -6803,8 +6804,8 @@
         "ar": "اطلب من مساعد المتجر فتح المبيعات أو صفحة تانية وخد رابط مباشر. وقت الإرسال بيظهر مع كل رسالة والرسائل متجمعة حسب التاريخ."
       },
       "details": {
-        "en": "The agent can use earlier messages from the same authorized conversation. Find Privacy settings in the Shop settings menu.",
-        "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
+        "en": "The agent can use earlier messages from the same authorized conversation. Ask how to enable products for a link to Business operation mode. Find Privacy settings in the Shop settings menu.",
+        "ar": "المساعد يقدر يستخدم الرسائل السابقة من نفس المحادثة المصرّح بيها. اسأل عن تفعيل المنتجات عشان تفتح إعداد طريقة تشغيل النشاط. إعدادات الخصوصية موجودة في قائمة إعدادات المتجر."
       }
     },
     "sources": [
